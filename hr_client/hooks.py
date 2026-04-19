@@ -2,7 +2,7 @@ app_name = "hr_client"
 app_title = "HR Client"
 app_publisher = "Amogh"
 app_description = "Custom HR module for client"
-app_email = "amoghspace@gmail.com"
+app_email = "amoghprashanth158@gmail.com"
 app_license = "mit"
 
 # Apps

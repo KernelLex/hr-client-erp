@@ -1,7 +1,7 @@
 [project]
 name = "hr_client"
 authors = [
-    { name = "Amogh", email = "amoghspace@gmail.com"}
+    { name = "Amogh", email = "amoghprashanth158@gmail.com"}
 ]
 description = "Custom HR module for client"
 requires-python = ">=3.10"
