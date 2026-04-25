@@ -1,0 +1,56 @@
+[
+ {
+  "doctype": "Custom Field",
+  "dt": "Job Applicant",
+  "fieldname": "custom_pipeline_stage",
+  "fieldtype": "Select",
+  "label": "Pipeline Stage",
+  "name": "Job Applicant-custom_pipeline_stage",
+  "options": "Application Received\nScreening\nInterview\nOffer Sent\nHired\nRejected",
+  "default": "Application Received",
+  "insert_after": "status",
+  "in_list_view": 1,
+  "in_standard_filter": 1,
+  "reqd": 0
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Job Applicant",
+  "fieldname": "custom_current_interview_round",
+  "fieldtype": "Link",
+  "label": "Current Interview Round",
+  "name": "Job Applicant-custom_current_interview_round",
+  "options": "Interview Round",
+  "insert_after": "custom_pipeline_stage",
+  "read_only": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Job Applicant",
+  "fieldname": "custom_rejection_reason",
+  "fieldtype": "Small Text",
+  "label": "Rejection Reason",
+  "name": "Job Applicant-custom_rejection_reason",
+  "insert_after": "custom_current_interview_round",
+  "depends_on": "eval:doc.custom_pipeline_stage==\"Rejected\""
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Job Applicant",
+  "fieldname": "custom_internal_notes",
+  "fieldtype": "Text",
+  "label": "Internal HR Notes",
+  "name": "Job Applicant-custom_internal_notes",
+  "insert_after": "custom_rejection_reason"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Job Opening",
+  "fieldname": "custom_interview_rounds",
+  "fieldtype": "Table",
+  "label": "Interview Round Sequence",
+  "name": "Job Opening-custom_interview_rounds",
+  "options": "Job Opening Interview Round",
+  "insert_after": "description"
+ }
+]

@@ -1,0 +1,59 @@
+{
+ "actions": [],
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sequence",
+  "interview_round",
+  "round_name",
+  "is_required"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "sequence",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Seq",
+   "reqd": 1
+  },
+  {
+   "columns": 4,
+   "fieldname": "interview_round",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Interview Round",
+   "options": "Interview Round",
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "fetch_from": "interview_round.round_name",
+   "fieldname": "round_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Round Name",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "default": "1",
+   "fieldname": "is_required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Required"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-04-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR Client",
+ "name": "Job Opening Interview Round",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

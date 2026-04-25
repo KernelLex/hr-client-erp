@@ -5,6 +5,43 @@ app_description = "Custom HR module for client"
 app_email = "amoghprashanth158@gmail.com"
 app_license = "mit"
 
+# CORS — allow React frontend on same host different port
+allow_cors = "*"
+
+# Custom Fields shipped with the app (synced on bench migrate)
+fixtures = [
+	{
+		"dt": "Custom Field",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Job Applicant-custom_pipeline_stage",
+					"Job Applicant-custom_current_interview_round",
+					"Job Applicant-custom_rejection_reason",
+					"Job Applicant-custom_internal_notes",
+					"Job Opening-custom_interview_rounds",
+				],
+			]
+		],
+	}
+]
+
+# Auto-manage pipeline stage on existing DocType events
+doc_events = {
+	"Job Applicant": {
+		"after_insert": "hr_client.api.recruitment.on_applicant_insert",
+	},
+	"Interview": {
+		"after_insert": "hr_client.api.recruitment.on_interview_insert",
+	},
+	"Job Offer": {
+		"after_insert": "hr_client.api.recruitment.on_offer_insert",
+		"on_update": "hr_client.api.recruitment.on_offer_update",
+	},
+}
+
 # Apps
 # ------------------
 
