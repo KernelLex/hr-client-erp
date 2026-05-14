@@ -311,29 +311,33 @@ Frappe resolves the module folder by importing `hr_client.hr_client` and uses th
 - API key never logged; `.env` in `.gitignore`; old exposed key revoked immediately
 - TypeScript clean, production build passes
 
-✅ **CRM Pipeline Module — Lead to Success Flow (2026-05-15)**
-- 4 new DocTypes in `hr_client/hr_client/hr_client/doctype/`:
-  - `Vera CRM Lead` (autoname `VCL-.YYYY.-.####`) — 14 fields: lead_title, company_name, contact_person, phone, email, service_interest (Select: Logistics/HR Services/Accounting/Other), source, notes, status (Select: Lead/Discussion/Quotation/Order/Delivery/Success/Failed, default: Lead), rejection_reason, assigned_to, approved_by, approval_status, current_stage_requested
-  - `Vera CRM Quotation` (autoname `VCQ-.YYYY.-.####`) — 11 fields: lead, quotation_number, items (child table), subtotal/tax/total (Currency), validity_days, terms_and_conditions, pdf_attachment, status, notes
-  - `Vera CRM Quotation Item` (child table, `istable:1`) — 4 fields: item_description, quantity, unit_price, amount
-  - `Vera CRM Approval Request` (autoname `VCAR-.YYYY.-.####`) — 8 fields: lead, requested_by, requested_stage, current_stage, approval_status (Pending/Approved/Rejected), admin_notes, quotation, lead_snapshot
+✅ **CRM Pipeline — All Employees, Admin Approval Flow (2026-05-15)**
+- **Access model:** CRM visible to ALL employees (not admin-only). Any employee can create leads and request stage advances. Owais approves/rejects stage moves.
+- 4 DocTypes in `hr_client/hr_client/hr_client/doctype/`:
+  - `Vera CRM Lead` (autoname `VCL-.YYYY.-.####`) — lead_title, company_name, contact_person, phone, email, service_interest, source, notes, status (Lead→Discussion→Quotation→Order→Delivery→Success→Failed, default: Lead), rejection_reason, assigned_to, `approval_status` (default: **Approved**), `stage_push_requested` (Check, default 0)
+  - `Vera CRM Quotation` (autoname `VCQ-.YYYY.-.####`) — lead, quotation_number, items (child table), subtotal/tax/total, validity_days, terms_and_conditions, pdf_attachment, notes
+  - `Vera CRM Quotation Item` (child table, `istable:1`) — item_description, quantity, unit_price, amount
+  - `Vera CRM Approval Request` (autoname `VCAR-.YYYY.-.####`) — lead + full snapshot (lead_title, company_name, contact_person, phone, email, service_interest), current_stage, requested_stage, requested_by, requested_by_name, request_notes, approval_status (Pending/Approved/Rejected), admin_notes, reviewed_by, reviewed_on
 - Migrated + cache-cleared ✅
-- Backend: `hr_client/api/crm.py` — 10 whitelisted endpoints:
-  - `get_all_leads`, `get_lead`, `create_lead`, `update_lead`
-  - `request_stage_advance` — creates Vera CRM Approval Request, sends email to Owais
-  - `approve_stage`, `reject_stage` — admin-only (raises PermissionError otherwise)
-  - `mark_failed` — terminal state, any authorized user
-  - `create_quotation` — generates PDF via weasyprint (fallback: `frappe.utils.pdf.get_pdf`), saves as File doc
-  - `get_quotation`
-- Frontend: 5 new files in `src/pages/crm/`:
-  - `types.ts` — TypeScript types: CRMLead, CRMApprovalRequest, CRMQuotation, CRMQuotationItem
-  - `useCRM.ts` — 10 React Query hooks; all mutations invalidate `["crm_leads"]`
-  - `PipelineBoard.tsx` — 7-column kanban (Lead/Discussion/Quotation/Order/Delivery/Success/Failed), company name, contact, service badge, days in stage, approval badge; click → `/crm/:id`
-  - `NewLeadForm.tsx` — create lead form → redirect to `/crm`
-  - `LeadDetail.tsx` — pipeline progress bar, Request Advance button, approval history, quotation builder (stage≥Quotation), admin approve/reject panel, Mark as Failed dialog
-- `Sidebar.tsx`: CRM Pipeline nav entry (TrendingUp icon, admin-only, route `/crm`)
-- `App.tsx`: 3 new routes — `/crm`, `/crm/new`, `/crm/:id`
-- TypeScript build clean (0 errors), committed as `66d3027`
+- Backend: `hr_client/api/crm.py` — 10 endpoints:
+  - `get_all_leads` — all leads to all employees, includes `assigned_to_name` and `pending_approval` per lead
+  - `get_lead` — full detail + `approval_history` + `pending_approval` + `quotation`
+  - `create_lead` — any employee, sets `approval_status=Approved`, `stage_push_requested=0`
+  - `update_lead` — owner or Owais only
+  - `request_next_stage(lead_id, request_notes)` — auto-calculates next stage from STAGE_ORDER, creates Approval Request with full snapshot, sets `stage_push_requested=1` + `approval_status=Pending`; blocks if pending already exists
+  - `approve_stage(approval_id, admin_notes)` — OWAIS_USERS only; advances lead.status, sets `stage_push_requested=0`, `approval_status=Approved`
+  - `reject_stage(approval_id, rejection_reason, admin_notes)` — OWAIS_USERS only; sets `stage_push_requested=0`, `approval_status=Rejected`, saves rejection_reason; lead stage unchanged
+  - `mark_failed(lead_id, reason)` — any employee with write permission
+  - `get_pending_approvals()` — OWAIS_USERS only; returns all Pending Approval Requests with enriched lead notes
+  - `create_quotation` + `get_quotation` — PDF via `frappe.utils.pdf.get_pdf`
+- Frontend: `src/pages/crm/`:
+  - `types.ts` — CRMLead (with `stage_push_requested`, `assigned_to_name`, `pending_approval`), CRMApprovalRequest (full snapshot fields)
+  - `useCRM.ts` — `useRequestNextStage` (renamed from `useRequestStageAdvance`), `usePendingApprovals(enabled)`
+  - `PipelineBoard.tsx` — card badges: "⏳ Awaiting Approval" (`stage_push_requested=1`), "❌ Rejected" (`approval_status=Rejected`); Owais sees collapsible approval panel at bottom with per-approval cards (full lead data + approve/reject inline)
+  - `NewLeadForm.tsx` — navigates to `/crm/:id` after creation
+  - `LeadDetail.tsx` — green "Push to [next] →" button when idle; orange "Awaiting" banner when pending; red "Rejected + reason" banner with re-request option; `AdminApprovalPanel` shows only for Owais when `pending_approval` exists; Mark as Failed for all employees
+- `Sidebar.tsx` — CRM entry non-admin, Briefcase icon, label "CRM"; red pending count badge for Owais via `usePendingApprovals(!!isOwais)`
+- Commits: backend `effa6f2`, frontend `88fc7d9`
 
 ## In progress
 Nothing — all features built and wired to real backend. `VITE_USE_MOCK=false`.
@@ -813,7 +817,12 @@ All passwords: `Vera@2026`. Owais logs in as `Administrator`.
 - DO NOT access Employee DocType fields by wrong names in `employee_lifecycle.py` — `EmployeeMaster` (HRMS) overrides `__getattr__` and raises `AttributeError` (not `None`) for unknown attributes. Emergency contact fields are `person_to_be_contacted` and `emergency_phone_number`, NOT `emergency_contact_name`/`emergency_contact_phone`. Always use `getattr(emp, "field_name", None)` for any HRMS-model field access outside of `_serialize_employee` in `employee.py` — that function is the authoritative field-name reference.
 - DO NOT rely solely on `_get_employee_by_email` for employee lookup — if the identifier is an employee ID (HR-EMP-XXXXX), email-only lookups return None. Always try `frappe.db.exists("Employee", identifier)` as the FIRST check, then fall back to email-based lookups. Lookup order in `get_employee_profile`: direct name → user_id → company_email → personal_email.
 - DO NOT update a CRM lead's status directly — all stage transitions must go through a `Vera CRM Approval Request`. Only `approve_stage` (admin-only) may write to `Vera CRM Lead.status`. Any direct `lead.status = new_stage; lead.save()` bypasses the approval workflow.
-- DO NOT allow anyone other than `owais@veraenterprises.in` (or `Administrator`) to call `approve_stage` or `reject_stage` — both must check `_is_admin()` at the top and raise `frappe.PermissionError` immediately if the check fails. No exceptions even for System Manager role holders.
+- DO NOT allow anyone other than `owais@veraenterprises.in` (or `Administrator`) to call `approve_stage` or `reject_stage` — check `frappe.session.user in OWAIS_USERS` at the top and return `{"success": False, "error": "Not authorized"}` immediately. No role-based exception.
+- DO NOT make CRM admin-only in the sidebar or frontend routes — CRM is visible to ALL employees. Only the `approve_stage`, `reject_stage`, and `get_pending_approvals` endpoints are restricted to Owais.
+- DO NOT use `current_stage_requested` field on `Vera CRM Lead` — this field was removed. Use `stage_push_requested` (Check) to detect if an advance is pending, and `pending_approval` (from `get_lead` response) to get the target stage.
+- DO NOT pass `target_stage` to `request_next_stage` — the endpoint auto-calculates the next stage from `STAGE_ORDER`. The old endpoint `request_stage_advance` no longer exists; the new one is `request_next_stage(lead_id, request_notes)`.
+- DO NOT allow a second `request_next_stage` call while `stage_push_requested=1` — the backend blocks it ("An approval request is already pending"). The frontend "Push to [next]" button must be hidden/disabled when `stage_push_requested=1`.
+- DO NOT omit snapshot fields when creating a `Vera CRM Approval Request` — always copy `lead_title`, `company_name`, `contact_person`, `phone`, `email`, `service_interest` from the lead at time of request, so Owais sees full context without loading the lead separately.
 
 ---
 
