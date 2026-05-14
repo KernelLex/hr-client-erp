@@ -52,5 +52,42 @@
   "name": "Job Opening-custom_interview_rounds",
   "options": "Job Opening Interview Round",
   "insert_after": "description"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_aadhaar_number",
+  "fieldtype": "Data",
+  "label": "Aadhaar Number",
+  "name": "Employee-custom_aadhaar_number",
+  "insert_after": "pan_number"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_pan_number",
+  "fieldtype": "Data",
+  "label": "PAN Number",
+  "name": "Employee-custom_pan_number",
+  "insert_after": "custom_aadhaar_number"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_ifsc_code",
+  "fieldtype": "Data",
+  "label": "IFSC Code",
+  "name": "Employee-custom_ifsc_code",
+  "insert_after": "bank_ac_no"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_skills",
+  "fieldtype": "Small Text",
+  "label": "Skills",
+  "name": "Employee-custom_skills",
+  "insert_after": "bio",
+  "description": "Comma-separated list of skills"
  }
 ]

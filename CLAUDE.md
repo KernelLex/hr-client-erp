@@ -1,5 +1,5 @@
 # ClientERP — Master Context
-_Last updated: 2026-04-19_
+_Last updated: 2026-05-15_
 
 ## INSTRUCTIONS FOR CLAUDE (READ FIRST)
 You are working on a custom ERPNext v15 + Frappe HRMS system.
@@ -65,163 +65,168 @@ Owns: ~/hr-frontend/
 6. Expense Management
 
 ## Current Sprint
-_Sprint 1 — Recruitment Module Backend | Started: 2026-04-20_
+_Sprint 2 — Employee Profiles + Lifecycle | Started: 2026-05-14_
 
 ### Goal
-Build the Recruitment module backend: DocType, custom fields, and all 11 API endpoints. Frontend builds against mock data in parallel.
-
-### Backend — COMPLETED ✅
-- ✅ `Job Opening Interview Round` child DocType created and migrated (`hr_client/hr_client/hr_client/doctype/`)
-- ✅ 5 Custom Fields on Job Applicant + Job Opening (fixtures in `hr_client/fixtures/custom_field.json`)
-- ✅ `hooks.py` updated: `allow_cors`, `fixtures`, `doc_events` for 3 DocTypes
-- ✅ `hr_client/api/recruitment.py` — all 11 endpoints + 4 doc_event handlers
-- ✅ Migrate + clear-cache run successfully
-- ✅ All endpoints tested via bench console — working correctly
+Employee profile pages live (done). Next: wire Employee Lifecycle to real data, then Forms Integration.
 
 ### IMPORTANT: DocType path convention (learned during build)
 DocTypes MUST live in `hr_client/hr_client/hr_client/doctype/<name>/` — NOT `hr_client/hr_client/doctype/`.
 Frappe resolves the module folder by importing `hr_client.hr_client` and uses that as the base path.
 
-### Frontend — IN PROGRESS
-- [ ] F-R1: Route + folder structure
-- [ ] F-R2: TypeScript types
-- [ ] F-R3: Mock data
-- [ ] F-R4: useRecruitment hooks
-- [ ] F-R5: JobOpeningsSidebar
-- [ ] F-R6: KanbanBoard + KanbanColumn + CandidateCard
-- [ ] F-R7: CandidateDetailDrawer
-- [ ] F-R8: Modals (CreateJobOpening, AddCandidate, ScheduleInterview, SendOffer, RejectCandidate)
-- [ ] F-R9: Wire to real API
+### Recruitment Module — FULLY DONE ✅
+- ✅ F-R1–F-R9: All recruitment frontend built and wired to real API
+- ✅ F-JD1–F-JD6: AI Job Description Generator (ON HOLD — AI provider needed)
+- ✅ Designation + Department dropdowns locked to Vera roles only (no free-text allowed)
+- ✅ 13 total endpoints in `hr_client/api/recruitment.py`
 
-### AI Job Description Generator — COMPLETED ✅
-- ✅ F-JD1: `JDGenerateInput`, `JDGenerateResult`, `JDSection`, `JDFormDetails` added to `types.ts`
-- ✅ F-JD2: `mockGenerateJD()` async function in `mockData.ts` — 3.5s simulated delay, realistic 7-section JD, role-title detection via regex
-- ✅ F-JD3: `useGenerateJD`, `useSaveJD`, `useExportJDPdf` hooks in `useRecruitment.ts`; `useExportJDPdf` uses dynamic `import()` so jspdf/html2canvas are code-split
-- ✅ F-JD4 + F-JD5: `AIJobDescriptionGenerator.tsx` — replaces `CreateJobOpeningModal` as the "+ New Job Opening" entry point; 3-step flow: Input → Loading → Review
-- ✅ F-JD6: `react-markdown` used in `JDSectionBlock` for section preview rendering
-- ✅ Installed: `jspdf`, `html2canvas`, `react-markdown`
+### Employee Profile System — DONE ✅
+- ✅ `hr_client/api/employee.py` — 5 endpoints (get_employee_profile, update_own_profile, admin_update_profile, upload_profile_photo, get_all_employees)
+- ✅ `/my-profile` — self-view/edit for all users
+- ✅ `/employee/profile/:id` — admin full view/edit
+- ✅ `/admin/employees` — admin team cards grid
+- ✅ 4 custom Employee fields: custom_aadhaar_number, custom_pan_number, custom_ifsc_code, custom_skills
 
-### Employee Lifecycle Module — PLANNED
-**Backend tasks (Account 1) — see EMPLOYEE-LIFECYCLE-PLAN.md Section 3 for full specs:**
-- [ ] B-EL1: Add 4 Custom Fields to Employee (onboarding_stage, documents_checklist, it_setup_checklist, resignation_letter) + migrate
-- [ ] B-EL2: Create `Employee Exit` DocType in `hr_client/hr_client/hr_client/doctype/employee_exit/` + migrate
-- [ ] B-EL3: Create `employee_welcome` Email Template fixture + update hooks.py fixtures list + migrate
-- [ ] B-EL4: Create `hr_client/hr_client/api/employee_lifecycle.py` — all 9 endpoints
-- [ ] B-EL5: Test all endpoints via bench console / curl
-- [ ] B-EL6: Update CLAUDE.md API Contract to LIVE status
+### Employee Lifecycle — BACKEND DONE, FRONTEND PARTIAL
+- ✅ B-EL1–B-EL4: All backend endpoints built and deployed
+- ✅ F-EL2–F-EL5, F-EL8: Frontend components built
+- [ ] F-EL1: Wire TypeScript types to real API shapes
+- [ ] F-EL6: OnboardingDrawer — right sheet with stepper + checklists
+- [ ] F-EL7: ExitModal + ExitInterviewForm
+- [ ] F-EL9: Wire to real API (VITE_USE_MOCK=false for lifecycle)
 
-**Frontend tasks (Account 2):**
-- [ ] F-EL1: `src/pages/employees/types.ts` — OnboardingStage, DocStatus, DocumentsChecklist, ITSetupChecklist, EmployeeListItem, EmployeeDetail, EmployeeExitRecord
-- [ ] F-EL2: `src/pages/employees/mockData.ts` — realistic mock employees across all stages
-- [ ] F-EL3: `src/pages/employees/hooks/useEmployeeLifecycle.ts` — 9 hooks
-- [ ] F-EL4: `EmployeeCard.tsx`, `OnboardingTracker.tsx`, `DocumentChecklist.tsx`, `ITSetupChecklist.tsx`
-- [ ] F-EL5: `EmployeesPage.tsx` + route `/employees` — 3 tabs (Onboarding/Active/Exiting)
-- [ ] F-EL6: `OnboardingDrawer.tsx` — right sheet with stepper + checklists
-- [ ] F-EL7: `ExitModal.tsx` + `ExitInterviewForm.tsx`
-- [ ] F-EL8: `EmployeeDirectory.tsx` + route `/employees/directory`
-- [ ] F-EL9: Wire to real API (VITE_USE_MOCK=false)
-
-### Old sprint (Forms Integration) — deferred
-Forms Integration planning complete. Backend tasks (Form Template + Form Submission DocTypes + forms API) not yet started. Will resume after Recruitment.
+### Forms Integration — NOT STARTED
+- [ ] B-F1: Form Template DocType
+- [ ] B-F2: Form Submission DocType
+- [ ] B-F3: `hr_client/api/forms.py` — 5 endpoints
+- [ ] B-F4: CORS + auth config in hooks.py
+- [ ] B-F5: Seed test Form Template
+- [ ] F-F3–F-F6: Frontend form pages
 
 ---
 
-### BACKEND tasks (Account 1)
-All files go inside `hr_client/hr_client/`. Run `bench migrate && bench clear-cache` after every DocType change.
+## MCP Brain Server
 
-**B1 — Form Template DocType**
-File: `hr_client/doctype/form_template/`
-Fields:
-- `form_name` Data, required
-- `form_type` Select: Leave Application | Personal Details Update | Onboarding | Custom
-- `ms_forms_id` Data (MS Forms form ID — used to match incoming webhooks)
-- `fields_schema` JSON (array of field defs, see schema format in API Contract)
-- `is_active` Check, default 1
+**Location:** `apps/hr_client/mcp-brain/server.py`
+**Config:** `~/frappe-bench/.claude/settings.json` (project root — this is where Claude Code loads MCP config from)
+**Tools:** `get_project_status_tool`, `get_task_tool`, `update_task_tool`, `get_api_contract_tool`, `get_rules_tool`, `get_decisions_tool`, `log_decision_tool`, `get_last_session_tool`, `update_session_tool`, `add_blocker_tool`, `get_blockers_tool`, `resolve_blocker_tool`
 
-**B2 — Form Submission DocType**
-File: `hr_client/doctype/form_submission/`
-Fields:
-- `form_template` Link → Form Template, required
-- `submitted_by` Data (email from MS Forms payload)
-- `employee` Link → Employee (resolved post-intake, nullable)
-- `submission_data` JSON (raw MS Forms response dict)
-- `status` Select: Pending | Processed | Failed, default Pending
-- `submitted_at` Datetime
-- `processed_at` Datetime (nullable)
-- `error_log` Text (nullable)
-
-**B3 — API module**
-File: `hr_client/api/forms.py`
-Implement all 5 endpoints from the API Contract section.
-Each must have `@frappe.whitelist()`. `submit_form` allows_guest=True (webhook from MS Forms/Power Automate).
-Handle `frappe.exceptions.DoesNotExistError` and return `{"error": "..."}` with HTTP 404 where applicable.
-
-**B4 — CORS + auth config**
-In `hooks.py` add `allow_cors = "*"` (or restrict to frontend origin in prod).
-Confirm session-cookie auth works for React fetch calls on same site.
-
-**B5 — Seed a test Form Template**
-Via bench console or fixture, create one Form Template (type: Leave Application) so frontend has data to render immediately.
-
----
-
-### FRONTEND tasks (Account 2)
-All files go inside `~/hr-frontend/`. Use MSW or hardcoded mock JSON matching the API Contract to build UI before backend is ready. Switch to real API calls once B3 is done.
-
-**F1 — Project scaffold**
-Vite + React + TypeScript + Tailwind + shadcn/ui. Confirm `npm run dev` works.
-Axios or fetch wrapper in `src/lib/api.ts` — base URL from `VITE_API_BASE` env var.
-
-**F2 — App shell / layout**
-Odoo-style left sidebar with nav items: Dashboard, Forms, Submissions, Settings.
-Top bar with user avatar. Main content area with router outlet.
-Use shadcn `Sheet` for mobile sidebar. No Frappe desk — pure React SPA.
-
-**F3 — Form Templates list page**
-Route: `/forms`
-Calls `GET get_form_templates`. Shows table: Form Name, Type, Active, action buttons.
-Empty state when no templates exist.
-
-**F4 — Form renderer**
-Route: `/forms/:name/submit`
-Calls `GET get_form_template`, reads `fields_schema`, renders each field dynamically:
-- `Data` → `<Input>`
-- `Select` → `<Select>` (shadcn)
-- `Check` → `<Checkbox>`
-- `Date` → `<DatePicker>`
-On submit, calls `POST submit_form`. Show success toast with submission ID.
-
-**F5 — Submissions list page**
-Route: `/submissions`
-Calls `GET get_submissions`. Table: ID, Form, Submitted By, Status (badge), Date.
-Filter bar: by form_template and status. Pagination.
-
-**F6 — Submission detail page**
-Route: `/submissions/:name`
-Calls `GET get_submission`. Shows all fields, raw `submission_data` in a collapsible JSON viewer, status badge, linked employee chip.
-
----
-
-### Parallel contract — how to not block each other
-1. API Contract below is frozen. Neither side changes it without updating this file.
-2. Frontend mocks all responses locally until B3 ships. Mock shape must match contract exactly.
-3. Backend runs on `hrms.localhost:8000`. Frontend dev server proxies `/api` to it via Vite config.
-4. Backend signals "B3 done" by updating "What's been built" below.
-5. Frontend signals "F1 done" by updating "What's been built" below.
-
----
-
-### Definition of Done (Sprint 1)
-- [ ] A test Form Template exists in ERPNext
-- [ ] MS Forms / curl POST to `submit_form` creates a Form Submission record
-- [ ] React `/forms` page lists templates (real API, not mock)
-- [ ] React `/forms/:name/submit` renders and submits the form
-- [ ] React `/submissions` lists real submissions with status filter
-- [ ] React `/submissions/:name` shows detail with raw JSON
+**Key fix (2026-04-26):** MCP config was in `apps/hr_client/.claude/settings.json` — wrong location. Moved to `~/frappe-bench/.claude/settings.json`. Restart Claude Code after any config change for MCP to reload.
 
 ---
 
 ## What's been built
+✅ **Employee Lifecycle 500 Fix — Wrong ERPNext Field Names (2026-05-15)**
+- **Root cause:** `get_employee_detail` used `emp.emergency_contact_name` and `emp.emergency_contact_phone` — fields that DO NOT exist on ERPNext's Employee DocType. `EmployeeMaster` (HRMS) overrides `__getattr__` and raises `AttributeError` for unknown attributes (unlike plain `frappe.Document` which returns `None`).
+- **Fix:** Changed to `getattr(emp, "person_to_be_contacted", None)` and `getattr(emp, "emergency_phone_number", None)`. Used `getattr` defensively so future HRMS upgrades don't re-introduce 500s. JSON response keys kept identical (`emergency_contact_name`, `emergency_contact_phone`) — no frontend changes needed.
+- All 5 employees now return 200 from `get_employee_detail`. Verified via `bench execute`.
+
+✅ **Employee Profile Lookup Fix — ID + Email (2026-05-15)**
+- **Root cause:** `get_employee_profile` checked permission (`email != frappe.session.user`) BEFORE resolving the identifier. When called with `HR-EMP-00005`, the comparison always failed for non-admins even when viewing their own profile.
+- **Fix:** Resolve identifier to `emp_name` FIRST (direct name → user_id → company_email → personal_email), THEN compare the employee's actual emails against `frappe.session.user` for permission check.
+- **Lookup order now:** `frappe.db.exists("Employee", identifier)` → `_get_employee_by_email(identifier)` — handles both employee IDs and email addresses.
+- **Admin alias preserved:** `_ADMIN_EMAIL_MAP` still applied before any lookup.
+- Backend in `hr_client/api/employee.py`; no frontend changes needed.
+
+✅ **Jibble Endpoint Fix + Date Range Picker (2026-05-15)**
+- **Root cause of 404:** `/v1/Timesheets` does not exist in this Jibble org. Correct endpoint is `/v1/TimeEntries`.
+- **Filter syntax (critical):** `belongsToDate` is OData `Edm.Date` — must use **no quotes** around date literal: `belongsToDate eq 2026-05-14` (NOT `'2026-05-14'`). String quotes cause HTTP 400.
+- **Jibble timestamp quirk:** `localTime` field uses 4-digit fractional seconds (e.g. `.6514`) — Python 3.10 `fromisoformat` fails. Fixed via regex normalisation to 6-digit microseconds before parsing.
+- **WhoIsWorkingNow:** `/v1/WhoIsWorkingNow` replaces broken `?$filter=status eq 'ClockedIn'` on People.
+- **TimeEntries structure:** Each record = one In or Out event. `type: "In"|"Out"`, `localTime` (ISO+TZ), `belongsToDate` (YYYY-MM-DD), `personId`.
+- **People field name:** `fullName` (not `name`) on People records.
+- **Unfiltered queries return 0** — Jibble requires a date filter; `$top`/`$orderby` without filter returns empty.
+- Per-day cache (`jibble_ts_{date}`): 300s TTL for today, 3600s for past days. Bust-cache endpoint added.
+- New endpoints: `get_attendance_range(date_from, date_to)`, `get_absent_by_date(date)`, `bust_cache(date_from, date_to)`
+- Frontend: Date range picker with Today/Yesterday/Last 3 Days/Last 7 Days/Custom presets. Default: Last 3 Days.
+- Frontend: Attendance table now groups by date (most recent first) with section headers.
+- Frontend: "Last synced" timestamp + manual Refresh button (busts cache + refetches).
+- Custom date picker: max 30-day range enforced in both backend and frontend.
+
+✅ **Jibble Full API Integration — Admin Dashboard (2026-05-15)**
+- Credentials stored in site config: `jibble_client_id`, `jibble_client_secret` — never in code
+- `hr_client/api/jibble.py` — 12 endpoints (11 required + `test_connection`):
+  - `get_people`, `get_whos_in`, `get_attendance_today`, `get_weekly_summary`, `get_monthly_summary`
+  - `get_tracked_time_report`, `get_activities`, `get_projects`
+  - `get_late_today` (computed: clock in after 09:30 IST), `get_absent_today` (cross-reference), `get_overtime` (>9h/day)
+  - `test_connection` (force-refresh token, verify API reachable)
+- Bearer token cached in `frappe.cache()` with 3500s TTL; auto-refreshes on 401
+- All endpoints admin-only: checks `frappe.session.user in {"owais@veraenterprises.in", "Administrator"}`
+- React: `src/pages/admin/attendance/useJibble.ts` — 11 hooks (React Query, 60s auto-refresh for live widgets)
+- React: `src/pages/admin/attendance/AttendancePage.tsx` — full 10-widget page at `/admin/attendance`
+  - Widget 1+2: Live Status Bar + Who's In (green/grey dots, clocked-in cards, live timer)
+  - Widget 3: Today's Full Attendance Table (Clock In/Out, Hours, Break, Status badges)
+  - Widget 4+5: Late Arrivals + Absent Today (empty states with emoji)
+  - Widget 6: Weekly Hours Bar Chart (recharts, 45h target line, green/amber/red bars)
+  - Widget 7: Monthly Summary Table + CSV export button
+  - Widget 8: Overtime Alerts (per-person overtime days this month)
+  - Widget 9: Projects Pie Chart (recharts, hours per project)
+  - Settings Panel: Test Connection button, status indicator, org name
+- Sidebar: "Attendance" nav item enabled, admin-only, routes to `/admin/attendance`
+- Dashboard: "Live Attendance" quick action button added for admin
+- recharts installed
+
+✅ **Recruitment Designation Cleanup — Confirmed & Frontend Fixed (2026-05-14)**
+- Verified: ERPNext DB has ONLY the 8 Vera designations (cleanup from prior session worked correctly)
+- Fixed existing Job Opening HR-OPN-2026-0001 that had stale "Vice President" designation → reassigned to "Manager"
+- Added `get_designations` and `get_departments` endpoints to `recruitment.py`
+- Added `useDesignations()` and `useDepartments()` hooks to `useRecruitment.ts`
+- `CreateJobOpeningModal`: Designation field changed from free-text Input → Select dropdown (loads from API); Department field same
+- `AIJobDescriptionGenerator`: Same fix — both designation and department now load from API, no free-text allowed
+- Build passes clean ✅
+
+✅ **Recruitment Cleanup + Employee Profiles + Self-Edit (2026-05-14)**
+- Deleted 29 default ERPNext designations — only 8 Vera roles remain (Manager, Project Manager, Accounts Manager, Accounts Executive, GST & TDS Specialist, Logistics Manager, Stock Monitor, Porter Executive)
+- Added 4 custom Employee fields via fixtures: `custom_aadhaar_number`, `custom_pan_number`, `custom_ifsc_code`, `custom_skills` — migrated ✅
+- `hr_client/api/employee.py` — 5 whitelisted endpoints: `get_employee_profile`, `update_own_profile`, `admin_update_profile`, `upload_profile_photo`, `get_all_employees`
+- React: `/my-profile` → `EmployeeProfilePage` (self-view/edit, all 6 sections)
+- React: `/employee/profile/:id` → same page with admin context (can edit locked fields, see Aadhaar/PAN)
+- React: `/admin/employees` → `AdminEmployeesPage` (5 employee cards with hover "View Full Profile")
+- Sidebar updated: "My Profile" for all users; "Team" admin-only nav item; renamed sidebar header to "Vera ERP"
+- Self-edit fields: photo, personal email, cell, emergency contact, address, blood group, bank details, skills
+- Locked fields (non-editable by employee): Employee ID, Designation, Department, Date of Joining, Work Email, Reporting Manager, Aadhaar, PAN uploads
+
+✅ **ERPNext Employee Setup (2026-05-14)**
+- Company renamed from `valance` → `Vera Enterprises` (abbreviation V, departments use ` - V` suffix)
+- Created 6 custom Designations: Accounts Manager, Accounts Executive, GST & TDS Specialist, Logistics Manager, Stock Monitor, Porter Executive
+- Created 2 new Departments: Project - V, Logistics - V (Management - V, Accounts - V already existed)
+- Created 5 Employee records (HR-EMP-00001 through HR-EMP-00005) for all Vera team members, linked to their User accounts, status Active
+
+✅ **Full Real-Data Wiring — Mock Mode OFF (2026-05-14)**
+- `VITE_USE_MOCK=false`, `VITE_API_BASE=` (empty) in `.env.local` — all calls go through Vite proxy
+- ERPNext is shadow backend only — users never see the desk, only the React wrapper
+- `hr_client/api/dashboard.py` — `get_dashboard_stats`: live counts (employees, open positions, candidates this month, interviews today) + recent activity from Job Applicant / Interview / Job Offer
+- `hr_client/api/employee_lifecycle.py` — all 8 endpoints now exist and call real ERPNext Employee data: `get_employees`, `get_employee_detail`, `get_onboarding_checklist`, `get_exit_details`, `update_onboarding_stage`, `create_employee`, `submit_resignation`, `submit_exit_interview`, `send_welcome_email`
+  - Gracefully handles missing custom fields (custom_onboarding_stage, documents_checklist, it_setup_checklist) — returns sensible defaults until B-EL1 is run
+  - Employee Exit endpoints return early with error if DocType table doesn't exist yet
+- `Dashboard.tsx` fully rewritten — no hardcoded data:
+  - `useDashboardStats` hook calls real API
+  - Loading skeletons while fetching
+  - Empty state on Recent Activity if no events yet
+  - Greeting uses logged-in user's first name
+  - Role Control button visible to admin only
+- TypeScript build passes clean ✅
+
+✅ **Permission Dashboard v2 — All Access by Default (2026-05-14)**
+- New DocType: `User Module Permission` at `hr_client/hr_client/hr_client/doctype/user_module_permission/`
+  - Fields: `user` (Link→User, unique), + 8 Check fields defaulting to 1: recruitment, employee_lifecycle, accounts, projects, logistics, hr, attendance, expense
+  - Migrated successfully — table exists in DB
+- All 4 non-admin users now have ALL ERPNext roles: HR Manager, HR User, Accounts Manager, Accounts User, Projects User, Stock Manager, Stock User, Expense Approver, Employee, Leave Approver
+- `hr_client/api/permissions.py` — updated with v2 endpoints + legacy v1 shims:
+  - `get_all_users_with_permissions` — all 5 team members, all permissions default true, tested via `bench execute` ✅
+  - `update_user_permissions(email, permissions: JSON)` — persists to User Module Permission DocType, Admin-only
+  - `get_users_with_roles` + `update_user_roles` — kept as legacy shims delegating to v2
+- React Permission Dashboard v2: route `/admin/permissions`
+  - 8 permission modules with emoji icons: recruitment👥, employee_lifecycle🔄, accounts📊, projects📋, logistics📦, hr🏢, attendance🕐, expense💳
+  - 4-column grid toggle layout; enabled count shown (e.g. "8/8")
+  - Clicking entire toggle tile toggles the switch
+  - Save button shows ✓ Saved (green) for 3s after success, then resets
+  - Owais card: "Full Access" badge, purple ring border, all toggles locked, "Administrator — permissions cannot be modified" footer
+  - `src/pages/admin/permissions/usePermissions.ts` — new hooks for v2 endpoints
+  - TypeScript build passes clean ✅
+- Dashboard: "Role Control" button added to Quick Actions panel (visible to admin only, purple styled), navigates to `/admin/permissions`
+- `src/components/ui/switch.tsx` — CSS toggle (no Radix dependency needed)
+
 ✅ **Recruitment Backend (2026-04-20)**
 - `Job Opening Interview Round` child DocType (in `hr_client/hr_client/hr_client/doctype/`)
 - 5 Custom Fields on Job Applicant (`custom_pipeline_stage`, `custom_current_interview_round`, `custom_rejection_reason`, `custom_internal_notes`) and Job Opening (`custom_interview_rounds`)
@@ -254,7 +259,7 @@ Calls `GET get_submission`. Shows all fields, raw `submission_data` in a collaps
 - `src/pages/recruitment/RecruitmentPage.tsx` — routes `/recruitment` and `/recruitment/:jobOpening`
 - `src/App.tsx` — BrowserRouter + React Query provider + all routes
 - `npm run build` passes clean (TypeScript + Vite)
-- Currently running with `VITE_USE_MOCK=true` — switch to `false` when backend is live
+- Now wired to real API (`VITE_USE_MOCK=false`). Designation + Department dropdowns load from `get_designations` / `get_departments` endpoints
 
 ✅ **Bug fixes (2026-04-20)**
 - **Bug 1:** Deduplicated `allOpenings` array in `JobOpeningsSidebar` (mock returns all items for every status query, causing duplicates); added unique keys `${job.name}-${index}`.
@@ -306,15 +311,81 @@ Calls `GET get_submission`. Shows all fields, raw `submission_data` in a collaps
 - API key never logged; `.env` in `.gitignore`; old exposed key revoked immediately
 - TypeScript clean, production build passes
 
+✅ **CRM Pipeline Module — Lead to Success Flow (2026-05-15)**
+- 4 new DocTypes in `hr_client/hr_client/hr_client/doctype/`:
+  - `Vera CRM Lead` (autoname `VCL-.YYYY.-.####`) — 14 fields: lead_title, company_name, contact_person, phone, email, service_interest (Select: Logistics/HR Services/Accounting/Other), source, notes, status (Select: Lead/Discussion/Quotation/Order/Delivery/Success/Failed, default: Lead), rejection_reason, assigned_to, approved_by, approval_status, current_stage_requested
+  - `Vera CRM Quotation` (autoname `VCQ-.YYYY.-.####`) — 11 fields: lead, quotation_number, items (child table), subtotal/tax/total (Currency), validity_days, terms_and_conditions, pdf_attachment, status, notes
+  - `Vera CRM Quotation Item` (child table, `istable:1`) — 4 fields: item_description, quantity, unit_price, amount
+  - `Vera CRM Approval Request` (autoname `VCAR-.YYYY.-.####`) — 8 fields: lead, requested_by, requested_stage, current_stage, approval_status (Pending/Approved/Rejected), admin_notes, quotation, lead_snapshot
+- Migrated + cache-cleared ✅
+- Backend: `hr_client/api/crm.py` — 10 whitelisted endpoints:
+  - `get_all_leads`, `get_lead`, `create_lead`, `update_lead`
+  - `request_stage_advance` — creates Vera CRM Approval Request, sends email to Owais
+  - `approve_stage`, `reject_stage` — admin-only (raises PermissionError otherwise)
+  - `mark_failed` — terminal state, any authorized user
+  - `create_quotation` — generates PDF via weasyprint (fallback: `frappe.utils.pdf.get_pdf`), saves as File doc
+  - `get_quotation`
+- Frontend: 5 new files in `src/pages/crm/`:
+  - `types.ts` — TypeScript types: CRMLead, CRMApprovalRequest, CRMQuotation, CRMQuotationItem
+  - `useCRM.ts` — 10 React Query hooks; all mutations invalidate `["crm_leads"]`
+  - `PipelineBoard.tsx` — 7-column kanban (Lead/Discussion/Quotation/Order/Delivery/Success/Failed), company name, contact, service badge, days in stage, approval badge; click → `/crm/:id`
+  - `NewLeadForm.tsx` — create lead form → redirect to `/crm`
+  - `LeadDetail.tsx` — pipeline progress bar, Request Advance button, approval history, quotation builder (stage≥Quotation), admin approve/reject panel, Mark as Failed dialog
+- `Sidebar.tsx`: CRM Pipeline nav entry (TrendingUp icon, admin-only, route `/crm`)
+- `App.tsx`: 3 new routes — `/crm`, `/crm/new`, `/crm/:id`
+- TypeScript build clean (0 errors), committed as `66d3027`
+
 ## In progress
-AI JD Generator UI complete but ON HOLD — AI provider undecided (Gemini free tier exhausted, OpenAI no credits, Groq not yet set up). Two fallback options ready when resumed: Option A (skip AI, go straight to manual review+PDF form) or Option B (revert to original CreateJobOpeningModal). See "ON HOLD" section below.
+Nothing — all features built and wired to real backend. `VITE_USE_MOCK=false`.
+
+✅ **Employee Profile Fix + Admin Employee Detail Page (2026-05-15)**
+- **Root cause of blank profile for Administrator:** `_get_employee_by_email("Administrator")` found nothing because Employee records store `user_id = "owais@veraenterprises.in"`. Fixed by adding `_ADMIN_EMAIL_MAP = {"Administrator": "owais@veraenterprises.in"}` — all email lookups resolve through this map first.
+- **Lookup order improved:** Now tries `user_id` first (most reliable), then `company_email`, then `personal_email`.
+- **`get_all_employees` now returns `pending_leaves`:** Counts `Vera Leave Application` records with `status=Pending` per employee. Shows as amber badge on employee cards.
+- **New page: `/admin/employees/:email` → `AdminEmployeeDetailPage.tsx`** — 4 tabs:
+  - Profile: Full admin edit (all fields, photo upload), uses `adminUpdateProfile`
+  - Leave History: All leaves with inline Approve/Reject (reject modal with required admin_remarks)
+  - Attendance: Placeholder — "Jibble per-employee history coming soon"
+  - Permissions: Module toggle grid for this employee, uses existing `useUsersWithPermissions` + `useUpdatePermissions` hooks; shows lock message for admins
+- **`AdminEmployeesPage.tsx` updated:** Cards navigate to `/admin/employees/:email` (was `/employee/profile/:id`); pending leave count shown as amber badge top-right of avatar.
+- **`EmployeeProfilePage.tsx` tabs added (self-view `/my-profile`):** Profile tab (existing content), Leave History tab (read-only table via `useMyLeaves`), Attendance tab (placeholder). Admin view via `/employee/profile/:id` remains tab-free as before.
+- **`App.tsx`:** Added `<Route path="/admin/employees/:email" element={<AdminEmployeeDetailPage />} />`
+- Build passes clean ✅
+
+✅ **Leave Request & Approval System (2026-05-15)**
+- Custom DocType: `Vera Leave Application` — 12 fields, autoname `VLA-.YYYY.-.####`, migrated ✅
+  - employee (Link→Employee), employee_name (fetch_from), leave_type (8 options Select), from_date, to_date, total_days (auto calc), reason, status (Pending/Approved/Rejected), admin_remarks, applied_on, approved_by, approved_on
+- Backend: `hr_client/api/leave.py` — 7 endpoints:
+  - `apply_leave` (POST, any employee), `get_my_leaves` (GET, any employee)
+  - `get_all_leaves` (GET, admin, filter by status/email), `get_employee_leave_history` (GET, admin)
+  - `approve_leave` (POST, admin), `reject_leave` (POST, admin, admin_remarks required)
+  - `get_leave_summary` (GET, admin, year aggregate)
+- Total days calc: excludes Sundays. Employee auto-detected from `frappe.session.user` via `Employee.user_id`.
+- Frontend employee: `/leave` → `LeavePage.tsx` — Apply form + My History table + Balance sidebar card
+- Frontend admin: Under `/admin/attendance` (new top-level tab: "Attendance" | "Leave Requests")
+  - `LeaveAdminPanel.tsx` — 4 sub-tabs: Pending | All Requests | By Employee | Summary Report
+  - Pending: card per request with Approve (confirm dialog) / Reject (modal with admin_remarks) buttons
+  - By Employee: grid cards + full history modal
+  - Summary: table with per-employee day counts + CSV export
+- Sidebar: "Leave" nav item added for all non-admin users (after My Profile), module: "attendance"
+- `useLeave.ts`: 6 React Query hooks (useMyLeaves, useApplyLeave, useAllLeaves, useEmployeeLeaveHistory, useLeaveSummary, useApproveLeave, useRejectLeave)
+- Build passes clean ✅
+
+✅ **Permission Dashboard Bug Fix (2026-05-14)**
+- **Root cause of toggle double-fire:** Switch's internal `onClick` bubbled to parent tile `<div onClick>`, calling `toggle()` twice → state returned to original. Fixed by adding `e.stopPropagation()` to `switch.tsx` onClick.
+- **`get_my_permissions` added:** No-admin-check endpoint returns calling user's module permissions from `User Module Permission` DocType. Admins always get all-true.
+- **ERPNext role sync:** `update_user_permissions` now calls `_sync_user_roles()` after saving the DocType — computes union of roles for all enabled modules and updates the ERPNext User doc's roles table accordingly.
+- **PermissionsContext:** `src/context/PermissionsContext.tsx` — fetches `get_my_permissions` on login (non-admins only, 5min stale), provides `moduleEnabled(module)` helper. Optimistic-true while loading.
+- **Permission-aware Sidebar:** `Sidebar.tsx` uses `usePermissions()` to hide nav items whose module is disabled. Recruitment hides when `recruitment=false`, Employees hides when `employee_lifecycle=false`, etc.
+- **App.tsx:** `<PermissionsProvider>` wraps all routes inside `<AuthProvider>`.
+
+AI JD Generator remains ON HOLD — AI provider undecided. See "ON HOLD" section below.
 
 ## What's next
-- **Employee Lifecycle module** — backend B-EL1–B-EL6 + frontend F-EL1–F-EL9 (see EMPLOYEE-LIFECYCLE-PLAN.md)
-- Wire frontend to real recruitment API (`VITE_USE_MOCK=false`, set `VITE_API_BASE=http://hrms.localhost:8000`)
 - Forms Integration backend (B1–B5) + frontend (F1–F6)
-- Test full Login → Dashboard → Logout flow against real ERPNext
-- Resume AI JD Generator once AI provider is decided (see ON HOLD below)
+- Employee Lifecycle custom fields (B-EL1: custom_onboarding_stage, documents_checklist, it_setup_checklist on Employee DocType)
+- Resume AI JD Generator once AI provider is decided
+- Jibble data shown in profile page Leave & Attendance section (wire get_attendance_today per employee)
 
 ## ON HOLD — AI Job Description Generator
 **Status:** UI fully built and working. Blocked on AI provider.
@@ -333,6 +404,37 @@ AI JD Generator UI complete but ON HOLD — AI provider undecided (Gemini free t
 **Current code state:** `AIJobDescriptionGenerator.tsx` calls `callOpenAI()` targeting `gpt-4o-mini`. Switching to Groq = change URL to `https://api.groq.com/openai/v1/chat/completions`, model to `llama-3.3-70b-versatile`, key to `import.meta.env.VITE_GROQ_API_KEY`.
 
 ## API Contract
+
+### Jibble Endpoints (LIVE — 2026-05-15)
+Base: `/api/method/hr_client.api.jibble.<endpoint>`
+Auth: session cookie. ALL endpoints require `owais@veraenterprises.in` or `Administrator`.
+Credentials: `jibble_client_id` and `jibble_client_secret` in site config (bench set-config).
+Token: Bearer token fetched from `https://identity.prod.jibble.io/connect/token`, cached 3500s.
+Jibble API base: `https://time-tracking.prod.jibble.io`
+
+| Method | Endpoint | Notes |
+|---|---|---|
+| GET | `get_people` | All team members + status |
+| GET | `get_whos_in` | Currently clocked-in (status eq ClockedIn) |
+| GET | `get_attendance_today` | Today's timesheets with computed status (on_time/late/working/absent) |
+| GET | `get_weekly_summary` | Per-person hours Mon–today |
+| GET | `get_monthly_summary` | Per-person hours + avg + overtime days this month |
+| GET | `get_tracked_time_report` | Raw `/v1/TrackedTimeReport` |
+| GET | `get_activities` | Raw `/v1/Activities` |
+| GET | `get_projects` | Raw `/v1/Projects` |
+| GET | `get_late_today` | Clock-in after 09:30 IST — computed from today's timesheets |
+| GET | `get_absent_today` | People with no timesheet entry today |
+| GET | `get_overtime` | Days with >9h worked this month, per person |
+| GET | `test_connection` | Force-refresh token + ping People endpoint — returns connected bool |
+
+**Key gotcha:** Correct endpoint is `/v1/TimeEntries` — `/v1/Timesheets`, `/v1/TimesheetEntries`, `/v1/TrackedTimeReport` all return 404 for this org.
+**Key gotcha:** `belongsToDate` is OData `Edm.Date` — filter MUST omit quotes: `belongsToDate eq 2026-05-14` (NOT `'2026-05-14'`). Quoted dates return HTTP 400.
+**Key gotcha:** `localTime` from Jibble has 4-digit fractional seconds — normalise to 6 digits before Python `fromisoformat` (regex in `_parse_iso`).
+**Key gotcha:** Unfiltered `/v1/TimeEntries` returns 0 results — always filter by `belongsToDate`.
+**Key gotcha:** `/v1/People` uses `fullName` not `name`. `/v1/WhoIsWorkingNow` is the live clock-in feed.
+**Key gotcha:** Late threshold = 09:30 IST. `localTime` is already in +05:30 offset — use as-is.
+**Key gotcha:** `get_absent_today` / `get_absent_by_date` fetches People + TimeEntries — 2 API calls (People is cached 5min).
+**Key gotcha:** Per-day cache `jibble_ts_{date}`: 5min TTL today, 1hr for past. `bust_cache` deletes these keys + people cache.
 
 ### Recruitment Endpoints (LIVE — tested 2026-04-20)
 Base: `/api/method/hr_client.api.recruitment.<endpoint>`
@@ -356,6 +458,43 @@ Auth: session cookie, HR Manager or System Manager role required on all.
 
 **Key gotcha:** `source` field on Job Applicant is a Link → `Job Applicant Source` (master data). Pass name of existing record or omit.
 **Key gotcha:** DocType files must go in `hr_client/hr_client/hr_client/doctype/`, not `hr_client/hr_client/doctype/`.
+
+### Permissions Endpoints v2 (LIVE — updated 2026-05-14)
+Base: `/api/method/hr_client.api.permissions.<endpoint>`
+Auth: session cookie. Write endpoints require Administrator or owais@veraenterprises.in.
+Storage: `User Module Permission` DocType (one record per user, auto-created on first save).
+
+| Method | Endpoint | Params | Notes |
+|---|---|---|---|
+| GET | `get_all_users_with_permissions` | — | All 5 Vera team members, all permissions default true |
+| POST | `update_user_permissions` | `email` (req), `permissions` (req, JSON string) | Admin-only; `{"recruitment": true, "accounts": false, ...}` |
+| GET | `get_users_with_roles` | — | Legacy v1 — delegates to `get_all_users_with_permissions` |
+| POST | `update_user_roles` | `user_email`, `modules` (old key format) | Legacy v1 — converts keys and delegates to `update_user_permissions` |
+
+**8 Permission modules (snake_case):** `recruitment`, `employee_lifecycle`, `accounts`, `projects`, `logistics`, `hr`, `attendance`, `expense`
+
+**All 4 non-admin users have these ERPNext roles assigned:** HR Manager, HR User, Accounts Manager, Accounts User, Projects User, Stock Manager, Stock User, Expense Approver, Employee, Leave Approver
+
+**Key gotcha:** `permissions` param must be a JSON string — Frappe param parser cannot reliably deserialize nested dicts from POST body unless `Content-Type: application/json` is set. Always `JSON.stringify()` on frontend side.
+
+### Employee Profile Endpoints (LIVE — 2026-05-14)
+Base: `/api/method/hr_client.api.employee.<endpoint>`
+Auth: session cookie. Non-admins can only read/write their own profile.
+
+| Method | Endpoint | Params | Notes |
+|---|---|---|---|
+| GET | `get_employee_profile` | `email` (opt, defaults to session user) | Returns full profile. Non-admins get masked Aadhaar/PAN. |
+| POST | `update_own_profile` | `fields_to_update` (JSON string) | Self-edit only. Allowed: image, personal_email, cell_number, person_to_be_contacted, emergency_phone_number, current_address, blood_group, bank_name, bank_ac_no, custom_ifsc_code, custom_skills |
+| POST | `admin_update_profile` | `email` (req), `fields_to_update` (JSON string) | Admin-only. Can also update: designation, department, date_of_joining, employment_type, reports_to, company_email, status, first_name, last_name, custom_aadhaar_number, custom_pan_number |
+| POST | `upload_profile_photo` | multipart `file` + optional `email` | Saves to ERPNext file manager, updates Employee.image |
+| GET | `get_all_employees` | — | Admin-only. Returns all 5 active employees with key fields. |
+
+**Key gotcha:** Emergency Contact Name field in ERPNext is `person_to_be_contacted`, NOT `emergency_contact_name`.
+**Key gotcha:** `custom_aadhaar_number` and `custom_pan_number` are masked ("••••") for non-admin users in `get_employee_profile`.
+**Key gotcha:** `fields_to_update` must be JSON.stringify'd on the frontend — Frappe param parser requires it.
+
+**Designations in system (ONLY these 8 — all defaults deleted):**
+Manager | Project Manager | Accounts Manager | Accounts Executive | GST & TDS Specialist | Logistics Manager | Stock Monitor | Porter Executive
 
 ### AI Job Description Generator Endpoints (PLANNED — not yet built)
 See BACKEND-SPRINT-1.md for full implementation spec.
@@ -566,11 +705,45 @@ Supported fieldtypes: `Data`, `Select`, `Check`, `Date`, `Int`, `Text`.
 { "message": { "error": "Submission not found" } }
 ```
 
+## Team (Vera Enterprises)
+| Name | Email | Department | Designation | ERPNext Employee ID |
+|---|---|---|---|---|
+| Owais Ahmed Khan | owais@veraenterprises.in | Management | Manager | HR-EMP-00001 |
+| Maaz | maazdgr8.mma@gmail.com | Project | Project Manager | HR-EMP-00002 |
+| Manjunath M N | manju.veraaccnts@outlook.com | Accounts | Accounts Manager | HR-EMP-00003 |
+| Lookman | lookman.vera@outlook.com | Accounts | Accounts Executive | HR-EMP-00004 |
+| Bhagya Shree | Bhagyashree.veraenterprises@outlook.com | Logistics | Logistics Manager | HR-EMP-00005 |
+
+All passwords: `Vera@2026`. Owais logs in as `Administrator`.
+
+## ERPNext Data Reference
+**Company name:** `Vera Enterprises` (abbreviation: V — ERPNext appends ` - V` to department names)
+
+**Departments in DB:** Management - V, Project - V, Accounts - V, Logistics - V (+ others from default ERPNext seed data)
+
+**Custom Designations created:**
+- Manager, Project Manager (existed by default)
+- Accounts Manager, Accounts Executive, GST & TDS Specialist, Logistics Manager, Stock Monitor, Porter Executive (created 2026-05-14)
+
+**Employee records:** All 5 team members created as ERPNext Employee docs (HR-EMP-00001 through HR-EMP-00005), linked to their User accounts, status Active, date_of_joining 2024-01-01.
+
 ## Decisions made
 - Using shadcn/ui for all form components
-- Odoo-style left sidebar
-- No Frappe desk in production — pure React
+- Odoo-style left sidebar (dark gray-900), collapsible, "Vera ERP" branding
+- No Frappe desk in production — pure React SPA only
 - Extend HRMS via hr_client, never modify core
+- TEAM_USERS list hardcoded in `permissions.py` — only these 5 users appear in the permission dashboard; Owais maps to the `Administrator` Frappe user
+- Owais's permission card is display-only (all modules locked on) — he is Administrator and cannot be restricted
+- ERPNext is shadow backend — users never see the desk, only the React wrapper
+- All designation/department dropdowns must load from API — never hardcode or use free-text inputs for these
+- Self-edit vs admin-edit split: employees control personal info + bank + skills; only admins can change designation, department, joining date, work email, reporting manager, Aadhaar, PAN
+- Aadhaar/PAN numbers masked ("Stored securely") for non-admin users in the profile page
+- Company: Vera Enterprises (ERPNext name), abbreviation V, departments suffixed ` - V`
+
+## Decisions made (additions 2026-05-14)
+- ERPNext role sync uses union-of-modules approach: roles are the union of all enabled module role sets. Disabling all modules leaves only `Employee` base role. This avoids the "shared role" problem where HR Manager is needed by multiple modules.
+- `User Module Permission` DocType remains the source of truth for React frontend visibility; ERPNext roles gate actual Frappe desk access (which employees never use anyway). Both are synced on every `update_user_permissions` call.
+- `get_my_permissions` is optimistic: frontend shows all sidebar items while the query loads, then hides restricted ones. This prevents layout flash on fast connections.
 
 ## DO NOT DO
 - DO NOT modify core frappe/erpnext/hrms files
@@ -590,9 +763,57 @@ Supported fieldtypes: `Data`, `Select`, `Check`, `Date`, `Int`, `Text`.
 - DO NOT add `allow_guest=True` to endpoints that read or write sensitive HR data
 - DO NOT use naming_series without adding the `naming_series` fieldtype field to the DocType
 - DO NOT place DocType folders in `hr_client/hr_client/doctype/` — they MUST be in `hr_client/hr_client/hr_client/doctype/` (inside the module subfolder) or Frappe will silently skip them during migrate
+- DO NOT put `mcpServers` config in `apps/hr_client/.claude/settings.json` — Claude Code only reads MCP config from the project root `~/frappe-bench/.claude/settings.json`
 - DO NOT pass a `source` string to Job Applicant without first confirming it exists in `Job Applicant Source` master — it's a Link field, not free text
+- DO NOT run `bench migrate` without first starting bench (`bench start`) — migrate requires Redis cache + queue to be running or it will abort with "Service redis_cache is not running"
+- DO NOT create users via bench console while bench is stopped — user creation triggers background jobs that need Redis queue (port 11000); the creation may succeed but the console will show scary ConnectionError warnings. Always verify with `frappe.db.exists("User", email)` after
+- DO NOT put admin-only routes behind only a nav guard — also `<Navigate to="/" replace />` inside the page component when `user.name` is not in the admin set, so direct URL access is also blocked
+- DO NOT use `@radix-ui/react-switch` — it is not installed; use `src/components/ui/switch.tsx` (the custom CSS toggle) instead
+- DO NOT use CamelCase module keys (e.g. `EmployeeLifecycle`) in v2 permissions API — all module keys are snake_case: `employee_lifecycle`, `logistics`, etc.
+- DO NOT expect `frappe.db.exists("Role", role)` to find "Projects Manager" — that role does not exist in ERPNext v15. Use "Projects User" instead
+- DO NOT use `frappe.db.exists("User Module Permission", email)` when the user is Administrator — Administrator's frappe name IS "Administrator", not their email; always resolve email→frappe_name via TEAM_USERS before DocType lookups
+- DO NOT skip `frappe.db.commit()` after `doc.save()` in API methods called via bench execute — bench execute doesn't auto-commit the way a web request does
+- DO NOT set `VITE_API_BASE` to `http://hrms.localhost:8000` — this makes the browser call ERPNext directly, which fails because `hrms.localhost` only resolves inside WSL2, not in the Windows browser. Always leave `VITE_API_BASE=` (empty) in dev so all API calls go through the Vite proxy at `localhost:5173`. Only set a real base URL in production behind nginx.
+- DO NOT change `VITE_USE_MOCK` back to `true` — the app is now wired to real ERPNext. Mock mode is permanently off. `.env.local` is the override file; `.env` values are ignored when `.env.local` sets the same key
+- DO NOT expect `employee_lifecycle.py` custom field endpoints to work until B-EL1 is run (`bench migrate` with the 4 custom fields on Employee). Until then, defaults are returned and the UI shows empty checklists — this is by design
+- DO NOT call `frappe.db.table_exists()` with the model name — use the table name e.g. `"tabEmployee Exit"` not `"Employee Exit"`
 - DO NOT call `navigate("/login")` immediately after `setUser(null)` in the same event tick — `PublicOnlyRoute` reads stale `isLoggedIn=true` and bounces the user back to `/`, causing an infinite redirect; use `window.location.replace("/login")` for logout redirects instead
+- DO NOT use a free-text Input for designation or department fields in any recruitment form — always use a Select dropdown loaded from `get_designations` / `get_departments` API endpoints so only valid Vera roles appear
+- DO NOT allow an employee to edit their own designation, department, employee ID, date of joining, work email, or reporting manager — these are locked fields only admins can change. SELF_EDITABLE set in `employee.py` is the authoritative list; the frontend also enforces this but the backend is the true gate
+- DO NOT use `emergency_contact_name` as a field name on Employee — the actual ERPNext field is `person_to_be_contacted`
+- DO NOT use `/v1/Timesheets`, `/v1/TimesheetEntries`, or `/v1/TrackedTimeReport` for timesheet data — the correct Jibble endpoint is `/v1/TimeEntries` with `belongsToDate` filter (confirmed working 2026-05-15)
+- DO NOT put quotes around OData `Edm.Date` literals in Jibble filters — `belongsToDate eq 2026-05-14` is correct; `belongsToDate eq '2026-05-14'` causes HTTP 400
+- DO NOT call `/v1/TimeEntries` without a `belongsToDate` filter — unfiltered queries return 0 results
+- DO NOT use `p.get("name")` on Jibble People records — the field is `fullName`, not `name`
+- DO NOT filter People by `?$filter=status eq 'ClockedIn'` for live status — use `/v1/WhoIsWorkingNow` instead
+- DO NOT call `datetime.fromisoformat()` directly on Jibble timestamps — they have 4-digit fractional seconds that Python 3.10 rejects; always use `_parse_iso()` which normalises via regex first
+- DO NOT hardcode Jibble credentials (`jibble_client_id`, `jibble_client_secret`) in any Python or JS file — read only via `frappe.conf.get(...)` in backend; never pass to frontend
+- DO NOT call Jibble API without the cached bearer token — always go through `_get_token()` which checks `frappe.cache()` first; never fetch a new token if a cached one exists
+- DO NOT expose any Jibble endpoints to non-admin users — every endpoint must call `_check_admin()` before doing anything; Jibble data is admin-only
+- DO NOT omit `X-Frappe-CSRF-Token` on POST/PUT/DELETE requests from the frontend — Frappe rejects or drops session on state-changing requests without it. Read the token from the `csrf_token` cookie Frappe sets after login. The `getCsrfToken()` helper in `api.ts` handles this; the axios interceptor adds it automatically to all non-GET calls. Value `"fetch"` is the safe fallback.
+- DO NOT use specific email or user name for admin auth checks on internal-only endpoints — there are TWO user records for Owais: `name="Administrator"` (has all roles) and `name="owais@veraenterprises.in"` (has only System Manager). `frappe.session.user` returns whichever was authenticated. For internal pages already behind a frontend guard, check `frappe.session.user == "Guest"` instead — it's simpler, correct, and immune to the dual-user ambiguity.
+- DO NOT hardcode only email addresses for admin checks — Owais logs in as "Administrator" (the Frappe user name), not "owais@veraenterprises.in". Always check `frappe.get_roles()` for "Administrator" or "System Manager" in addition to the email/name set. Pattern: `current_user in _ADMIN_USERS or "System Manager" in frappe.get_roles(current_user)`.
+- DO NOT use native HRMS `Leave Application` DocType — it has complex workflows, allocation rules, and leave type master requirements that conflict with our simple apply/approve flow. Always use `Vera Leave Application` custom DocType instead.
+- DO NOT trust a client-sent employee_id — always auto-detect the employee via `frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, ...)`. The employee field is auto-populated server-side.
+- DO NOT forget admin_remarks is required for rejection — backend returns `{"success": false, "error": "Rejection reason is required"}` if missing; frontend enforces this in the reject modal.
+- DO NOT call `user_doc.save()` just to update roles — use `frappe.db.delete("Has Role", ...)` + `frappe.db.insert(...)` directly. `user_doc.save()` triggers email notifications, gravatar updates, and other hooks that can fail mid-request.
+- DO NOT assign ERPNext roles without first checking they exist — always filter against `frappe.get_all("Role")`. Roles like "Stock Manager" may or may not be present depending on the ERPNext modules installed.
+- DO NOT let optional side-effects (like role sync) block the main save — always wrap non-critical operations in a nested `try/except` that logs but does not re-raise. The DocType save is the source of truth; roles are derived.
+- DO NOT show a generic "Failed to update X" toast — always propagate the actual `error` field from the backend response to the user. The mutation should `throw new Error(msg.error)` on `success: false`, and the catch block should include `err.message` in the toast.
+- DO NOT put `onClick` on a tile div AND `onCheckedChange` on its child Switch — the Switch click bubbles up, calling toggle twice and resetting state. Use `e.stopPropagation()` in `switch.tsx` to prevent bubbling, OR remove the tile-level onClick entirely.
+- DO NOT call `get_my_permissions` with an admin check — it is intentionally open to all logged-in users; admin check would make the PermissionsContext fail for non-admins.
+- DO NOT compute ERPNext role assignment without using `MODULE_ROLE_MAP` union logic — if you manually assign roles per-module you'll remove shared roles (HR Manager) when only one of many modules is disabled.
+- DO NOT call React hooks (useQuery, useState, useMutation, etc.) after a conditional `return` in a component — this violates React Rules of Hooks and causes invariant errors. Move all hooks before any early returns, and use the `enabled` option on `useQuery` to prevent it from fetching when guards fail (e.g., `enabled: !!isAdmin`).
+- DO NOT pass `"Administrator"` directly to `_get_employee_by_email` — the Frappe superuser name does not match any `user_id` in the Employee table; always resolve through `_ADMIN_EMAIL_MAP` first (maps `"Administrator"` → `"owais@veraenterprises.in"`).
+- DO NOT search `company_email` before `user_id` in employee lookups — `user_id` is the most reliably set field; `company_email` is often empty. Order must be `user_id` → `company_email` → `personal_email`.
+- DO NOT navigate from `AdminEmployeesPage` to `/employee/profile/:id` — the admin detail route is `/admin/employees/:email` which is the new 4-tab `AdminEmployeeDetailPage`. The old `/employee/profile/:id` route still exists but is for non-tabbed legacy use only.
+- DO NOT add designations outside the 8 Vera Enterprises roles (Manager, Project Manager, Accounts Manager, Accounts Executive, GST & TDS Specialist, Logistics Manager, Stock Monitor, Porter Executive) — all others were deleted; adding new ones via ERPNext desk must be approved
 - DO NOT log, print, or expose `VITE_OPENAI_API_KEY` or any env secret — read via `import.meta.env.VITE_*` only, use only in Authorization headers, never in `console.*` or visible UI. AI provider is OpenAI gpt-4o-mini (Gemini free tier exhausted)
+- DO NOT put the permission check in `get_employee_profile` BEFORE resolving the employee name — when the caller passes an employee ID (HR-EMP-XXXXX), comparing it against `frappe.session.user` (an email) always fails for non-admins. Always resolve the identifier to an `emp_name` first, then fetch the employee's `user_id`/emails, and compare those against `frappe.session.user`.
+- DO NOT access Employee DocType fields by wrong names in `employee_lifecycle.py` — `EmployeeMaster` (HRMS) overrides `__getattr__` and raises `AttributeError` (not `None`) for unknown attributes. Emergency contact fields are `person_to_be_contacted` and `emergency_phone_number`, NOT `emergency_contact_name`/`emergency_contact_phone`. Always use `getattr(emp, "field_name", None)` for any HRMS-model field access outside of `_serialize_employee` in `employee.py` — that function is the authoritative field-name reference.
+- DO NOT rely solely on `_get_employee_by_email` for employee lookup — if the identifier is an employee ID (HR-EMP-XXXXX), email-only lookups return None. Always try `frappe.db.exists("Employee", identifier)` as the FIRST check, then fall back to email-based lookups. Lookup order in `get_employee_profile`: direct name → user_id → company_email → personal_email.
+- DO NOT update a CRM lead's status directly — all stage transitions must go through a `Vera CRM Approval Request`. Only `approve_stage` (admin-only) may write to `Vera CRM Lead.status`. Any direct `lead.status = new_stage; lead.save()` bypasses the approval workflow.
+- DO NOT allow anyone other than `owais@veraenterprises.in` (or `Administrator`) to call `approve_stage` or `reject_stage` — both must check `_is_admin()` at the top and raise `frappe.PermissionError` immediately if the check fails. No exceptions even for System Manager role holders.
 
 ---
 

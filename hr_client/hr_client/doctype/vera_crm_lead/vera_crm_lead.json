@@ -16,9 +16,8 @@
   "status",
   "rejection_reason",
   "assigned_to",
-  "approved_by",
   "approval_status",
-  "current_stage_requested"
+  "stage_push_requested"
  ],
  "fields": [
   {
@@ -92,23 +91,17 @@
    "options": "User"
   },
   {
-   "fieldname": "approved_by",
-   "fieldtype": "Link",
-   "label": "Approved By",
-   "options": "User"
-  },
-  {
    "fieldname": "approval_status",
    "fieldtype": "Select",
    "label": "Approval Status",
    "options": "Pending\nApproved\nRejected",
-   "default": "Pending"
+   "default": "Approved"
   },
   {
-   "fieldname": "current_stage_requested",
-   "fieldtype": "Select",
-   "label": "Current Stage Requested",
-   "options": "Lead\nDiscussion\nQuotation\nOrder\nDelivery\nSuccess\nFailed"
+   "fieldname": "stage_push_requested",
+   "fieldtype": "Check",
+   "label": "Stage Push Requested",
+   "default": 0
   }
  ],
  "modified": "2026-05-15 00:00:00.000000",
@@ -133,12 +126,11 @@
    "write": 1
   },
   {
-   "create": 0,
+   "create": 1,
    "delete": 0,
-   "if_owner": 1,
    "read": 1,
    "role": "Employee",
-   "write": 0
+   "write": 1
   }
  ],
  "sort_field": "creation",

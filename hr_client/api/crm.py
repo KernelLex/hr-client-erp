@@ -1,479 +1,416 @@
 import frappe
 import json
-from datetime import datetime
+from frappe.utils import now_datetime
+from datetime import date, timedelta
 
-ADMIN_USERS = {"Administrator", "owais@veraenterprises.in"}
+OWAIS_USERS = {"owais@veraenterprises.in", "Administrator"}
 STAGE_ORDER = ["Lead", "Discussion", "Quotation", "Order", "Delivery", "Success"]
 
 
-def _is_admin():
-    return (
-        frappe.session.user in ADMIN_USERS
-        or "System Manager" in frappe.get_roles(frappe.session.user)
-    )
+def _is_owais():
+    return frappe.session.user in OWAIS_USERS
 
 
-def _get_lead_or_throw(lead_id):
+def _next_stage(current):
     try:
-        return frappe.get_doc("Vera CRM Lead", lead_id)
-    except frappe.DoesNotExistError:
-        frappe.throw(f"Lead {lead_id} not found", frappe.DoesNotExistError)
+        idx = STAGE_ORDER.index(current)
+    except ValueError:
+        return None
+    if idx >= len(STAGE_ORDER) - 1:
+        return None
+    return STAGE_ORDER[idx + 1]
 
 
-# ---------------------------------------------------------------------------
-# 1. get_all_leads
-# ---------------------------------------------------------------------------
+def _user_full_name(user):
+    return frappe.db.get_value("User", user, "full_name") or user
+
+
 @frappe.whitelist()
 def get_all_leads():
-    user = frappe.session.user
-    if _is_admin():
-        filters = {}
-    else:
-        filters = {"assigned_to": user}
-
+    frappe.has_permission("Vera CRM Lead", ptype="read", throw=True)
     leads = frappe.get_all(
         "Vera CRM Lead",
-        filters=filters,
         fields=[
-            "name",
-            "lead_title",
-            "company_name",
-            "contact_person",
-            "phone",
-            "email",
-            "service_interest",
-            "source",
-            "status",
-            "approval_status",
-            "current_stage_requested",
-            "assigned_to",
-            "approved_by",
-            "creation",
-            "modified",
+            "name", "lead_title", "company_name", "contact_person", "phone",
+            "email", "service_interest", "source", "notes", "status",
+            "rejection_reason", "assigned_to", "approval_status",
+            "stage_push_requested", "creation", "modified",
         ],
         order_by="creation desc",
     )
-    return {"leads": leads}
+    for lead in leads:
+        lead["assigned_to_name"] = _user_full_name(lead["assigned_to"]) if lead.get("assigned_to") else ""
+        pending = frappe.get_all(
+            "Vera CRM Approval Request",
+            filters={"lead": lead["name"], "approval_status": "Pending"},
+            fields=["name", "requested_stage", "requested_by", "requested_by_name", "creation"],
+            limit=1,
+            order_by="creation desc",
+        )
+        lead["pending_approval"] = pending[0] if pending else None
+    return {"success": True, "leads": leads}
 
 
-# ---------------------------------------------------------------------------
-# 2. get_lead
-# ---------------------------------------------------------------------------
 @frappe.whitelist()
 def get_lead(lead_id):
-    doc = _get_lead_or_throw(lead_id)
-    if not _is_admin() and doc.assigned_to != frappe.session.user:
-        frappe.throw("Permission denied", frappe.PermissionError)
+    frappe.has_permission("Vera CRM Lead", ptype="read", throw=True)
+    try:
+        lead = frappe.get_doc("Vera CRM Lead", lead_id)
+    except frappe.DoesNotExistError:
+        return {"success": False, "error": "Lead not found"}
 
-    lead_data = doc.as_dict()
+    data = lead.as_dict()
+    data["assigned_to_name"] = _user_full_name(lead.assigned_to) if lead.assigned_to else ""
 
-    # Fetch approval history
     approvals = frappe.get_all(
         "Vera CRM Approval Request",
         filters={"lead": lead_id},
         fields=[
-            "name",
-            "requested_by",
-            "requested_stage",
-            "current_stage",
-            "approval_status",
-            "admin_notes",
-            "quotation",
-            "creation",
-            "modified",
+            "name", "lead_title", "company_name", "contact_person", "phone",
+            "email", "service_interest", "current_stage", "requested_stage",
+            "requested_by", "requested_by_name", "request_notes",
+            "approval_status", "admin_notes", "reviewed_by", "reviewed_on", "creation",
         ],
         order_by="creation desc",
     )
-    lead_data["approval_history"] = approvals
+    data["approval_history"] = approvals
+    pending = [a for a in approvals if a.get("approval_status") == "Pending"]
+    data["pending_approval"] = pending[0] if pending else None
 
-    # Fetch quotation if any
-    quotation = frappe.db.get_value(
+    quotations = frappe.get_all(
         "Vera CRM Quotation",
-        {"lead": lead_id},
-        ["name", "quotation_number", "status", "total", "pdf_attachment"],
-        as_dict=True,
+        filters={"lead": lead_id},
+        fields=["name"],
+        limit=1,
+        order_by="creation desc",
     )
-    lead_data["quotation"] = quotation
+    if quotations:
+        q = frappe.get_doc("Vera CRM Quotation", quotations[0]["name"])
+        data["quotation"] = q.as_dict()
+    else:
+        data["quotation"] = None
 
-    return {"lead": lead_data}
+    return {"success": True, "lead": data}
 
 
-# ---------------------------------------------------------------------------
-# 3. create_lead
-# ---------------------------------------------------------------------------
 @frappe.whitelist(methods=["POST"])
-def create_lead(data):
-    if isinstance(data, str):
-        data = json.loads(data)
-
-    required = ["lead_title", "company_name", "contact_person", "phone", "email", "service_interest"]
-    for field in required:
-        if not data.get(field):
-            frappe.throw(f"Field '{field}' is required")
-
+def create_lead(lead_title, company_name, contact_person, phone, email,
+                service_interest, source=None, notes=None):
+    frappe.has_permission("Vera CRM Lead", ptype="create", throw=True)
     doc = frappe.new_doc("Vera CRM Lead")
-    for key, val in data.items():
-        setattr(doc, key, val)
-
+    doc.lead_title = lead_title
+    doc.company_name = company_name
+    doc.contact_person = contact_person
+    doc.phone = phone
+    doc.email = email
+    doc.service_interest = service_interest
+    doc.source = source or ""
+    doc.notes = notes or ""
     doc.status = "Lead"
-    doc.approval_status = "Pending"
-    if not doc.assigned_to:
-        doc.assigned_to = frappe.session.user
-
-    doc.insert(ignore_permissions=False)
+    doc.approval_status = "Approved"
+    doc.stage_push_requested = 0
+    doc.assigned_to = frappe.session.user
+    doc.insert(ignore_permissions=True)
     frappe.db.commit()
-    return {"success": True, "lead_id": doc.name}
+    return {"success": True, "lead": doc.as_dict()}
 
 
-# ---------------------------------------------------------------------------
-# 4. update_lead
-# ---------------------------------------------------------------------------
 @frappe.whitelist(methods=["POST"])
 def update_lead(lead_id, data):
+    frappe.has_permission("Vera CRM Lead", ptype="write", throw=True)
     if isinstance(data, str):
         data = json.loads(data)
+    try:
+        doc = frappe.get_doc("Vera CRM Lead", lead_id)
+    except frappe.DoesNotExistError:
+        return {"success": False, "error": "Lead not found"}
 
-    doc = _get_lead_or_throw(lead_id)
-    if not _is_admin() and doc.assigned_to != frappe.session.user:
-        frappe.throw("Permission denied", frappe.PermissionError)
+    if not _is_owais() and doc.assigned_to != frappe.session.user:
+        return {"success": False, "error": "Not authorized to update this lead"}
 
-    # Never allow direct status change via update_lead — only via approval flow
-    data.pop("status", None)
-    data.pop("approval_status", None)
-
-    for key, val in data.items():
-        setattr(doc, key, val)
-
+    allowed = {"lead_title", "company_name", "contact_person", "phone", "email",
+               "service_interest", "source", "notes"}
+    for k, v in data.items():
+        if k in allowed:
+            setattr(doc, k, v)
     doc.save(ignore_permissions=True)
     frappe.db.commit()
-    return {"success": True}
+    return {"success": True, "lead": doc.as_dict()}
 
 
-# ---------------------------------------------------------------------------
-# 5. request_stage_advance
-# ---------------------------------------------------------------------------
 @frappe.whitelist(methods=["POST"])
-def request_stage_advance(lead_id, target_stage, notes=""):
-    doc = _get_lead_or_throw(lead_id)
+def request_next_stage(lead_id, request_notes=""):
+    frappe.has_permission("Vera CRM Lead", ptype="read", throw=True)
+    try:
+        lead = frappe.get_doc("Vera CRM Lead", lead_id)
+    except frappe.DoesNotExistError:
+        return {"success": False, "error": "Lead not found"}
 
-    current = doc.status
-    if current == "Failed":
-        frappe.throw("Cannot advance a failed lead")
-    if current == "Success":
-        frappe.throw("Lead is already at Success stage")
-    if target_stage not in STAGE_ORDER:
-        frappe.throw(f"Invalid stage: {target_stage}")
+    if lead.status in ("Failed", "Success"):
+        return {"success": False, "error": "Cannot advance a completed lead"}
 
-    current_idx = STAGE_ORDER.index(current) if current in STAGE_ORDER else 0
-    target_idx = STAGE_ORDER.index(target_stage)
-    if target_idx <= current_idx:
-        frappe.throw(f"Cannot move to stage '{target_stage}' — it is not an advance from '{current}'")
+    next_stage = _next_stage(lead.status)
+    if not next_stage:
+        return {"success": False, "error": "Lead is already at the final stage"}
 
-    # Check if there's already a pending approval
-    existing_pending = frappe.db.get_value(
+    existing = frappe.get_all(
         "Vera CRM Approval Request",
-        {"lead": lead_id, "approval_status": "Pending"},
-        "name",
+        filters={"lead": lead_id, "approval_status": "Pending"},
+        limit=1,
     )
-    if existing_pending:
-        frappe.throw("There is already a pending approval request for this lead")
-
-    # Snapshot of lead
-    lead_snapshot = json.dumps(doc.as_dict(), default=str)
+    if existing:
+        return {"success": False, "error": "An approval request is already pending for this lead"}
 
     approval = frappe.new_doc("Vera CRM Approval Request")
     approval.lead = lead_id
+    approval.lead_title = lead.lead_title
+    approval.company_name = lead.company_name
+    approval.contact_person = lead.contact_person
+    approval.phone = lead.phone
+    approval.email = lead.email
+    approval.service_interest = lead.service_interest
+    approval.current_stage = lead.status
+    approval.requested_stage = next_stage
     approval.requested_by = frappe.session.user
-    approval.requested_stage = target_stage
-    approval.current_stage = current
+    approval.requested_by_name = _user_full_name(frappe.session.user)
+    approval.request_notes = request_notes or ""
     approval.approval_status = "Pending"
-    approval.lead_snapshot = lead_snapshot
-    if notes:
-        approval.admin_notes = f"Requester notes: {notes}"
     approval.insert(ignore_permissions=True)
 
-    # Update lead to show pending
-    doc.approval_status = "Pending"
-    doc.current_stage_requested = target_stage
-    doc.save(ignore_permissions=True)
+    lead.stage_push_requested = 1
+    lead.approval_status = "Pending"
+    lead.save(ignore_permissions=True)
     frappe.db.commit()
 
-    # Send email notification to Owais
-    try:
-        frappe.sendmail(
-            recipients=["owais@veraenterprises.in"],
-            subject=f"[CRM] Stage Advance Request: {doc.lead_title} → {target_stage}",
-            message=f"""
-<p>A stage advance request has been submitted for lead <strong>{doc.lead_title}</strong>.</p>
-<ul>
-  <li><strong>Company:</strong> {doc.company_name}</li>
-  <li><strong>Current Stage:</strong> {current}</li>
-  <li><strong>Requested Stage:</strong> {target_stage}</li>
-  <li><strong>Requested By:</strong> {frappe.session.user}</li>
-  <li><strong>Notes:</strong> {notes or "None"}</li>
-</ul>
-<p>Approval ID: {approval.name}</p>
-            """,
-        )
-    except Exception:
-        pass  # Don't fail the request if email fails
-
-    return {"success": True, "approval_id": approval.name}
+    return {"success": True, "approval": approval.as_dict()}
 
 
-# ---------------------------------------------------------------------------
-# 6. approve_stage
-# ---------------------------------------------------------------------------
 @frappe.whitelist(methods=["POST"])
 def approve_stage(approval_id, admin_notes=""):
-    if frappe.session.user not in ADMIN_USERS and "System Manager" not in frappe.get_roles(frappe.session.user):
-        frappe.throw("Only administrators can approve stage transitions", frappe.PermissionError)
+    if frappe.session.user not in OWAIS_USERS:
+        return {"success": False, "error": "Not authorized"}
 
     try:
         approval = frappe.get_doc("Vera CRM Approval Request", approval_id)
     except frappe.DoesNotExistError:
-        frappe.throw(f"Approval request {approval_id} not found")
+        return {"success": False, "error": "Approval request not found"}
 
     if approval.approval_status != "Pending":
-        frappe.throw(f"Approval request is already {approval.approval_status}")
+        return {"success": False, "error": "This request has already been reviewed"}
 
     approval.approval_status = "Approved"
-    if admin_notes:
-        approval.admin_notes = admin_notes
+    approval.admin_notes = admin_notes or ""
+    approval.reviewed_by = frappe.session.user
+    approval.reviewed_on = now_datetime()
     approval.save(ignore_permissions=True)
 
-    # Advance the lead
     lead = frappe.get_doc("Vera CRM Lead", approval.lead)
     lead.status = approval.requested_stage
     lead.approval_status = "Approved"
-    lead.approved_by = frappe.session.user
-    lead.current_stage_requested = None
+    lead.stage_push_requested = 0
     lead.save(ignore_permissions=True)
     frappe.db.commit()
 
-    return {"success": True, "new_stage": approval.requested_stage}
+    return {"success": True, "lead": lead.as_dict()}
 
 
-# ---------------------------------------------------------------------------
-# 7. reject_stage
-# ---------------------------------------------------------------------------
 @frappe.whitelist(methods=["POST"])
-def reject_stage(approval_id, rejection_reason="", admin_notes=""):
-    if frappe.session.user not in ADMIN_USERS and "System Manager" not in frappe.get_roles(frappe.session.user):
-        frappe.throw("Only administrators can reject stage transitions", frappe.PermissionError)
+def reject_stage(approval_id, rejection_reason, admin_notes=""):
+    if frappe.session.user not in OWAIS_USERS:
+        return {"success": False, "error": "Not authorized"}
 
     try:
         approval = frappe.get_doc("Vera CRM Approval Request", approval_id)
     except frappe.DoesNotExistError:
-        frappe.throw(f"Approval request {approval_id} not found")
+        return {"success": False, "error": "Approval request not found"}
 
     if approval.approval_status != "Pending":
-        frappe.throw(f"Approval request is already {approval.approval_status}")
+        return {"success": False, "error": "This request has already been reviewed"}
 
     approval.approval_status = "Rejected"
-    notes = admin_notes
-    if rejection_reason:
-        notes = f"Rejection reason: {rejection_reason}" + (f"\n{admin_notes}" if admin_notes else "")
-    approval.admin_notes = notes
+    approval.admin_notes = admin_notes or ""
+    approval.reviewed_by = frappe.session.user
+    approval.reviewed_on = now_datetime()
     approval.save(ignore_permissions=True)
 
-    # Update lead — stays at current stage
     lead = frappe.get_doc("Vera CRM Lead", approval.lead)
-    lead.approval_status = "Rejected"
     lead.rejection_reason = rejection_reason
-    lead.current_stage_requested = None
+    lead.approval_status = "Rejected"
+    lead.stage_push_requested = 0
     lead.save(ignore_permissions=True)
     frappe.db.commit()
 
-    return {"success": True}
+    return {"success": True, "lead": lead.as_dict()}
 
 
-# ---------------------------------------------------------------------------
-# 8. mark_failed
-# ---------------------------------------------------------------------------
 @frappe.whitelist(methods=["POST"])
 def mark_failed(lead_id, reason):
-    if not _is_admin():
-        frappe.throw("Only administrators can mark leads as failed", frappe.PermissionError)
+    frappe.has_permission("Vera CRM Lead", ptype="write", throw=True)
+    try:
+        lead = frappe.get_doc("Vera CRM Lead", lead_id)
+    except frappe.DoesNotExistError:
+        return {"success": False, "error": "Lead not found"}
 
-    doc = _get_lead_or_throw(lead_id)
-    doc.status = "Failed"
-    doc.rejection_reason = reason
-    doc.approval_status = "Rejected"
-    doc.current_stage_requested = None
-    doc.save(ignore_permissions=True)
+    lead.status = "Failed"
+    lead.rejection_reason = reason
+    lead.stage_push_requested = 0
+    lead.save(ignore_permissions=True)
     frappe.db.commit()
     return {"success": True}
 
 
-# ---------------------------------------------------------------------------
-# 9. create_quotation
-# ---------------------------------------------------------------------------
+@frappe.whitelist()
+def get_pending_approvals():
+    if frappe.session.user not in OWAIS_USERS:
+        return {"success": False, "error": "Not authorized"}
+
+    approvals = frappe.get_all(
+        "Vera CRM Approval Request",
+        filters={"approval_status": "Pending"},
+        fields=[
+            "name", "lead", "lead_title", "company_name", "contact_person",
+            "phone", "email", "service_interest", "current_stage", "requested_stage",
+            "requested_by", "requested_by_name", "request_notes", "creation",
+        ],
+        order_by="creation asc",
+    )
+    for approval in approvals:
+        row = frappe.db.get_value(
+            "Vera CRM Lead", approval["lead"], ["notes", "creation"], as_dict=True
+        )
+        if row:
+            approval["lead_notes"] = row.get("notes") or ""
+            approval["lead_created"] = str(row.get("creation") or "")
+        else:
+            approval["lead_notes"] = ""
+            approval["lead_created"] = ""
+
+    return {"success": True, "approvals": approvals, "count": len(approvals)}
+
+
 @frappe.whitelist(methods=["POST"])
 def create_quotation(lead_id, items, terms="", validity_days=30, tax_percent=18):
-    doc = _get_lead_or_throw(lead_id)
-
+    frappe.has_permission("Vera CRM Lead", ptype="read", throw=True)
     if isinstance(items, str):
         items = json.loads(items)
-    validity_days = int(validity_days)
-    tax_percent = float(tax_percent)
 
-    # Build quotation doc
-    quot_doc = frappe.new_doc("Vera CRM Quotation")
-    quot_doc.lead = lead_id
-    quot_doc.terms_and_conditions = terms
-    quot_doc.validity_days = validity_days
-    quot_doc.tax_percent = tax_percent
-    quot_doc.status = "Draft"
-
-    subtotal = 0.0
-    for item in items:
-        qty = float(item.get("quantity", 1))
-        price = float(item.get("unit_price", 0))
-        amount = qty * price
-        subtotal += amount
-        quot_doc.append(
-            "items",
-            {
-                "item_description": item.get("item_description", ""),
-                "quantity": qty,
-                "unit_price": price,
-                "amount": amount,
-            },
-        )
-
-    quot_doc.subtotal = subtotal
-    quot_doc.total = subtotal + (subtotal * tax_percent / 100)
-    quot_doc.insert(ignore_permissions=True)
-
-    # Set quotation_number to the doc name for display
-    quot_doc.quotation_number = quot_doc.name
-    quot_doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
-    # Generate PDF
     try:
-        _generate_quotation_pdf(quot_doc, doc)
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "CRM Quotation PDF Generation Failed")
+        lead = frappe.get_doc("Vera CRM Lead", lead_id)
+    except frappe.DoesNotExistError:
+        return {"success": False, "error": "Lead not found"}
 
-    return {"success": True, "quotation_id": quot_doc.name}
+    subtotal = sum(float(i.get("quantity", 0)) * float(i.get("unit_price", 0)) for i in items)
+    tax_pct = float(tax_percent)
+    total = subtotal + subtotal * tax_pct / 100
+
+    existing = frappe.get_all("Vera CRM Quotation", filters={"lead": lead_id}, limit=1)
+    if existing:
+        frappe.delete_doc("Vera CRM Quotation", existing[0]["name"], ignore_permissions=True)
+
+    q = frappe.new_doc("Vera CRM Quotation")
+    q.lead = lead_id
+    q.quotation_number = f"Q-{lead_id}-{frappe.utils.now_datetime().strftime('%Y%m%d')}"
+    q.subtotal = subtotal
+    q.tax_percent = tax_pct
+    q.total = total
+    q.validity_days = int(validity_days)
+    q.terms_and_conditions = terms or ""
+
+    for item in items:
+        amount = float(item.get("quantity", 0)) * float(item.get("unit_price", 0))
+        q.append("items", {
+            "item_description": item.get("item_description", ""),
+            "quantity": float(item.get("quantity", 0)),
+            "unit_price": float(item.get("unit_price", 0)),
+            "amount": amount,
+        })
+
+    q.insert(ignore_permissions=True)
+    pdf_url = _generate_quotation_pdf(q, lead)
+    if pdf_url:
+        q.pdf_attachment = pdf_url
+        q.save(ignore_permissions=True)
+
+    frappe.db.commit()
+    return {"success": True, "quotation": q.as_dict(), "pdf_url": pdf_url}
 
 
-def _generate_quotation_pdf(quot_doc, lead_doc):
-    """Generate a PDF for the quotation and attach it."""
-    items_rows = ""
-    for item in quot_doc.get("items") or []:
-        items_rows += f"""
-        <tr>
-          <td>{item.item_description}</td>
-          <td style="text-align:right">{item.quantity}</td>
-          <td style="text-align:right">₹{item.unit_price:,.2f}</td>
-          <td style="text-align:right">₹{item.amount:,.2f}</td>
-        </tr>"""
+def _generate_quotation_pdf(q, lead):
+    from frappe.utils.pdf import get_pdf
 
-    html_content = f"""
-<html><head><style>
-  body {{ font-family: Arial, sans-serif; margin: 40px; color: #333; }}
-  .header {{ text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1e3a5f; padding-bottom: 20px; }}
-  h1 {{ color: #1e3a5f; margin: 0 0 5px 0; }}
-  .meta {{ color: #666; font-size: 14px; }}
-  .section {{ margin: 20px 0; }}
-  .section h3 {{ color: #1e3a5f; border-bottom: 1px solid #ddd; padding-bottom: 5px; }}
-  table {{ width: 100%; border-collapse: collapse; margin: 10px 0; }}
-  th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; }}
-  th {{ background: #1e3a5f; color: white; }}
-  .subtotal-row td {{ background: #f9f9f9; }}
-  .tax-row td {{ background: #f9f9f9; }}
-  .total-row td {{ font-weight: bold; background: #e8f0fe; font-size: 16px; }}
-  .lead-info {{ background: #f5f7fa; padding: 15px; border-radius: 5px; margin: 15px 0; }}
-  .lead-info p {{ margin: 5px 0; }}
-  .terms {{ font-size: 12px; color: #666; margin-top: 30px; }}
-  .footer {{ margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 15px; }}
-</style></head>
-<body>
-  <div class="header">
-    <h1>Vera Enterprises</h1>
-    <p class="meta">Quotation #{quot_doc.quotation_number}</p>
-    <p class="meta">Date: {datetime.now().strftime('%d %b %Y')}</p>
-    <p class="meta">Valid for {quot_doc.validity_days} days</p>
-  </div>
-
-  <div class="lead-info">
-    <p><strong>To:</strong> {lead_doc.company_name}</p>
-    <p><strong>Attn:</strong> {lead_doc.contact_person}</p>
-    <p><strong>Service:</strong> {lead_doc.service_interest}</p>
-  </div>
-
-  <div class="section">
-    <h3>Items</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th style="text-align:right">Qty</th>
-          <th style="text-align:right">Unit Price</th>
-          <th style="text-align:right">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        {items_rows}
-        <tr class="subtotal-row">
-          <td colspan="3" style="text-align:right"><strong>Subtotal</strong></td>
-          <td style="text-align:right">₹{quot_doc.subtotal:,.2f}</td>
-        </tr>
-        <tr class="tax-row">
-          <td colspan="3" style="text-align:right"><strong>Tax ({quot_doc.tax_percent}%)</strong></td>
-          <td style="text-align:right">₹{(quot_doc.subtotal * quot_doc.tax_percent / 100):,.2f}</td>
-        </tr>
-        <tr class="total-row">
-          <td colspan="3" style="text-align:right">TOTAL</td>
-          <td style="text-align:right">₹{quot_doc.total:,.2f}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  {f'<div class="section"><h3>Terms &amp; Conditions</h3><p>{quot_doc.terms_and_conditions}</p></div>' if quot_doc.terms_and_conditions else ''}
-
-  <div class="footer">
-    Vera Enterprises | Authorized by Owais Ahmed Khan<br/>
-    This quotation is valid for {quot_doc.validity_days} days from the date of issue.
-  </div>
+    valid_until = (date.today() + timedelta(days=int(q.validity_days))).strftime("%B %d, %Y")
+    items_html = "".join(
+        f"<tr><td>{item.item_description}</td>"
+        f"<td style='text-align:center'>{item.quantity}</td>"
+        f"<td style='text-align:right'>&#8377;{item.unit_price:,.2f}</td>"
+        f"<td style='text-align:right'>&#8377;{item.amount:,.2f}</td></tr>"
+        for item in q.items
+    )
+    html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+body{{font-family:Arial,sans-serif;color:#333;margin:0;padding:40px}}
+.hdr{{background:#1e293b;color:#fff;padding:24px 32px;margin:-40px -40px 32px}}
+.hdr h1{{margin:0;font-size:22px}}.hdr p{{margin:4px 0 0;opacity:.7;font-size:13px}}
+.meta{{display:flex;gap:40px;margin-bottom:20px}}
+.mb label{{font-size:11px;text-transform:uppercase;color:#888}}
+.mb p{{margin:2px 0 0;font-weight:600;font-size:14px}}
+table{{width:100%;border-collapse:collapse;margin:20px 0}}
+th{{background:#f1f5f9;padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase}}
+td{{padding:9px 10px;border-bottom:1px solid #e2e8f0;font-size:13px}}
+.tot{{text-align:right;margin-top:8px}}
+.tot table{{width:260px;margin-left:auto}}
+.tot td{{border:none;padding:3px 8px}}
+.tr-total td{{font-weight:700;font-size:15px;border-top:2px solid #1e293b}}
+.terms{{margin-top:20px;padding:14px;background:#f8fafc;border-radius:6px;font-size:12px;color:#666}}
+.footer{{margin-top:36px;padding-top:14px;border-top:1px solid #e2e8f0;font-size:11px;color:#888;display:flex;justify-content:space-between}}
+</style></head><body>
+<div class="hdr"><h1>Vera Enterprises</h1><p>Quotation — {q.quotation_number}</p></div>
+<div class="meta">
+<div class="mb"><label>Date</label><p>{date.today().strftime("%B %d, %Y")}</p></div>
+<div class="mb"><label>Valid Until</label><p>{valid_until}</p></div>
+<div class="mb"><label>Prepared For</label><p>{lead.company_name}</p></div>
+<div class="mb"><label>Contact</label><p>{lead.contact_person}</p></div>
+</div>
+<table><thead><tr><th>Description</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Amount</th></tr></thead>
+<tbody>{items_html}</tbody></table>
+<div class="tot"><table>
+<tr><td>Subtotal</td><td>&#8377;{q.subtotal:,.2f}</td></tr>
+<tr><td>Tax ({q.tax_percent}%)</td><td>&#8377;{q.subtotal * q.tax_percent / 100:,.2f}</td></tr>
+<tr class="tr-total"><td>Total</td><td>&#8377;{q.total:,.2f}</td></tr>
+</table></div>
+{f'<div class="terms"><strong>Terms &amp; Conditions</strong><br>{q.terms_and_conditions}</div>' if q.terms_and_conditions else ''}
+<div class="footer"><span>Vera Enterprises | {lead.email}</span><span>Authorized by Owais Ahmed Khan</span></div>
 </body></html>"""
 
     try:
-        from weasyprint import HTML
-        pdf_bytes = HTML(string=html_content).write_pdf()
-    except ImportError:
-        from frappe.utils.pdf import get_pdf
-        pdf_bytes = get_pdf(html_content)
-
-    import base64
-    file_doc = frappe.get_doc({
-        "doctype": "File",
-        "file_name": f"Quotation-{quot_doc.quotation_number}.pdf",
-        "content": base64.b64encode(pdf_bytes).decode(),
-        "is_private": 0,
-        "attached_to_doctype": "Vera CRM Quotation",
-        "attached_to_name": quot_doc.name,
-        "decode": True,
-    })
-    file_doc.insert(ignore_permissions=True)
-    quot_doc.pdf_attachment = file_doc.file_url
-    quot_doc.save(ignore_permissions=True)
-    frappe.db.commit()
+        pdf_content = get_pdf(html)
+        file_doc = frappe.get_doc({
+            "doctype": "File",
+            "file_name": f"quotation_{q.name}.pdf",
+            "content": pdf_content,
+            "attached_to_doctype": "Vera CRM Quotation",
+            "attached_to_name": q.name,
+            "attached_to_field": "pdf_attachment",
+            "is_private": 0,
+        })
+        file_doc.insert(ignore_permissions=True)
+        return file_doc.file_url
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "CRM PDF Generation Failed")
+        return None
 
 
-# ---------------------------------------------------------------------------
-# 10. get_quotation
-# ---------------------------------------------------------------------------
 @frappe.whitelist()
-def get_quotation(quotation_id):
-    try:
-        quot = frappe.get_doc("Vera CRM Quotation", quotation_id)
-    except frappe.DoesNotExistError:
-        frappe.throw(f"Quotation {quotation_id} not found", frappe.DoesNotExistError)
-
-    data = quot.as_dict()
-    return {"quotation": data}
+def get_quotation(lead_id):
+    frappe.has_permission("Vera CRM Lead", ptype="read", throw=True)
+    quotations = frappe.get_all(
+        "Vera CRM Quotation",
+        filters={"lead": lead_id},
+        fields=["name"],
+        limit=1,
+        order_by="creation desc",
+    )
+    if not quotations:
+        return {"success": True, "quotation": None}
+    q = frappe.get_doc("Vera CRM Quotation", quotations[0]["name"])
+    return {"success": True, "quotation": q.as_dict()}

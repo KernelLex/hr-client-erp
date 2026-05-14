@@ -6,13 +6,21 @@
  "engine": "InnoDB",
  "field_order": [
   "lead",
-  "requested_by",
-  "requested_stage",
+  "lead_title",
+  "company_name",
+  "contact_person",
+  "phone",
+  "email",
+  "service_interest",
   "current_stage",
+  "requested_stage",
+  "requested_by",
+  "requested_by_name",
+  "request_notes",
   "approval_status",
   "admin_notes",
-  "quotation",
-  "lead_snapshot"
+  "reviewed_by",
+  "reviewed_on"
  ],
  "fields": [
   {
@@ -24,10 +32,41 @@
    "in_list_view": 1
   },
   {
-   "fieldname": "requested_by",
-   "fieldtype": "Link",
-   "label": "Requested By",
-   "options": "User"
+   "fieldname": "lead_title",
+   "fieldtype": "Data",
+   "label": "Lead Title"
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "Company Name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "label": "Contact Person"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "service_interest",
+   "fieldtype": "Data",
+   "label": "Service Interest"
+  },
+  {
+   "fieldname": "current_stage",
+   "fieldtype": "Select",
+   "label": "Current Stage",
+   "options": "Lead\nDiscussion\nQuotation\nOrder\nDelivery\nSuccess\nFailed"
   },
   {
    "fieldname": "requested_stage",
@@ -37,10 +76,20 @@
    "in_list_view": 1
   },
   {
-   "fieldname": "current_stage",
-   "fieldtype": "Select",
-   "label": "Current Stage",
-   "options": "Lead\nDiscussion\nQuotation\nOrder\nDelivery\nSuccess\nFailed"
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User"
+  },
+  {
+   "fieldname": "requested_by_name",
+   "fieldtype": "Data",
+   "label": "Requested By Name"
+  },
+  {
+   "fieldname": "request_notes",
+   "fieldtype": "Text",
+   "label": "Request Notes"
   },
   {
    "fieldname": "approval_status",
@@ -56,15 +105,15 @@
    "label": "Admin Notes"
   },
   {
-   "fieldname": "quotation",
+   "fieldname": "reviewed_by",
    "fieldtype": "Link",
-   "label": "Quotation",
-   "options": "Vera CRM Quotation"
+   "label": "Reviewed By",
+   "options": "User"
   },
   {
-   "fieldname": "lead_snapshot",
-   "fieldtype": "Long Text",
-   "label": "Lead Snapshot"
+   "fieldname": "reviewed_on",
+   "fieldtype": "Datetime",
+   "label": "Reviewed On"
   }
  ],
  "modified": "2026-05-15 00:00:00.000000",
@@ -89,12 +138,11 @@
    "write": 1
   },
   {
-   "create": 0,
+   "create": 1,
    "delete": 0,
-   "if_owner": 1,
    "read": 1,
    "role": "Employee",
-   "write": 0
+   "write": 1
   }
  ],
  "sort_field": "creation",

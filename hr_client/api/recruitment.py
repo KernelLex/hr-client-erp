@@ -524,3 +524,24 @@ def get_applicant_sources():
 	_require_hr_role()
 	sources = frappe.get_all("Job Applicant Source", fields=["name", "source_name"], order_by="name asc")
 	return {"sources": sources}
+
+
+@frappe.whitelist()
+def get_designations():
+	"""Return all Designation records (Vera Enterprises roles only)."""
+	_require_hr_role()
+	designations = frappe.get_all("Designation", fields=["name"], order_by="name asc")
+	return {"designations": [d.name for d in designations]}
+
+
+@frappe.whitelist()
+def get_departments():
+	"""Return all Departments for Vera Enterprises."""
+	_require_hr_role()
+	departments = frappe.get_all(
+		"Department",
+		filters={"company": "Vera Enterprises"},
+		fields=["name", "department_name"],
+		order_by="department_name asc",
+	)
+	return {"departments": [{"name": d.name, "label": d.department_name} for d in departments]}

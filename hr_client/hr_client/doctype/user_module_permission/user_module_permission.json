@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "autoname": "field:user",
+ "creation": "2026-05-14 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "recruitment",
+  "employee_lifecycle",
+  "accounts",
+  "projects",
+  "logistics",
+  "hr",
+  "attendance",
+  "expense"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "recruitment",
+   "fieldtype": "Check",
+   "label": "Recruitment"
+  },
+  {
+   "default": "1",
+   "fieldname": "employee_lifecycle",
+   "fieldtype": "Check",
+   "label": "Employee Lifecycle"
+  },
+  {
+   "default": "1",
+   "fieldname": "accounts",
+   "fieldtype": "Check",
+   "label": "Accounts"
+  },
+  {
+   "default": "1",
+   "fieldname": "projects",
+   "fieldtype": "Check",
+   "label": "Projects"
+  },
+  {
+   "default": "1",
+   "fieldname": "logistics",
+   "fieldtype": "Check",
+   "label": "Logistics"
+  },
+  {
+   "default": "1",
+   "fieldname": "hr",
+   "fieldtype": "Check",
+   "label": "HR"
+  },
+  {
+   "default": "1",
+   "fieldname": "attendance",
+   "fieldtype": "Check",
+   "label": "Attendance"
+  },
+  {
+   "default": "1",
+   "fieldname": "expense",
+   "fieldtype": "Check",
+   "label": "Expense"
+  }
+ ],
+ "links": [],
+ "modified": "2026-05-14 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "User Module Permission",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "HR Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}
