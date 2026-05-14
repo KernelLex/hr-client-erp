@@ -1,0 +1,113 @@
+{
+ "autoname": "VCQ-.YYYY.-.####",
+ "creation": "2026-05-15 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "lead",
+  "quotation_number",
+  "items",
+  "subtotal",
+  "tax_percent",
+  "total",
+  "validity_days",
+  "terms_and_conditions",
+  "pdf_attachment",
+  "status",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "Vera CRM Lead",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "quotation_number",
+   "fieldtype": "Data",
+   "label": "Quotation Number"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Vera CRM Quotation Item"
+  },
+  {
+   "fieldname": "subtotal",
+   "fieldtype": "Currency",
+   "label": "Subtotal",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tax_percent",
+   "fieldtype": "Float",
+   "label": "Tax Percent",
+   "default": "18"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "validity_days",
+   "fieldtype": "Int",
+   "label": "Validity (Days)",
+   "default": "30"
+  },
+  {
+   "fieldname": "terms_and_conditions",
+   "fieldtype": "Text",
+   "label": "Terms and Conditions"
+  },
+  {
+   "fieldname": "pdf_attachment",
+   "fieldtype": "Attach",
+   "label": "PDF Attachment"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSent\nApproved\nRejected",
+   "default": "Draft",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  }
+ ],
+ "modified": "2026-05-15 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera CRM Quotation",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "HR Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

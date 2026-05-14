@@ -1,0 +1,147 @@
+{
+ "autoname": "VCL-.YYYY.-.####",
+ "creation": "2026-05-15 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "lead_title",
+  "company_name",
+  "contact_person",
+  "phone",
+  "email",
+  "service_interest",
+  "source",
+  "notes",
+  "status",
+  "rejection_reason",
+  "assigned_to",
+  "approved_by",
+  "approval_status",
+  "current_stage_requested"
+ ],
+ "fields": [
+  {
+   "fieldname": "lead_title",
+   "fieldtype": "Data",
+   "label": "Lead Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "Company Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "label": "Contact Person",
+   "reqd": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "reqd": 1
+  },
+  {
+   "fieldname": "service_interest",
+   "fieldtype": "Select",
+   "label": "Service Interest",
+   "options": "Logistics\nHR Services\nAccounting\nOther",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Referral\nCold Call\nWalk-in\nSocial Media\nOther"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Lead\nDiscussion\nQuotation\nOrder\nDelivery\nSuccess\nFailed",
+   "default": "Lead",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Text",
+   "label": "Rejection Reason"
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User"
+  },
+  {
+   "fieldname": "approval_status",
+   "fieldtype": "Select",
+   "label": "Approval Status",
+   "options": "Pending\nApproved\nRejected",
+   "default": "Pending"
+  },
+  {
+   "fieldname": "current_stage_requested",
+   "fieldtype": "Select",
+   "label": "Current Stage Requested",
+   "options": "Lead\nDiscussion\nQuotation\nOrder\nDelivery\nSuccess\nFailed"
+  }
+ ],
+ "modified": "2026-05-15 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera CRM Lead",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "HR Manager",
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "if_owner": 1,
+   "read": 1,
+   "role": "Employee",
+   "write": 0
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
