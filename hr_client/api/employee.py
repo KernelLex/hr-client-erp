@@ -13,13 +13,13 @@ SELF_EDITABLE = {
     "current_address", "blood_group", "gender",
     "bank_name", "bank_ac_no", "custom_ifsc_code",
     "custom_skills",
+    "custom_aadhaar_number", "custom_pan_number",
 }
 
 # Fields only admins can change
 ADMIN_ONLY = {
     "designation", "department", "date_of_joining", "employment_type",
     "reports_to", "company_email", "status", "first_name", "last_name",
-    "custom_aadhaar_number", "custom_pan_number",
 }
 
 
@@ -134,12 +134,8 @@ def get_employee_profile(email=None, employee_id=None):
                 frappe.throw("Not permitted", frappe.PermissionError)
 
         data = _serialize_employee(emp_name)
-
-        # Hide Aadhaar/PAN numbers from non-admins
-        if not _is_admin():
-            data["custom_aadhaar_number"] = "••••" if data["custom_aadhaar_number"] else ""
-            data["custom_pan_number"] = "••••" if data["custom_pan_number"] else ""
-
+        # Note: non-admins can only reach here for their own profile (PermissionError thrown above
+        # for non-self access), so no masking needed — employees can see and edit their own values.
         return data
 
     except frappe.PermissionError:
