@@ -246,7 +246,7 @@ def get_candidate(name):
 @frappe.whitelist(methods=["POST"])
 def create_job_opening(job_title, designation, department=None, description=None,
 						employment_type=None, location=None, lower_range=None,
-						upper_range=None, interview_rounds=None):
+						upper_range=None, num_positions=None, interview_rounds=None):
 	"""Create a new Job Opening with optional interview round sequence."""
 	_require_hr_role()
 
@@ -264,6 +264,8 @@ def create_job_opening(job_title, designation, department=None, description=None
 		doc.lower_range = float(lower_range)
 	if upper_range:
 		doc.upper_range = float(upper_range)
+	if num_positions:
+		doc.no_of_positions = int(num_positions)
 
 	if interview_rounds:
 		rounds = (
@@ -524,6 +526,52 @@ def get_applicant_sources():
 	_require_hr_role()
 	sources = frappe.get_all("Job Applicant Source", fields=["name", "source_name"], order_by="name asc")
 	return {"sources": sources}
+
+
+OWAIS_USERS = {"owais@veraenterprises.in", "Administrator"}
+
+
+def _require_owais():
+    if frappe.session.user not in OWAIS_USERS:
+        frappe.throw("Admin access required", frappe.PermissionError)
+
+
+@frappe.whitelist(methods=["POST"])
+def close_job_opening(job_id):
+    """Close a job opening (admin only)."""
+    _require_owais()
+
+    if not frappe.db.exists("Job Opening", job_id):
+        frappe.response.http_status_code = 404
+        return {"error": "Job Opening not found"}
+
+    frappe.db.set_value("Job Opening", job_id, "status", "Closed")
+    frappe.db.commit()
+    return {"success": True}
+
+
+@frappe.whitelist(methods=["POST"])
+def delete_job_opening(job_id):
+    """Delete a job opening and all linked applicants (admin only)."""
+    _require_owais()
+
+    if not frappe.db.exists("Job Opening", job_id):
+        frappe.response.http_status_code = 404
+        return {"error": "Job Opening not found"}
+
+    applicants = frappe.db.get_all("Job Applicant", filters={"job_title": job_id}, fields=["name"])
+    for app in applicants:
+        interviews = frappe.db.get_all("Interview", filters={"job_applicant": app["name"]}, fields=["name"])
+        for iv in interviews:
+            frappe.delete_doc("Interview", iv["name"], ignore_permissions=True, force=True)
+        offers = frappe.db.get_all("Job Offer", filters={"job_applicant": app["name"]}, fields=["name"])
+        for offer in offers:
+            frappe.delete_doc("Job Offer", offer["name"], ignore_permissions=True, force=True)
+        frappe.delete_doc("Job Applicant", app["name"], ignore_permissions=True, force=True)
+
+    frappe.delete_doc("Job Opening", job_id, ignore_permissions=True, force=True)
+    frappe.db.commit()
+    return {"success": True}
 
 
 @frappe.whitelist()
