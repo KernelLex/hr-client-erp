@@ -10,7 +10,7 @@ _ADMIN_EMAIL_MAP = {"Administrator": "owais@veraenterprises.in"}
 SELF_EDITABLE = {
     "image", "personal_email", "cell_number",
     "person_to_be_contacted", "emergency_phone_number",
-    "current_address", "blood_group",
+    "current_address", "blood_group", "gender",
     "bank_name", "bank_ac_no", "custom_ifsc_code",
     "custom_skills",
 }
