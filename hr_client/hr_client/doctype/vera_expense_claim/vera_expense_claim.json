@@ -26,7 +26,8 @@
   "reviewed_by",
   "reviewed_on",
   "rejection_reason",
-  "submitted_on"
+  "submitted_on",
+  "pdf_path"
  ],
  "fields": [
   {"fieldname": "claim_title", "fieldtype": "Data", "label": "Claim Title", "in_list_view": 1},
@@ -50,7 +51,8 @@
   {"fieldname": "reviewed_by", "fieldtype": "Link", "label": "Reviewed By", "options": "User"},
   {"fieldname": "reviewed_on", "fieldtype": "Datetime", "label": "Reviewed On"},
   {"fieldname": "rejection_reason", "fieldtype": "Text", "label": "Rejection Reason"},
-  {"fieldname": "submitted_on", "fieldtype": "Datetime", "label": "Submitted On"}
+  {"fieldname": "submitted_on", "fieldtype": "Datetime", "label": "Submitted On"},
+  {"fieldname": "pdf_path", "fieldtype": "Data", "label": "PDF Path", "read_only": 1}
  ],
  "modified": "2026-05-15 00:00:00.000000",
  "modified_by": "Administrator",

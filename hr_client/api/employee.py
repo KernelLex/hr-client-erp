@@ -1,5 +1,6 @@
 import frappe
 import json
+from hr_client.api.utils import handle_api_error
 
 ADMIN_USERS = {"Administrator", "owais@veraenterprises.in"}
 
@@ -248,3 +249,19 @@ def get_all_employees():
         except Exception:
             emp["pending_leaves"] = 0
     return employees
+
+
+@frappe.whitelist()
+@handle_api_error
+def check_default_password():
+    """
+    Returns whether the current user is still using the onboarding default password.
+    Used to show a change-password banner on the dashboard.
+    Never exposes the password or hash — only returns a boolean.
+    """
+    from frappe.utils.password import check_password
+    try:
+        check_password(frappe.session.user, "Vera@2026")
+        return {"is_default": True}
+    except frappe.AuthenticationError:
+        return {"is_default": False}

@@ -2,6 +2,7 @@ import frappe
 from frappe.utils import now_datetime, getdate, today
 
 OWAIS_USERS = {"owais@veraenterprises.in", "Administrator"}
+PETROL_RATE_PER_KM = 4.0
 
 
 def _is_owais():
@@ -42,7 +43,79 @@ def _claim_to_dict(doc):
         "reviewed_on": str(doc.reviewed_on or ""),
         "rejection_reason": doc.rejection_reason or "",
         "submitted_on": str(doc.submitted_on or ""),
+        "pdf_path": doc.pdf_path or "",
     }
+
+
+def _generate_petrol_pdf(doc):
+    """Generate petrol claim PDF, attach to doc, return file URL or None."""
+    try:
+        from frappe.utils.pdf import get_pdf
+        from frappe.utils.file_manager import save_file
+
+        route = ""
+        if doc.route_from or doc.route_to:
+            route = f"{doc.route_from or '—'} → {doc.route_to or '—'}"
+
+        rows = [
+            ("Employee Name", f"<strong>{doc.employee_name}</strong>"),
+            ("Employee ID", doc.employee),
+            ("Claim Date", str(doc.claim_date)),
+            ("Kilometers Traveled", f"<strong>{doc.km_driven} km</strong>"),
+            ("Rate per KM", "&#8377;4.00"),
+            ("Claim Amount", f"<span style='font-size:20px;font-weight:bold;color:#1a56db;'>&#8377;{doc.amount:.2f}</span>"),
+        ]
+        if doc.vehicle_number:
+            rows.append(("Vehicle Number", doc.vehicle_number))
+        if route:
+            rows.append(("Route", route))
+        if doc.purpose:
+            rows.append(("Purpose", doc.purpose))
+
+        table_rows = "".join(
+            f"<tr><td style='padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;'>{label}</td>"
+            f"<td style='padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:13px;'>{value}</td></tr>"
+            for label, value in rows
+        )
+
+        html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="font-family:Arial,sans-serif;margin:40px;color:#111;">
+  <div style="border-bottom:3px solid #1a56db;padding-bottom:12px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end;">
+    <div>
+      <div style="font-size:22px;font-weight:bold;color:#1a56db;">Vera Enterprises</div>
+      <div style="font-size:15px;color:#555;margin-top:4px;">Petrol Claim Receipt</div>
+    </div>
+    <div style="text-align:right;font-size:12px;color:#6b7280;">
+      <div>Claim ID: <strong>{doc.name}</strong></div>
+      <div>Status: <strong>{doc.status}</strong></div>
+    </div>
+  </div>
+  <table style="width:100%;border-collapse:collapse;margin-top:8px;">
+    <thead>
+      <tr style="background:#f3f4f6;">
+        <th style="text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#6b7280;font-weight:600;width:40%;">Field</th>
+        <th style="text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#6b7280;font-weight:600;">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      {table_rows}
+    </tbody>
+  </table>
+  <div style="margin-top:40px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:12px;">
+    This is a computer-generated document. Generated on {now_datetime().strftime('%d %B %Y at %H:%M')}.
+  </div>
+</body>
+</html>"""
+
+        pdf_content = get_pdf(html)
+        fname = f"{doc.name}-petrol-claim.pdf"
+        file_doc = save_file(fname, pdf_content, "Vera Expense Claim", doc.name, is_private=0)
+        return file_doc.file_url
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Petrol PDF Generation Failed")
+        return None
 
 
 @frappe.whitelist()
@@ -61,7 +134,7 @@ def get_my_claims():
             "submitted_on", "reviewed_on", "employee", "employee_name",
             "km_driven", "vehicle_number", "route_from", "route_to",
             "fuel_receipt", "material_description", "vendor_name", "material_receipt",
-            "employee_email",
+            "employee_email", "pdf_path",
         ],
         order_by="claim_date desc",
     )
@@ -71,6 +144,7 @@ def get_my_claims():
         c["claim_date"] = str(c.get("claim_date") or "")
         c["submitted_on"] = str(c.get("submitted_on") or "")
         c["reviewed_on"] = str(c.get("reviewed_on") or "")
+        c["pdf_path"] = c.get("pdf_path") or ""
 
     return {"success": True, "claims": claims}
 
@@ -88,6 +162,7 @@ def get_all_claims():
             "admin_notes", "rejection_reason", "submitted_on", "reviewed_on",
             "km_driven", "vehicle_number", "route_from", "route_to",
             "fuel_receipt", "material_description", "vendor_name", "material_receipt",
+            "pdf_path",
         ],
         order_by="claim_date desc",
     )
@@ -97,8 +172,8 @@ def get_all_claims():
         c["claim_date"] = str(c.get("claim_date") or "")
         c["submitted_on"] = str(c.get("submitted_on") or "")
         c["reviewed_on"] = str(c.get("reviewed_on") or "")
+        c["pdf_path"] = c.get("pdf_path") or ""
 
-    # Group by employee
     by_employee = {}
     for c in claims:
         emp = c["employee"]
@@ -118,8 +193,8 @@ def get_all_claims():
 def submit_claim(
     claim_type,
     claim_date,
-    amount,
     purpose,
+    amount=None,
     km_driven=None,
     vehicle_number=None,
     route_from=None,
@@ -149,24 +224,41 @@ def submit_claim(
     doc.employee_email = emp_doc.company_email or emp_doc.personal_email or frappe.session.user
     doc.claim_type = claim_type
     doc.claim_date = claim_date
-    doc.amount = float(amount)
     doc.purpose = purpose
     doc.status = "Pending"
     doc.submitted_on = now_datetime()
 
     if claim_type == "Petrol":
-        if km_driven:
-            doc.km_driven = float(km_driven)
+        km = float(km_driven) if km_driven else 0.0
+        if km <= 0:
+            return {"success": False, "error": "Kilometers traveled must be greater than 0"}
+        doc.km_driven = km
+        doc.amount = round(km * PETROL_RATE_PER_KM, 2)
         doc.vehicle_number = vehicle_number or ""
         doc.route_from = route_from or ""
         doc.route_to = route_to or ""
         doc.fuel_receipt = fuel_receipt or ""
     elif claim_type == "Material":
+        if amount is None:
+            return {"success": False, "error": "Amount is required for Material claims"}
+        doc.amount = float(amount)
+        if doc.amount <= 0:
+            return {"success": False, "error": "Amount must be greater than 0"}
         doc.material_description = material_description or ""
         doc.vendor_name = vendor_name or ""
         doc.material_receipt = material_receipt or ""
+    else:
+        return {"success": False, "error": f"Unknown claim type: {claim_type}"}
 
     doc.insert(ignore_permissions=True)
+
+    # Generate PDF for petrol claims
+    if claim_type == "Petrol":
+        pdf_url = _generate_petrol_pdf(doc)
+        if pdf_url:
+            doc.pdf_path = pdf_url
+            doc.save(ignore_permissions=True)
+
     frappe.db.commit()
 
     return {"success": True, "claim": _claim_to_dict(doc)}
@@ -220,7 +312,6 @@ def reject_claim(claim_id, rejection_reason, admin_notes=""):
 def get_monthly_summary(month=None, year=None):
     frappe.has_permission("Vera Expense Claim", ptype="read", throw=True)
 
-    from frappe.utils import getdate as _getdate
     import datetime
 
     today_dt = datetime.date.today()
@@ -256,7 +347,6 @@ def get_monthly_summary(month=None, year=None):
             fields=["employee", "employee_name", "claim_type", "amount", "status"],
         )
 
-    # Aggregate per employee
     agg = {}
     for c in claims:
         emp_key = c["employee"]

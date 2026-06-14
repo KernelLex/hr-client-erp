@@ -58,6 +58,31 @@ def apply_leave(leave_type, from_date, to_date, reason):
     if total_days <= 0:
         return {"success": False, "error": "Invalid date range — to_date must be on or after from_date"}
 
+    # Enforce max 5 leaves per calendar month (count non-rejected leaves in the same month)
+    from_d = getdate(from_date)
+    month_start = from_d.replace(day=1)
+    import datetime
+    if from_d.month == 12:
+        month_end = datetime.date(from_d.year + 1, 1, 1)
+    else:
+        month_end = datetime.date(from_d.year, from_d.month + 1, 1)
+
+    existing_count = frappe.db.count(
+        "Vera Leave Application",
+        filters=[
+            ["employee", "=", emp.name],
+            ["from_date", ">=", str(month_start)],
+            ["from_date", "<", str(month_end)],
+            ["status", "!=", "Rejected"],
+        ],
+    )
+    if existing_count >= 5:
+        month_label = from_d.strftime("%B %Y")
+        return {
+            "success": False,
+            "error": f"You have reached the maximum of 5 leaves for {month_label}.",
+        }
+
     try:
         doc = frappe.new_doc("Vera Leave Application")
         doc.employee = emp.name
@@ -203,6 +228,173 @@ def reject_leave(leave_id, admin_remarks):
         return {"success": False, "error": str(e)}
 
     return {"success": True, "leave_id": leave_id}
+
+
+@frappe.whitelist()
+def get_leave_documents(leave_id):
+    """Return files attached to a leave record. Accessible by owner or admin."""
+    if frappe.session.user == "Guest":
+        frappe.throw("Login required", frappe.AuthenticationError)
+
+    try:
+        doc = frappe.get_doc("Vera Leave Application", leave_id)
+    except frappe.DoesNotExistError:
+        return {"success": False, "error": "Leave not found"}
+
+    emp = _get_employee()
+    if not _is_admin() and (not emp or doc.employee != emp.name):
+        return {"success": False, "error": "Access denied"}
+
+    files = frappe.get_all(
+        "File",
+        filters={
+            "attached_to_doctype": "Vera Leave Application",
+            "attached_to_name": leave_id,
+        },
+        fields=["name", "file_name", "file_url", "creation", "file_size"],
+        order_by="creation asc",
+    )
+    return {"success": True, "files": files}
+
+
+@frappe.whitelist()
+def get_holidays():
+    """Returns 2026 public holidays for Vera Enterprises with computed status."""
+    from datetime import date as _date
+    from frappe.utils import getdate, today
+
+    holidays = [
+        {"date": "2026-01-01", "name": "Happy New Year",                           "day": "Thursday",  "month": "January"},
+        {"date": "2026-01-15", "name": "Maatu Pongal / Makar Sankranthi / Lohri",  "day": "Thursday",  "month": "January"},
+        {"date": "2026-01-26", "name": "Republic Day",                              "day": "Monday",    "month": "January"},
+        {"date": "2026-03-19", "name": "Gudi Padwa / Ugadi",                        "day": "Thursday",  "month": "March"},
+        {"date": "2026-03-20", "name": "Ramzan Id / Eid-Ul-Fitar",                  "day": "Friday",    "month": "March"},
+        {"date": "2026-05-01", "name": "Labour's Day",                              "day": "Friday",    "month": "May"},
+        {"date": "2026-08-15", "name": "Independence Day",                          "day": "Saturday",  "month": "August"},
+        {"date": "2026-09-14", "name": "Ganesh Chaturthi",                          "day": "Monday",    "month": "September"},
+        {"date": "2026-10-02", "name": "Gandhi Jayanti",                            "day": "Friday",    "month": "October"},
+        {"date": "2026-10-19", "name": "Ashtami / Ayudha Pooja",                    "day": "Monday",    "month": "October"},
+        {"date": "2026-10-20", "name": "Dussehra",                                  "day": "Tuesday",   "month": "October"},
+        {"date": "2026-11-10", "name": "Diwali / Padwa",                            "day": "Tuesday",   "month": "November"},
+        {"date": "2026-11-11", "name": "Diwali",                                    "day": "Wednesday", "month": "November"},
+        {"date": "2026-12-25", "name": "Christmas",                                 "day": "Friday",    "month": "December"},
+    ]
+
+    today_date = getdate(today())
+    for h in holidays:
+        hd = getdate(h["date"])
+        delta = (hd - today_date).days
+        h["is_past"] = hd < today_date
+        h["is_today"] = hd == today_date
+        h["is_upcoming"] = hd > today_date
+        h["days_until"] = delta
+
+    return holidays
+
+
+@frappe.whitelist()
+def get_leave_policy():
+    """Returns Vera Enterprises full leave policy for 2026."""
+    return {
+        "summary": {
+            "public_holidays": 14,
+            "happy_holiday": 1,
+            "earned_leave": 12,
+            "sick_leave": 5,
+            "max_carry_forward": 5,
+        },
+        "leave_types": [
+            {
+                "type": "Earned Leave (EL)", "days": 12, "days_label": "12 days",
+                "color": "green", "icon": "🌿",
+                "rules": [
+                    "1 leave earned per month",
+                    "Credited at end of each month",
+                    "Max 5 days carry forward to next year",
+                    "Holidays/weekly offs between leave not counted",
+                    "Planned leaves need advance approval",
+                    "New joiners before 20th get 1 day credit",
+                    "New joiners after 20th get 0.5 day credit",
+                ],
+            },
+            {
+                "type": "Sick Leave (SL)", "days": 5, "days_label": "5 days",
+                "color": "blue", "icon": "🏥",
+                "rules": [
+                    "Max 2 consecutive days without medical certificate",
+                    "More than 2 days requires medical certificate",
+                    "Inform Reporting Manager and HR beforehand",
+                    "1 day allowed for vaccination side effects",
+                ],
+            },
+            {
+                "type": "Public Holidays", "days": 14, "days_label": "14 days",
+                "color": "purple", "icon": "🎉",
+                "rules": [
+                    "14 listed public holidays in 2026",
+                    "Plus 1 Happy Holiday of your choice",
+                    "Happy Holiday can be birthday, anniversary, or personal festival",
+                ],
+            },
+            {
+                "type": "Maternity Leave", "days": 182, "days_label": "26 weeks",
+                "color": "pink", "icon": "👶",
+                "rules": [
+                    "First 2 children: 26 weeks (182 days)",
+                    "Third child onwards: 12 weeks",
+                    "Must have worked 80+ days in last 12 months",
+                    "Doctor certificate required before leave",
+                    "Form 2 must be submitted to HR",
+                    "Miscarriage: 6 weeks leave",
+                    "Tubectomy: 2 weeks leave",
+                ],
+            },
+            {
+                "type": "Paternity Leave", "days": 5, "days_label": "5 days",
+                "color": "teal", "icon": "👨‍👶",
+                "rules": [
+                    "5 consecutive days",
+                    "Must be taken within 3 months of childbirth",
+                    "Maximum 2 instances during tenure",
+                    "Can be clubbed with earned leaves with approval",
+                ],
+            },
+            {
+                "type": "Death Leave", "days": 5, "days_label": "Up to 5 days",
+                "color": "grey", "icon": "🕊️",
+                "rules": [
+                    "Up to 5 days for immediate family",
+                    "Immediate family: parents, siblings, spouse, children, in-laws",
+                ],
+            },
+            {
+                "type": "Compensatory Off", "days": 0, "days_label": "As earned",
+                "color": "orange", "icon": "⚖️",
+                "rules": [
+                    "For working on weekly off or public holiday",
+                    "Must be availed within 60 days",
+                    "Needs Reporting Manager approval",
+                ],
+            },
+            {
+                "type": "Leave Without Pay (LWP)", "days": 0, "days_label": "As needed",
+                "color": "red", "icon": "📋",
+                "rules": [
+                    "Only when leave balance is exhausted",
+                    "Needs Reporting Manager approval",
+                    "Employee expected to return to duty on approved date",
+                ],
+            },
+        ],
+        "important_rules": [
+            "Leaves need Reporting Manager approval",
+            "Long leaves (5+ days): apply 15 working days in advance",
+            "Unauthorized absence 3+ days may lead to disciplinary action",
+            "Leave during notice period is at Manager's discretion",
+            "Previous leave requests valid only for last 60 days",
+            "Absence 3+ days without communication is considered absconding",
+        ],
+    }
 
 
 @frappe.whitelist()

@@ -1,41 +1,212 @@
-### HR Client
+# Vera ERP — Backend (hr_client)
 
-Custom HR module for client
+Custom Frappe/ERPNext v15 app for Vera Enterprises HR + ERP system.
+Extends ERPNext via custom DocTypes, whitelisted API endpoints, and hooks.
+Never modifies core frappe/erpnext/hrms files.
 
-### Installation
+---
 
-You can install this app using the [bench](https://github.com/frappe/bench) CLI:
+## Stack
+
+- ERPNext v15 + Frappe HRMS
+- Python 3.10+
+- MariaDB
+- Redis (cache + queue)
+- Ollama (local LLM for document extraction — optional)
+
+---
+
+## Modules
+
+| Module | File | Description |
+|---|---|---|
+| Dashboard | `api/dashboard.py` | Live stats for the React dashboard |
+| Employee | `api/employee.py` | Profile view/edit, photo upload, default-password check |
+| Employee Lifecycle | `api/employee_lifecycle.py` | Onboarding, offboarding, exit interview |
+| Recruitment | `api/recruitment.py` | Job openings, candidate pipeline, interview rounds |
+| CRM | `api/crm.py` | Lead pipeline with stage-advance approval flow |
+| Attendance | `api/jibble.py` | Jibble time-tracking integration (live attendance) |
+| Leave | `api/leave.py` | Leave applications + admin approval |
+| Expenses | `api/expenses.py` | Petrol/material expense claims + admin approval |
+| Permissions | `api/permissions.py` | Per-user module access control |
+| User Management | `api/user_management.py` | Create/disable/delete ERPNext users (admin only) |
+| AI / Drive | `api/ai.py` | Document extraction, verification, AI health |
+| Notes | `api/notes.py` | Internal employee notes (admin) |
+| Utils | `api/utils.py` | `handle_api_error` decorator |
+
+---
+
+## Installation
+
+### Prerequisites
+
+- ERPNext v15 bench set up and running
+- Site created (this project uses `hrms.localhost`)
+- Python 3.10+
+
+### 1. Get the app
 
 ```bash
-cd $PATH_TO_YOUR_BENCH
-bench get-app $URL_OF_THIS_REPO --branch develop
+cd ~/frappe-bench
+bench get-app https://github.com/KernelLex/hr-client-erp.git
 bench install-app hr_client
 ```
 
-### Contributing
-
-This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
+### 2. Install vera_drive (Google Drive integration)
 
 ```bash
-cd apps/hr_client
-pre-commit install
+bench get-app https://github.com/KernelLex/vera-drive.git   # if separate repo
+bench install-app vera_drive
 ```
 
-Pre-commit is configured to use the following tools for checking and formatting your code:
+Or if in the same bench:
+```bash
+bench install-app vera_drive
+```
 
-- ruff
-- eslint
-- prettier
-- pyupgrade
+### 3. Migrate and clear cache
 
-### CI
+```bash
+bench --site hrms.localhost migrate
+bench --site hrms.localhost clear-cache
+```
 
-This app can use GitHub Actions for CI. The following workflows are configured:
+---
 
-- CI: Installs this app and runs unit tests on every push to `develop` branch.
-- Linters: Runs [Frappe Semgrep Rules](https://github.com/frappe/semgrep-rules) and [pip-audit](https://pypi.org/project/pip-audit/) on every pull request.
+## Required Configuration
 
+### A. Jibble Attendance Integration
 
-### License
+Jibble credentials go in `site_config.json` — **never in code**.
 
-mit
+```bash
+bench --site hrms.localhost set-config jibble_client_id "YOUR_JIBBLE_CLIENT_ID"
+bench --site hrms.localhost set-config jibble_client_secret "YOUR_JIBBLE_CLIENT_SECRET"
+```
+
+Get these from: **Jibble Dashboard → Settings → Integrations → API**
+- OAuth 2.0 client credentials (grant_type: client_credentials)
+- Scopes needed: `timesheets`, `people`
+
+### B. Google Drive Integration (vera_drive)
+
+Place your Google service account JSON at:
+```
+frappe-bench/apps/vera_drive/vera_drive/service_account.json
+```
+
+This file is **gitignored** and must never be committed.
+
+To get it:
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a project → Enable **Google Drive API**
+3. Create a **Service Account** → download JSON key
+4. Share your Google Drive folder with the service account email (read-only)
+5. Update `ROOT_FOLDER_ID` in `vera_drive/vera_drive/google_drive.py` with your Drive folder ID
+
+Also update `VERA_EMPLOYEES` and `FOLDER_OWNER_MAP` in `google_drive.py` to match your team's Google accounts and folder structure.
+
+### C. OpenAI (AI Job Description Generator)
+
+The OpenAI key lives in the **frontend** `.env.local` as `VITE_OPENAI_API_KEY` — the API call is made from the browser, not the backend. See the frontend README for details.
+
+If you use the Ollama-based local AI for document extraction, ensure Ollama is running:
+```bash
+ollama serve          # starts on localhost:11434
+ollama pull mistral   # or whichever model is configured in api/ai.py
+```
+Ollama is optional — document extraction falls back to regex rules if Ollama is offline.
+
+### D. Session Security (production)
+
+```bash
+bench --site hrms.localhost set-config session_expiry "06:00:00"
+bench --site hrms.localhost set-config session_expiry_mobile "720:00:00"
+```
+
+Also set in `site_config.json`:
+```json
+{
+  "developer_mode": 0
+}
+```
+
+---
+
+## site_config.json — Full Reference
+
+After setup, your `sites/hrms.localhost/site_config.json` should look like:
+
+```json
+{
+  "db_name": "_your_db_name",
+  "db_password": "your_db_password",
+  "db_type": "mariadb",
+  "developer_mode": 0,
+  "host_name": "http://hrms.localhost:8001",
+  "jibble_client_id": "YOUR_JIBBLE_CLIENT_ID",
+  "jibble_client_secret": "YOUR_JIBBLE_CLIENT_SECRET",
+  "session_expiry": "06:00:00",
+  "session_expiry_mobile": "720:00:00"
+}
+```
+
+> `db_name` and `db_password` are auto-generated by bench when the site is created.
+
+---
+
+## Starting for Development
+
+```bash
+# Terminal 1 — ERPNext bench (runs on port 8001)
+cd ~/frappe-bench
+bench start
+
+# Terminal 2 — React frontend (runs on port 5173, proxies to bench)
+cd ~/hr-frontend
+npm run dev
+```
+
+> **Port 8001 not 8000:** Windows Hyper-V reserves port 8000 on WSL2. The bench `Procfile` is already set to 8001.
+
+Access the app at `http://localhost:5173`
+
+---
+
+## First-time User Setup
+
+After installing the app, seed the initial users:
+
+```bash
+bench --site hrms.localhost execute hr_client.patches.create_all_users
+bench --site hrms.localhost execute hr_client.patches.create_owais_user
+```
+
+Default password for all users: `Vera@2026`
+**All users should change their password on first login.**
+
+---
+
+## API Security Model
+
+- All endpoints require `@frappe.whitelist()` — unauthenticated requests are rejected by Frappe
+- All endpoints are wrapped with `@handle_api_error` (from `api/utils.py`) — clean JSON errors, no stack traces
+- Admin-only endpoints call `_require_admin()` which checks `frappe.session.user` against the admin set
+- Owais (`owais@veraenterprises.in`) is a protected superuser — cannot be disabled/deleted via the User Management API
+- All user management actions are logged to Frappe's Activity Log
+- Passwords validated server-side: 8+ chars, 1 uppercase, 1 number, 1 special character
+- No credentials in any tracked file — Jibble and DB creds in `site_config.json` only
+- `service_account.json` is gitignored in `vera_drive`
+
+---
+
+## Firewall (production)
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw deny 8001/tcp    # ERPNext port — internal only
+sudo ufw deny 11434/tcp   # Ollama — internal only
+sudo ufw --force enable
+```

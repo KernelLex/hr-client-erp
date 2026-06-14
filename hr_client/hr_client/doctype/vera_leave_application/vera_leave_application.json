@@ -39,7 +39,7 @@
    "fieldname": "leave_type",
    "fieldtype": "Select",
    "label": "Leave Type",
-   "options": "Casual Leave\nSick Leave\nEmergency Leave\nMaternity Leave\nPaternity Leave\nUnpaid Leave\nWork From Home\nCompensatory Leave",
+   "options": "Casual Leave\nSick Leave\nEmergency Leave\nMaternity Leave\nPaternity Leave\nUnpaid Leave\nWork From Home\nCompensatory Leave\nHappy Holiday",
    "reqd": 1,
    "in_list_view": 1
   },

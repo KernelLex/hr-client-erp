@@ -1,5 +1,5 @@
 # ClientERP — Master Context
-_Last updated: 2026-05-15_
+_Last updated: 2026-06-06 (session 6)_
 
 ## INSTRUCTIONS FOR CLAUDE (READ FIRST)
 You are working on a custom ERPNext v15 + Frappe HRMS system.
@@ -18,7 +18,7 @@ Will expand to full ERP over time.
 
 ## Stack
 - ERPNext v15 + Frappe HRMS
-- Custom app: hr_client (extends HRMS, never modifies core)
+- Custom apps: hr_client (extends HRMS, never modifies core), vera_drive (Google Drive integration)
 - React + Vite + Tailwind + shadcn/ui (frontend)
 - Jibble API (attendance sync)
 - WSL2 local → Linux server production
@@ -27,6 +27,7 @@ Will expand to full ERP over time.
 - Site: hrms.localhost
 - Bench: ~/frappe-bench/
 - Custom app: ~/frappe-bench/apps/hr_client/
+- Drive app: ~/frappe-bench/apps/vera_drive/
 - Frontend: ~/hr-frontend/
 - Start bench: cd ~/frappe-bench && bench start
 - Clear cache: bench --site hrms.localhost clear-cache
@@ -78,7 +79,10 @@ Frappe resolves the module folder by importing `hr_client.hr_client` and uses th
 - ✅ F-R1–F-R9: All recruitment frontend built and wired to real API
 - ✅ F-JD1–F-JD6: AI Job Description Generator (ON HOLD — AI provider needed)
 - ✅ Designation + Department dropdowns locked to Vera roles only (no free-text allowed)
-- ✅ 13 total endpoints in `hr_client/api/recruitment.py`
+- ✅ 15 total endpoints in `hr_client/api/recruitment.py` (added close_job_opening, delete_job_opening)
+- ✅ RecruitmentPage redesigned as job card listing (not kanban-first); PipelinePage at `/recruitment/pipeline/:id`
+- ✅ Owais-only: "+ Post New Job" button, close (X) and delete (trash) controls on each card
+- ✅ Dummy job HR-OPN-2026-0001 removed from DB
 
 ### Employee Profile System — DONE ✅
 - ✅ `hr_client/api/employee.py` — 5 endpoints (get_employee_profile, update_own_profile, admin_update_profile, upload_profile_photo, get_all_employees)
@@ -116,6 +120,48 @@ Frappe resolves the module folder by importing `hr_client.hr_client` and uses th
 ---
 
 ## What's been built
+
+✅ **Admin User Management Panel (2026-06-14)**
+- `hr_client/api/user_management.py` — 8 endpoints, all wrapped with `@frappe.whitelist()` + `@handle_api_error` + `_require_admin()` (Administrator/Owais only — stricter than HR Manager checks elsewhere):
+  - `get_all_users` — list of all non-Guest System Users with roles, last_login, linked employee
+  - `get_user_detail` — full user + roles for a single email
+  - `create_user` — validates email format, password strength (8+ chars, uppercase, number, special char), email uniqueness; assigns roles; rate-limited to 10/hour
+  - `update_user_roles` — replaces role list; cannot remove Administrator role from Owais
+  - `change_user_password` — validates strength; cannot change Owais's password; rate-limited to 5/15min
+  - `toggle_user_status` — enable/disable; cannot disable Owais
+  - `delete_user` — soft-delete (disable + rename email to `_deleted` suffix); cannot delete Owais or self
+  - `get_available_roles` — all non-hidden ERPNext roles for checkbox list
+- All actions logged to Frappe Activity Log via `_log_activity()`
+- Rate limiting via `frappe.cache()` with TTL
+- `src/pages/admin/UserManagement.tsx` — full page component:
+  - Header + "+ Add New User" button + search bar
+  - Table: Avatar | Name/Email/Designation | Role badges | Status badge | Last Login | Actions
+  - Action buttons: Edit Roles / Change Password / Disable-Enable / Delete (not shown for Owais)
+  - Protected Owais row shows lock icon + "Protected" label, no destructive actions
+  - AddUserModal: first/last/email/password with live strength indicator + confirm + role checkboxes
+  - EditRolesModal: current roles pre-checked, multi-select checkbox list
+  - ChangePasswordModal: new password with strength indicator + confirm
+  - ConfirmDialog: generic (toggle) and email-confirm (delete) variants
+  - Skeleton loading, empty state, toast notifications, inline error messages
+- Route: `/admin/users` → `<UserManagement />`
+- Sidebar: "User Management" nav item added in admin section (Users icon, adminBadge), above Permissions
+- TypeScript build: clean ✅
+
+✅ **Core Security Hardening (2026-06-14)**
+- `developer_mode` set to `0` in `site_config.json` — production mode, no stack traces in API errors
+- `host_name` corrected to `http://hrms.localhost:8001` in `site_config.json`
+- Session expiry set: `session_expiry: "06:00:00"`, `session_expiry_mobile: "720:00:00"` in `site_config.json`
+- `vera_drive/.gitignore` updated — `service_account.json` and `*.json.key` now gitignored; file was untracked (`??`) and would have been committed without this fix
+- `hr_client/api/utils.py` created — `handle_api_error` decorator: catches `ValidationError` (400), `PermissionError` (403), `DoesNotExistError` (404), bare `Exception` (500 + frappe.log_error); returns clean JSON in all cases
+- `hr_client/api/employee.py` — new endpoint `check_default_password()` uses `check_password(user, "Vera@2026")` to detect users still on the onboarding default; returns `{is_default: bool}` only — never exposes the password or hash
+- Dashboard.tsx — `useDefaultPasswordCheck` hook + amber warning banner shown to any user still on default password; links to `/my-profile`; dismissed automatically once password is changed (staleTime: Infinity so only checked once per session)
+- **Audit results (all PASS):**
+  - No plaintext passwords anywhere in API code
+  - No password fields returned in any API response
+  - `frappe.db.sql()` in ai.py uses only hardcoded internal constants — no user input interpolation
+  - No `dangerouslySetInnerHTML` anywhere in the React codebase
+  - No hardcoded credentials in hr_client; service_account.json gitignored in vera_drive
+  - localStorage: only stores `{name, full_name}` for UI state — no session tokens or passwords
 ✅ **Employee Lifecycle 500 Fix — Wrong ERPNext Field Names (2026-05-15)**
 - **Root cause:** `get_employee_detail` used `emp.emergency_contact_name` and `emp.emergency_contact_phone` — fields that DO NOT exist on ERPNext's Employee DocType. `EmployeeMaster` (HRMS) overrides `__getattr__` and raises `AttributeError` for unknown attributes (unlike plain `frappe.Document` which returns `None`).
 - **Fix:** Changed to `getattr(emp, "person_to_be_contacted", None)` and `getattr(emp, "emergency_phone_number", None)`. Used `getattr` defensively so future HRMS upgrades don't re-introduce 500s. JSON response keys kept identical (`emergency_contact_name`, `emergency_contact_phone`) — no frontend changes needed.
@@ -339,6 +385,68 @@ Frappe resolves the module folder by importing `hr_client.hr_client` and uses th
 - `Sidebar.tsx` — CRM entry non-admin, Briefcase icon, label "CRM"; red pending count badge for Owais via `usePendingApprovals(!!isOwais)`
 - Commits: backend `effa6f2`, frontend `88fc7d9`
 
+✅ **Expense Claims Module (2026-05-15)**
+- Custom DocType: `Vera Expense Claim` (autoname `VEC-.YYYY.-.####`) — 22 fields: claim_title (auto-generated), employee (Link→Employee), employee_name (fetch_from), employee_email, claim_type (Petrol/Material), claim_date, amount, km_driven, vehicle_number, route_from, route_to, fuel_receipt, material_description, vendor_name, material_receipt, purpose, status (Pending/Approved/Rejected, default Pending), admin_notes, reviewed_by, reviewed_on, rejection_reason, submitted_on. Migrated ✅
+- Backend: `hr_client/api/expenses.py` — 6 endpoints:
+  - `get_my_claims` (any employee, own records ordered by claim_date desc)
+  - `get_all_claims` (Owais only, all employees)
+  - `submit_claim` (POST, any employee — auto-detects employee from session, generates `claim_title = "{emp_name} - {claim_type} - {Month Year}"`, never trusts frontend-sent employee ID)
+  - `approve_claim` (POST, Owais only)
+  - `reject_claim` (POST, Owais only, rejection_reason required)
+  - `get_monthly_summary` (employee gets own; Owais gets all — petrol vs material breakdown + aggregates)
+- Frontend: `src/pages/expenses/`:
+  - `types.ts` — ExpenseClaim, MonthlySummary, ClaimType, ClaimStatus, MONTHS
+  - `useExpenses.ts` — 6 React Query hooks
+  - `MyClaimsDashboard.tsx` — 4 summary cards, month/year selector, expandable claim rows, Admin View button for Owais
+  - `NewClaimForm.tsx` — step 1: choose type (⛽ Petrol / 📦 Material); step 2: type-specific fields
+  - `AdminClaimsView.tsx` — pending approvals banner, monthly summary per-employee table, all claims with filters
+- App.tsx: 3 new routes `/expenses`, `/expenses/new`, `/expenses/admin`
+- Sidebar: Expenses entry enabled for all users (module: expense)
+- Commits: backend `68b5fef`, frontend `d3847f6`
+
+✅ **Dropdown Transparent Background Fix (2026-05-15)**
+- **Root cause:** `tailwind.config.js` maps `bg-popover` → `hsl(var(--popover))`, but `index.css` defines `--popover: oklch(1 0 0)` — oklch format is invalid inside `hsl()`, so browser ignores it → transparent. `SelectTrigger` also had explicit `bg-transparent`.
+- **Fix:** `select.tsx` — SelectTrigger and SelectContent popup now use `bg-white text-gray-900` (explicit, no CSS variable dependency). SelectItem uses `hover:bg-gray-100 focus:bg-gray-100` instead of `focus:bg-accent`. `index.css` — added `select, select option { background-color: white; color: #111827; }` to cover native select elements.
+- Applied globally — affects all Select dropdowns across the app.
+
+✅ **UI Overhaul — Design System (2026-05-15)**
+- **Design tokens added** to `index.css`: `--brand-primary` (#4F46E5), `--bg-app` (#F8FAFC), `--bg-sidebar` (#0F172A), status colors, `--shadow-card`, `--shadow-card-hover`, `--radius-card` (12px), `--radius-button` (8px).
+- **Sidebar:** 220px wide; indigo square logo mark + "Vera ERP" branding; nav items — muted default (#94A3B8), hover = #1E293B bg + indigo-300 icon, active = #4F46E5 bg + white text + indigo shadow; "soon" badge styled; user info section at bottom (avatar circle + name + email + sign out).
+- **Dashboard:** 26px bold greeting + date on right; stat cards with border + shadow + hover lift + colored circle icon bg; activity items use lucide icons instead of dots, hover highlight, borders between rows; Quick Actions → solid filled buttons (indigo, violet, emerald).
+- **My Profile:** Indigo→violet gradient banner (80px); avatar overlaps banner with white border; name/designation/department as indigo-50 pills; section cards have left indigo border accent; tab bar uses underline style with indigo active state.
+- **Expenses:** Summary cards use spec status colors (Total: white/indigo, Approved: green-50, Pending: yellow-50, Rejected: red-50); claim rows hover shows indigo-300 border + shadow; Petrol/Material badges use blue-100/violet-100.
+- **Layout:** Overall page background changed to `--bg-app` (#F8FAFC).
+- Frontend commit: `f312134`
+
+✅ **Employee Data Fill + Profile Display Fixes (2026-05-15)**
+- All 5 employee records seeded via `hr_client.patches.fill_employee_data`: personal_email, cell_number, gender, employment_type, reports_to (where applicable). Maaz also got date_of_birth.
+- Employment Type masters created: Full-time, Part-time, Contract, Probation (table was empty).
+- **Employee phone numbers:** Owais: 9845320577, Maaz: 8904706343, Manjunath: 9606944904, Lookman: 9035076487, Bhagya Shree: 9845322006.
+- `gender` added to `SELF_EDITABLE` in `employee.py` (employees can now edit their own gender).
+- Frontend profile page fixes:
+  - `formatDateDisplay`: shows "1 January 1995" instead of raw "1995-01-01" (date_of_birth and locked date_of_joining fields)
+  - `formatPhone`: formats 10-digit Indian numbers as "+91 XXXXX XXXXX" (cell_number, emergency_phone_number)
+  - Gender field now renders as a select dropdown (Male/Female/Non-binary/Prefer not to say) when in edit mode
+- Backend commit: `94c54a9`, Frontend commit: `c8ee907`
+
+✅ **My Profile — Full-Width Redesign (2026-05-15)**
+- **Layout:** Full-width, no max-width constraint. Two-column grid on desktop (`lg:grid-cols-5`): left 2/5 (Personal Info + Documents), right 3/5 (Work Info + Bank Details). Skills full-width at bottom. Single column on tablet/mobile.
+- **Header:** 160px indigo→violet gradient banner; 100px avatar circle overlapping banner by ~50px (white 4px border); name (24px bold), designation/department pills, active badge, work email below.
+- **Edit mode:** Editable fields get `#EEF2FF` bg + `#C7D2FE` border; locked fields show lock icon. Edit/Save/Cancel buttons in top-right of header card. No page navigation — all inline.
+- **Skills section:** Interactive chips with X to remove; inline add input + Add button; Enter key adds skill. Shows "Add your skills" prompt when empty and editable.
+- **Documents:** Employees can now edit their own Aadhaar/PAN (moved from ADMIN_ONLY → SELF_EDITABLE). Read mode shows "Stored securely" with lock icon when filled; edit mode shows blank input. Backend masking removed (non-admins can only access their own profile anyway).
+- **Field formatting:** Dates as "1 January 1990"; phones as "+91 XXXXX XXXXX"; "Not set" italic for empties.
+- **Tab bar:** Sticky at top of page content area; underline active indicator (indigo).
+- Backend commit: `d8845f7`, Frontend commit: `ea9e43b`
+
+✅ **Recruitment — Job Card Listing Page + Admin Controls (2026-05-15)**
+- Dummy job opening HR-OPN-2026-0001 ("Senior Python Developer") and its rejected applicant deleted via `cleanup_dummy_jobs` patch.
+- Backend: `close_job_opening(job_id)` — sets status=Closed (Owais-only). `delete_job_opening(job_id)` — cascades to applicants → interviews → offers then deletes opening (Owais-only). `num_positions` param added to `create_job_opening`.
+- Frontend: `RecruitmentPage` rewritten as job card listing at `/recruitment` — cards show title, designation, department, posted date, candidate count badge. Owais-only: "+ Post New Job" inline modal, close button (X, amber), delete button (trash, red) with inline confirm. Closed jobs collapsible section.
+- `PipelinePage.tsx` at `/recruitment/pipeline/:jobOpening` — kanban view with breadcrumb "← Jobs" link and "Add Candidate" button.
+- `useCloseJobOpening` + `useDeleteJobOpening` hooks added to `useRecruitment.ts`.
+- Build passes clean ✅. Backend commit: `de93d8f`. Frontend commit: `2525f42`.
+
 ## In progress
 Nothing — all features built and wired to real backend. `VITE_USE_MOCK=false`.
 
@@ -385,11 +493,255 @@ Nothing — all features built and wired to real backend. `VITE_USE_MOCK=false`.
 
 AI JD Generator remains ON HOLD — AI provider undecided. See "ON HOLD" section below.
 
+✅ **Accounts Module — Folder View + Real Uploader Detection (2026-06-02)**
+- **NEW: Folder View tab** (`FolderViewTab.tsx`) — third tab between Drive Documents and Upload Status:
+  - Stats header with color-coded pills per top-level folder (Sales/Purchase/Accounts/HR/Logistics) + file counts
+  - Collapsible folder tree with chevrons, folder color coding, file type icons (PDF=red, Excel=green, Word=blue)
+  - Real-time search (flat list with folder path shown, result count)
+  - Right panel on file click: filename, size/type meta, uploader section (name + email + detection label), last modified by, Open in Drive, Analyse File
+  - Refresh button: syncs drive + invalidates tree query
+  - Loading skeletons, error state with retry
+
+✅ **Accounts Module — Google Drive Dashboard in React SPA (2026-06-02)**
+- Route `/accounts` → `src/pages/Accounts/index.tsx` — three sub-tabs: Drive Documents + Folder View + Upload Status
+- `src/api/accounts.ts` — 8 typed fetch functions (getDriveStats, syncDrive, getDriveFiles, markReviewed, flagFile, analyseFile, getFolderTree, getFolderContents)
+- **Drive Documents tab** (`DriveDocumentsTab.tsx`):
+  - Stat cards: Total/Pending/Flagged/Last Sync with accent colors
+  - Category pills: All/Sales/Purchase/Accounts/HR/Logistics
+  - File table: 8 columns — added "Uploaded By" column with detection badge (●green=drive_api, ●blue=last_modifier, ~grey=folder_path, ⚠orange=drive_api_unknown, ⚠red=unknown)
+  - Per-row actions: View (opens Drive + triggers analyse_file), ✓ Reviewed (POST mark_reviewed), ⚑ Flag (modal with required notes → POST flag_file)
+  - Analysis panel below table: spreadsheet → striped HTML table, PDF → scrollable pre, 3 Claude AI prompt buttons
+  - Stats auto-refresh every 5 minutes via `refetchInterval`
+  - Loading skeletons, empty state, error state
+- **Upload Status tab** (`UploadStatusTab.tsx`):
+  - 2×2 grid of employee cards (Maaz/Lookman/Manjunath/Bhagya) with `expectedEmail` field
+  - Per doc-type: shows individual files with filename, date, uploader line (detection dot + name + method label)
+  - ⚠ Warning shown when file was uploaded by someone other than the expected employee for that folder
+- Sidebar: "Accounts" item added after Attendance, icon: BookOpen, `module: "accounts"` (permission-gated for non-admins, always visible for admin)
+- TypeScript: zero errors
+
+**VE Drive File DocType fields (full list):**
+`file_name, original_name, doc_type, category, party_name, file_date, drive_file_id, drive_view_link, drive_folder_path, file_extension, status, admin_notes, synced_on, uploaded_by_name, uploaded_by_email, last_modified_by_name, last_modified_by_email, upload_detected_method`
+
+**Uploader detection priority order (stored as `upload_detected_method`):**
+1. `drive_api` — Drive API `owners[0]` matched to a Vera employee (most accurate)
+2. `drive_api_unknown` — Drive API `owners[0]` is NOT a Vera employee (stored as-is)
+3. `last_modifier` — `lastModifyingUser` matched to a Vera employee
+4. `folder_path` — fallback: employee inferred from which folder the file is in
+
+**VERA_EMPLOYEES map (in google_drive.py):**
+- `maazdgr8.mma@gmail.com` → Maaz (Sales)
+- `lookman.vera@outlook.com` → Lookman (Purchase + Logistics)
+- `manju.veraaccnts@outlook.com` → Manjunath M N (Accounts)
+- `bhagyashree.veraenterprises@outlook.com` → Bhagya Shree (HR)
+- `owais@veraenterprises.in` → Owais Ahmed Khan
+
+**Guardrails:**
+- Never silently assume ownership — always store and show `upload_detected_method`
+- Always backfill existing records after adding new detection fields (use `IS NULL OR = ''` filter, not just `= ''`)
+- Drive API fields string must be a single compact line — multiline/indented strings cause HTTP 400
+
+✅ **Sidebar Navigation Redesign (2026-06-02)**
+- Complete rewrite of `src/components/layout/Sidebar.tsx`
+- **Structure:** Logo → Top profile (clickable → /my-profile) → Dashboard → My Profile → HR group → Recruitment → Accounts group → CRM [soon] → Performance [soon] → Permissions [admin] → Bottom profile + Sign out
+- **HR group** (dropdown, default expanded): Attendance (/admin/attendance) + Holidays sub-item (/admin/attendance?tab=holidays) + Leave + Expenses + Team [admin only]
+- **Accounts group** (dropdown, default expanded): Drive Documents (/accounts) + Upload Status (/accounts?tab=upload)
+- Dropdown state persisted in localStorage (`sidebar_hr_open`, `sidebar_accounts_open`)
+- Active route auto-expands parent group on load/navigation via `useEffect`
+- Manual active-state detection for search-param-dependent items (Drive Documents vs Upload Status)
+- Mobile: fixed overlay with `translate-x` slide-in/out; desktop: inline with width collapse (existing pattern)
+- `Layout.tsx`: mobile backdrop overlay added — tap outside closes sidebar on mobile
+- `AccountsPage/index.tsx`: reads `?tab=upload` (upload-status) and `?tab=folder` (folder-view) from URL via `useSearchParams`; tab changes update URL with `replace: true`
+- CRM and Performance shown as greyed-out disabled items with [soon] badge
+- Top profile pill: avatar initials + name + email, clickable → /my-profile
+- Permission-aware: HR items hidden per module permission; Recruitment/Accounts hidden if module disabled; Team/Permissions admin-only
+- TypeScript: zero errors
+
+**Sidebar guardrails:**
+- Active route MUST always auto-expand its parent dropdown on page load (via useEffect on location.pathname)
+- Dropdown state is always saved to localStorage — never reset to default after user collapses
+- Use manual isActive checks (not NavLink isActive) for any items where search params affect which item is active
+- CRM and Performance MUST remain disabled/greyed (use DisabledItem component) until explicitly re-enabled
+- NEVER use `<a href>` for internal navigation — always use React Router `NavLink` or `useNavigate`. Raw anchors cause full page reload; React Router navigation does NOT re-run useEffect with empty deps, so pages using `<a href>` may appear to "work on reload but not navigation"
+
+**React page data-loading guardrails:**
+- All React Query `useQuery` calls for page-level data MUST use `staleTime: 0` and `refetchOnMount: "always"` — prevents stale cached failure responses from being shown on navigation
+- Always include `location.pathname` in the `useEffect` dependency array for explicit refetch hooks — this is the reliable trigger for "run on every navigation to this route"
+- Always use `mountedRef` to guard async state updates after component unmount — prevents React "Can't perform state update on unmounted component" warnings
+- Always reset loading/error state at the TOP of the useEffect before the fetch, not after
+- Never use `retry: false` on queries that should recover — use `retry: 1` so transient failures (Ollama offline) can self-heal on next visit
+
+✅ **My Profile Page — Tabbed Navigation with Persistent Header (2026-06-02)**
+- Complete rewrite of `src/pages/profile/EmployeeProfilePage.tsx` (~500 lines replacing 796-line original)
+- **Always-visible ProfileHeader:** 120px gradient banner + 80px avatar (overlapping 40px) + name, designation/dept, email, phone, status badge + Edit/Save/Cancel buttons in top-right. Header never scrolls away and is visible regardless of active tab.
+- **3 tabs (self-view only — `showTabs = isSelf`):**
+  - Profile: full two-column edit form (all sections from old page)
+  - Attendance: placeholder ("coming soon")
+  - Leave History: 4 summary cards (Days Approved/Approved Count/Pending/Rejected) + filter pills + Apply button + leave table + ApplyLeaveModal
+- **Tab state:** persisted in `localStorage` via key `"profile_tab"`. `switchTab()` saves before state update.
+- **Edit mode:** `handleEditClick()` always switches to Profile tab first, then sets `editMode=true`. Switching tabs while in edit mode is allowed (draft kept); Save/Cancel remain in header.
+- **ApplyLeaveModal:** 8 leave types (LEAVE_TYPES), from/to date pickers, auto-calc total days excluding Sundays, reason textarea, submits via `useApplyLeave` mutation + invalidates queries.
+- **Admin view** (`isSelf=false`): no tab bar rendered — shows Profile content only; Edit button still works (calls `adminUpdateProfile`).
+- **TypeScript:** zero errors (verified with `npx tsc --noEmit`).
+
+**Decision logged:** Profile page uses persistent header + tab navigation instead of sidebar sections. Header always visible above tabs.
+
+✅ **Holidays & Leave Policy Feature (2026-06-02)**
+- **ERPNext:** "Vera Enterprises 2026" Holiday List created via `hr_client.patches.create_holidays_2026.execute` — 14 public holidays inserted into ERPNext Holiday List DocType.
+- **Backend:** Added 2 endpoints to `hr_client/api/leave.py`:
+  - `get_holidays()` — returns all 14 holidays with computed `is_past`, `is_today`, `is_upcoming`, `days_until` fields. No auth restriction (public calendar data).
+  - `get_leave_policy()` — returns full policy: summary (14 public holidays + 1 happy holiday + 12 EL + 5 SL + 5 carry forward), 8 leave type cards with rules, and 6 important rules. No auth restriction.
+- **Frontend:** `src/pages/holidays/HolidaysPage.tsx` — standalone `/holidays` route:
+  - 3 inner tabs: **2026 Holidays** | **Leave Policy** | **Important Rules**
+  - Calendar tab: 4 summary stat cards + "next holiday" banner (always shows days until) + leave balance bar chart (computed from useMyLeaves) + holidays grouped by month with past/today/upcoming/next badges + Happy Holiday card
+  - Policy tab: summary pills + 8 expandable accordion cards with color-coded borders per leave type
+  - Rules tab: yellow warning card with 📌 rule bullets
+  - `HolidaysContent` exported separately for reuse inside the Profile tab
+- **Sidebar:** Holidays sub-item now links to `/holidays` (was `/admin/attendance?tab=holidays`). `isHolidaysActive` = `path === "/holidays"`. `isAttendanceActive` simplified (no longer needs search-param exclusion). Auto-expand useEffect updated to include `/holidays`.
+- **My Profile:** Added 4th tab "Holidays" (icon: BarChart3) to self-view tab bar. Renders `<HolidaysContent />` inside a padded wrapper.
+- **Types:** `Holiday`, `LeaveTypePolicy`, `LeavePolicy` interfaces added to `src/pages/leave/types.ts`
+- **Hooks:** `useHolidays()` and `useLeavePolicy()` added to `src/pages/leave/useLeave.ts` (1hr stale time — static data)
+- **App.tsx:** `/holidays` route added inside protected Layout
+- TypeScript: zero errors
+
+**Decision:** Holiday data hardcoded in `get_holidays` endpoint AND stored in ERPNext Holiday List — dual storage for reliability. ERPNext list used by HRMS core; API endpoint used by React frontend.
+
+**Holiday List in ERPNext:** "Vera Enterprises 2026" — 14 holidays, 2026-01-01 to 2026-12-25.
+
+✅ **Extract All Fix + Other Type + Skip Patterns (2026-06-03 session 2)**
+- **Root cause:** "VE — File Naming Convention Guide" (doc_type=Other) had no DOCTYPE_MAP handler → `process_drive_file` returned `{success: false}` without updating admin_notes → file stayed "New" forever → pending count never reached 0
+- **Backend fix 1:** Added `SKIP_PATTERNS` list and `_should_skip_file(filename)` to `pipeline.py`. Files matching guide/template/readme/sample/etc. in filename → `PROCESSED:SKIPPED:Non-business file`
+- **Backend fix 2:** Updated `DOCTYPE_MAP` to include `"Other": None` (and Delivery Certificate, Transport Doc, Packing List). Any entry where value is `None` → `PROCESSED:SKIPPED:No handler for type '<X>'`. Unknown types not in map → also skipped.
+- **Backend fix 3:** Added `_mark_skipped(drive_file_name, reason)` helper that sets `admin_notes=PROCESSED:SKIPPED:<reason>` + `status=Reviewed` + commits
+- **Backend fix 4:** Hardened `process_single_file()` — added file-not-found check, proper `frappe.utils.cint(force)` conversion, try/except wrapper with `log_error`
+- **Backend fix 5:** Added `get_pending_count()` endpoint: returns `{total, processed, pending, pending_files}` where pending = files without `PROCESSED:` prefix in admin_notes
+- **Frontend fix:** Updated `ProcessFilesPanel.handleExtractAll()`:
+  - Fetches fresh file list at button click time (not just cached query data)
+  - Checks `result?.skipped` vs `result?.success !== false` to correctly count processed/skipped/failed
+  - 500ms delay between files to avoid server overload
+  - Shows accurate log: "X processed, Y skipped, Z failed"
+  - Pending display: shows "✅ All files processed" when count is 0, otherwise "N file(s) pending"
+  - Fixed null-safe filter: `!String(f.admin_notes ?? "").startsWith("PROCESSED:")`
+- **Test results:** 35/35 files in DB, 35/35 processed, pending=0, naming guide → PROCESSED:SKIPPED:Non-business file ✅
+
+✅ **Drive Sync Fix + 4 New DocTypes + AI Health Dashboard (2026-06-03)**
+- **Sync diagnosis:** Sync was already working (34–35 files, all syncs Success). 11 "unprocessed" files had no handler in `pipeline.py` DOCTYPE_MAP — doc types Sales Order, Credit Note, Debit Note, Stock Report, Stock Journal were simply unrecognized.
+- **4 new DocTypes in `vera_drive` module (migrated ✅):**
+  - `VE Sales Order` — so_number, so_date, client_name, delivery_date, delivery_address, total_amount, payment_terms, status(Draft/Confirmed/Delivered/Cancelled), items_json, drive_file, uploaded_by, extraction_method
+  - `VE Credit Note` — cn_number, cn_date, client_name, original_invoice, reason, total_amount, cgst, sgst, igst, status(Pending/Applied/Cancelled), drive_file, uploaded_by, extraction_method
+  - `VE Debit Note` — dn_number, dn_date, vendor_name, original_invoice, reason, total_amount, cgst, sgst, igst, status(Pending/Applied/Cancelled), drive_file, uploaded_by, extraction_method
+  - `VE Stock Record` — record_type(Stock Report/Stock Journal/Stock Movement), record_date, period, total_items, total_value, opening_stock, closing_stock, stock_in, stock_out, items_json, drive_file, uploaded_by, extraction_method
+- `vera_drive/vera_drive/extractor.py` — added `extract_sales_order()`, `extract_credit_note()`, `extract_debit_note()`, `extract_stock_record()` methods; updated `extract()` router and `quality_score()` important_fields list
+- `vera_drive/vera_drive/pipeline.py` — added 6 entries to DOCTYPE_MAP (Sales Order, Credit Note, Debit Note, Stock Report, Stock Journal, Delivery Note); added `_map_fields()` blocks for all 4 new DocTypes
+- **All 35 files now handled** — 34 processed, 1 "Other/Guide" file skipped by design (no handler for "Other" doc type)
+- **ProcessFilesPanel upgraded** — per-file progress bar loop using `processSingleFile()` instead of batch `processAllFiles()`. Shows current file name + percentage. Auto-calls `autoLinkDocuments()` after completion. Invalidates `structured-data` and `dashboard-insights` queries.
+- **`vera_drive/vera_drive/api.py` `sync_now`** — now returns `{status, total_files, new_files, message}` (file counts), not just `{status: 'ok'}`.
+- **AI Health endpoint** — `hr_client/api/ai.py` `get_ai_health()`: 4-component composite score: Ollama (response time, model, status), Extraction (processed/pending/failed/success_rate), Drive Sync (last_sync, hours_ago, freshness), Data Quality (records with amounts + party names). Returns `overall_score` 0–100, `overall_label`, `overall_color`.
+- **AI Health types** — `src/api/ai.ts` exports `OllamaHealth`, `ExtractionHealth`, `DriveSyncHealth`, `DataQualityHealth`, `AIHealth`, `getAIHealth()`
+- **AIHealthWidget** — collapsible widget on main Dashboard (admin-only, after Quick Actions). 4-grid cards, overall score circle, quick actions (Sync Drive, Extract Pending, View Business Dashboard). Auto-refetch every 60s when expanded. Starts collapsed (loads on first expand).
+- **Test results:** 10/10 PASS — sync_now shape, 35 files in DB, all 4 DocTypes, Credit Note record, Stock Record, new DocTypes created, real data (30 structured, 34 processed). Overall health: 98/100 Excellent.
+
+✅ **Google Drive → Structured ERP Data (2026-06-03)**
+- 9 new DocTypes in `vera_drive` module: `VE Sales Invoice`, `VE Purchase Invoice`, `VE Purchase Order`, `VE Quotation`, `VE GRN`, `VE Financial Report`, `VE Salary Record`, `VE Attendance Record`, `VE Payment Record` — all migrated, tables live in DB
+- Stub controller files at `vera_drive/vera_drive/vera_drive/doctype/<name>/` for each DocType (required in developer mode before insertion)
+- `vera_drive/vera_drive/extractor.py` — `RulesExtractor` class: regex-based extraction for amounts (INR/₹/Rs), Indian dates, GSTIN, doc numbers, party names, GST breakdown; `quality_score()` returns 0–100
+- `vera_drive/vera_drive/pipeline.py` — `process_drive_file()`: download → extract text (PDF/xlsx/docx) → rules extraction → LLM fallback via Ollama if quality <60% → save to structured DocType → mark Drive file as PROCESSED; `_map_fields()` for all 9 target types
+- `vera_drive/vera_drive/api.py` — 7 new endpoints: `process_all_files`, `process_single_file`, `get_structured_data`, `auto_link_documents`, `get_document_connections`, `update_payment_status`, `update_doc_status`
+- `vera_drive/vera_drive/tasks.py` — `sync_drive_files()` now calls `_auto_process_new_files()` after every sync (max 20 files) + `auto_link_documents()` if any processed
+- React: `hr-frontend/src/api/business.ts` — 7 typed API functions + full TypeScript interfaces for all 9 DocTypes
+- React: `hr-frontend/src/pages/BusinessDashboard/index.tsx` — full dashboard at `/business` (admin-only): 6 KPI metric cards, 5 tabs (Sales/Purchase/Accounts/HR/Links), inline Mark Paid / Mark Received / Won/Lost actions, Links tab shows document chains with auto-link button, Process Files panel at bottom
+- Sidebar: "Business Dashboard" sub-item added under Accounts group (admin-only), auto-expands when on /business
+
+✅ **Verification Page Complete Overhaul (2026-06-06 session 6)**
+- **Part 1 — Status reset:** All AI-auto-verified records reset to Unverified via `session6_setup.py` patch. Only records with `verified_by = 'Vera AI (auto)'` reset — human-verified records untouched. Total 5 records reset.
+- **Part 2 — 4 new Custom Fields** added to all 12 VE DocTypes (48 total Custom Field records created):
+  - `extraction_attempts` (Int, default 0) — how many times AI tried to extract this document
+  - `extraction_history` (Long Text) — JSON array of up to 10 attempt logs: `{attempt, timestamp, confidence, method, quality}`
+  - `manual_review_required` (Check, default 0) — flagged when 3 attempts all score < 50%
+  - `last_extraction_at` (Datetime) — timestamp of most recent extraction attempt
+  - Existing extracted records initialized to `extraction_attempts=1`
+- **Part 3 — pipeline.py** updated with:
+  - `MAX_EXTRACTION_ATTEMPTS = 3` and `LOW_CONFIDENCE_THRESHOLD = 50` constants
+  - `process_drive_file()` now increments `extraction_attempts`, logs to `extraction_history`, sets `last_extraction_at`
+  - After 3 attempts with < 50% confidence: `manual_review_required = True`, `verification_status = "Needs Review"`
+  - `original_extracted` only written on first insert (not overwritten on re-extraction)
+- **Part 6 — 2 new backend endpoints** in `hr_client/api/ai.py`:
+  - `reset_auto_verified()` — resets all `verified_by = 'Vera AI (auto)'` records to Unverified; never touches human-verified
+  - `get_all_extracted_records(status, doctype)` — returns ALL records across all 12 VE DocTypes with normalized `party`, `amount`, `date` fields; sorted by priority (manual_required → needs_review → unverified → verified); includes full stats breakdown
+- **Part 7 — Frontend API** additions to `src/api/ai.ts`:
+  - `ExtractedRecord` interface with all normalized fields including `manual_review_required`, `extraction_attempts`, `priority`
+  - `AllExtractedRecordsResult` and `ResetAutoVerifiedResult` interfaces
+  - `resetAutoVerified()` and `getAllExtractedRecords(status?, doctype?)` functions
+- **Part 4/5 — Complete Verification Page Redesign** (`src/pages/Verification/index.tsx`):
+  - **3 mode tabs:** All Records (📋) | Auto-Verify (🤖) | Review Mode (👆)
+  - **All Records mode:** Full table of ALL 20+ extracted records; search by party/docname; filter by status + doctype; confidence color-coded badges; extraction_attempts counter; ⚠ badge for manual_required; click any row to open side-by-side detail panel
+  - **Auto-Verify mode:** Calls `resetAutoVerified()` first, then runs `autoVerifyAll(threshold)`; threshold slider 50–95%; success screen with auto-verified/needs-review counts; "Review N Records →" button
+  - **Review Mode:** Loads ALL non-verified records sorted by priority; progress bar; keyboard shortcuts A/F/R/S; completion screen with per-action summary
+  - **Side-by-side Detail Panel** (overlay, 50/50 split):
+    - LEFT: editable fields with confidence badges (green/yellow/red), "Edit All Fields" toggle, "Apply original" buttons for low-confidence fields, Approve As-Is / Save Corrections / Reject & Re-extract actions
+    - RIGHT: Source Text tab (searchable with bracket highlighting), Raw Data tab (JSON view), History tab (extraction attempt log with timestamp/confidence/method/quality)
+    - Drive file info and Open in Drive link at bottom
+  - **Orange manual-review banner:** shown when `manual_required > 0`, links to Review Mode
+  - **Stats strip:** Total/Verified/Needs Review/Unverified/Avg Confidence always visible
+  - **Accuracy table:** per-DocType breakdown always visible at bottom of All Records mode
+- **8/8 tests passing:** `hr_client/tests/test_session6.py`
+
+✅ **Smart Verification — Auto + Swipe Review (2026-06-06 session 5)**
+- **3 new endpoints in `hr_client/api/ai.py`:**
+  - `auto_verify_all(threshold=75)` — auto-verifies records with confidence >= threshold (marks as Verified with "Vera AI (auto)" as verifier); flags low-confidence records as "Needs Review". Never touches already-Verified or Corrected records. Returns auto_verified/needs_review counts + review_queue list.
+  - `get_review_queue()` — returns all "Needs Review" records with pre-loaded source text (from Drive file), problem_fields list (confidence < 50%), good fields, and priority. Sorted lowest confidence first so most urgent appears first.
+  - `quick_action(doctype, docname, action, corrections)` — single endpoint for all swipe actions: approve (mark Verified), reject (mark Needs Review + trigger background re-extraction via `frappe.enqueue`), correct (apply field corrections + mark Corrected), skip (no-op).
+- **`/verify` page completely redesigned** (`src/pages/Verification/index.tsx`):
+  - **Two modes:** Auto Mode (default) + Review Mode, toggled via pill buttons
+  - **Auto Mode:** Confidence threshold slider (50–95%), live preview of estimated auto-verified vs needs-review counts, "Run Auto-Verify" button, success screen with "Review N Records Now →" auto-transition
+  - **Review Mode:** Full swipe-review flow — SwipeCard shows one record at a time with progress bar, problem fields (editable inline inputs), good fields grid, source text collapsible, action buttons
+  - **SwipeCard actions:** Approve As-Is / Fix & Approve (applies edited corrections) / Reject & Re-extract / Skip for Now
+  - **Keyboard shortcuts:** A=Approve, F=Fix & Approve, R=Reject, S=Skip (suppressed inside input fields)
+  - **Completion screen:** Trophy icon, per-action summary (approved/corrected/rejected/skipped counts), "View Business Dashboard →"
+  - **Smart banners:** context-aware nudge based on state (unverified exists → run auto, needs_review exists → start review, all done → clean state)
+  - **Stats strip:** 4 cards (Verified/Corrected/Needs Review/Avg Confidence), always visible
+  - **Accuracy breakdown table:** per-DocType verification rate + confidence, always visible at bottom
+- **Business Dashboard nudge updated:** uses `needs_review` count (not just unverified), shows estimated time ("Takes ~N min"), hides when all verified
+- **Frontend API** (`src/api/ai.ts`): `autoVerifyAll`, `getReviewQueue`, `quickAction` functions + full TypeScript interfaces (`AutoVerifyResult`, `ReviewRecord`, `ReviewQueue`, `QuickActionResult`)
+
+✅ **Data Verification & Cross-Check System (2026-06-03 session 3)**
+- **7 verification fields added to ALL 13 VE DocTypes** (via JSON file edits + bench migrate):
+  - `verification_status` (Select: Unverified/Verified/Needs Review/Corrected, default Unverified)
+  - `confidence_score` (Int, 0–100)
+  - `verified_by` (Data), `verified_on` (Datetime)
+  - `correction_notes` (Text — audit trail of what was changed)
+  - `original_extracted` (Long Text — JSON snapshot of initial extraction, never overwritten)
+  - `extraction_confidence` (Long Text — JSON dict of per-field confidence scores)
+- **`vera_drive/pipeline.py` additions:**
+  - `calculate_field_confidence(extracted, text, doc_type)` — scoring rules: +30 value found in source text, +15 valid date format, +20 amounts > 0, +20 well-formed doc numbers, +20 reasonable party names. Base 50. Returns `(field_scores_dict, overall_score)`.
+  - `process_drive_file()` now saves `verification_status=Unverified`, `confidence_score`, `original_extracted`, `extraction_confidence` on every extraction.
+  - Return dict includes `"confidence": overall_confidence`.
+- **7 new whitelisted endpoints in `hr_client/api/ai.py`:**
+  - `get_verification_queue(status, doctype)` — DB query across all 13 VE DocTypes, computes priority (< 40% = high, 40–69% = medium, ≥ 70% = low), sorts by confidence ascending
+  - `get_verification_detail(doctype, docname)` — full record + field_comparison list (confidence_label, confidence_color, was_changed) + source document text via vera_drive pipeline
+  - `verify_record(doctype, docname, corrections, status)` — applies corrections, sets verified_by/verified_on, saves
+  - `reextract_document(doc_name)` — clears admin_notes, calls process_drive_file(force_reprocess=True)
+  - `get_accuracy_stats()` — aggregates per-DocType stats: verified/corrected/unverified counts, avg confidence
+  - `ai_crosscheck(doctype, docname, source_content)` — builds prompt, calls ask_llm_json(temperature=0.05), returns field_results with is_correct, source_value, suggested_corrections
+  - `apply_ai_corrections(doctype, docname, corrections)` — delegates to verify_record with status="Corrected"
+- **Frontend types + functions** added to `src/api/ai.ts`: VerificationRecord, VerificationQueue, FieldComparison, VerificationDetail, AccuracySummary, AccuracyStats, CrosscheckResult + all 7 fetch functions
+- **`/verify` route** → `src/pages/Verification/index.tsx` (admin-only):
+  - Stats row: 5 cards (Total/Verified/Corrected/Needs Review/Avg Confidence)
+  - Accuracy by DocType table with verification rates
+  - Priority tabs: All / High / Medium / Low / Done
+  - `VerifyModal` (full-screen 2-col): Left = editable fields with confidence-colored borders + warnings; Right = source text + AI crosscheck panel with per-field results + Apply buttons
+- **Business Dashboard** updated: verification banner (yellow, shows unverified count + "Go to Verification →"), "AI" column in Sales Invoice table with confidence badges (clickable for yellow/red → navigate to /verify)
+- **Sidebar:** "Verify Data" sub-item in Accounts group (CheckSquare icon, admin-only, adminBadge), maxHeight increased to 400px
+- **Tests:** TEST 1–3, 3b, 7 PASS; TEST 4 (AI crosscheck) PASS (returns field-by-field results, `correct_count:2/12`, `accuracy_pct:16.67`, `has_corrections:true`)
+- **Confidence backfill:** All 34 existing records reprocessed — avg confidence 63% (Fair). VE Payment Record shows 0% (no extractable data in those files).
+
 ## What's next
 - Forms Integration backend (B1–B5) + frontend (F1–F6)
 - Employee Lifecycle custom fields (B-EL1: custom_onboarding_stage, documents_checklist, it_setup_checklist on Employee DocType)
 - Resume AI JD Generator once AI provider is decided
 - Jibble data shown in profile page Leave & Attendance section (wire get_attendance_today per employee)
+- Add "accounts" to Permission Dashboard toggle list so non-admin visibility can be controlled
+- Holidays tab on Attendance page (/admin/attendance?tab=holidays) — route exists but tab not yet built
 
 ## ON HOLD — AI Job Description Generator
 **Status:** UI fully built and working. Blocked on AI provider.
@@ -406,6 +758,113 @@ AI JD Generator remains ON HOLD — AI provider undecided. See "ON HOLD" section
 4. **No AI (Option B)** — revert to original `CreateJobOpeningModal` (simple form, no PDF). One-line swap in `RecruitmentPage.tsx`.
 
 **Current code state:** `AIJobDescriptionGenerator.tsx` calls `callOpenAI()` targeting `gpt-4o-mini`. Switching to Groq = change URL to `https://api.groq.com/openai/v1/chat/completions`, model to `llama-3.3-70b-versatile`, key to `import.meta.env.VITE_GROQ_API_KEY`.
+
+✅ **Vera Drive — Google Drive Integration App (2026-06-01)**
+- New Frappe app `vera_drive` created, installed on `hrms.localhost`
+- Google Drive service account: `vera-drive-bot@vera-drive-498117.iam.gserviceaccount.com`
+- Root Drive folder ID: `1tuZUNAScIAR7IX3sttH6VgKkQNsy5IDu` (Vera Enterprises — Documents)
+- Service account JSON: `apps/vera_drive/vera_drive/service_account.json` — NEVER commit or move
+- 2 DocTypes: `VE Drive File`, `VE Drive Sync Log` (triple-nested path: `vera_drive/vera_drive/vera_drive/doctype/`)
+- 34 files synced from Drive on first run; sync runs every 30 min via cron scheduler
+- Dashboard at `/app/vera-dashboard` in ERPNext desk
+- Python deps pinned to Frappe-compatible versions (google-api-python-client~=2.188.0, etc.)
+- API endpoints in `vera_drive/api.py`: `sync_now`, `get_dashboard_stats`, `get_all_files`, `mark_reviewed`, `flag_file`, `analyse_file`
+- Dashboard features: metric cards, category filter pills, file table with View/Reviewed/Flag actions, analysis panel (PDF/spreadsheet preview), employee upload status cards
+- Note: bench must run on port 8001 (Windows Hyper-V reserves 8000 on WSL2) — Procfile updated
+
+## API Contract
+
+### Vera Drive Endpoints (LIVE — 2026-06-01)
+Base: `/api/method/vera_drive.api.<endpoint>`
+Auth: session cookie. All require Administrator or System Manager role.
+
+| Method | Endpoint | Notes |
+|--------|----------|-------|
+| GET | `sync_now` | Triggers immediate Drive sync, returns `{status: 'ok'}` |
+| GET | `get_dashboard_stats` | Returns total/pending/flagged counts + last_sync for current month |
+| GET | `get_all_files` | Params: `category` (All/Sales/Purchase/Accounts/HR/Logistics), `status` (optional). Returns all DriveFile fields including uploader fields |
+| POST | `mark_reviewed` | Param: `docname`. Sets status=Reviewed |
+| POST | `flag_file` | Params: `docname`, `notes`. Sets status=Flagged |
+| POST | `analyse_file` | Params: `drive_file_id`, `file_extension`. Returns spreadsheet rows or PDF text |
+| GET | `get_folder_tree` | Full recursive tree from ROOT_FOLDER_ID. Each file includes uploader info from Drive API owners/lastModifyingUser |
+| GET | `get_folder_contents` | Param: `folder_id`. Returns `{folders, files}` for a single folder (lazy load) |
+| POST | `process_all_files` | Params: `category` (optional), `force` (0/1). Runs extraction pipeline on up to 100 Drive files |
+| POST | `process_single_file` | Params: `doc_name`, `force`. Processes one VE Drive File |
+| GET | `get_structured_data` | Param: `doctype` (sales/purchase/accounts/hr). Returns all extracted structured records + totals aggregate |
+| POST | `auto_link_documents` | Links Quotation→Invoice (≤5% amount diff) and PO→Purchase Invoice (≤10% diff) by party name |
+| GET | `get_document_connections` | Returns sales_chain and purchase_chain arrays for Links tab visualization |
+| POST | `update_payment_status` | Params: `doctype` (VE Sales/Purchase Invoice), `docname`, `status`. Mark paid/overdue |
+| POST | `update_doc_status` | Params: `doctype` (VE Purchase Order/Quotation/GRN), `docname`, `status` |
+
+**Extraction DocTypes (all in module: Vera Drive):**
+VE Sales Invoice, VE Purchase Invoice, VE Purchase Order, VE Quotation, VE GRN, VE Financial Report, VE Salary Record, VE Attendance Record, VE Payment Record, VE Sales Order, VE Credit Note, VE Debit Note, VE Stock Record
+
+**AI Endpoints (LIVE — 2026-06-03):**
+Base: `/api/method/hr_client.api.ai.<endpoint>`
+
+| Method | Endpoint | Notes |
+|--------|----------|-------|
+| GET | `get_ai_health` | Returns `{ollama, extraction, drive_sync, data_quality, overall_score, overall_label, overall_color}`. Ollama check includes response-time measurement. Extraction counts from PROCESSED:% admin_notes via raw SQL. |
+| GET | `check_ai_status` | Returns `{ollama_running, models, active_model, ready}` |
+| POST | `get_dashboard_insights` | AI-generated health score, insights, alerts, recommendations |
+| POST | `compare_periods` | Compare two monthly periods |
+| POST | `chat` | Chat with Vera assistant (`message`, `history_json`, `context_type`) |
+| POST | `generate_report` | Generate report (`report_type`, `filters_json`) |
+| GET | `get_verification_queue` | Params: `status` (default "Unverified"), `doctype` (opt). Returns records across all 13 VE DocTypes with computed priority. |
+| GET | `get_verification_detail` | Params: `doctype`, `docname`. Returns full record + field_comparison + source_content from Drive file. |
+| POST | `verify_record` | Params: `doctype`, `docname`, `corrections` (JSON), `status` (default "Verified"). Saves verified_by/verified_on. |
+| POST | `reextract_document` | Param: `doc_name` (VE Drive File name). Clears admin_notes and re-runs pipeline. |
+| GET | `get_accuracy_stats` | Returns summary + by_doctype breakdown of verification counts and avg confidence. |
+| POST | `ai_crosscheck` | Params: `doctype`, `docname`, `source_content`. Ollama-powered field-by-field cross-check. Returns field_results with is_correct, suggested_corrections. |
+| POST | `apply_ai_corrections` | Params: `doctype`, `docname`, `corrections` (JSON). Saves as status="Corrected". Delegates to verify_record. |
+| POST | `auto_verify_all` | Param: `threshold` (int, default 75). Auto-verifies Unverified records with confidence >= threshold. Never touches Verified/Corrected. Returns auto_verified/needs_review counts. |
+| GET | `get_review_queue` | Returns all Needs Review records with pre-loaded source text, problem_fields (confidence < 50%), all_fields, drive_file info. Sorted lowest confidence first. |
+| POST | `quick_action` | Params: `doctype`, `docname`, `action` (approve/reject/correct/skip), `corrections` (JSON, for correct). Reject triggers background re-extraction via frappe.enqueue. |
+| POST | `reset_auto_verified` | Resets all records where `verified_by = 'Vera AI (auto)'` back to Unverified. Never touches human-verified records. Returns `{success, reset, message}`. |
+| GET | `get_all_extracted_records` | Params: `status` (opt), `doctype` (opt). Returns ALL records across all 12 VE DocTypes with normalized `party`/`amount`/`date` fields + priority sorting + stats. |
+
+**Verification system decisions (session 6 additions):**
+- New custom fields added via bench console (not fixtures) — Custom Field DocType approach, 48 records total (4 fields × 12 VE DocTypes)
+- `MAX_EXTRACTION_ATTEMPTS = 3` — after 3 attempts with < 50% confidence, `manual_review_required = True` and status = "Needs Review"
+- `original_extracted` written ONLY on first insert — never overwritten on re-extraction to preserve the original AI output
+- `extraction_history` stores last 10 attempts (JSON array) to keep DB size bounded
+- `reset_auto_verified()` called at the START of Auto-Verify flow, not at end — ensures clean slate before each auto-verify run
+- Detail panel uses 50/50 split overlay — extracted fields on LEFT, source document on RIGHT (fixed layout, never flipped)
+- Priority sorting order: `manual_review_required=True` first (orange), then `Needs Review`, then `Unverified` (sorted by lowest confidence), then `Verified`/`Corrected`
+- All Records mode shows ALL 20+ records (not filtered by status) — use filter dropdowns to narrow; this gives a complete picture at a glance
+- Review Mode loads ALL non-verified records (not just "Needs Review") — manual_required records appear first due to priority sort
+- Extraction history tab in detail panel shows attempt log with timestamp, confidence, method, quality per attempt
+
+**Verification system decisions:**
+- Confidence scoring: base 50, +30 value in source text, +15 valid date, +20 amount > 0, +20 well-formed doc number, +20 reasonable party name
+- Priority thresholds: < 40% = high, 40–69% = medium, ≥ 70% = low
+- AI crosscheck uses temperature=0.05 for maximum accuracy
+- `original_extracted` is written once at extraction time and NEVER overwritten — used to track corrections
+- `_require_admin()` checks `frappe.session.user == "Guest"` (not email comparison)
+- `_SKIP_FIELDS` frozenset excludes metadata/blob JSON fields from field comparison in detail view
+- Default auto-verify threshold: 75% (slider range 50–95%)
+- Swipe review shows only "Needs Review" records — never Unverified (those go through Auto mode first)
+- Fix & Approve is the primary action — applies user-edited corrections then marks Corrected
+- Keyboard shortcuts: A=Approve, F=Fix & Approve, R=Reject, S=Skip
+- Reject action always triggers background re-extraction via `frappe.enqueue` — no manual re-extract needed
+- Review queue pre-loads source text at query time — swipe is instant with no per-card loading
+
+**Extraction pipeline decisions:**
+- Rules extraction first (fast, reliable) — LLM (Ollama local) fallback only if quality < 60%
+- Quality score 0–100 based on % of important fields filled
+- Documents auto-link by party name + amount similarity: ≤5% for sales, ≤10% for purchase
+- Processed files marked with `PROCESSED:<DocType>:<docname>` prefix in admin_notes
+- Skipped files (non-business, unknown type) marked with `PROCESSED:SKIPPED:<reason>` prefix
+- Auto-process max 20 files per sync cycle (timeout protection)
+- Always run `auto_link_documents()` after a batch process completes
+- Never reprocess already-processed files unless `force=True`
+- `_should_skip_file()` runs BEFORE DOCTYPE_MAP lookup — catches guides/templates regardless of doc_type
+- `"Other": None` in DOCTYPE_MAP triggers immediate PROCESSED:SKIPPED (no extraction attempt)
+
+**SKIP_PATTERNS (filenames containing these strings are skipped):**
+`naming convention`, `guide`, `template`, `readme`, `instructions`, `how to`, `sample`, `example`, `test file`, `dummy`
+
+---
 
 ## API Contract
 
@@ -731,6 +1190,22 @@ All passwords: `Vera@2026`. Owais logs in as `Administrator`.
 
 **Employee records:** All 5 team members created as ERPNext Employee docs (HR-EMP-00001 through HR-EMP-00005), linked to their User accounts, status Active, date_of_joining 2024-01-01.
 
+## Repository
+Single monorepo: https://github.com/KernelLex/Vera_ERP
+Branch: main
+Structure:
+- `apps/hr_client/` — Frappe backend (this app)
+- `apps/vera_drive/` — Google Drive Frappe app
+- `hr-frontend/` — React frontend SPA
+- `README.md` — Single source of truth for full server setup (requirements, ERPNext install, credentials, nginx, SSL, production mode)
+- `setup.sh` — One-command installer (copies apps → bench, installs, migrates, npm install)
+
+Auto-deploy: server cron job pulls main at 2 AM daily and runs migrate + bench restart.
+
+**Key rule:** When adding new credentials or setup steps, update `README.md` before closing the session.
+
+---
+
 ## Decisions made
 - Using shadcn/ui for all form components
 - Odoo-style left sidebar (dark gray-900), collapsible, "Vera ERP" branding
@@ -744,6 +1219,37 @@ All passwords: `Vera@2026`. Owais logs in as `Administrator`.
 - Aadhaar/PAN numbers masked ("Stored securely") for non-admin users in the profile page
 - Company: Vera Enterprises (ERPNext name), abbreviation V, departments suffixed ` - V`
 
+## Decisions made (additions 2026-06-03 session 2)
+- Files with `doc_type = "Other"` → mark `PROCESSED:SKIPPED:No handler for type 'Other'` immediately; never leave them in perpetual pending
+- Non-business files (guides, templates, READMEs, samples) detected via SKIP_PATTERNS on filename → mark `PROCESSED:SKIPPED:Non-business file` before any pipeline attempt
+- Pending count = files where `admin_notes NOT LIKE 'PROCESSED:%'` — both structured extractions and SKIPPED files reduce the pending count to zero
+- Extract All button fetches a fresh file list at click time, not just the cached query, to avoid stale counts
+- 500ms delay between sequential file processing calls to avoid overwhelming the Frappe server
+- `get_pending_count()` is the authoritative source for pending vs processed counts
+
+## Decisions made (additions 2026-06-03)
+- Credit/Debit notes use dedicated number fields (`cn_number`/`dn_number`) not `invoice_number` — they reference originals via `original_invoice`
+- Both "Stock Report" and "Stock Journal" doc types map to single `VE Stock Record` DocType — unified via `record_type` field
+- AI Health widget on main Dashboard auto-polls every 60s when expanded; starts collapsed to avoid unnecessary load
+- Ollama response time < 2s = "healthy" (green), 2–5s = "slow" (yellow), > 5s = "very slow" (red), offline = "offline" (gray)
+- `get_ai_health()` overall score = average of 4 component scores: Ollama (0/50/70/100), extraction success_rate, sync freshness score, data quality score
+- Drive sync was working correctly all along — the "11 unprocessed files" issue was simply missing DocType handlers in pipeline.py (Sales Order, Credit Note, Debit Note, Stock Report, Stock Journal had no entries in DOCTYPE_MAP)
+- `sync_now` must return file count (`total_files`, `new_files`) not just `{status: 'ok'}` — the frontend displays these counts in the Sync Now button response
+
+## Decisions made (additions 2026-06-02 — monorepo)
+- All code consolidated into single monorepo at `github.com/KernelLex/Vera_ERP` — no more 3 separate repos (hr_client, vera_drive, hr-frontend were separate before 2026-06-02)
+- `README.md` in monorepo root is the single source of truth for server setup — always keep it updated when setup steps change
+- Holidays feature uses dual storage: hardcoded in `get_holidays` API endpoint (fast, reliable for React) AND stored in ERPNext Holiday List DocType "Vera Enterprises 2026" (used by HRMS core for leave calculations)
+- `/holidays` route is a standalone page accessible to all employees (not admin-only). `get_holidays` and `get_leave_policy` endpoints intentionally have no admin check — it's public calendar data.
+- Sidebar top profile pill removed (2026-06-02) — only bottom profile section (above Sign Out) remains. No duplicate profile display.
+
+## Decisions made (additions 2026-06-01)
+- `vera_drive` is a separate Frappe app, not part of `hr_client` — keeps Drive integration isolated and independently deployable
+- Service account JSON stored in `apps/vera_drive/vera_drive/service_account.json` — NEVER in site config, never in code, never committed to a public repo
+- Drive sync runs every 30 minutes via Frappe cron scheduler — not a background job or webhook, to avoid dependency on external triggers
+- Bench runs on port 8001 on this dev machine because Windows Hyper-V (WSL2) silently reserves port 8000; `EADDRINUSE` with nothing showing in `ss`/`netstat` is the WSL2 Hyper-V port reservation symptom
+- Python deps for vera_drive pinned to Frappe-compatible versions (use `~=` not `==` to avoid downgrading frappe's own packages)
+
 ## Decisions made (additions 2026-05-14)
 - ERPNext role sync uses union-of-modules approach: roles are the union of all enabled module role sets. Disabling all modules leaves only `Employee` base role. This avoids the "shared role" problem where HR Manager is needed by multiple modules.
 - `User Module Permission` DocType remains the source of truth for React frontend visibility; ERPNext roles gate actual Frappe desk access (which employees never use anyway). Both are synced on every `update_user_permissions` call.
@@ -755,11 +1261,17 @@ All passwords: `Vera@2026`. Owais logs in as `Administrator`.
 - DO NOT run migrate without cache clear after
 - DO NOT store Jibble API key in code — use site_config
 - DO NOT call API endpoints not listed in API Contract
+- DO NOT modify `vera_drive/vera_drive/service_account.json` — these are production Google service account keys
+- All vera_drive API calls from React must use the existing `api` axios instance (withCredentials: true + CSRF interceptor) — never introduce raw fetch as a second HTTP client
+- DO NOT create ERPNext desk pages for Accounts/Drive — everything goes in the React SPA at /accounts
+- DO NOT pin vera_drive Python deps to versions older than what frappe 15.x requires — always use `~=` compatible version specifier and match frappe's own installed versions
+- DO NOT start bench on port 8000 on this WSL2 machine — Windows Hyper-V reserves it; always use port 8001 (already set in Procfile)
 - DO NOT push directly to main branch
 - DO NOT call `self.save()` inside a `validate()` hook — causes infinite recursion
 - DO NOT use `frappe.get_doc()` when you only need one field — use `frappe.db.get_value()` instead
 - DO NOT catch bare `Exception` and silently swallow it — always re-raise or log
 - DO NOT return raw HTTP responses from whitelisted methods — return dict/list only
+- DO NOT render the Team employee detail page without a left panel — the layout must always be two-column (left: ProfileHeaderCard + tabs, right: NotesColumn). Always verify data fetch is wired before rendering the layout.
 - DO NOT use `frappe.db.sql()` raw queries when ORM methods exist — SQL bypasses permission checks
 - DO NOT forget `super().validate()` in controller validate() — skips parent class validation
 - DO NOT write fixtures that duplicate existing Custom Fields — check DB first
@@ -772,6 +1284,8 @@ All passwords: `Vera@2026`. Owais logs in as `Administrator`.
 - DO NOT run `bench migrate` without first starting bench (`bench start`) — migrate requires Redis cache + queue to be running or it will abort with "Service redis_cache is not running"
 - DO NOT create users via bench console while bench is stopped — user creation triggers background jobs that need Redis queue (port 11000); the creation may succeed but the console will show scary ConnectionError warnings. Always verify with `frappe.db.exists("User", email)` after
 - DO NOT put admin-only routes behind only a nav guard — also `<Navigate to="/" replace />` inside the page component when `user.name` is not in the admin set, so direct URL access is also blocked
+- DO NOT commit credentials, `.env` files, `service_account.json`, or `brain.db` to GitHub — always verify `.gitignore` covers these before any `git add`. The `.gitignore` in the monorepo root is the canonical list.
+- DO NOT update `README.md` in `~/Vera_ERP_combined/apps/hr_client/` (static copy) — always edit the live working copy at `~/frappe-bench/apps/hr_client/CLAUDE.md`, then sync to monorepo.
 - DO NOT use `@radix-ui/react-switch` — it is not installed; use `src/components/ui/switch.tsx` (the custom CSS toggle) instead
 - DO NOT use CamelCase module keys (e.g. `EmployeeLifecycle`) in v2 permissions API — all module keys are snake_case: `employee_lifecycle`, `logistics`, etc.
 - DO NOT expect `frappe.db.exists("Role", role)` to find "Projects Manager" — that role does not exist in ERPNext v15. Use "Projects User" instead
@@ -823,6 +1337,52 @@ All passwords: `Vera@2026`. Owais logs in as `Administrator`.
 - DO NOT pass `target_stage` to `request_next_stage` — the endpoint auto-calculates the next stage from `STAGE_ORDER`. The old endpoint `request_stage_advance` no longer exists; the new one is `request_next_stage(lead_id, request_notes)`.
 - DO NOT allow a second `request_next_stage` call while `stage_push_requested=1` — the backend blocks it ("An approval request is already pending"). The frontend "Push to [next]" button must be hidden/disabled when `stage_push_requested=1`.
 - DO NOT omit snapshot fields when creating a `Vera CRM Approval Request` — always copy `lead_title`, `company_name`, `contact_person`, `phone`, `email`, `service_interest` from the lead at time of request, so Owais sees full context without loading the lead separately.
+- DO NOT allow `approve_claim` or `reject_claim` to run for any user other than `owais@veraenterprises.in` or `Administrator` — check `frappe.session.user in OWAIS_USERS` at the very top and return `{"success": False, "error": "Not authorized"}` immediately. These endpoints modify financial records.
+- DO NOT trust the frontend to send the correct employee ID on claim submission — always auto-detect the employee via `_get_employee()` which looks up `frappe.session.user` through `user_id` → `company_email` → `personal_email`. If no employee is found, return an error. Never accept an `employee` parameter from the client.
+- DO NOT use `bg-popover`, `bg-card`, or other Tailwind CSS variable-based backgrounds in UI components — `tailwind.config.js` maps these to `hsl(var(--...))` but `index.css` defines the vars as `oklch(...)`, which is invalid inside `hsl()` and renders as transparent. Always use explicit colors (`bg-white`, `bg-gray-100`) in components.
+- DO NOT add new pages (routes) without wrapping them in the `<Layout />` component — the sidebar only renders inside Layout. All routes under `/` (except `/login`) must be nested under `<Route element={<Layout />}>` in App.tsx, or the sidebar will be absent on that page.
+- DO NOT use unstyled native `<select>` dropdowns without explicit `background-color: #FFFFFF; color: #0F172A` — CSS variable-based backgrounds resolve to transparent on native selects. The global rule in `index.css` covers all `select, select option` but any custom className that sets a bg color will override it; always use `bg-white text-gray-900` or inline style.
+- DO NOT display `reports_to` raw employee ID (e.g. "HR-EMP-00001") anywhere in the UI — always show `reports_to_name` which is resolved in `_serialize_employee` via `frappe.db.get_value("Employee", doc.reports_to, "employee_name")`. The raw ID is only useful for internal lookups.
+- DO NOT save bank details (bank_name, account_number, IFSC) to Employee DocType unless the custom fields exist — the authoritative store is the ERPNext `Bank Account` DocType (party_type=Employee). Current implementation saves to Employee custom fields (`bank_name`, `bank_ac_no`, `custom_ifsc_code`) as a shortcut; a future migration to `Bank Account` DocType will be needed before go-live.
+- DO NOT use a narrow centered column (`max-w-4xl`) for the profile page — the profile uses a full-width two-column grid layout (`grid-cols-1 lg:grid-cols-5`). Left 2/5 = Personal Info + Documents; right 3/5 = Work Info + Bank Details; Skills full-width at bottom. Always use this grid pattern for profile-style pages.
+- DO NOT mask Aadhaar/PAN numbers in `get_employee_profile` for the requesting user's own profile — non-admins can only reach the endpoint for their own record (PermissionError thrown otherwise), so masking their own data is unnecessary. Only mask when admin views another employee's data (current code doesn't do this — both admin and self get full values).
+- DO NOT navigate to `/recruitment/:jobOpening` — the old combined route no longer exists. The kanban pipeline view is now at `/recruitment/pipeline/:jobOpening` (rendered by `PipelinePage.tsx`). `/recruitment` is the job card listing only.
+- DO NOT hide or scroll away the Profile page header when switching tabs — the `ProfileHeader` must always be rendered above the tab bar and tab content, regardless of which tab is active.
+- DO NOT enter edit mode from any tab other than Profile — `handleEditClick()` must call `switchTab("profile")` before setting `editMode=true`. Clicking Edit from Attendance or Leave History tabs must silently switch to Profile tab first.
+- DO NOT show the user profile at the top of the sidebar — profile (avatar + name + email) appears ONLY at the bottom section above Sign Out. The top profile pill was removed; do not re-add it.
+- DO NOT use `onClick={() => {}}` as a placeholder for navigation — always use `useNavigate()` from React Router for internal page transitions. Never use `window.location.href` for internal SPA routes.
+- DO NOT forget to add "Happy Holiday" to the `LEAVE_TYPES` const array in `types.ts` AND to the `vera_leave_application.json` DocType options string AND run `bench migrate` — all three must stay in sync.
+- DO NOT link the Holidays sidebar item to `/admin/attendance?tab=holidays` — Holidays is at `/holidays` (standalone page, accessible to all employees, not admin-only). `isAttendanceActive` no longer needs a search-param exclusion.
+- DO NOT call `get_holidays` or `get_leave_policy` with admin checks — these return public policy data that every employee should see.
+- DO NOT forget to always show "days until next holiday" on the holidays page calendar tab — it is a required element per spec (banner below summary cards).
+- DO NOT use `items-end` on the profile header info row — it causes the employee name (h1, first element in the text div) to render inside the gradient banner and be hidden. The correct pattern is `items-start` on the flex row + `paddingTop: "44px"` on the text div to push text below the banner edge while keeping the avatar correctly centered at the banner bottom.
+- DO NOT forget `flex-shrink: 0` (or Tailwind `shrink-0`) on the profile avatar wrapper — without it, when the text div grows (e.g. long names), the avatar can compress horizontally, distorting the circle shape.
+- DO NOT render the tab bar when viewing another employee's profile as admin — `showTabs = isSelf` is the gate; when `isSelf=false` the tab bar is hidden and Profile content is shown directly (no attendance/leave tabs for admin-view-of-other).
+- DO NOT leave a doc type unhandled in pipeline.py DOCTYPE_MAP without resolving it — always either map it to a DocType or map it to `None` (which triggers PROCESSED:SKIPPED). A return `{success: false}` without updating admin_notes leaves the file in perpetual pending state
+- DO NOT forget that `PROCESSED:SKIPPED:...` counts as "processed" for the pending count calculation — any admin_notes starting with `PROCESSED:` means the file is done, whether it was extracted or skipped
+- DO NOT check `result.success` alone to determine if a file was processed — also check `result.skipped`; skipped files are success=True but should be counted separately (skipped, not processed)
+- DO NOT apply SKIP_PATTERNS only to "Other" type — apply `_should_skip_file()` BEFORE the DOCTYPE_MAP lookup so guide files with any doc_type are caught early
+- DO NOT use a 500ms sleep in production batch processing without a comment — it is intentional server throttling, not a bug or oversight
+- DO NOT return only `{"status": "ok"}` from `sync_now` — always include `total_files`, `new_files`, and `message` so the frontend can display current file counts
+- DO NOT compute AI health score from a single component — always average all 4 components: Ollama (0/50/70/100 based on status/response-time), extraction success_rate, sync freshness score (100/70/30/0 for good/ok/stale/unknown), data quality score. Missing any component skews the score.
+- DO NOT query the Error Log DocType with a `title` field — the column does not exist. Use raw SQL: `frappe.db.sql("SELECT creation, method, error FROM tabError Log ...")` where `method` stores the title argument and `error` stores the message.
+- DO NOT allow `close_job_opening` or `delete_job_opening` to run for anyone other than `owais@veraenterprises.in` or `Administrator` — both are Owais-only; `delete_job_opening` cascades deletion to all linked Job Applicants, Interviews, and Job Offers.
+- DO NOT call `delete_job_opening` without first deleting all child records — delete linked Interviews and Job Offers per applicant before deleting the Job Applicant, then delete the Job Opening itself. Skipping cascade will cause FK/link constraint errors in Frappe.
+- DO NOT overwrite `original_extracted` on re-extraction — it is a one-time snapshot of the first AI extraction and must never be updated. Only write it during `target_doc.insert()`, not `target_doc.save()`.
+- DO NOT add new Custom Fields to VE DocTypes via fixtures JSON — use bench console with `frappe.new_doc("Custom Field")` pattern instead, since fixture JSON approach conflicts with existing verification fields already installed on the DocTypes.
+- DO NOT set `manual_review_required = True` unless the record has reached exactly `MAX_EXTRACTION_ATTEMPTS` (3) AND the confidence is below `LOW_CONFIDENCE_THRESHOLD` (50%) — earlier attempts should not flag it. The flag clears to 0 if a subsequent extraction succeeds above threshold.
+- DO NOT call `reset_auto_verified()` without expecting side effects on the verification stats — it resets all AI-verified records to Unverified, which will lower the verified count shown in stats. Always call it at the START of Auto-Verify flow, before running `auto_verify_all()`.
+- DO NOT use a single global status filter in `get_all_extracted_records` to build the UI stats — always fetch ALL records (no status filter) and compute stats server-side. The stats dict is the authoritative source for the stats strip.
+- DO NOT put `extraction_history` as a fixture field — it is a Long Text that grows over time; fixtures would overwrite it during migrate. Only Custom Field definition (metadata) goes in fixtures; data stays in DB.
+- DO NOT return password fields in API responses — never include any password, hash, or secret in any dict returned from a whitelisted endpoint
+- DO NOT use `frappe.db.sql()` with f-string or % string formatting where any part comes from user input — all user-supplied values must use %s parameterized queries; hardcoded internal constants are acceptable
+- DO NOT store credentials in any tracked file — Jibble, Google service account, OpenAI keys, and any future secrets must live exclusively in `site_config.json`; `vera_drive/vera_drive/service_account.json` is gitignored and must stay that way
+- DO NOT use `dangerouslySetInnerHTML` without wrapping the value with `DOMPurify.sanitize()` — raw HTML injection from user content must always be sanitized
+- DO NOT set `developer_mode: 1` in production `site_config.json` — developer mode returns full Python tracebacks in API error responses; production must have `developer_mode: 0`
+- DO NOT disable or delete `owais@veraenterprises.in` via the User Management API — all 6 destructive endpoints hard-block this email with a PermissionError; the check is in `user_management.py` `_PROTECTED_USER` constant
+- DO NOT allow changing Owais's password via the admin panel — `change_user_password` blocks `_PROTECTED_USER`; Owais must use profile settings to change their own password
+- DO NOT skip logging user management actions to Frappe Activity Log — every create/delete/disable/role-change/password-change in `user_management.py` calls `_log_activity()` which inserts to Activity Log DocType
+- DO NOT allow weak passwords on user create or password change — `_validate_password_strength()` in `user_management.py` enforces: 8+ chars, 1 uppercase, 1 number, 1 special character; this check runs server-side regardless of frontend validation
 
 ---
 
