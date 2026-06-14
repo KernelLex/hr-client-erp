@@ -1,146 +1,180 @@
-# Vera ERP — Backend (hr_client)
+# Vera ERP — Monorepo
 
-Custom Frappe/ERPNext v15 app for Vera Enterprises HR + ERP system.
-Extends ERPNext via custom DocTypes, whitelisted API endpoints, and hooks.
-Never modifies core frappe/erpnext/hrms files.
+Full ERP system for Vera Enterprises built on ERPNext v15 + Frappe HRMS.
+This repo contains both the **backend** (Frappe custom app) and the **React frontend** in one place.
+
+```
+hr-client-erp/
+├── hr_client/        ← Frappe custom app (Python backend)
+├── hr-frontend/      ← React + Vite frontend
+├── mcp-brain/        ← MCP server for Claude Code context
+└── README.md
+```
+
+Employees only ever see the React app — the ERPNext/Frappe desk is completely hidden.
 
 ---
 
-## Stack
+## Quick Start (Development)
 
-- ERPNext v15 + Frappe HRMS
-- Python 3.10+
-- MariaDB
-- Redis (cache + queue)
-- Ollama (local LLM for document extraction — optional)
+```bash
+# 1. Start ERPNext bench (port 8001)
+cd ~/frappe-bench
+bench start
+
+# 2. Start React dev server (port 5173)
+cd hr-client-erp/hr-frontend
+npm install
+npm run dev
+```
+
+App runs at **http://localhost:5173**
+
+> Port 8001, not 8000 — Windows Hyper-V reserves 8000 on WSL2. Bench Procfile is already set to 8001.
 
 ---
 
-## Modules
+## Repository Structure
+
+### `hr_client/` — Backend (Frappe custom app)
 
 | Module | File | Description |
 |---|---|---|
-| Dashboard | `api/dashboard.py` | Live stats for the React dashboard |
-| Employee | `api/employee.py` | Profile view/edit, photo upload, default-password check |
+| Dashboard | `api/dashboard.py` | Live stats for React dashboard |
+| Employee | `api/employee.py` | Profile view/edit, default-password check |
 | Employee Lifecycle | `api/employee_lifecycle.py` | Onboarding, offboarding, exit interview |
-| Recruitment | `api/recruitment.py` | Job openings, candidate pipeline, interview rounds |
-| CRM | `api/crm.py` | Lead pipeline with stage-advance approval flow |
-| Attendance | `api/jibble.py` | Jibble time-tracking integration (live attendance) |
+| Recruitment | `api/recruitment.py` | Job openings, candidate pipeline |
+| CRM | `api/crm.py` | Lead pipeline with approval flow |
+| Attendance | `api/jibble.py` | Jibble time-tracking integration |
 | Leave | `api/leave.py` | Leave applications + admin approval |
-| Expenses | `api/expenses.py` | Petrol/material expense claims + admin approval |
+| Expenses | `api/expenses.py` | Expense claims + admin approval |
 | Permissions | `api/permissions.py` | Per-user module access control |
-| User Management | `api/user_management.py` | Create/disable/delete ERPNext users (admin only) |
+| User Management | `api/user_management.py` | Create/disable/delete users (admin only) |
 | AI / Drive | `api/ai.py` | Document extraction, verification, AI health |
-| Notes | `api/notes.py` | Internal employee notes (admin) |
+| Notes | `api/notes.py` | Internal employee notes |
 | Utils | `api/utils.py` | `handle_api_error` decorator |
 
----
+### `hr-frontend/` — Frontend (React + Vite)
 
-## Installation
-
-### Prerequisites
-
-- ERPNext v15 bench set up and running
-- Site created (this project uses `hrms.localhost`)
-- Python 3.10+
-
-### 1. Get the app
-
-```bash
-cd ~/frappe-bench
-bench get-app https://github.com/KernelLex/hr-client-erp.git
-bench install-app hr_client
-```
-
-### 2. Install vera_drive (Google Drive integration)
-
-```bash
-bench get-app https://github.com/KernelLex/vera-drive.git   # if separate repo
-bench install-app vera_drive
-```
-
-Or if in the same bench:
-```bash
-bench install-app vera_drive
-```
-
-### 3. Migrate and clear cache
-
-```bash
-bench --site hrms.localhost migrate
-bench --site hrms.localhost clear-cache
-```
+| Route | Description | Access |
+|---|---|---|
+| `/` | Dashboard — stats, activity, AI health | All |
+| `/recruitment` | Job openings + candidate pipeline | All |
+| `/crm` | CRM lead pipeline with approval flow | All |
+| `/my-profile` | Employee self-view/edit profile | All |
+| `/leave` | Leave applications + history | All |
+| `/expenses` | Expense claims | All |
+| `/holidays` | 2026 holiday calendar + leave policy | All |
+| `/admin/employees` | Team management | Admin |
+| `/admin/attendance` | Live Jibble attendance dashboard | Admin |
+| `/admin/users` | User Management panel | Admin |
+| `/admin/permissions` | Module access control | Admin |
+| `/accounts` | Google Drive sync + structured data | Admin |
+| `/business` | Business intelligence dashboard | Admin |
+| `/verify` | AI document verification | Admin |
+| `/ai-insights` | AI health dashboard | Admin |
 
 ---
 
 ## Required Configuration
 
-### A. Jibble Attendance Integration
+These secrets are **not in git** — you must set them up manually on each machine.
 
-Jibble credentials go in `site_config.json` — **never in code**.
+### 1. Jibble Attendance API
+
+Get from: **Jibble Dashboard → Settings → Integrations → API** (OAuth2 client credentials)
 
 ```bash
 bench --site hrms.localhost set-config jibble_client_id "YOUR_JIBBLE_CLIENT_ID"
 bench --site hrms.localhost set-config jibble_client_secret "YOUR_JIBBLE_CLIENT_SECRET"
 ```
 
-Get these from: **Jibble Dashboard → Settings → Integrations → API**
-- OAuth 2.0 client credentials (grant_type: client_credentials)
-- Scopes needed: `timesheets`, `people`
+### 2. Google Drive Integration
 
-### B. Google Drive Integration (vera_drive)
-
-Place your Google service account JSON at:
+Place the Google service account JSON key at:
 ```
 frappe-bench/apps/vera_drive/vera_drive/service_account.json
 ```
 
-This file is **gitignored** and must never be committed.
+**This file is gitignored — never commit it.**
 
-To get it:
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a project → Enable **Google Drive API**
-3. Create a **Service Account** → download JSON key
-4. Share your Google Drive folder with the service account email (read-only)
-5. Update `ROOT_FOLDER_ID` in `vera_drive/vera_drive/google_drive.py` with your Drive folder ID
+To generate it:
+1. [Google Cloud Console](https://console.cloud.google.com) → Enable **Google Drive API**
+2. Create a **Service Account** → Keys → Add Key → JSON → download
+3. Share your Drive root folder with the service account email (Viewer permission)
+4. Update `ROOT_FOLDER_ID` in `vera_drive/vera_drive/google_drive.py` with your folder's ID (from the URL when you open it in Drive)
 
-Also update `VERA_EMPLOYEES` and `FOLDER_OWNER_MAP` in `google_drive.py` to match your team's Google accounts and folder structure.
+Also update `VERA_EMPLOYEES` and `FOLDER_OWNER_MAP` in `google_drive.py` to match your team.
 
-### C. OpenAI (AI Job Description Generator)
+### 3. OpenAI (AI Job Description Generator — optional)
 
-The OpenAI key lives in the **frontend** `.env.local` as `VITE_OPENAI_API_KEY` — the API call is made from the browser, not the backend. See the frontend README for details.
-
-If you use the Ollama-based local AI for document extraction, ensure Ollama is running:
-```bash
-ollama serve          # starts on localhost:11434
-ollama pull mistral   # or whichever model is configured in api/ai.py
+```env
+# hr-frontend/.env.local
+VITE_OPENAI_API_KEY=sk-proj-...
 ```
-Ollama is optional — document extraction falls back to regex rules if Ollama is offline.
 
-### D. Session Security (production)
+Used client-side for the AI JD generator only. Everything else works without it.
+Model: `gpt-4o-mini`. Get a key at [platform.openai.com](https://platform.openai.com/api-keys).
+
+### 4. Ollama (local AI for document extraction — optional)
 
 ```bash
-bench --site hrms.localhost set-config session_expiry "06:00:00"
-bench --site hrms.localhost set-config session_expiry_mobile "720:00:00"
+ollama serve          # runs on localhost:11434
+ollama pull mistral   # or whichever model is set in hr_client/api/ai.py
 ```
 
-Also set in `site_config.json`:
-```json
-{
-  "developer_mode": 0
-}
-```
+Document extraction falls back to regex rules if Ollama is offline.
 
 ---
 
-## site_config.json — Full Reference
+## Frontend Setup (`hr-frontend/`)
 
-After setup, your `sites/hrms.localhost/site_config.json` should look like:
+```bash
+cd hr-frontend
+npm install
+```
+
+Create `hr-frontend/.env.local`:
+
+```env
+# Empty = Vite proxy handles /api/* → ERPNext in dev
+VITE_API_BASE=
+
+# Always false in real usage
+VITE_USE_MOCK=false
+
+# Optional — only for AI Job Description Generator
+VITE_OPENAI_API_KEY=sk-proj-...
+```
+
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_API_BASE` | No | Empty in dev. Set to server IP/domain in production. |
+| `VITE_USE_MOCK` | No | `"false"` for real backend. `"true"` for UI development without ERPNext. |
+| `VITE_OPENAI_API_KEY` | No | OpenAI key for AI JD generator. Feature disabled if missing. |
+
+---
+
+## Backend Setup (`hr_client/`)
+
+### Install the Frappe app
+
+```bash
+cd ~/frappe-bench
+bench get-app https://github.com/KernelLex/hr-client-erp.git
+bench install-app hr_client
+bench --site hrms.localhost migrate
+bench --site hrms.localhost clear-cache
+```
+
+### `site_config.json` reference
+
+`~/frappe-bench/sites/hrms.localhost/site_config.json`:
 
 ```json
 {
-  "db_name": "_your_db_name",
-  "db_password": "your_db_password",
+  "db_name": "_auto_generated_by_bench",
+  "db_password": "_auto_generated_by_bench",
   "db_type": "mariadb",
   "developer_mode": 0,
   "host_name": "http://hrms.localhost:8001",
@@ -151,62 +185,81 @@ After setup, your `sites/hrms.localhost/site_config.json` should look like:
 }
 ```
 
-> `db_name` and `db_password` are auto-generated by bench when the site is created.
-
----
-
-## Starting for Development
-
-```bash
-# Terminal 1 — ERPNext bench (runs on port 8001)
-cd ~/frappe-bench
-bench start
-
-# Terminal 2 — React frontend (runs on port 5173, proxies to bench)
-cd ~/hr-frontend
-npm run dev
-```
-
-> **Port 8001 not 8000:** Windows Hyper-V reserves port 8000 on WSL2. The bench `Procfile` is already set to 8001.
-
-Access the app at `http://localhost:5173`
-
----
-
-## First-time User Setup
-
-After installing the app, seed the initial users:
+### Seed initial users
 
 ```bash
 bench --site hrms.localhost execute hr_client.patches.create_all_users
 bench --site hrms.localhost execute hr_client.patches.create_owais_user
 ```
 
-Default password for all users: `Vera@2026`
-**All users should change their password on first login.**
+Default password for all users: **`Vera@2026`** — change immediately after first login.
+Any user still on the default password sees a warning banner on the dashboard.
 
 ---
 
-## API Security Model
+## Production Deployment
 
-- All endpoints require `@frappe.whitelist()` — unauthenticated requests are rejected by Frappe
-- All endpoints are wrapped with `@handle_api_error` (from `api/utils.py`) — clean JSON errors, no stack traces
-- Admin-only endpoints call `_require_admin()` which checks `frappe.session.user` against the admin set
-- Owais (`owais@veraenterprises.in`) is a protected superuser — cannot be disabled/deleted via the User Management API
-- All user management actions are logged to Frappe's Activity Log
-- Passwords validated server-side: 8+ chars, 1 uppercase, 1 number, 1 special character
-- No credentials in any tracked file — Jibble and DB creds in `site_config.json` only
-- `service_account.json` is gitignored in `vera_drive`
+### nginx config
 
----
+```nginx
+server {
+    listen 80;
+    server_name _;   # replace with your domain
 
-## Firewall (production)
+    root /path/to/hr-client-erp/hr-frontend/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8001;
+        proxy_set_header Host hrms.localhost;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /assets/ {
+        proxy_pass http://127.0.0.1:8001;
+        proxy_set_header Host hrms.localhost;
+    }
+
+    # Block Frappe desk from public internet — CRITICAL
+    location /desk  { return 403; }
+    location /app   { return 403; }
+    location /login { return 403; }
+}
+```
+
+### Firewall
 
 ```bash
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
-sudo ufw deny 8001/tcp    # ERPNext port — internal only
+sudo ufw deny 8001/tcp    # ERPNext — internal only
 sudo ufw deny 11434/tcp   # Ollama — internal only
 sudo ufw --force enable
 ```
+
+### Build frontend for production
+
+```bash
+cd hr-frontend
+npm run build
+# output → hr-frontend/dist/
+sudo systemctl reload nginx
+```
+
+---
+
+## Security Model
+
+- All API endpoints: `@frappe.whitelist()` + `@handle_api_error` — unauthenticated requests rejected, errors return clean JSON
+- Admin-only endpoints: `_require_admin()` checks `frappe.session.user`
+- `owais@veraenterprises.in` is a protected superuser — cannot be disabled, deleted, or have password changed via admin panel
+- All user management actions logged to Frappe Activity Log
+- Password policy enforced server-side: 8+ chars, uppercase, number, special character
+- No secrets in any tracked file — Jibble creds in `site_config.json`, Drive key in gitignored file
+- `developer_mode: 0` in production — no stack traces in API responses
+- Session expiry: 6 hours (web), 30 days (mobile)
