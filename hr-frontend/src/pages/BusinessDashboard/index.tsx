@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { TrendingUp, RefreshCw, Settings, AlertTriangle, CheckCircle, Clock, Link2, Bot, Sparkles, ExternalLink } from "lucide-react"
+import { TrendingUp, RefreshCw, Settings, AlertTriangle, Clock, Link2, Bot, Sparkles, ExternalLink } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import {
   getStructuredData, processSingleFile, autoLinkDocuments,
-  updatePaymentStatus, updateDocStatus,
+  updateDocStatus,
   getDocumentConnections,
   type SalesInvoice, type PurchaseInvoice, type PurchaseOrder,
   type Quotation, type FinancialReport, type SalaryRecord,
@@ -14,13 +14,6 @@ import { getDashboardInsights, getAccuracyStats } from "@/api/ai"
 import { useAuth } from "@/context/AuthContext"
 
 type ActiveTab = "sales" | "purchase" | "accounts" | "hr" | "links"
-
-function fmt(n: number) {
-  if (!n) return "₹0"
-  if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L`
-  if (n >= 1000) return `₹${(n / 1000).toFixed(0)}K`
-  return `₹${n.toLocaleString("en-IN")}`
-}
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
@@ -44,6 +37,20 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
+function DirectionBadge({ direction }: { direction?: string }) {
+  const map: Record<string, string> = {
+    Outgoing: "bg-blue-100 text-blue-700",
+    Incoming: "bg-purple-100 text-purple-700",
+    Internal: "bg-gray-100 text-gray-600",
+  }
+  if (!direction || direction === "Unknown") return null
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[direction] ?? "bg-gray-100 text-gray-600"}`}>
+      {direction}
+    </span>
+  )
+}
+
 function MetricCard({ label, value, sub, accent }: { label: string; value: string; sub: string; accent: string }) {
   return (
     <div className={`bg-white rounded-xl border shadow-sm p-4 border-l-4 ${accent}`}>
@@ -54,14 +61,18 @@ function MetricCard({ label, value, sub, accent }: { label: string; value: strin
   )
 }
 
+function DriveLink({ href }: { href?: string }) {
+  if (!href) return <span className="text-gray-300 text-xs">—</span>
+  return (
+    <a href={href} target="_blank" rel="noreferrer"
+       className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 whitespace-nowrap">
+      <ExternalLink className="w-3 h-3" /> Open
+    </a>
+  )
+}
+
 function SalesTab({ data }: { data: { sales_invoices?: SalesInvoice[]; quotations?: Quotation[] } }) {
   const qc = useQueryClient()
-  const navigate = useNavigate()
-  const updateStatus = useMutation({
-    mutationFn: ({ doctype, name, status }: { doctype: string; name: string; status: string }) =>
-      updatePaymentStatus(doctype, name, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["structured-data"] }),
-  })
 
   const invoices = data.sales_invoices ?? []
   const quotations = data.quotations ?? []
@@ -69,44 +80,29 @@ function SalesTab({ data }: { data: { sales_invoices?: SalesInvoice[]; quotation
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-semibold text-gray-800 mb-3">Sales Invoices ({invoices.length})</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">Sales Invoices & Receipts ({invoices.length})</h3>
         <div className="bg-white rounded-xl border overflow-hidden">
           {invoices.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">No sales invoices extracted yet. Process Drive files to populate.</div>
+            <div className="p-8 text-center text-gray-400">No sales invoices found. Process Drive files to populate.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr className="text-left">
-                  <th className="px-4 py-3 text-gray-600 font-medium">Invoice #</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Client</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">File Name</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Client / Party</th>
                   <th className="px-4 py-3 text-gray-600 font-medium">Date</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Amount</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Status</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">AI</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Action</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Direction</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Open</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {invoices.map((inv) => (
-                  <tr key={inv.name} className={`hover:bg-gray-50 ${inv.payment_status === "Overdue" ? "bg-red-50" : ""}`}>
-                    <td className="px-4 py-3 font-mono text-xs">{inv.invoice_number || inv.name}</td>
+                  <tr key={inv.name} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-700 max-w-xs truncate text-xs font-mono">{inv.invoice_number || inv.name}</td>
                     <td className="px-4 py-3 text-gray-700">{inv.client_name || "—"}</td>
                     <td className="px-4 py-3 text-gray-500">{inv.invoice_date || "—"}</td>
-                    <td className="px-4 py-3 font-semibold">{fmt(inv.total_amount)}</td>
-                    <td className="px-4 py-3"><StatusBadge status={inv.payment_status} /></td>
-                    <td className="px-4 py-3">
-                      <ConfBadgeInline score={inv.confidence_score} onClick={() => navigate("/verify")} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {inv.payment_status === "Pending" || inv.payment_status === "Overdue" ? (
-                        <button
-                          onClick={() => updateStatus.mutate({ doctype: "VE Sales Invoice", name: inv.name, status: "Paid" })}
-                          className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
-                        >
-                          Mark Paid
-                        </button>
-                      ) : null}
-                    </td>
+                    <td className="px-4 py-3"><DirectionBadge direction={inv.direction} /></td>
+                    <td className="px-4 py-3"><DriveLink href={inv.web_view_link} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -119,41 +115,39 @@ function SalesTab({ data }: { data: { sales_invoices?: SalesInvoice[]; quotation
         <h3 className="font-semibold text-gray-800 mb-3">Quotations ({quotations.length})</h3>
         <div className="bg-white rounded-xl border overflow-hidden">
           {quotations.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">No quotations extracted yet.</div>
+            <div className="p-8 text-center text-gray-400">No quotations found.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr className="text-left">
-                  <th className="px-4 py-3 text-gray-600 font-medium">Quote #</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">File Name</th>
                   <th className="px-4 py-3 text-gray-600 font-medium">Client</th>
                   <th className="px-4 py-3 text-gray-600 font-medium">Date</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Value</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Status</th>
                   <th className="px-4 py-3 text-gray-600 font-medium">Action</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Open</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {quotations.map((q) => (
                   <tr key={q.name} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">{q.quote_number || q.name}</td>
+                    <td className="px-4 py-3 text-gray-700 max-w-xs truncate text-xs font-mono">{q.quote_number || q.name}</td>
                     <td className="px-4 py-3 text-gray-700">{q.client_name || "—"}</td>
                     <td className="px-4 py-3 text-gray-500">{q.quote_date || "—"}</td>
-                    <td className="px-4 py-3 font-semibold">{fmt(q.final_value || q.total_value)}</td>
-                    <td className="px-4 py-3"><StatusBadge status={q.status} /></td>
                     <td className="px-4 py-3 space-x-1">
                       {q.status === "Sent" && (
                         <>
                           <button
-                            onClick={() => updateDocStatus("VE Quotation", q.name, "Won")}
+                            onClick={() => { updateDocStatus("VE Quotation", q.name, "Won"); qc.invalidateQueries({ queryKey: ["structured-data"] }) }}
                             className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
                           >Won</button>
                           <button
-                            onClick={() => updateDocStatus("VE Quotation", q.name, "Lost")}
+                            onClick={() => { updateDocStatus("VE Quotation", q.name, "Lost"); qc.invalidateQueries({ queryKey: ["structured-data"] }) }}
                             className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                           >Lost</button>
                         </>
                       )}
                     </td>
+                    <td className="px-4 py-3"><DriveLink href={q.web_view_link} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -170,18 +164,6 @@ function PurchaseTab({
 }: {
   data: { purchase_invoices?: PurchaseInvoice[]; purchase_orders?: PurchaseOrder[] }
 }) {
-  const qc = useQueryClient()
-  const updateStatus = useMutation({
-    mutationFn: ({ doctype, name, status }: { doctype: string; name: string; status: string }) =>
-      updatePaymentStatus(doctype, name, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["structured-data"] }),
-  })
-  const updatePO = useMutation({
-    mutationFn: ({ name, status }: { name: string; status: string }) =>
-      updateDocStatus("VE Purchase Order", name, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["structured-data"] }),
-  })
-
   const invoices = data.purchase_invoices ?? []
   const orders = data.purchase_orders ?? []
 
@@ -191,35 +173,26 @@ function PurchaseTab({
         <h3 className="font-semibold text-gray-800 mb-3">Purchase Invoices ({invoices.length})</h3>
         <div className="bg-white rounded-xl border overflow-hidden">
           {invoices.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">No purchase invoices extracted yet.</div>
+            <div className="p-8 text-center text-gray-400">No purchase invoices found.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr className="text-left">
-                  <th className="px-4 py-3 text-gray-600 font-medium">Invoice #</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Vendor</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">File Name</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Vendor / Party</th>
                   <th className="px-4 py-3 text-gray-600 font-medium">Date</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Amount</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Status</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Action</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Direction</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Open</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {invoices.map((inv) => (
                   <tr key={inv.name} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">{inv.invoice_number || inv.name}</td>
+                    <td className="px-4 py-3 text-gray-700 max-w-xs truncate text-xs font-mono">{inv.invoice_number || inv.name}</td>
                     <td className="px-4 py-3 text-gray-700">{inv.vendor_name || "—"}</td>
                     <td className="px-4 py-3 text-gray-500">{inv.invoice_date || "—"}</td>
-                    <td className="px-4 py-3 font-semibold">{fmt(inv.total_amount)}</td>
-                    <td className="px-4 py-3"><StatusBadge status={inv.payment_status} /></td>
-                    <td className="px-4 py-3">
-                      {inv.payment_status === "Pending" && (
-                        <button
-                          onClick={() => updateStatus.mutate({ doctype: "VE Purchase Invoice", name: inv.name, status: "Paid" })}
-                          className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
-                        >Mark Paid</button>
-                      )}
-                    </td>
+                    <td className="px-4 py-3"><DirectionBadge direction={inv.direction} /></td>
+                    <td className="px-4 py-3"><DriveLink href={inv.web_view_link} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -232,35 +205,24 @@ function PurchaseTab({
         <h3 className="font-semibold text-gray-800 mb-3">Purchase Orders ({orders.length})</h3>
         <div className="bg-white rounded-xl border overflow-hidden">
           {orders.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">No purchase orders extracted yet.</div>
+            <div className="p-8 text-center text-gray-400">No purchase orders found.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr className="text-left">
-                  <th className="px-4 py-3 text-gray-600 font-medium">PO #</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">File Name</th>
                   <th className="px-4 py-3 text-gray-600 font-medium">Vendor</th>
                   <th className="px-4 py-3 text-gray-600 font-medium">Date</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Value</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Status</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Action</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Open</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {orders.map((po) => (
                   <tr key={po.name} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">{po.po_number || po.name}</td>
+                    <td className="px-4 py-3 text-gray-700 max-w-xs truncate text-xs font-mono">{po.po_number || po.name}</td>
                     <td className="px-4 py-3 text-gray-700">{po.vendor_name || "—"}</td>
                     <td className="px-4 py-3 text-gray-500">{po.po_date || "—"}</td>
-                    <td className="px-4 py-3 font-semibold">{fmt(po.total_value)}</td>
-                    <td className="px-4 py-3"><StatusBadge status={po.status} /></td>
-                    <td className="px-4 py-3">
-                      {po.status === "Open" && (
-                        <button
-                          onClick={() => updatePO.mutate({ name: po.name, status: "Received" })}
-                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
-                        >Mark Received</button>
-                      )}
-                    </td>
+                    <td className="px-4 py-3"><DriveLink href={po.web_view_link} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -274,72 +236,45 @@ function PurchaseTab({
 
 function AccountsTab({ data }: { data: { financial_reports?: FinancialReport[] } }) {
   const reports = data.financial_reports ?? []
-  const pl = reports.find((r) => r.report_type === "Profit & Loss")
-  const bs = reports.find((r) => r.report_type === "Balance Sheet")
-  const tb = reports.find((r) => r.report_type === "Trial Balance")
+
+  const byType = reports.reduce<Record<string, FinancialReport[]>>((acc, r) => {
+    const t = r.report_type || "Other"
+    ;(acc[t] = acc[t] ?? []).push(r)
+    return acc
+  }, {})
 
   return (
     <div className="space-y-6">
-      {pl && (
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-3">Profit & Loss Summary</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border p-4 border-l-4 border-l-green-500">
-              <div className="text-xs text-gray-500 mb-1">Total Revenue</div>
-              <div className="text-xl font-bold text-gray-900">{fmt(pl.total_revenue)}</div>
-              <div className="text-xs text-gray-400 mt-1">Gross: {pl.gross_margin_pct?.toFixed(1) ?? "—"}%</div>
-            </div>
-            <div className="bg-white rounded-xl border p-4 border-l-4 border-l-red-400">
-              <div className="text-xs text-gray-500 mb-1">Total Expenses</div>
-              <div className="text-xl font-bold text-gray-900">{fmt(pl.total_expenses)}</div>
-            </div>
-            <div className={`bg-white rounded-xl border p-4 border-l-4 ${(pl.net_profit ?? 0) >= 0 ? "border-l-indigo-500" : "border-l-red-500"}`}>
-              <div className="text-xs text-gray-500 mb-1">Net Profit</div>
-              <div className={`text-xl font-bold ${(pl.net_profit ?? 0) >= 0 ? "text-indigo-700" : "text-red-600"}`}>
-                {fmt(pl.net_profit)}
-              </div>
-              <div className="text-xs text-gray-400 mt-1">Net: {pl.net_margin_pct?.toFixed(1) ?? "—"}%</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {bs && (
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-3">Balance Sheet Summary</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border p-4">
-              <div className="text-xs text-gray-500 mb-1">Total Assets</div>
-              <div className="text-xl font-bold">{fmt(bs.total_assets)}</div>
-            </div>
-            <div className="bg-white rounded-xl border p-4">
-              <div className="text-xs text-gray-500 mb-1">Total Liabilities</div>
-              <div className="text-xl font-bold">{fmt(bs.total_liabilities)}</div>
-            </div>
-            <div className="bg-white rounded-xl border p-4">
-              <div className="text-xs text-gray-500 mb-1">Equity</div>
-              <div className="text-xl font-bold">{fmt(bs.equity)}</div>
-              {bs.current_ratio > 0 && (
-                <div className="text-xs text-gray-400 mt-1">Current ratio: {bs.current_ratio.toFixed(2)}</div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tb && (
-        <div className="bg-white rounded-xl border p-4">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <span className="text-sm font-medium">Trial Balance — Period: {tb.period || "—"}</span>
-          </div>
-        </div>
-      )}
-
-      {reports.length === 0 && (
+      {reports.length === 0 ? (
         <div className="bg-white rounded-xl border p-8 text-center text-gray-400">
-          No financial reports extracted yet. Upload P&amp;L, Balance Sheet, or Trial Balance files to Drive.
+          No financial documents found. Upload P&amp;L, Balance Sheet, Trial Balance, Ledger, or Bank Reconciliation files to Drive.
         </div>
+      ) : (
+        Object.entries(byType).map(([type, items]) => (
+          <div key={type}>
+            <h3 className="font-semibold text-gray-800 mb-3">{type} ({items.length})</h3>
+            <div className="bg-white rounded-xl border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b">
+                  <tr className="text-left">
+                    <th className="px-4 py-3 text-gray-600 font-medium">File Name</th>
+                    <th className="px-4 py-3 text-gray-600 font-medium">Date</th>
+                    <th className="px-4 py-3 text-gray-600 font-medium">Open</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {items.map((r) => (
+                    <tr key={r.name} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-700 max-w-sm truncate text-xs font-mono">{r.file_name || r.name}</td>
+                      <td className="px-4 py-3 text-gray-500">{r.from_date || "—"}</td>
+                      <td className="px-4 py-3"><DriveLink href={r.web_view_link} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))
       )}
     </div>
   )
@@ -351,33 +286,27 @@ function HRTab({ data }: { data: { salary_records?: SalaryRecord[] } }) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-semibold text-gray-800 mb-3">Payroll Records ({salaries.length})</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">HR & Payroll Documents ({salaries.length})</h3>
         <div className="bg-white rounded-xl border overflow-hidden">
           {salaries.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">No salary records extracted yet.</div>
+            <div className="p-8 text-center text-gray-400">No HR/payroll files found.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr className="text-left">
-                  <th className="px-4 py-3 text-gray-600 font-medium">Employee</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Month</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Gross</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Deductions</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">Net Pay</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">PF</th>
-                  <th className="px-4 py-3 text-gray-600 font-medium">TDS</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">File Name</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Employee / Party</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Period</th>
+                  <th className="px-4 py-3 text-gray-600 font-medium">Open</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {salaries.map((s) => (
                   <tr key={s.name} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">{s.employee_name || "—"}</td>
-                    <td className="px-4 py-3 text-gray-500">{s.month_year || `${s.month ?? ""} ${s.year ?? ""}`}</td>
-                    <td className="px-4 py-3">{fmt(s.gross_salary)}</td>
-                    <td className="px-4 py-3 text-red-600">{fmt(s.total_deductions)}</td>
-                    <td className="px-4 py-3 font-semibold text-green-700">{fmt(s.net_salary)}</td>
-                    <td className="px-4 py-3 text-gray-500">{fmt(s.pf_amount)}</td>
-                    <td className="px-4 py-3 text-gray-500">{fmt(s.tds_amount)}</td>
+                    <td className="px-4 py-3 text-gray-700 max-w-xs truncate text-xs font-mono">{s.file_name || s.name}</td>
+                    <td className="px-4 py-3 text-gray-700">{s.employee_name || "—"}</td>
+                    <td className="px-4 py-3 text-gray-500">{s.month_year || "—"}</td>
+                    <td className="px-4 py-3"><DriveLink href={s.web_view_link} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -444,24 +373,13 @@ function LinksTab() {
                     {chain.quotation && (
                       <div className="text-gray-700">
                         Quote {chain.quotation.quote_number || chain.quotation.name}
-                        <span className="text-gray-400"> ({chain.client}  {fmt(Number(chain.quotation.final_value))})</span>
+                        <span className="text-gray-400"> ({chain.client})</span>
                         <StatusBadge status={chain.quotation.status} />
                       </div>
                     )}
                     {chain.invoice && (
-                      <div className="pl-4 text-gray-700 before:content-['└→_'] before:text-gray-400">
+                      <div className="pl-4 text-gray-700 before:content-[\'└→_\'] before:text-gray-400">
                         Invoice {chain.invoice.number || chain.invoice.name}
-                        <span className="text-gray-400"> ({fmt(chain.invoice.amount)})</span>
-                        <StatusBadge status={chain.invoice.status} />
-                        {chain.invoice.status === "Pending" && (
-                          <span className="ml-2 text-yellow-600 text-xs">⏳ awaiting payment</span>
-                        )}
-                      </div>
-                    )}
-                    {!chain.quotation && chain.invoice && (
-                      <div className="text-gray-700">
-                        Invoice {chain.invoice.number || chain.invoice.name}
-                        <span className="text-gray-400"> ({chain.client}  {fmt(chain.invoice.amount)})</span>
                         <StatusBadge status={chain.invoice.status} />
                       </div>
                     )}
@@ -478,14 +396,13 @@ function LinksTab() {
                     {chain.po && (
                       <div className="text-gray-700">
                         PO {chain.po.number || chain.po.name}
-                        <span className="text-gray-400"> ({chain.vendor}  {fmt(chain.po.amount)})</span>
+                        <span className="text-gray-400"> ({chain.vendor})</span>
                         <StatusBadge status={chain.po.status} />
                       </div>
                     )}
                     {chain.invoice ? (
-                      <div className="pl-4 before:content-['└→_'] before:text-gray-400 text-gray-700">
-                        Invoice {(chain.invoice as { invoice_number?: string; name?: string }).invoice_number || chain.invoice.name}
-                        <span className="text-gray-400"> ({fmt(chain.invoice.amount)})</span>
+                      <div className="pl-4 text-gray-700">
+                        Invoice {chain.invoice.name}
                         <StatusBadge status={chain.invoice.status} />
                       </div>
                     ) : (
@@ -515,21 +432,19 @@ function ProcessFilesPanel() {
     staleTime: 30_000,
   })
 
-  const pending = (files ?? []).filter(
-    (f) => !String(f.admin_notes ?? "").startsWith("PROCESSED:")
-  )
+  const allFiles = files ?? []
+  const pending = allFiles.filter((f) => f.status !== "Reviewed")
 
   const handleExtractAll = async () => {
     if (pending.length === 0) return
     setExtracting(true)
     setLog(null)
 
-    // Fetch a fresh file list at click time so we process the actual current state
     let freshPending = pending
     try {
       const fresh = await getDriveFiles("All")
       freshPending = (fresh ?? []).filter(
-        (f) => !String(f.admin_notes ?? "").startsWith("PROCESSED:")
+        (f) => f.status !== "Reviewed"
       )
     } catch { /* fall back to cached pending */ }
 
@@ -562,11 +477,9 @@ function ProcessFilesPanel() {
         failCount++
         failedFiles.push({ name: file.file_name, reason: (err as Error).message })
       }
-      // Small delay to avoid overwhelming the server
       await new Promise((r) => setTimeout(r, 500))
     }
 
-    // Auto-link after processing
     try { await autoLinkDocuments() } catch { /* non-fatal */ }
 
     setCurrentFile("")
@@ -592,11 +505,10 @@ function ProcessFilesPanel() {
           <span className="font-semibold text-gray-800">Extract Data from Drive Files</span>
         </div>
         <div className="flex items-center gap-2">
-          {pending.length === 0 ? (
-            <span className="text-sm text-green-600 font-medium">✅ All files processed</span>
-          ) : (
-            <span className="text-sm text-gray-500">{pending.length} file{pending.length !== 1 ? "s" : ""} pending</span>
-          )}
+          <span className="text-sm text-gray-500">
+            {allFiles.length} files total
+            {pending.length > 0 ? ` · ${pending.length} pending` : " · all synced"}
+          </span>
           <button
             onClick={handleExtractAll}
             disabled={extracting || pending.length === 0}
@@ -630,7 +542,7 @@ function ProcessFilesPanel() {
         <div className="mb-3 text-sm bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-green-700">{log}</div>
       )}
 
-      {pending.length > 0 && (
+      {allFiles.length > 0 && (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
@@ -638,24 +550,32 @@ function ProcessFilesPanel() {
                 <th className="px-3 py-2 text-gray-600 font-medium">File</th>
                 <th className="px-3 py-2 text-gray-600 font-medium">Type</th>
                 <th className="px-3 py-2 text-gray-600 font-medium">Status</th>
+                <th className="px-3 py-2 text-gray-600 font-medium">Open</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {pending.slice(0, 10).map((f) => (
+              {allFiles.slice(0, 15).map((f) => (
                 <tr key={f.name} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-700 truncate max-w-xs">{f.file_name}</td>
-                  <td className="px-3 py-2 text-gray-500">{f.doc_type || "—"}</td>
+                  <td className="px-3 py-2 text-gray-700 truncate max-w-xs text-xs">{f.file_name}</td>
+                  <td className="px-3 py-2 text-gray-500 text-xs">{f.doc_type || "—"}</td>
                   <td className="px-3 py-2">
-                    <span className="flex items-center gap-1 text-yellow-700">
-                      <Clock className="w-3 h-3" /> Pending
-                    </span>
+                    {f.status === "Reviewed" ? (
+                      <span className="flex items-center gap-1 text-green-700 text-xs">✓ Synced</span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-yellow-700 text-xs">
+                        <Clock className="w-3 h-3" /> Pending
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <DriveLink href={f.drive_view_link} />
                   </td>
                 </tr>
               ))}
-              {pending.length > 10 && (
+              {allFiles.length > 15 && (
                 <tr>
-                  <td colSpan={3} className="px-3 py-2 text-center text-gray-400 text-xs">
-                    + {pending.length - 10} more
+                  <td colSpan={4} className="px-3 py-2 text-center text-gray-400 text-xs">
+                    + {allFiles.length - 15} more files
                   </td>
                 </tr>
               )}
@@ -781,18 +701,6 @@ const TABS: { id: ActiveTab; label: string; icon: string }[] = [
   { id: "links", label: "Links", icon: "🔗" },
 ]
 
-function ConfBadgeInline({ score, onClick }: { score?: number | null; onClick?: () => void }) {
-  const pct = score ?? 0
-  if (!pct) return null
-  const cls = pct >= 70 ? "text-green-700 bg-green-50" : pct >= 40 ? "text-yellow-700 bg-yellow-50 cursor-pointer" : "text-red-700 bg-red-50 cursor-pointer"
-  const icon = pct >= 70 ? "✅" : pct >= 40 ? "🟡" : "🔴"
-  return (
-    <span onClick={onClick} className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${cls}`} title={pct < 70 ? "Click to verify" : undefined}>
-      {icon} {pct}%
-    </span>
-  )
-}
-
 export default function BusinessDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -828,6 +736,11 @@ export default function BusinessDashboard() {
     )
   }
 
+  const salesDocCount = (data?.sales_invoices?.length ?? 0) + (data?.quotations?.length ?? 0)
+  const purchaseDocCount = (data?.purchase_invoices?.length ?? 0) + (data?.purchase_orders?.length ?? 0) + (data?.grns?.length ?? 0)
+  const accountsDocCount = (data?.financial_reports?.length ?? 0) + (data?.payment_records?.length ?? 0)
+  const hrDocCount = (data?.salary_records?.length ?? 0) + (data?.attendance_records?.length ?? 0)
+
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -837,7 +750,7 @@ export default function BusinessDashboard() {
             <TrendingUp className="w-5 h-5 text-indigo-600" />
             <h1 className="text-2xl font-bold text-gray-900">Business Dashboard</h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">Real data extracted from Drive documents</p>
+          <p className="text-sm text-gray-500 mt-1">Documents synced from Google Drive</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -849,7 +762,7 @@ export default function BusinessDashboard() {
         </div>
       </div>
 
-      {/* Verification nudge — only shown when records need attention */}
+      {/* Verification nudge */}
       {verificationNudge > 0 && (
         <div className="flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-3">
           <div className="flex items-center gap-2">
@@ -873,7 +786,7 @@ export default function BusinessDashboard() {
       {/* AI Health Panel */}
       <AIHealthPanel onNavigate={() => navigate("/ai-insights")} />
 
-      {/* KPI Cards */}
+      {/* KPI Cards — document counts by category */}
       {isLoading ? (
         <div className="grid grid-cols-6 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -887,44 +800,40 @@ export default function BusinessDashboard() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <MetricCard
-            label="Total Sales"
-            value={fmt(totals?.total_sales ?? 0)}
-            sub={`${data?.sales_invoices?.length ?? 0} invoices`}
+            label="Sales Docs"
+            value={String(salesDocCount)}
+            sub={`${data?.sales_invoices?.length ?? 0} inv · ${data?.quotations?.length ?? 0} quotes`}
             accent="border-l-green-500"
           />
           <MetricCard
-            label="Total Purchases"
-            value={fmt(totals?.total_purchases ?? 0)}
-            sub={`${data?.purchase_invoices?.length ?? 0} invoices`}
+            label="Purchase Docs"
+            value={String(purchaseDocCount)}
+            sub={`${data?.purchase_invoices?.length ?? 0} inv · ${data?.purchase_orders?.length ?? 0} POs`}
             accent="border-l-red-400"
           />
           <MetricCard
-            label="Gross Margin"
-            value={fmt(totals?.gross_margin ?? 0)}
-            sub={
-              totals?.total_sales
-                ? `${(((totals?.gross_margin ?? 0) / totals.total_sales) * 100).toFixed(1)}%`
-                : "—"
-            }
+            label="Accounts Files"
+            value={String(accountsDocCount)}
+            sub={`${data?.financial_reports?.length ?? 0} reports`}
             accent="border-l-indigo-500"
           />
           <MetricCard
-            label="Receivables"
-            value={fmt(totals?.total_receivables ?? 0)}
-            sub="pending payment"
+            label="HR Files"
+            value={String(hrDocCount)}
+            sub={`${data?.salary_records?.length ?? 0} salary · ${data?.attendance_records?.length ?? 0} attendance`}
+            accent="border-l-purple-400"
+          />
+          <MetricCard
+            label="Open Quotations"
+            value={String(totals?.open_quotations ?? 0)}
+            sub="pending response"
             accent="border-l-yellow-400"
           />
           <MetricCard
-            label="Payables"
-            value={fmt(totals?.total_payables ?? 0)}
-            sub="due to vendors"
+            label="Pending POs"
+            value={String(totals?.pending_pos ?? 0)}
+            sub="awaiting receipt"
             accent="border-l-orange-400"
-          />
-          <MetricCard
-            label="Overdue"
-            value={String(totals?.overdue_invoices ?? 0)}
-            sub="invoices overdue"
-            accent={totals?.overdue_invoices ? "border-l-red-600" : "border-l-gray-200"}
           />
         </div>
       )}

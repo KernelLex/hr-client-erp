@@ -20,6 +20,10 @@ _SKIP_FIELDS = frozenset([
     "name", "owner", "creation", "modified", "modified_by", "docstatus", "idx", "doctype",
     "original_extracted", "extraction_confidence", "items_json", "raw_data_json",
     "records_json", "earnings_json", "deductions_json",
+    # verification metadata — not extracted business fields
+    "verification_status", "confidence_score", "verified_by", "verified_on",
+    "extraction_attempts", "manual_review_required", "last_extraction_at",
+    "extraction_method", "drive_file", "extraction_history", "correction_notes",
 ])
 
 
@@ -534,19 +538,26 @@ def get_verification_detail(doctype, docname):
     drive_file = None
     if record_dict.get("drive_file"):
         try:
-            drive_file = frappe.db.get_value(
-                "VE Drive File", record_dict["drive_file"],
-                ["file_name", "doc_type", "drive_file_id", "file_extension",
-                 "drive_view_link", "uploaded_by_name", "file_date"],
+            # drive_file stores the Google Drive file ID; look up by drive_file_id field
+            df = frappe.db.get_value(
+                "VE Drive File",
+                {"drive_file_id": record_dict["drive_file"]},
+                ["file_name", "doc_type", "drive_file_id", "mime_type",
+                 "web_view_link", "doc_date"],
                 as_dict=True,
             )
-            if drive_file:
-                from vera_drive.google_drive import download_file_content
-                from vera_drive.pipeline import _extract_text
-                fh = download_file_content(drive_file["drive_file_id"])
-                source_content = _extract_text(fh, drive_file["file_extension"]) or ""
+            if df:
+                drive_file = {
+                    "file_name": df.get("file_name", ""),
+                    "doc_type": df.get("doc_type", ""),
+                    "drive_file_id": df.get("drive_file_id", ""),
+                    "file_extension": (df.get("mime_type") or "").split("/")[-1],
+                    "drive_view_link": df.get("web_view_link", ""),
+                    "uploaded_by_name": "",
+                    "file_date": str(df.get("doc_date") or ""),
+                }
         except Exception as e:
-            source_content = f"Could not load source: {str(e)[:200]}"
+            frappe.log_error(frappe.get_traceback(), "get_verification_detail: drive_file lookup")
 
     field_comparison = []
     for field, value in record_dict.items():

@@ -1,21 +1,45 @@
-"""One-time patch to create Employee records for all 5 Vera Enterprises team members."""
+"""Bootstrap Vera Enterprises ERPNext data: company, departments, designations, employees."""
 import frappe
 from frappe.utils import getdate
 
 
 def execute():
-    company = "Vera Enterprises"
+    for wt in ["Transit", "Stores", "Fixed Asset", "Quality Inspection"]:
+        if not frappe.db.exists("Warehouse Type", wt):
+            frappe.get_doc({"doctype": "Warehouse Type", "name": wt}).insert(ignore_permissions=True)
 
-    # Ensure departments exist
-    _ensure_department("Management - V", company)
-    _ensure_department("Project - V", company)
-    _ensure_department("Accounts - V", company)
-    _ensure_department("Logistics - V", company)
+    if not frappe.db.exists("Company", "Vera Enterprises"):
+        company = frappe.new_doc("Company")
+        company.company_name = "Vera Enterprises"
+        company.abbr = "V"
+        company.default_currency = "INR"
+        company.country = "India"
+        company.flags.ignore_mandatory = True
+        company.insert(ignore_permissions=True)
+        frappe.db.commit()
 
-    # Ensure designations exist
-    for desig in ["Manager", "Project Manager", "Accounts Manager", "Accounts Executive", "Logistics Manager"]:
+    for dept_name in ["Management", "Project", "Accounts", "Logistics", "HR"]:
+        full_name = f"{dept_name} - V"
+        if not frappe.db.exists("Department", full_name):
+            dept = frappe.new_doc("Department")
+            dept.department_name = dept_name
+            dept.company = "Vera Enterprises"
+            dept.insert(ignore_permissions=True)
+
+    for desig in ["Manager", "Project Manager", "Accounts Manager", "Accounts Executive",
+                  "GST & TDS Specialist", "Logistics Manager", "Stock Monitor", "Porter Executive"]:
         if not frappe.db.exists("Designation", desig):
             frappe.get_doc({"doctype": "Designation", "designation_name": desig}).insert(ignore_permissions=True)
+
+    for et in ["Full-time", "Part-time", "Contract", "Probation"]:
+        if not frappe.db.exists("Employment Type", et):
+            frappe.get_doc({"doctype": "Employment Type", "employment_type_name": et}).insert(ignore_permissions=True)
+
+    for g in ["Male", "Female", "Non-binary", "Prefer not to say", "Other"]:
+        if not frappe.db.exists("Gender", g):
+            frappe.get_doc({"doctype": "Gender", "gender": g}).insert(ignore_permissions=True)
+
+    frappe.db.commit()
 
     employees = [
         dict(first_name="Owais Ahmed", last_name="Khan",
@@ -43,9 +67,7 @@ def execute():
 
     for e in employees:
         if frappe.db.exists("Employee", {"user_id": e["user_id"]}):
-            frappe.logger().info(f"Employee already exists for {e['user_id']}, skipping")
             continue
-
         doc = frappe.new_doc("Employee")
         doc.first_name = e["first_name"]
         doc.last_name = e.get("last_name", "")
@@ -57,18 +79,11 @@ def execute():
         doc.gender = e["gender"]
         doc.date_of_joining = getdate("2024-01-01")
         doc.status = "Active"
-        doc.company = company
+        doc.company = "Vera Enterprises"
         doc.employment_type = "Full-time"
+        doc.date_of_birth = getdate("1990-01-01")
+        doc.flags.ignore_mandatory = True
         doc.insert(ignore_permissions=True)
-        frappe.logger().info(f"Created employee {doc.name} for {e['user_id']}")
 
     frappe.db.commit()
-
-
-def _ensure_department(name, company):
-    if not frappe.db.exists("Department", name):
-        frappe.get_doc({
-            "doctype": "Department",
-            "department_name": name.split(" - ")[0],
-            "company": company,
-        }).insert(ignore_permissions=True)
+    return "Setup complete"

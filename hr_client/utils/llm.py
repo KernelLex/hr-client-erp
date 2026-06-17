@@ -83,6 +83,8 @@ def ask_llm(
     return ""
 
 
+_JSON_SYSTEM = "You are a JSON API. Output ONLY a single valid JSON object. No markdown, no code fences, no explanation."
+
 def ask_llm_json(
     prompt: str,
     system: str = None,
@@ -92,11 +94,10 @@ def ask_llm_json(
     if not is_ollama_running():
         return None
     model = model or _pick_model()
-    full_prompt = prompt + "\n\nRespond with ONLY valid JSON. No explanation, no markdown code blocks."
-    messages = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": full_prompt})
+    messages = [
+        {"role": "system", "content": _JSON_SYSTEM},
+        {"role": "user", "content": prompt},
+    ]
     try:
         resp = requests.post(
             f"{OLLAMA_BASE}/api/chat",
@@ -104,12 +105,13 @@ def ask_llm_json(
                 "model": model,
                 "messages": messages,
                 "stream": False,
+                "format": "json",
                 "options": {"temperature": temperature, "num_predict": 2048},
             },
-            timeout=60,
+            timeout=90,
         )
         if resp.status_code == 200:
-            raw = resp.json().get("message", {}).get("content", "")
+            raw = resp.json().get("message", {}).get("content", "").strip()
             raw = raw.replace("```json", "").replace("```", "").strip()
             import re
             match = re.search(r'\{.*\}', raw, re.DOTALL)

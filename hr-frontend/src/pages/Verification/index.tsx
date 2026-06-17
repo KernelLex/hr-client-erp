@@ -328,10 +328,10 @@ function DetailPanel({
                         : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
-                    {tab === "source" ? "Source Text" : tab === "raw" ? "Raw Data" : "History"}
+                    {tab === "source" ? "Document" : tab === "raw" ? "Raw Data" : "History"}
                   </button>
                 ))}
-                {sourceTab === "source" && (
+                {sourceTab === "source" && sourceText && (
                   <input
                     className="ml-auto text-xs border rounded px-2 py-1 w-28"
                     placeholder="Search..."
@@ -339,20 +339,70 @@ function DetailPanel({
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 )}
+                {sourceTab === "source" && detail.drive_file?.drive_view_link && (
+                  <a
+                    href={detail.drive_file.drive_view_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto text-xs text-indigo-600 hover:underline flex items-center gap-1"
+                  >
+                    Open in Drive ↗
+                  </a>
+                )}
               </div>
-              <div className="flex-1 overflow-y-auto px-4 py-3">
+              <div className="flex-1 overflow-hidden min-h-0">
                 {sourceTab === "source" && (
-                  <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed">
-                    {displayText || "No source text available"}
-                  </pre>
+                  <>
+                    {detail.drive_file?.drive_view_link ? (
+                      <div className="flex flex-col items-center justify-center h-full gap-5 px-8 bg-gray-50">
+                        <div className="w-full max-w-xs bg-white border border-gray-200 rounded-2xl p-7 shadow-sm text-center">
+                          <div className="text-6xl mb-4">📄</div>
+                          <h3 className="font-semibold text-gray-800 text-sm mb-2 break-all leading-relaxed">
+                            {detail.drive_file.file_name}
+                          </h3>
+                          <span className="text-xs text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full font-medium">
+                            {detail.drive_file.doc_type}
+                          </span>
+                          {detail.drive_file.file_date && (
+                            <p className="text-xs text-gray-400 mt-2 mb-1">{detail.drive_file.file_date}</p>
+                          )}
+                          <a
+                            href={detail.drive_file.drive_view_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-medium text-sm hover:bg-indigo-700 w-full justify-center transition-colors"
+                          >
+                            Open Document in Drive ↗
+                          </a>
+                        </div>
+                        <p className="text-xs text-gray-400 text-center max-w-xs">
+                          Opens in a new tab — sign in to Google if prompted
+                        </p>
+                      </div>
+                    ) : sourceText ? (
+                      <div className="overflow-y-auto h-full px-4 py-3">
+                        <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed">
+                          {displayText}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400">
+                        <span className="text-5xl">📄</span>
+                        <p className="text-sm font-medium">No document preview available</p>
+                        <p className="text-xs text-gray-300">Drive link not found for this record</p>
+                      </div>
+                    )}
+                  </>
                 )}
                 {sourceTab === "raw" && (
-                  <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono">
-                    {JSON.stringify(detail.record, null, 2)}
-                  </pre>
+                  <div className="overflow-y-auto h-full px-4 py-3">
+                    <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono">
+                      {JSON.stringify(detail.record, null, 2)}
+                    </pre>
+                  </div>
                 )}
                 {sourceTab === "history" && (
-                  <div className="space-y-3">
+                  <div className="overflow-y-auto h-full px-4 py-3 space-y-3">
                     {extractionHistory.length === 0 ? (
                       <div className="text-gray-400 text-sm">No extraction history</div>
                     ) : (
@@ -385,18 +435,10 @@ function DetailPanel({
                 )}
               </div>
               {detail.drive_file && (
-                <div className="px-4 py-2 border-t bg-gray-50 text-xs text-gray-500 shrink-0">
+                <div className="px-4 py-2 border-t bg-gray-50 text-xs text-gray-500 shrink-0 flex items-center gap-2">
                   <span>📄 {detail.drive_file.file_name}</span>
-                  {detail.drive_file.drive_view_link && (
-                    <a
-                      href={detail.drive_file.drive_view_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-2 text-indigo-600 hover:underline"
-                    >
-                      Open in Drive ↗
-                    </a>
-                  )}
+                  <span className="text-gray-300">·</span>
+                  <span>{detail.drive_file.doc_type || "Unknown type"}</span>
                 </div>
               )}
             </div>

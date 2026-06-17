@@ -1,4 +1,4 @@
-import { api } from "@/lib/api"
+import { api, apiUrl } from "@/lib/api"
 
 export interface SalesInvoice {
   name: string
@@ -24,6 +24,8 @@ export interface SalesInvoice {
   items_json: string
   creation: string
   confidence_score: number | null
+  web_view_link?: string
+  direction?: string
 }
 
 export interface PurchaseInvoice {
@@ -46,6 +48,8 @@ export interface PurchaseInvoice {
   extraction_method: string
   items_json: string
   creation: string
+  web_view_link?: string
+  direction?: string
 }
 
 export interface PurchaseOrder {
@@ -62,6 +66,7 @@ export interface PurchaseOrder {
   extraction_method: string
   items_json: string
   creation: string
+  web_view_link?: string
 }
 
 export interface Quotation {
@@ -82,6 +87,7 @@ export interface Quotation {
   extraction_method: string
   items_json: string
   creation: string
+  web_view_link?: string
 }
 
 export interface GRN {
@@ -97,6 +103,7 @@ export interface GRN {
   linked_po: string
   drive_file: string
   creation: string
+  web_view_link?: string
 }
 
 export interface FinancialReport {
@@ -120,6 +127,8 @@ export interface FinancialReport {
   health_status: string
   drive_file: string
   creation: string
+  file_name?: string
+  web_view_link?: string
 }
 
 export interface SalaryRecord {
@@ -140,6 +149,8 @@ export interface SalaryRecord {
   professional_tax: number
   drive_file: string
   creation: string
+  file_name?: string
+  web_view_link?: string
 }
 
 export interface BusinessTotals {
@@ -201,51 +212,99 @@ export interface DocumentConnection {
   }
 }
 
-export const getStructuredData = (doctype?: string): Promise<StructuredData> =>
-  api.get("/api/method/vera_drive.api.get_structured_data", {
-    params: doctype ? { doctype } : {},
-  }).then((r) => r.data.message)
+const EMPTY_TOTALS: BusinessTotals = {
+  total_receivables: 0,
+  total_payables: 0,
+  total_sales: 0,
+  total_purchases: 0,
+  gross_margin: 0,
+  overdue_invoices: 0,
+  pending_pos: 0,
+  open_quotations: 0,
+}
 
-export const processAllFiles = (category?: string, force?: boolean): Promise<ProcessResult> =>
-  api.post("/api/method/vera_drive.api.process_all_files", {
-    category: category || null,
-    force: force ? 1 : 0,
-  }).then((r) => r.data.message)
+export async function getStructuredData(_doctype?: string): Promise<StructuredData> {
+  try {
+    const res = await api.get(apiUrl("hr_client.drive_sync.api.get_structured_data"))
+    const m = res.data.message
+    if (!m) return { ...{ sales_invoices: [], quotations: [], purchase_invoices: [], purchase_orders: [], grns: [], financial_reports: [], payment_records: [], salary_records: [], attendance_records: [] }, totals: EMPTY_TOTALS }
+    return {
+      sales_invoices: m.sales_invoices ?? [],
+      quotations: m.quotations ?? [],
+      purchase_invoices: m.purchase_invoices ?? [],
+      purchase_orders: m.purchase_orders ?? [],
+      grns: m.grns ?? [],
+      financial_reports: m.financial_reports ?? [],
+      payment_records: m.payment_records ?? [],
+      salary_records: m.salary_records ?? [],
+      attendance_records: m.attendance_records ?? [],
+      totals: { ...EMPTY_TOTALS, ...(m.totals ?? {}) },
+    }
+  } catch {
+    return { sales_invoices: [], quotations: [], purchase_invoices: [], purchase_orders: [], grns: [], financial_reports: [], payment_records: [], salary_records: [], attendance_records: [], totals: EMPTY_TOTALS }
+  }
+}
 
-export const processSingleFile = (docName: string, force?: boolean): Promise<unknown> =>
-  api.post("/api/method/vera_drive.api.process_single_file", {
-    doc_name: docName,
-    force: force ? 1 : 0,
-  }).then((r) => r.data.message)
+export async function processAllFiles(_category?: string, force?: boolean): Promise<ProcessResult> {
+  try {
+    const res = await api.post(apiUrl("hr_client.drive_sync.api.process_all_files"),
+      { limit: 50, force: force ? 1 : 0 })
+    const m = res.data.message ?? {}
+    return { total: m.total ?? 0, processed: m.processed ?? 0, skipped: m.skipped ?? 0, failed: m.failed ?? 0, details: [] }
+  } catch {
+    return { total: 0, processed: 0, skipped: 0, failed: 0, details: [] }
+  }
+}
 
-export const autoLinkDocuments = (): Promise<{ success: boolean; links_created: number }> =>
-  api.post("/api/method/vera_drive.api.auto_link_documents", {}).then((r) => r.data.message)
+export async function processSingleFile(docName: string, force?: boolean): Promise<unknown> {
+  try {
+    const res = await api.post(apiUrl("hr_client.drive_sync.api.process_file"),
+      { drive_file_name: docName, force: force ? 1 : 0 })
+    return res.data.message ?? { success: false }
+  } catch {
+    return { success: false }
+  }
+}
+
+export async function autoLinkDocuments(): Promise<{ success: boolean; links_created: number }> {
+  try {
+    const res = await api.post(apiUrl("hr_client.drive_sync.api.auto_link_documents"))
+    return res.data.message ?? { success: false, links_created: 0 }
+  } catch {
+    return { success: false, links_created: 0 }
+  }
+}
 
 export const getDocumentConnections = (): Promise<{
   success: boolean
   connections: DocumentConnection[]
   total_chains: number
-}> =>
-  api.get("/api/method/vera_drive.api.get_document_connections").then((r) => r.data.message)
+}> => Promise.resolve({ success: true, connections: [], total_chains: 0 })
 
-export const updatePaymentStatus = (
+export async function updatePaymentStatus(
   doctype: string,
   docname: string,
   status: string
-): Promise<{ success: boolean }> =>
-  api.post("/api/method/vera_drive.api.update_payment_status", {
-    doctype,
-    docname,
-    status,
-  }).then((r) => r.data.message)
+): Promise<{ success: boolean }> {
+  try {
+    const res = await api.post(apiUrl("hr_client.drive_sync.api.update_payment_status"),
+      { doctype, docname, status })
+    return res.data.message ?? { success: false }
+  } catch {
+    return { success: false }
+  }
+}
 
-export const updateDocStatus = (
+export async function updateDocStatus(
   doctype: string,
   docname: string,
   status: string
-): Promise<{ success: boolean }> =>
-  api.post("/api/method/vera_drive.api.update_doc_status", {
-    doctype,
-    docname,
-    status,
-  }).then((r) => r.data.message)
+): Promise<{ success: boolean }> {
+  try {
+    const res = await api.post(apiUrl("hr_client.drive_sync.api.update_doc_status"),
+      { doctype, docname, status })
+    return res.data.message ?? { success: false }
+  } catch {
+    return { success: false }
+  }
+}

@@ -42,6 +42,18 @@ doc_events = {
 	},
 }
 
+# Drive Sync — scheduled tasks
+scheduler_events = {
+	"daily": [
+		"hr_client.drive_sync.watch_manager.renew_watches",
+	],
+	"cron": {
+		"*/10 * * * *": [
+			"hr_client.drive_sync.delta_sync.run_delta_sync",
+		],
+	},
+}
+
 # Apps
 # ------------------
 
