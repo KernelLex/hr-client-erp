@@ -26,6 +26,37 @@ _SKIP_FIELDS = frozenset([
     "extraction_method", "drive_file", "extraction_history", "correction_notes",
 ])
 
+# Map generic original_extracted field names → doctype-specific structured field names
+_ORIG_TO_STRUCT = {
+    "VE Sales Invoice":    {"party_name": "client_name", "date": "invoice_date", "document_number": "invoice_number", "amount": "total_amount"},
+    "VE Purchase Invoice": {"party_name": "vendor_name", "date": "invoice_date", "document_number": "invoice_number", "amount": "total_amount"},
+    "VE Purchase Order":   {"party_name": "vendor_name", "date": "po_date",      "document_number": "po_number",      "amount": "total_value"},
+    "VE Quotation":        {"party_name": "client_name", "date": "quote_date",   "document_number": "quote_number",   "amount": "total_value"},
+    "VE Sales Order":      {"party_name": "client_name", "date": "so_date",      "document_number": "so_number",      "amount": "total_amount"},
+    "VE GRN":              {"party_name": "vendor_name", "date": "grn_date",     "document_number": "grn_number",     "amount": "total_value"},
+    "VE Payment Record":   {"party_name": "party_name",  "date": "payment_date", "document_number": "payment_number", "amount": "amount"},
+    "VE Salary Record":    {"party_name": "employee_name","date": "salary_month","document_number": "name",           "amount": "net_salary"},
+    "VE Attendance Record":{"party_name": "employee_name","date": "period",      "document_number": "name",           "amount": "present_days"},
+    "VE Financial Report": {"party_name": "party_name",  "date": "period",       "document_number": "name",           "amount": "net_profit"},
+    "VE Credit Note":      {"party_name": "client_name", "date": "cn_date",      "document_number": "cn_number",      "amount": "total_amount"},
+    "VE Debit Note":       {"party_name": "vendor_name", "date": "dn_date",      "document_number": "dn_number",      "amount": "total_amount"},
+}
+
+_ORIG_SKIP = frozenset([
+    "drive_file", "extraction_method", "verification_status", "confidence_score",
+    "extraction_attempts",
+])
+
+
+def _orig_fallback(record, key, default=""):
+    """Get a value from original_extracted JSON when structured field is empty."""
+    try:
+        orig = json.loads(record.get("original_extracted") or "{}")
+        val = orig.get(key)
+        return str(val) if val not in (None, "") else default
+    except Exception:
+        return default
+
 
 def _require_admin():
     user = frappe.session.user
@@ -559,22 +590,44 @@ def get_verification_detail(doctype, docname):
         except Exception as e:
             frappe.log_error(frappe.get_traceback(), "get_verification_detail: drive_file lookup")
 
+    # Build field mapping: generic orig keys → doctype-specific struct field names
+    dt_map = _ORIG_TO_STRUCT.get(doctype, {})
+
+    seen_fields = set()
     field_comparison = []
-    for field, value in record_dict.items():
-        if field in _SKIP_FIELDS or value is None or value == "":
-            continue
-        confidence = field_confidence.get(field, 50)
-        original_val = original.get(field)
+
+    def _add_field(field, current_val, orig_val, confidence):
+        seen_fields.add(field)
         field_comparison.append({
             "field": field,
             "label": field.replace("_", " ").title(),
-            "current_value": value,
-            "original_value": original_val,
+            "current_value": current_val,
+            "original_value": orig_val,
             "confidence": confidence,
-            "was_changed": str(original_val) != str(value) if original_val is not None else False,
+            "was_changed": str(orig_val) != str(current_val) if orig_val is not None and current_val not in (None, "") else False,
             "confidence_label": "High" if confidence >= 70 else "Medium" if confidence >= 40 else "Low",
             "confidence_color": "green" if confidence >= 70 else "yellow" if confidence >= 40 else "red",
         })
+
+    # 1. Surface original_extracted fields — map generic names to struct field names
+    for orig_key, orig_val in original.items():
+        if orig_key in _ORIG_SKIP or orig_val in (None, ""):
+            continue
+        struct_field = dt_map.get(orig_key, orig_key)  # map to structured field if known
+        if struct_field in _SKIP_FIELDS or struct_field in seen_fields:
+            continue
+        struct_val = record_dict.get(struct_field)
+        display_val = struct_val if struct_val not in (None, "") else orig_val
+        confidence = field_confidence.get(orig_key, field_confidence.get(struct_field, 50))
+        _add_field(struct_field, display_val, orig_val, confidence)
+
+    # 2. Add any remaining structured fields with values not already shown
+    for field, value in record_dict.items():
+        if field in _SKIP_FIELDS or field in seen_fields or value is None or value == "":
+            continue
+        confidence = field_confidence.get(field, 50)
+        _add_field(field, value, original.get(field), confidence)
+
     field_comparison.sort(key=lambda x: x["confidence"])
 
     return {
@@ -1065,6 +1118,7 @@ def get_all_extracted_records(status=None, doctype=None):
                     "verified_by", "verified_on", "drive_file",
                     "extraction_method", "manual_review_required",
                     "extraction_attempts", "last_extraction_at",
+                    "original_extracted",
                     _DATE_FIELDS.get(dt, "name"),
                     _PARTY_FIELDS.get(dt, "name"),
                     _AMOUNT_FIELDS.get(dt, "name"),
@@ -1104,9 +1158,9 @@ def get_all_extracted_records(status=None, doctype=None):
                     "manual_review_required": bool(r.get("manual_review_required")),
                     "extraction_attempts": int(r.get("extraction_attempts") or 0),
                     "last_extraction_at": str(r.get("last_extraction_at") or ""),
-                    "party": r.get(_PARTY_FIELDS.get(dt, "name")) or "",
-                    "amount": float(r.get(_AMOUNT_FIELDS.get(dt, "name")) or 0),
-                    "date": str(r.get(_DATE_FIELDS.get(dt, "name")) or ""),
+                    "party": r.get(_PARTY_FIELDS.get(dt, "name")) or _orig_fallback(r, "party_name"),
+                    "amount": float(r.get(_AMOUNT_FIELDS.get(dt, "name")) or 0) or float(_orig_fallback(r, "amount") or 0),
+                    "date": str(r.get(_DATE_FIELDS.get(dt, "name")) or "") or _orig_fallback(r, "date"),
                     "priority": priority,
                 })
         except Exception as e:
