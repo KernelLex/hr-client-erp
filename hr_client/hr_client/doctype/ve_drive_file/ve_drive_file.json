@@ -21,7 +21,9 @@
   "section_sync",
   "sync_status",
   "last_synced",
-  "naming_valid"
+  "naming_valid",
+  "uploaded_by_name",
+  "uploaded_by_email"
  ],
  "fields": [
   {
@@ -130,6 +132,16 @@
    "fieldtype": "Check",
    "label": "Naming Valid",
    "description": "0 if doc_type/direction could not be parsed from filename"
+  },
+  {
+   "fieldname": "uploaded_by_name",
+   "fieldtype": "Data",
+   "label": "Uploaded By Name"
+  },
+  {
+   "fieldname": "uploaded_by_email",
+   "fieldtype": "Data",
+   "label": "Uploaded By Email"
   }
  ],
  "modified": "2026-06-16 00:00:00.000000",

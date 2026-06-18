@@ -101,14 +101,18 @@ def _get_structured_data():
 
 
 def _get_structured_for_file(drive_file_name: str) -> dict:
-    """Get structured record linked to a specific drive file."""
+    """Get structured record linked to a specific VE Drive File (by docname)."""
+    # VE structured DocTypes store the Google Drive file ID in drive_file — resolve it first
+    drive_file_id = frappe.db.get_value("VE Drive File", drive_file_name, "drive_file_id")
+    if not drive_file_id:
+        return {}
     doctypes = [
         "VE Sales Invoice", "VE Purchase Invoice", "VE Purchase Order",
         "VE Quotation", "VE GRN", "VE Financial Report", "VE Salary Record",
         "VE Attendance Record", "VE Payment Record",
     ]
     for dt in doctypes:
-        rec = frappe.db.get_value(dt, {"drive_file": drive_file_name}, "*", as_dict=True)
+        rec = frappe.db.get_value(dt, {"drive_file": drive_file_id}, "*", as_dict=True)
         if rec:
             return {"doctype": dt, "record": rec}
     return {}
@@ -137,11 +141,11 @@ def analyse_document(drive_file_name):
 
     context_lines = [
         f"File: {drive_file.file_name}",
-        f"Category: {drive_file.category}",
+        f"Module: {drive_file.module}",
         f"Doc Type: {drive_file.doc_type}",
         f"Party: {drive_file.party_name or 'Unknown'}",
-        f"Date: {drive_file.file_date}",
-        f"Status: {drive_file.status}",
+        f"Date: {drive_file.doc_date}",
+        f"Sync Status: {drive_file.sync_status}",
     ]
 
     if linked:
@@ -188,7 +192,7 @@ def analyse_selected(doc_names_json):
             )
             summaries.append(
                 f"- {df.file_name} ({df.doc_type}, {df.party_name or 'N/A'}): "
-                f"₹{float(amount or 0):,.0f}, status={df.status}"
+                f"₹{float(amount or 0):,.0f}, status={df.sync_status}"
             )
         except Exception:
             pass
@@ -409,18 +413,34 @@ def get_ai_health():
         else:
             health["ollama"]["status"] = "online_no_model"
     
-    # ── Extraction stats ──────────────────────────────────────────────────────
+    # ── Extraction stats — count VE structured records vs total Drive files ───
     try:
         total = frappe.db.count("VE Drive File")
-        processed = frappe.db.sql(
-            "SELECT COUNT(*) FROM `tabVE Drive File` WHERE admin_notes LIKE 'PROCESSED:%'",
-        )[0][0]
-        pending = frappe.db.sql(
-            "SELECT COUNT(*) FROM `tabVE Drive File` WHERE (admin_notes IS NULL OR admin_notes NOT LIKE 'PROCESSED:%') AND status = 'New'",
-        )[0][0]
+        # Count how many Drive files have a corresponding structured VE record
+        processed = frappe.db.sql("""
+            SELECT COUNT(DISTINCT drive_file_id) FROM `tabVE Drive File` df
+            WHERE EXISTS (
+                SELECT 1 FROM `tabVE Sales Invoice` WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Sales Order` WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Purchase Invoice` WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Purchase Order` WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Quotation` WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE GRN` WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Financial Report` WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Salary Record` WHERE drive_file = df.drive_file_id
+            )
+        """)[0][0]
+        pending = total - processed
         health["extraction"].update({
             "total_files": total, "processed": processed, "pending": pending,
-            "failed": max(0, total - processed - pending),
+            "failed": 0,
             "success_rate": round(processed / total * 100) if total > 0 else 0,
         })
     except Exception:
@@ -638,7 +658,7 @@ def get_verification_detail(doctype, docname):
         "field_comparison": field_comparison,
         "field_confidence": field_confidence,
         "original_extraction": original,
-        "source_content": source_content[:5000],
+        "source_content": "",
         "drive_file": drive_file,
         "overall_confidence": record_dict.get("confidence_score", 0),
         "verification_status": record_dict.get("verification_status", "Unverified"),
@@ -680,13 +700,27 @@ def verify_record(doctype, docname, corrections=None, status="Verified"):
 
 @frappe.whitelist()
 def reextract_document(doc_name, force=True):
-    """Clear PROCESSED flag and re-run extraction on a Drive file."""
+    """Re-run AI content extraction on a VE Drive File."""
     _require_admin()
-    from vera_drive.pipeline import process_drive_file
-    frappe.db.set_value("VE Drive File", doc_name, "admin_notes", "")
+    from hr_client.drive_sync.extractor import extract_and_save
+    from hr_client.drive_sync.parser import parse_filename, folder_path_to_module
+
+    try:
+        file_doc = frappe.get_doc("VE Drive File", doc_name)
+    except frappe.DoesNotExistError:
+        return {"success": False, "reason": "Drive file not found"}
+
+    # Re-parse filename to keep metadata fresh
+    parsed = parse_filename(file_doc.file_name)
+    file_doc.doc_type = parsed.get("doc_type") or file_doc.doc_type
+    file_doc.party_name = parsed.get("party") or file_doc.party_name
+    file_doc.doc_date = parsed.get("date") or file_doc.doc_date
+    file_doc.direction = parsed.get("direction", "Unknown")
+    file_doc.naming_valid = 1 if parsed.get("naming_valid") else 0
+    file_doc.save(ignore_permissions=True)
     frappe.db.commit()
-    file_doc = frappe.get_doc("VE Drive File", doc_name)
-    return process_drive_file(file_doc, force_reprocess=True)
+
+    return extract_and_save(file_doc)
 
 
 @frappe.whitelist()
@@ -881,8 +915,6 @@ def get_review_queue():
     Sorted lowest confidence first so most urgent records appear first.
     """
     _require_admin()
-    from vera_drive.pipeline import _extract_text
-
     queue = []
 
     for dt in _AUTO_VERIFY_DOCTYPES:
@@ -911,20 +943,22 @@ def get_review_queue():
                         })
                 problem_fields.sort(key=lambda x: x["confidence"])
 
-                # Pre-load source text for instant swipe review
-                source_text = ""
                 drive_file_info = {}
                 if r.get("drive_file"):
                     try:
                         df = frappe.db.get_value(
-                            "VE Drive File", r["drive_file"],
-                            ["file_name", "doc_type", "drive_file_id",
-                             "file_extension", "drive_view_link"],
+                            "VE Drive File",
+                            {"drive_file_id": r["drive_file"]},
+                            ["file_name", "doc_type", "drive_file_id", "mime_type", "web_view_link"],
                             as_dict=True,
                         )
                         if df:
-                            drive_file_info = df
-                            source_text = _extract_text(df["drive_file_id"], df["file_extension"])[:3000]
+                            drive_file_info = {
+                                "file_name": df.get("file_name", ""),
+                                "doc_type": df.get("doc_type", ""),
+                                "drive_file_id": df.get("drive_file_id", ""),
+                                "drive_view_link": df.get("web_view_link", ""),
+                            }
                     except Exception:
                         pass
 
@@ -941,7 +975,6 @@ def get_review_queue():
                     "extraction_method": r.get("extraction_method", ""),
                     "problem_fields": problem_fields,
                     "all_fields": safe_fields,
-                    "source_text": source_text,
                     "drive_file": drive_file_info,
                     "priority": "critical" if score < 30 else "high" if score < 50 else "medium",
                 })
@@ -973,18 +1006,17 @@ def quick_action(doctype, docname, action, corrections=None):
             "verification_status": "Needs Review",
             "correction_notes": f"Rejected by {frappe.session.user} — re-extraction needed",
         })
-        drive_file = frappe.db.get_value(doctype, docname, "drive_file")
-        if drive_file:
-            from vera_drive.pipeline import process_drive_file
-            frappe.db.set_value("VE Drive File", drive_file, "admin_notes", "")
-            frappe.db.commit()
-            file_doc = frappe.get_doc("VE Drive File", drive_file)
-            frappe.enqueue(
-                process_drive_file,
-                file_doc=file_doc,
-                force_reprocess=True,
-                queue="short",
-            )
+        drive_file_id = frappe.db.get_value(doctype, docname, "drive_file")
+        if drive_file_id:
+            # Look up VE Drive File by drive_file_id
+            df_name = frappe.db.get_value("VE Drive File", {"drive_file_id": drive_file_id}, "name")
+            if df_name:
+                frappe.enqueue(
+                    "hr_client.drive_sync.api.process_file",
+                    drive_file_name=df_name,
+                    force=1,
+                    queue="short",
+                )
 
     elif action == "correct":
         if corrections:
@@ -1057,8 +1089,8 @@ def get_all_extracted_records(status=None, doctype=None):
         "VE Quotation": "quote_date",
         "VE Credit Note": "cn_date",
         "VE Debit Note": "dn_date",
-        "VE Financial Report": "record_date",
-        "VE Salary Record": "record_date",
+        "VE Financial Report": "period",
+        "VE Salary Record": "salary_month",
         "VE Stock Record": "record_date",
         "VE Sales Order": "so_date",
         "VE GRN": "grn_date",
@@ -1082,10 +1114,10 @@ def get_all_extracted_records(status=None, doctype=None):
         "VE Sales Invoice": "total_amount",
         "VE Purchase Invoice": "total_amount",
         "VE Purchase Order": "total_value",
-        "VE Quotation": "final_value",
+        "VE Quotation": "total_value",
         "VE Credit Note": "total_amount",
         "VE Debit Note": "total_amount",
-        "VE Financial Report": "total_amount",
+        "VE Financial Report": "net_profit",
         "VE Salary Record": "net_salary",
         "VE Stock Record": "total_value",
         "VE Sales Order": "total_amount",

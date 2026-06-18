@@ -39,16 +39,17 @@ export function useDashboardStats() {
   })
 }
 
-export function useDriveFiles(module: string) {
+export function useDriveFiles(module: string, docType?: string, opts?: { enabled?: boolean }) {
   return useQuery<DriveFile[]>({
-    queryKey: ["ve_drive_files", module],
+    queryKey: ["ve_drive_files", module, docType],
     queryFn: async () => {
-      const res = await api.get(apiUrl("hr_client.drive_sync.api.get_files"), {
-        params: { module },
-      })
+      const params: Record<string, string> = { module, page_length: "500" }
+      if (docType && docType !== "All") params.doc_type = docType
+      const res = await api.get(apiUrl("hr_client.drive_sync.api.get_files"), { params })
       return res.data.message ?? []
     },
     staleTime: 1000 * 30,
+    enabled: opts?.enabled !== false,
   })
 }
 
@@ -74,6 +75,21 @@ export function useNamingIssues() {
     queryFn: async () => {
       const res = await api.get(apiUrl("hr_client.drive_sync.api.get_naming_issues"))
       return res.data.message ?? []
+    },
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export interface FolderCounts {
+  [module: string]: { total: number; [docType: string]: number }
+}
+
+export function useFolderCounts() {
+  return useQuery<FolderCounts>({
+    queryKey: ["ve_drive_folder_counts"],
+    queryFn: async () => {
+      const res = await api.get(apiUrl("hr_client.drive_sync.api.get_folder_counts"))
+      return res.data.message ?? {}
     },
     staleTime: 1000 * 60 * 5,
   })

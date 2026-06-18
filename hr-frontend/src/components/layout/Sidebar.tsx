@@ -244,7 +244,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
     if (p.startsWith("/admin/attendance") || p === "/leave" || p.startsWith("/expenses") || p.startsWith("/admin/employees") || p === "/holidays") {
       setHrOpen(true)
     }
-    if (p.startsWith("/accounts") || p === "/business" || p === "/verify" || p === "/ai-insights") {
+    if (p.startsWith("/accounts") || p === "/drive" || p === "/business" || p === "/verify" || p === "/ai-insights") {
       setAccountsOpen(true)
     }
   }, [location.pathname])
@@ -281,12 +281,12 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const isTeamActive = path.startsWith("/admin/employees")
   const isHrGroupActive = isAttendanceActive || isHolidaysActive || isLeaveActive || isExpensesActive || isTeamActive
 
-  const isAccountsDocActive = path === "/accounts" && search !== "?tab=upload"
+  const isAccountsDocActive = path === "/drive"
   const isAccountsUploadActive = path === "/accounts" && search === "?tab=upload"
   const isBusinessActive = path === "/business"
   const isVerifyActive = path === "/verify"
   const isAIInsightsActive = path === "/ai-insights"
-  const isAccountsGroupActive = path.startsWith("/accounts") || path === "/business" || path === "/verify" || path === "/ai-insights"
+  const isAccountsGroupActive = path === "/drive" || path.startsWith("/accounts") || path === "/business" || path === "/verify" || path === "/ai-insights"
 
   // Permissions
   const showAttendance = moduleEnabled("attendance")
@@ -410,7 +410,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
             >
               <div className="pt-0.5 space-y-0.5">
                 <SubItem
-                  to="/accounts"
+                  to="/drive"
                   label="Drive Documents"
                   icon={FileText}
                   isActive={isAccountsDocActive}

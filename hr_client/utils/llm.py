@@ -106,9 +106,13 @@ def ask_llm_json(
                 "messages": messages,
                 "stream": False,
                 "format": "json",
-                "options": {"temperature": temperature, "num_predict": 2048},
+                "options": {
+                    "temperature": temperature,
+                    "num_predict": 512,   # JSON output is ~100-200 tokens; 512 is a safe cap
+                    "num_ctx": 2048,      # keep context large enough for the document text
+                },
             },
-            timeout=90,
+            timeout=60,
         )
         if resp.status_code == 200:
             raw = resp.json().get("message", {}).get("content", "").strip()

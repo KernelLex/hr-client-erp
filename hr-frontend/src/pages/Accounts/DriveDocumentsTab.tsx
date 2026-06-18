@@ -17,6 +17,20 @@ import {
 const CATEGORIES = ["All", "Sales", "Purchase", "Accounts", "HR", "Logistics"] as const
 type Category = (typeof CATEGORIES)[number]
 
+const DOC_TYPE_LABELS: Record<string, string> = {
+  SalesInvoice:    "Sale Invoice",
+  SalesOrder:      "Sale Order",
+  Quotation:       "Performa Invoice",
+  CreditNote:      "Credit Note",
+  PurchaseInvoice: "Purchase Invoice",
+  PurchaseOrder:   "Purchase Order",
+  DebitNote:       "Debit Note",
+  Receipt:         "Receipt Voucher",
+  Payment:         "Payment Voucher",
+  GRN:             "GRN",
+  DeliveryNote:    "Delivery Note",
+}
+
 const CATEGORY_STYLE: Record<string, { bg: string; text: string }> = {
   Sales:     { bg: "#dcfce7", text: "#166534" },
   Purchase:  { bg: "#fee2e2", text: "#991b1b" },
@@ -65,33 +79,6 @@ function StatCard({
   )
 }
 
-const METHOD_CONFIG: Record<string, { dot: string; label: string; tip: string }> = {
-  drive_api:         { dot: "#16a34a", label: "●", tip: "Confirmed by Google Drive" },
-  last_modifier:     { dot: "#2563eb", label: "●", tip: "Detected from last edit" },
-  folder_path:       { dot: "#94a3b8", label: "~", tip: "Estimated from folder location" },
-  drive_api_unknown: { dot: "#f97316", label: "⚠", tip: "Not a Vera Enterprises account" },
-}
-
-function UploaderBadge({ name, method }: { name?: string; method?: string }) {
-  if (!name || name === "Unknown") {
-    return (
-      <span title="Could not detect uploader" className="text-[11px] text-red-400 flex items-center gap-1">
-        <span>⚠</span> Unknown
-      </span>
-    )
-  }
-  const cfg = method ? METHOD_CONFIG[method] : null
-  return (
-    <span
-      className="flex items-center gap-1 text-[11px]"
-      title={cfg?.tip ?? ""}
-      style={{ color: "var(--text-primary)" }}
-    >
-      {cfg && <span style={{ color: cfg.dot, fontSize: "10px" }}>{cfg.label}</span>}
-      {name}
-    </span>
-  )
-}
 
 function SkeletonRow() {
   return (
@@ -501,7 +488,7 @@ export function DriveDocumentsTab() {
                             <Badge label={f.category || "—"} {...catStyle} />
                           </td>
                           <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-[12px]">
-                            {f.doc_type || "—"}
+                            {DOC_TYPE_LABELS[f.doc_type] ?? (f.doc_type || "—")}
                           </td>
                           <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-[12px]">
                             {f.party_name || "—"}
@@ -509,11 +496,8 @@ export function DriveDocumentsTab() {
                           <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-[12px]">
                             {f.file_date || "—"}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <UploaderBadge
-                              name={f.uploaded_by_name}
-                              method={f.upload_detected_method}
-                            />
+                          <td className="px-4 py-3 whitespace-nowrap text-[12px] text-gray-600">
+                            {f.uploaded_by_name || <span className="text-gray-300">—</span>}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <Badge label={f.status} {...stStyle} />

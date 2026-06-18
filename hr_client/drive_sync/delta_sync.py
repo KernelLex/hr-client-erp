@@ -9,9 +9,12 @@ import frappe
 from frappe.utils import now_datetime
 
 from hr_client.drive_sync.utils import get_drive_service, resolve_folder_path
-from hr_client.drive_sync.parser import parse_filename, folder_path_to_module
+from hr_client.drive_sync.parser import (
+    parse_filename, folder_path_to_module,
+    folder_path_to_doc_type, folder_path_to_direction,
+)
 
-_FILE_FIELDS = "id,name,mimeType,modifiedTime,webViewLink,thumbnailLink,parents,trashed"
+_FILE_FIELDS = "id,name,mimeType,modifiedTime,webViewLink,thumbnailLink,parents,trashed,lastModifyingUser(emailAddress,displayName)"
 
 
 def run_delta_sync():
@@ -113,22 +116,32 @@ def _upsert_file(service, item, path_cache):
     parsed = parse_filename(file_name)
     module = folder_path_to_module(folder_path)
 
+    folder_doc_type = folder_path_to_doc_type(folder_path)
+    folder_direction = folder_path_to_direction(folder_path)
+
+    doc_type = folder_doc_type or parsed.get("doc_type") or ""
+    direction = folder_direction or parsed.get("direction", "Unknown")
+    naming_valid = 1 if (parsed.get("date") and doc_type) else 0
+
+    lmu = item.get("lastModifyingUser") or {}
     now = now_datetime()
     data = {
         "drive_file_id": file_id,
         "file_name": file_name,
         "folder_path": folder_path,
         "module": module,
-        "doc_type": parsed.get("doc_type") or "",
+        "doc_type": doc_type,
         "party_name": parsed.get("party") or "",
-        "direction": parsed.get("direction", "Unknown"),
+        "direction": direction,
         "mime_type": mime,
         "drive_modified_time": _parse_drive_dt(item.get("modifiedTime")),
         "web_view_link": item.get("webViewLink", ""),
         "thumbnail_link": item.get("thumbnailLink", ""),
         "sync_status": "Synced",
         "last_synced": now,
-        "naming_valid": 1 if parsed.get("naming_valid") else 0,
+        "naming_valid": naming_valid,
+        "uploaded_by_name": lmu.get("displayName", ""),
+        "uploaded_by_email": lmu.get("emailAddress", ""),
     }
     if parsed.get("date"):
         data["doc_date"] = parsed["date"]
