@@ -18,6 +18,12 @@ export default defineConfig({
         headers: { Host: "hrms.localhost" },
         cookieDomainRewrite: "localhost",
       },
+      "/files": {
+        target: "http://127.0.0.1:8001",
+        changeOrigin: true,
+        headers: { Host: "hrms.localhost" },
+        cookieDomainRewrite: "localhost",
+      },
     },
   },
 })

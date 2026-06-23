@@ -19,7 +19,9 @@ import {
   LogOut,
   Minus,
   CheckSquare,
+  MessageSquare,
 } from "lucide-react"
+import { useUnreadCounts } from "@/pages/chat/useChat"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
 import { usePermissions } from "@/context/PermissionsContext"
@@ -61,6 +63,7 @@ function NavItem({
   icon: Icon,
   end = false,
   adminBadge = false,
+  unreadCount = 0,
   onClick,
 }: {
   to: string
@@ -68,6 +71,7 @@ function NavItem({
   icon: React.ElementType
   end?: boolean
   adminBadge?: boolean
+  unreadCount?: number
   onClick?: () => void
 }) {
   return (
@@ -94,8 +98,13 @@ function NavItem({
       {({ isActive }) => (
         <>
           <Icon size={15} style={{ color: isActive ? "#FFFFFF" : "#64748B" }} />
-          <span>{label}</span>
+          <span className="flex-1">{label}</span>
           {adminBadge && <AdminBadge />}
+          {unreadCount > 0 && (
+            <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold px-1">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </>
       )}
     </NavLink>
@@ -230,7 +239,8 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const { user, logout } = useAuth()
   const { moduleEnabled } = usePermissions()
   const location = useLocation()
-
+  const { data: unreadData } = useUnreadCounts()
+  const totalUnread = unreadData?.total_unread ?? 0
 
   const isAdmin = !!(user && ADMIN_USERS.has(user.name))
 
@@ -458,6 +468,16 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
 
         {/* CRM */}
         <NavItem to="/crm" label="CRM" icon={TrendingUp} onClick={close} />
+
+        {/* Chat */}
+        <NavItem
+          to="/chat"
+          label="Chat"
+          icon={MessageSquare}
+          unreadCount={totalUnread}
+          onClick={close}
+        />
+
         <DisabledItem label="Performance" icon={BarChart2} />
 
         {/* Admin-only section */}
