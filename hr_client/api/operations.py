@@ -96,18 +96,14 @@ def get_operations_data():
     ]
 
     # ── Monthly sales/purchases from VE Tally Voucher ──────────────
-    monthly_raw = frappe.db.sql("""
-        SELECT
-            DATE_FORMAT(voucher_date, '%%Y-%%m') as month,
-            voucher_type,
-            SUM(amount) as total
-        FROM `tabVE Tally Voucher`
-        WHERE is_cancelled = 0
-          AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-          AND voucher_type IN ('Sales', 'Purchase', 'Receipt', 'PERFORMA INVOICE')
-        GROUP BY month, voucher_type
-        ORDER BY month
-    """, as_dict=True)
+    monthly_raw = frappe.db.sql(
+        "SELECT DATE_FORMAT(voucher_date, %s) as month, voucher_type, SUM(amount) as total "
+        "FROM `tabVE Tally Voucher` "
+        "WHERE is_cancelled = 0 AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) "
+        "AND voucher_type IN ('Sales', 'Purchase', 'Receipt', 'PERFORMA INVOICE') "
+        "GROUP BY month, voucher_type ORDER BY month",
+        ('%Y-%m',), as_dict=True
+    )
 
     chart_map = {}
     for row in monthly_raw:
@@ -419,6 +415,245 @@ def get_tally_financial_summary():
         "stock_skus":     snap.get("stock_item_count", 0),
         "as_of":          as_of,
     }
+
+
+@frappe.whitelist()
+def get_cashflow_trend():
+    """12-month cashflow: sales, purchases, receipts, payments per month."""
+    _require_admin()
+    rows = frappe.db.sql(
+        "SELECT DATE_FORMAT(voucher_date, %s) as month, voucher_type, SUM(amount) as total "
+        "FROM `tabVE Tally Voucher` "
+        "WHERE is_cancelled = 0 AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL 13 MONTH) "
+        "AND voucher_type IN ('Sales','PERFORMA INVOICE','Purchase','Receipt','Payment') "
+        "GROUP BY month, voucher_type ORDER BY month",
+        ('%Y-%m',), as_dict=True
+    )
+    months_map: dict = {}
+    for r in rows:
+        m = r.month
+        if m not in months_map:
+            months_map[m] = {"month": _parse_month(m), "key": m, "sales": 0.0, "purchases": 0.0, "receipts": 0.0, "payments": 0.0}
+        if r.voucher_type in ("Sales", "PERFORMA INVOICE"):
+            months_map[m]["sales"] += flt(r.total) / 100_000
+        elif r.voucher_type == "Purchase":
+            months_map[m]["purchases"] += flt(r.total) / 100_000
+        elif r.voucher_type == "Receipt":
+            months_map[m]["receipts"] += flt(r.total) / 100_000
+        elif r.voucher_type == "Payment":
+            months_map[m]["payments"] += flt(r.total) / 100_000
+
+    result = []
+    for v in months_map.values():
+        net = round(v["receipts"] - v["payments"], 2)
+        result.append({
+            "month": v["month"],
+            "key": v["key"],
+            "sales":     round(v["sales"], 2),
+            "purchases": round(v["purchases"], 2),
+            "receipts":  round(v["receipts"], 2),
+            "payments":  round(v["payments"], 2),
+            "net":       net,
+        })
+    return result
+
+
+@frappe.whitelist()
+def get_debtor_aging():
+    """Debtors with outstanding balance bucketed by days since last invoice."""
+    _require_admin()
+    rows = frappe.db.sql(
+        "SELECT l.ledger_name, l.closing_balance, "
+        "MAX(v.voucher_date) as last_sale "
+        "FROM `tabVE Tally Ledger` l "
+        "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
+        "AND v.voucher_type IN ('Sales','PERFORMA INVOICE') AND v.is_cancelled = 0 "
+        "WHERE l.is_debtors = 1 AND l.closing_balance > 0 "
+        "GROUP BY l.ledger_name, l.closing_balance "
+        "ORDER BY l.closing_balance DESC",
+        as_dict=True
+    )
+
+    from datetime import date
+    today = date.today()
+    buckets = {"current": 0.0, "b30_60": 0.0, "b61_90": 0.0, "b90plus": 0.0, "unknown": 0.0}
+    debtors = []
+
+    for r in rows:
+        bal = flt(r.closing_balance)
+        if r.last_sale:
+            days = (today - r.last_sale).days
+        else:
+            days = None
+
+        if days is None:
+            bucket = "unknown"
+        elif days <= 30:
+            bucket = "current"
+        elif days <= 60:
+            bucket = "b30_60"
+        elif days <= 90:
+            bucket = "b61_90"
+        else:
+            bucket = "b90plus"
+
+        buckets[bucket] += bal
+        debtors.append({
+            "party": r.ledger_name,
+            "balance": round(bal, 2),
+            "balance_fmt": _fmt(bal),
+            "last_sale": str(r.last_sale) if r.last_sale else None,
+            "days": days,
+            "bucket": bucket,
+        })
+
+    total = sum(buckets.values())
+    return {
+        "debtors": debtors[:50],
+        "total": round(total, 2),
+        "total_fmt": _fmt(total),
+        "buckets": {
+            "current":  {"amount": round(buckets["current"], 2),  "fmt": _fmt(buckets["current"]),  "label": "0–30 days",  "color": "emerald"},
+            "b30_60":   {"amount": round(buckets["b30_60"], 2),   "fmt": _fmt(buckets["b30_60"]),   "label": "31–60 days", "color": "yellow"},
+            "b61_90":   {"amount": round(buckets["b61_90"], 2),   "fmt": _fmt(buckets["b61_90"]),   "label": "61–90 days", "color": "orange"},
+            "b90plus":  {"amount": round(buckets["b90plus"], 2),  "fmt": _fmt(buckets["b90plus"]),  "label": "90+ days",   "color": "red"},
+            "unknown":  {"amount": round(buckets["unknown"], 2),  "fmt": _fmt(buckets["unknown"]),  "label": "Unknown age","color": "gray"},
+        },
+    }
+
+
+@frappe.whitelist()
+def get_party_statement(party_name: str, limit: int = 50):
+    """All vouchers for a party, newest first, with running balance."""
+    _require_admin()
+    if not party_name:
+        frappe.throw("party_name required")
+
+    ledger = frappe.db.get_value(
+        "VE Tally Ledger", {"ledger_name": party_name},
+        ["ledger_name", "closing_balance", "is_debtors", "is_creditors", "parent_group"],
+        as_dict=True,
+    )
+
+    vouchers = frappe.db.sql(
+        "SELECT voucher_type, voucher_number, voucher_date, amount, narration "
+        "FROM `tabVE Tally Voucher` "
+        "WHERE party_name = %s AND is_cancelled = 0 "
+        "ORDER BY voucher_date DESC, name DESC LIMIT %s",
+        (party_name, int(limit)), as_dict=True
+    )
+
+    rows = []
+    for v in vouchers:
+        rows.append({
+            "type":    v.voucher_type,
+            "number":  v.voucher_number,
+            "date":    str(v.voucher_date),
+            "amount":  flt(v.amount),
+            "amount_fmt": _fmt(flt(v.amount)),
+            "narration": (v.narration or "").strip(),
+        })
+
+    return {
+        "party": party_name,
+        "balance": round(flt(ledger.closing_balance if ledger else 0), 2),
+        "balance_fmt": _fmt(flt(ledger.closing_balance if ledger else 0)),
+        "group": ledger.parent_group if ledger else "",
+        "is_debtor": bool(ledger and ledger.is_debtors),
+        "is_creditor": bool(ledger and ledger.is_creditors),
+        "transactions": rows,
+    }
+
+
+@frappe.whitelist()
+def search_tally(query: str = "", voucher_type: str = "", from_date: str = "", to_date: str = "", page: int = 1):
+    """Search vouchers by party name or narration."""
+    _require_admin()
+    query = (query or "").strip()
+    if len(query) < 2 and not voucher_type and not from_date:
+        return {"results": [], "total": 0}
+
+    conds = ["is_cancelled = 0"]
+    params: list = []
+
+    if query:
+        conds.append("(party_name LIKE %s OR narration LIKE %s OR voucher_number LIKE %s)")
+        params += [f"%{query}%", f"%{query}%", f"%{query}%"]
+    if voucher_type:
+        conds.append("voucher_type = %s")
+        params.append(voucher_type)
+    if from_date:
+        conds.append("voucher_date >= %s")
+        params.append(from_date)
+    if to_date:
+        conds.append("voucher_date <= %s")
+        params.append(to_date)
+
+    where = " AND ".join(conds)
+    page = max(1, int(page))
+    offset = (page - 1) * 50
+
+    count_row = frappe.db.sql(
+        f"SELECT COUNT(*) as cnt FROM `tabVE Tally Voucher` WHERE {where}",
+        params, as_dict=True
+    )
+    total = count_row[0].cnt if count_row else 0
+
+    results = frappe.db.sql(
+        f"SELECT voucher_type, voucher_number, voucher_date, party_name, amount, narration "
+        f"FROM `tabVE Tally Voucher` WHERE {where} "
+        f"ORDER BY voucher_date DESC LIMIT 50 OFFSET %s",
+        params + [offset], as_dict=True
+    )
+
+    return {
+        "total": total,
+        "page": page,
+        "results": [
+            {
+                "type": r.voucher_type,
+                "number": r.voucher_number,
+                "date": str(r.voucher_date),
+                "party": r.party_name,
+                "amount": flt(r.amount),
+                "amount_fmt": _fmt(flt(r.amount)),
+                "narration": (r.narration or "").strip()[:80],
+            }
+            for r in results
+        ],
+    }
+
+
+@frappe.whitelist()
+def get_creditor_list():
+    """Top creditors with balance."""
+    _require_admin()
+    snap = _load_snapshot()
+    top = snap.get("top_creditors", {})
+    rows = frappe.db.sql(
+        "SELECT l.ledger_name, l.closing_balance, "
+        "MAX(v.voucher_date) as last_purchase "
+        "FROM `tabVE Tally Ledger` l "
+        "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
+        "AND v.voucher_type = 'Purchase' AND v.is_cancelled = 0 "
+        "WHERE l.is_creditors = 1 AND l.closing_balance < 0 "
+        "GROUP BY l.ledger_name, l.closing_balance "
+        "ORDER BY l.closing_balance ASC LIMIT 50",
+        as_dict=True
+    )
+    from datetime import date
+    today = date.today()
+    result = []
+    for r in rows:
+        days = (today - r.last_purchase).days if r.last_purchase else None
+        result.append({
+            "party": r.ledger_name,
+            "balance": round(abs(flt(r.closing_balance)), 2),
+            "balance_fmt": _fmt(abs(flt(r.closing_balance))),
+            "last_purchase": str(r.last_purchase) if r.last_purchase else None,
+            "days": days,
+        })
+    return result
 
 
 @frappe.whitelist()
