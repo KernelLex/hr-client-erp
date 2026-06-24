@@ -1,0 +1,204 @@
+{
+ "autoname": "VE-RCV-.YYYY.-.####",
+ "creation": "2026-06-21 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "receipt_number",
+  "receipt_date",
+  "col_break_1",
+  "amount",
+  "party_name",
+  "section_payment",
+  "payment_mode",
+  "reference_doc",
+  "narration",
+  "section_extraction",
+  "drive_file",
+  "extraction_method",
+  "confidence_score",
+  "section_verification",
+  "verification_status",
+  "verified_by",
+  "verified_on",
+  "correction_notes",
+  "original_extracted",
+  "extraction_confidence",
+  "extraction_attempts",
+  "extraction_history",
+  "manual_review_required",
+  "last_extraction_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "receipt_number",
+   "fieldtype": "Data",
+   "label": "Receipt Number",
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "receipt_date",
+   "fieldtype": "Date",
+   "label": "Receipt Date",
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "party_name",
+   "fieldtype": "Data",
+   "label": "Party Name",
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_payment",
+   "fieldtype": "Section Break",
+   "label": "Payment Details"
+  },
+  {
+   "fieldname": "payment_mode",
+   "fieldtype": "Select",
+   "label": "Payment Mode",
+   "options": "\nCash\nCheque\nNEFT\nRTGS\nUPI\nBank Transfer\nOther"
+  },
+  {
+   "fieldname": "reference_doc",
+   "fieldtype": "Data",
+   "label": "Reference Document"
+  },
+  {
+   "fieldname": "narration",
+   "fieldtype": "Small Text",
+   "label": "Narration"
+  },
+  {
+   "fieldname": "section_extraction",
+   "fieldtype": "Section Break",
+   "label": "Extraction Info"
+  },
+  {
+   "fieldname": "drive_file",
+   "fieldtype": "Data",
+   "label": "Drive File ID",
+   "unique": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "extraction_method",
+   "fieldtype": "Data",
+   "label": "Extraction Method"
+  },
+  {
+   "fieldname": "confidence_score",
+   "fieldtype": "Int",
+   "label": "Confidence Score"
+  },
+  {
+   "fieldname": "section_verification",
+   "fieldtype": "Section Break",
+   "label": "Verification"
+  },
+  {
+   "fieldname": "verification_status",
+   "fieldtype": "Select",
+   "label": "Verification Status",
+   "options": "Unverified\nVerified\nNeeds Review\nCorrected",
+   "default": "Unverified"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Data",
+   "label": "Verified By"
+  },
+  {
+   "fieldname": "verified_on",
+   "fieldtype": "Datetime",
+   "label": "Verified On"
+  },
+  {
+   "fieldname": "correction_notes",
+   "fieldtype": "Text",
+   "label": "Correction Notes"
+  },
+  {
+   "fieldname": "original_extracted",
+   "fieldtype": "Long Text",
+   "label": "Original Extracted"
+  },
+  {
+   "fieldname": "extraction_confidence",
+   "fieldtype": "Long Text",
+   "label": "Extraction Confidence"
+  },
+  {
+   "fieldname": "extraction_attempts",
+   "fieldtype": "Int",
+   "label": "Extraction Attempts",
+   "default": "0"
+  },
+  {
+   "fieldname": "extraction_history",
+   "fieldtype": "Long Text",
+   "label": "Extraction History"
+  },
+  {
+   "fieldname": "manual_review_required",
+   "fieldtype": "Check",
+   "label": "Manual Review Required",
+   "default": "0"
+  },
+  {
+   "fieldname": "last_extraction_at",
+   "fieldtype": "Datetime",
+   "label": "Last Extraction At"
+  }
+ ],
+ "modified": "2026-06-21 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Receipt",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "role": "HR Manager"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "role": "Accounts Manager"
+  }
+ ],
+ "sort_field": "receipt_date",
+ "sort_order": "DESC",
+ "title_field": "receipt_number",
+ "track_changes": 0
+}
