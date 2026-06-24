@@ -1,0 +1,50 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "VTV-.YYYY.-.#####",
+ "creation": "2026-06-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "tally_guid",
+  "voucher_type",
+  "voucher_number",
+  "voucher_date",
+  "col1",
+  "party_name",
+  "amount",
+  "narration",
+  "sec1",
+  "debit_ledger",
+  "credit_ledger",
+  "is_cancelled"
+ ],
+ "fields": [
+  {"fieldname": "tally_guid", "fieldtype": "Data", "label": "Tally GUID", "unique": 1, "in_list_view": 1},
+  {"fieldname": "voucher_type", "fieldtype": "Select", "label": "Voucher Type", "in_list_view": 1, "options": "Sales\nPurchase\nReceipt\nPayment\nJournal\nContra\nDebit Note\nCredit Note\nStock Journal\nPERFORMA INVOICE\nDelivery Note\nPurchase Order\nSales Order\nOther"},
+  {"fieldname": "voucher_number", "fieldtype": "Data", "label": "Voucher Number", "in_list_view": 1},
+  {"fieldname": "voucher_date", "fieldtype": "Date", "label": "Date", "in_list_view": 1},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "party_name", "fieldtype": "Data", "label": "Party Name", "in_list_view": 1},
+  {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount"},
+  {"fieldname": "narration", "fieldtype": "Small Text", "label": "Narration"},
+  {"fieldname": "sec1", "fieldtype": "Section Break"},
+  {"fieldname": "debit_ledger", "fieldtype": "Data", "label": "Debit Ledger"},
+  {"fieldname": "credit_ledger", "fieldtype": "Data", "label": "Credit Ledger"},
+  {"fieldname": "is_cancelled", "fieldtype": "Check", "label": "Cancelled"}
+ ],
+ "links": [],
+ "modified": "2026-06-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Tally Voucher",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "voucher_date",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

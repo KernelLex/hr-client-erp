@@ -2,8 +2,9 @@ import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   TrendingUp, RefreshCw, AlertTriangle, Bot, Sparkles, ExternalLink,
-  Search, X, Home, ChevronRight, Settings, Folder, FileText,
+  Search, X, Home, ChevronRight, Settings, Folder, FileText, Activity,
 } from "lucide-react"
+import { useTallySummary, formatDate as tallyFmtDate } from "@/api/tally"
 import { useNavigate } from "react-router-dom"
 import {
   getStructuredData, processSingleFile, autoLinkDocuments,
@@ -843,6 +844,8 @@ export default function BusinessDashboard() {
 
   const { data: folderCounts = {} as FolderCounts } = useFolderCounts()
 
+  const { data: tallySnap } = useTallySummary()
+
   const { data: accStats } = useQuery({
     queryKey: ["accuracy-stats"],
     queryFn: getAccuracyStats,
@@ -937,6 +940,33 @@ export default function BusinessDashboard() {
           <button onClick={() => navigate("/verify")} className="text-xs bg-yellow-600 text-white px-3 py-1.5 rounded-lg hover:bg-yellow-700">
             Review Now →
           </button>
+        </div>
+      )}
+
+      {/* Tally Financial Strip */}
+      {tallySnap && isAtHome && !search && (
+        <div className="bg-[#0B2545] rounded-xl px-5 py-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Activity size={14} className="text-[#C9A96E]" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+              Tally Ground Truth · as of {tallyFmtDate(tallySnap.as_of)}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[
+              { label: "Cash + Bank",   value: tallySnap.cash_bank,    color: "text-white" },
+              { label: "Receivables",   value: tallySnap.receivables,  color: "text-green-300" },
+              { label: "Payables",      value: tallySnap.payables,     color: "text-red-300" },
+              { label: "FY Sales",      value: tallySnap.fy_sales,     color: "text-blue-200" },
+              { label: "FY Purchases",  value: tallySnap.fy_purchases, color: "text-orange-200" },
+              { label: "Net GST",       value: tallySnap.net_gst,      color: "text-yellow-200" },
+            ].map((k) => (
+              <div key={k.label} className="bg-white/5 rounded-lg px-3 py-2.5">
+                <p className="text-[10px] text-[#94A3B8] font-semibold uppercase tracking-widest mb-1">{k.label}</p>
+                <p className={`font-mono text-base font-bold ${k.color}`}>{k.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

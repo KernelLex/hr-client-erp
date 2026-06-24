@@ -1,0 +1,51 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:ledger_name",
+ "creation": "2026-06-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "ledger_name",
+  "parent_group",
+  "root_group",
+  "col1",
+  "opening_balance",
+  "closing_balance",
+  "is_debtors",
+  "is_creditors",
+  "is_bank",
+  "is_cash",
+  "is_gst",
+  "is_tds"
+ ],
+ "fields": [
+  {"fieldname": "ledger_name", "fieldtype": "Data", "in_list_view": 1, "label": "Ledger Name", "reqd": 1, "unique": 1},
+  {"fieldname": "parent_group", "fieldtype": "Data", "in_list_view": 1, "label": "Parent Group"},
+  {"fieldname": "root_group", "fieldtype": "Data", "label": "Root Group"},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "opening_balance", "fieldtype": "Currency", "label": "Opening Balance"},
+  {"fieldname": "closing_balance", "fieldtype": "Currency", "label": "Closing Balance (Computed)"},
+  {"fieldname": "is_debtors", "fieldtype": "Check", "label": "Is Sundry Debtor"},
+  {"fieldname": "is_creditors", "fieldtype": "Check", "label": "Is Sundry Creditor"},
+  {"fieldname": "is_bank", "fieldtype": "Check", "label": "Is Bank Account"},
+  {"fieldname": "is_cash", "fieldtype": "Check", "label": "Is Cash"},
+  {"fieldname": "is_gst", "fieldtype": "Check", "label": "Is GST Ledger"},
+  {"fieldname": "is_tds", "fieldtype": "Check", "label": "Is TDS Ledger"}
+ ],
+ "links": [],
+ "modified": "2026-06-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Tally Ledger",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "ledger_name",
+ "sort_order": "ASC",
+ "track_changes": 0
+}

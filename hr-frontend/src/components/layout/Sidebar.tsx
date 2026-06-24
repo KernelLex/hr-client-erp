@@ -20,6 +20,7 @@ import {
   Minus,
   CheckSquare,
   MessageSquare,
+  Activity,
 } from "lucide-react"
 import { useUnreadCounts } from "@/pages/chat/useChat"
 import { cn } from "@/lib/utils"
@@ -467,6 +468,17 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         )}
 
         <Sep />
+
+        {/* Operations — admin only */}
+        {isAdmin && (
+          <NavItem
+            to="/operations"
+            label="Operations"
+            icon={Activity}
+            adminBadge
+            onClick={close}
+          />
+        )}
 
         {/* CRM */}
         {showCRM && (

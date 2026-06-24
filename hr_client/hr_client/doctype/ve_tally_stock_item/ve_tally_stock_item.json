@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:item_name",
+ "creation": "2026-06-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_name",
+  "stock_group",
+  "col1",
+  "hsn_code",
+  "gst_rate",
+  "unit",
+  "standard_rate"
+ ],
+ "fields": [
+  {"fieldname": "item_name", "fieldtype": "Data", "in_list_view": 1, "label": "Item Name", "reqd": 1, "unique": 1},
+  {"fieldname": "stock_group", "fieldtype": "Data", "in_list_view": 1, "label": "Stock Group"},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "hsn_code", "fieldtype": "Data", "label": "HSN Code"},
+  {"fieldname": "gst_rate", "fieldtype": "Float", "label": "GST Rate (%)"},
+  {"fieldname": "unit", "fieldtype": "Data", "label": "Unit"},
+  {"fieldname": "standard_rate", "fieldtype": "Currency", "label": "Standard Rate"}
+ ],
+ "links": [],
+ "modified": "2026-06-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Tally Stock Item",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "item_name",
+ "sort_order": "ASC",
+ "track_changes": 0
+}

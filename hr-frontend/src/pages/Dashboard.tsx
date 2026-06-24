@@ -6,8 +6,9 @@ import {
   Plus, UserPlus, Shield, Activity,
   CheckCircle2, XCircle, Circle, FileText, Calendar,
   Bot, ChevronDown, ChevronUp, RefreshCw, Loader2, ExternalLink,
-  AlertTriangle,
+  AlertTriangle, TrendingUp, TrendingDown, Wallet,
 } from "lucide-react"
+import { useTallySummary, formatDate as tallyFmtDate } from "@/api/tally"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 import { api, apiUrl } from "@/lib/api"
@@ -278,6 +279,7 @@ export function Dashboard() {
   const isAdmin = user && ADMIN_USERS.has(user.name)
   const { data, isLoading } = useDashboardStats()
   const { data: pwCheck } = useDefaultPasswordCheck()
+  const { data: tallySnap } = useTallySummary()
   const showPasswordBanner = pwCheck?.is_default === true
 
   const stats = data?.stats
@@ -579,6 +581,47 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Tally Financial Snapshot — admin only */}
+      {isAdmin && tallySnap && (
+        <div
+          className="rounded-xl p-5"
+          style={{ background: "#0B2545", border: "none", borderRadius: "var(--radius-card)" }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Activity size={15} className="text-yellow-400" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-yellow-400">
+                Tally Financial Snapshot · {tallyFmtDate(tallySnap.as_of)}
+              </span>
+            </div>
+            <button
+              onClick={() => navigate("/operations")}
+              className="text-xs text-blue-300 hover:text-white transition-colors"
+            >
+              Full View →
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {[
+              { label: "Cash + Bank",   value: tallySnap.cash_bank,    icon: Wallet,      color: "text-white" },
+              { label: "Receivables",   value: tallySnap.receivables,  icon: TrendingUp,  color: "text-green-300" },
+              { label: "Payables",      value: tallySnap.payables,     icon: TrendingDown,color: "text-red-300" },
+              { label: "FY Sales",      value: tallySnap.fy_sales,     icon: TrendingUp,  color: "text-blue-200" },
+              { label: "FY Purchases",  value: tallySnap.fy_purchases, icon: TrendingDown,color: "text-orange-200" },
+              { label: "Net GST Due",   value: tallySnap.net_gst,      icon: FileText,    color: "text-yellow-200" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="rounded-lg px-3 py-2.5" style={{ background: "rgba(255,255,255,0.07)" }}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Icon size={10} className="text-gray-400" />
+                  <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">{label}</span>
+                </div>
+                <p className={`font-mono text-lg font-bold leading-tight ${color}`}>{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* AI & System Health — admin only */}
       {isAdmin && (

@@ -33,6 +33,7 @@ import VerificationPage from "@/pages/Verification"
 import AIChat from "@/components/AIChat"
 import { VeDrivePage } from "@/pages/drive/VeDrivePage"
 import { ChatPage } from "@/pages/chat/ChatPage"
+import OperationsPage from "@/pages/Operations"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,6 +89,8 @@ function App() {
                 <Route path="/drive" element={<VeDrivePage />} />
                 {/* Chat */}
                 <Route path="/chat" element={<ChatPage />} />
+                {/* Operations Dashboard */}
+                <Route path="/operations" element={<OperationsPage />} />
                 {/* Holidays */}
                 <Route path="/holidays" element={<HolidaysPage />} />
                 {/* Catch-all: redirect unknown paths to dashboard */}
