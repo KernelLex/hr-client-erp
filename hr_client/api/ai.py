@@ -985,6 +985,7 @@ _AUTO_VERIFY_DOCTYPES = [
     "VE Sales Invoice", "VE Purchase Invoice", "VE Purchase Order", "VE Quotation",
     "VE Credit Note", "VE Debit Note", "VE Financial Report", "VE Salary Record",
     "VE Stock Record", "VE Sales Order", "VE GRN", "VE Payment Record",
+    "VE Receipt", "VE Attendance Record",
 ]
 
 
@@ -1231,6 +1232,8 @@ def get_all_extracted_records(status=None, doctype=None):
         "VE Sales Order": "so_date",
         "VE GRN": "grn_date",
         "VE Payment Record": "payment_date",
+        "VE Receipt": "receipt_date",
+        "VE Attendance Record": "period",
     }
     _PARTY_FIELDS = {
         "VE Sales Invoice": "client_name",
@@ -1245,6 +1248,8 @@ def get_all_extracted_records(status=None, doctype=None):
         "VE Sales Order": "client_name",
         "VE GRN": "vendor_name",
         "VE Payment Record": "party_name",
+        "VE Receipt": "party_name",
+        "VE Attendance Record": "employee_name",
     }
     _AMOUNT_FIELDS = {
         "VE Sales Invoice": "total_amount",
@@ -1259,6 +1264,8 @@ def get_all_extracted_records(status=None, doctype=None):
         "VE Sales Order": "total_amount",
         "VE GRN": "total_value",
         "VE Payment Record": "amount",
+        "VE Receipt": "amount",
+        "VE Attendance Record": "present_days",
     }
 
     target_doctypes = [doctype] if doctype else _AUTO_VERIFY_DOCTYPES
