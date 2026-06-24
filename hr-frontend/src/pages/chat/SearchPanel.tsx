@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Search, X, FileText, Hash, MessageSquare, Loader2 } from "lucide-react"
+import { Search, X, FileText, Hash, Loader2 } from "lucide-react"
 import { useSearchMessages } from "./useChat"
 import type { SearchResult } from "./types"
 

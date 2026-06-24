@@ -37,7 +37,7 @@ function formatDayHeader(iso: string) {
 }
 
 // Render message content with @mention highlights
-function renderContent(content: string, mentions: string[], mentionUserNames: Record<string, string>) {
+function renderContent(content: string) {
   // Replace @FullName tokens. We stored mentions as email array; content has @Full Name text.
   // We highlight any @Word+ sequences that match a known full_name or start with @
   const parts = content.split(/(@\S+(?:\s+\S+)?)/g)
@@ -61,7 +61,7 @@ interface Props {
   onDelete: (id: string) => void
 }
 
-export function MessageItem({ message, prevMessage, currentUser, mentionUserNames, onDelete }: Props) {
+export function MessageItem({ message, prevMessage, currentUser, mentionUserNames: _mentionUserNames, onDelete }: Props) {
   const [hovered, setHovered] = useState(false)
 
   const isOwn = message.sender === currentUser
@@ -152,7 +152,7 @@ export function MessageItem({ message, prevMessage, currentUser, mentionUserName
             <>
               {message.content && (
                 <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
-                  {renderContent(message.content, message.mentions, mentionUserNames)}
+                  {renderContent(message.content)}
                 </p>
               )}
               {message.file_url && (

@@ -21,7 +21,7 @@ export function ChatPage() {
   const { user } = useAuth()
   const currentUser = user?.name ?? ""
 
-  const { data: rooms = [], isLoading: roomsLoading } = useRooms()
+  const { data: rooms = [] } = useRooms()
   const { data: onlineUsers = [] } = usePresence()
   const { data: unreadData } = useUnreadCounts()
   const { data: mentionUsers = [] } = useMentionUsers()

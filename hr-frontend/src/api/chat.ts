@@ -109,9 +109,29 @@ export async function uploadChatFile(
   fd.append("is_private", "0")
   fd.append("folder", "Home/Chat Attachments")
 
-  const r = await api.post("/api/method/upload_file", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
+  // Use native fetch, not axios: axios's default Content-Type: application/json
+  // overrides FormData and the boundary is never set, breaking multipart parsing.
+  // fetch() with a FormData body sets Content-Type: multipart/form-data; boundary=...
+  // automatically, which is what Frappe's upload_file expects.
+  const csrfToken =
+    document.cookie
+      .split("; ")
+      .find((r) => r.startsWith("csrf_token="))
+      ?.split("=")[1] ?? "fetch"
+
+  const res = await fetch("/api/method/upload_file", {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-Frappe-CSRF-Token": csrfToken },
+    body: fd,
   })
-  const msg = r.data.message
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err?.exc_type ?? `Upload failed (${res.status})`)
+  }
+
+  const data = await res.json()
+  const msg = data.message
   return { file_url: msg.file_url, file_name: msg.file_name }
 }

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Hash, MessageSquare, Plus, Search, X } from "lucide-react"
+import { Hash, Plus, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ChatRoom, MentionUser, OnlineUser } from "./types"
 import { useGetOrCreateDM } from "./useChat"
@@ -37,7 +37,7 @@ interface Props {
 
 export function RoomList({
   rooms, activeRoomId, onSelectRoom, onSearch,
-  mentionUsers, onlineUsers, currentUser, unreadCounts,
+  mentionUsers, onlineUsers, currentUser: _currentUser, unreadCounts,
 }: Props) {
   const [showNewDM, setShowNewDM] = useState(false)
   const { mutate: createDM, isPending: dmPending } = useGetOrCreateDM()

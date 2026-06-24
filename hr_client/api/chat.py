@@ -119,7 +119,7 @@ def _count_unread(room_id, user):
 def _count_mentions(room_id, user):
     """Count unread messages that mention the current user."""
     last_read = _get_member_last_read(room_id, user)
-    where_extra = f"AND name > '{frappe.db.escape(last_read)}'" if last_read else ""
+    where_extra = f"AND name > {frappe.db.escape(last_read)}" if last_read else ""
     rows = frappe.db.sql(
         f"""SELECT mentions FROM `tabVera Chat Message`
             WHERE room = %s AND is_deleted = 0 AND mentions IS NOT NULL AND mentions != ''
@@ -203,10 +203,23 @@ def get_rooms():
         unread = _count_unread(rid, user)
         mention_count = _count_mentions(rid, user)
 
+        # For DMs, display the OTHER person's name (stored display_name is set from
+        # the initiator's perspective, so the recipient would see their own name).
+        if room["room_type"] == "Direct":
+            other = frappe.get_all(
+                "Vera Chat Room Member",
+                filters={"parent": rid, "user": ["!=", user]},
+                fields=["user_full_name"],
+                limit=1,
+            )
+            display_name = other[0]["user_full_name"] if other else room["display_name"]
+        else:
+            display_name = room["display_name"]
+
         result.append({
             "id": rid,
             "room_type": room["room_type"],
-            "display_name": room["display_name"],
+            "display_name": display_name,
             "created_at": str(room.get("created_at") or ""),
             "unread": unread,
             "mention_count": mention_count,
