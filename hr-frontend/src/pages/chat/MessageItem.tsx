@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Trash2 } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { Trash2, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { FilePreview } from "./FilePreview"
 import type { ChatMessage } from "./types"
@@ -59,6 +59,45 @@ interface Props {
   currentUser: string
   mentionUserNames: Record<string, string>
   onDelete: (id: string) => void
+}
+
+function DeleteMenu({ onConfirm }: { onConfirm: () => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors flex items-center gap-0.5"
+        title="Delete message"
+      >
+        <Trash2 size={13} />
+        <ChevronDown size={10} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 bottom-7 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 min-w-[160px]">
+          <button
+            onClick={() => { setOpen(false); onConfirm() }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <Trash2 size={13} />
+            Delete for everyone
+          </button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function MessageItem({ message, prevMessage, currentUser, mentionUserNames: _mentionUserNames, onDelete }: Props) {
@@ -174,13 +213,7 @@ export function MessageItem({ message, prevMessage, currentUser, mentionUserName
 
         {/* Delete action (hover, own messages) */}
         {!message.is_deleted && isOwn && hovered && (
-          <button
-            onClick={() => onDelete(message.id)}
-            className="shrink-0 p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-            title="Delete message"
-          >
-            <Trash2 size={13} />
-          </button>
+          <DeleteMenu onConfirm={() => onDelete(message.id)} />
         )}
       </div>
     </>

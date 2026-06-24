@@ -3,6 +3,7 @@ import {
   getRooms, getOrCreateDM, markRoomRead,
   getMessages, getNewMessages, sendMessage, deleteMessage, searchMessages,
   pingOnline, getOnlineUsers, getUnreadCounts, getUsersForMention, createGroup,
+  getRoomMedia,
 } from "@/api/chat"
 import type { ChatMessage } from "./types"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -162,6 +163,15 @@ export function useSearchMessages(query: string, roomId?: string) {
     queryFn: () => searchMessages(query, roomId),
     enabled: query.trim().length >= 2,
     staleTime: 10_000,
+  })
+}
+
+export function useRoomMedia(roomId: string | null, search?: string) {
+  return useQuery({
+    queryKey: ["chat-media", roomId, search],
+    queryFn: () => getRoomMedia(roomId!, search),
+    enabled: !!roomId,
+    staleTime: 30_000,
   })
 }
 

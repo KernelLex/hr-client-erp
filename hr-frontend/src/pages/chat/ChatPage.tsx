@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
-import { Hash, MessageSquare, Users } from "lucide-react"
+import { Hash, MessageSquare, Users, Search } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import {
   useRooms,
@@ -124,6 +124,8 @@ export function ChatPage() {
           <SearchPanel
             onClose={() => setShowSearch(false)}
             onNavigate={handleSelectRoom}
+            activeRoomId={activeRoomId}
+            activeRoomName={activeRoom?.display_name}
           />
         ) : (
           <>
@@ -143,6 +145,16 @@ export function ChatPage() {
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 mr-1" />
                     {onlineUsers.length} online
                   </span>
+                )}
+                {/* In-room search button */}
+                {activeRoomId && (
+                  <button
+                    onClick={() => setShowSearch(true)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                    title="Search in this chat"
+                  >
+                    <Search size={15} />
+                  </button>
                 )}
               </div>
             </div>

@@ -69,9 +69,31 @@ export async function searchMessages(
   room_id?: string
 ): Promise<SearchResult[]> {
   const r = await api.get(apiUrl("hr_client.api.chat.search_messages"), {
-    params: { query, room_id },
+    params: { query, ...(room_id ? { room_id } : {}) },
   })
   return r.data.message.results
+}
+
+export interface MediaItem {
+  id: string
+  sender: string
+  sender_name: string
+  file_url: string | null
+  file_name: string
+  file_type: string | null
+  file_size: number | null
+  kind: "image" | "pdf" | "doc" | "sheet" | "file"
+  sent_at: string
+}
+
+export async function getRoomMedia(
+  room_id: string,
+  search?: string
+): Promise<MediaItem[]> {
+  const r = await api.get(apiUrl("hr_client.api.chat.get_room_media"), {
+    params: { room_id, ...(search?.trim() ? { search } : {}) },
+  })
+  return r.data.message.media ?? []
 }
 
 // ─── Presence ────────────────────────────────────────────────────────────────

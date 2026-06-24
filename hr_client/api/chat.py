@@ -456,14 +456,14 @@ def delete_message(message_id):
 
 @frappe.whitelist()
 @handle_api_error
-def search_messages(query, room_id=None, limit=20):
+def search_messages(query, room_id=None, limit=50):
     _require_login()
     user = _current_user()
 
     if not query or len(str(query).strip()) < 2:
         frappe.throw("Query must be at least 2 characters", frappe.ValidationError)
 
-    limit = min(int(limit), 50)
+    limit = min(int(limit), 200)
 
     # Rooms user is a member of
     member_rows = frappe.get_all(
@@ -479,13 +479,14 @@ def search_messages(query, room_id=None, limit=20):
     safe_query = frappe.db.escape(f"%{query.strip()}%")
     room_placeholders = ", ".join(["%s"] * len(room_filter))
 
+    # Search both message text AND file names
     rows = frappe.db.sql(
         f"""SELECT name, room, sender, sender_name, content, message_type,
-                   file_name, sent_at, is_deleted
+                   file_url, file_name, file_type, file_size, sent_at, is_deleted
             FROM `tabVera Chat Message`
             WHERE room IN ({room_placeholders})
               AND is_deleted = 0
-              AND content LIKE {safe_query}
+              AND (content LIKE {safe_query} OR file_name LIKE {safe_query})
             ORDER BY sent_at DESC
             LIMIT %s""",
         tuple(room_filter) + (limit,),
@@ -512,11 +513,71 @@ def search_messages(query, room_id=None, limit=20):
             "sender_name": r.get("sender_name") or r["sender"],
             "content": r["content"],
             "message_type": r.get("message_type", "text"),
+            "file_url": r.get("file_url"),
             "file_name": r.get("file_name"),
+            "file_type": r.get("file_type"),
+            "file_size": r.get("file_size"),
             "sent_at": str(r.get("sent_at") or ""),
         })
 
     return {"success": True, "results": results}
+
+
+@frappe.whitelist()
+@handle_api_error
+def get_room_media(room_id, search=None, limit=100):
+    """Return all file attachments shared in a room, optionally filtered by filename."""
+    _require_login()
+    user = _current_user()
+
+    if not _is_room_member(room_id):
+        frappe.throw("Not a member of this room", frappe.PermissionError)
+
+    limit = min(int(limit), 500)
+
+    if search and str(search).strip():
+        safe_q = frappe.db.escape(f"%{str(search).strip()}%")
+        rows = frappe.db.sql(
+            f"""SELECT name, sender, sender_name, file_url, file_name, file_type, file_size, sent_at
+                FROM `tabVera Chat Message`
+                WHERE room = %s AND message_type = 'file' AND is_deleted = 0
+                  AND file_name LIKE {safe_q}
+                ORDER BY sent_at DESC
+                LIMIT %s""",
+            (room_id, limit),
+            as_dict=True,
+        )
+    else:
+        rows = frappe.db.sql(
+            """SELECT name, sender, sender_name, file_url, file_name, file_type, file_size, sent_at
+               FROM `tabVera Chat Message`
+               WHERE room = %s AND message_type = 'file' AND is_deleted = 0
+               ORDER BY sent_at DESC
+               LIMIT %s""",
+            (room_id, limit),
+            as_dict=True,
+        )
+
+    media = []
+    for r in rows:
+        ft = (r.get("file_type") or "").lower()
+        kind = "image" if ft.startswith("image/") else (
+               "pdf" if "pdf" in ft else (
+               "doc" if any(x in ft for x in ["word", "document"]) else (
+               "sheet" if any(x in ft for x in ["excel", "sheet", "csv"]) else "file")))
+        media.append({
+            "id": r["name"],
+            "sender": r["sender"],
+            "sender_name": r.get("sender_name") or r["sender"],
+            "file_url": r.get("file_url"),
+            "file_name": r.get("file_name") or "File",
+            "file_type": r.get("file_type"),
+            "file_size": r.get("file_size"),
+            "kind": kind,
+            "sent_at": str(r.get("sent_at") or ""),
+        })
+
+    return {"success": True, "media": media, "total": len(media)}
 
 
 # ─── Presence endpoints ───────────────────────────────────────────────────────

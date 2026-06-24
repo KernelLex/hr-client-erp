@@ -58,7 +58,10 @@ export interface SearchResult {
   sender_name: string
   content: string | null
   message_type: string
+  file_url: string | null
   file_name: string | null
+  file_type: string | null
+  file_size: number | null
   sent_at: string
 }
 
