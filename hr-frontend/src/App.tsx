@@ -32,6 +32,7 @@ import AIInsights from "@/pages/AIInsights"
 import VerificationPage from "@/pages/Verification"
 import AIChat from "@/components/AIChat"
 import { VeDrivePage } from "@/pages/drive/VeDrivePage"
+import { ChatPage } from "@/pages/chat/ChatPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,6 +86,8 @@ function App() {
                 <Route path="/ai-insights" element={<AIInsights key="ai-insights" />} />
                 {/* Drive Index */}
                 <Route path="/drive" element={<VeDrivePage />} />
+                {/* Chat */}
+                <Route path="/chat" element={<ChatPage />} />
                 {/* Holidays */}
                 <Route path="/holidays" element={<HolidaysPage />} />
                 {/* Catch-all: redirect unknown paths to dashboard */}
