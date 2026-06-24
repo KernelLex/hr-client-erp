@@ -95,12 +95,13 @@ export async function syncDrive(): Promise<{ status: string }> {
 
 export async function getDriveFiles(
   category = "All",
-  _status?: string
+  _status?: string,
+  search?: string
 ): Promise<DriveFile[]> {
   const module = CATEGORY_TO_MODULE[category] ?? category
-  const res = await api.get(apiUrl("hr_client.drive_sync.api.get_files"), {
-    params: { module },
-  })
+  const params: Record<string, string | number> = { module, page_length: 500 }
+  if (search?.trim()) params.search = search.trim()
+  const res = await api.get(apiUrl("hr_client.drive_sync.api.get_files"), { params })
   const files: any[] = res.data.message ?? []
   return files.map((f) => ({
     name: f.name,

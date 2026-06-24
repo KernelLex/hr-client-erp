@@ -1,6 +1,6 @@
-import type { GetUsersPermissionsResponse } from "./types"
+import type { GetUsersPermissionsResponse, PermissionModule } from "./types"
 
-const ALL_ON = {
+const ALL_ON: Record<PermissionModule, boolean> = {
   recruitment: true,
   employee_lifecycle: true,
   accounts: true,
@@ -8,11 +8,14 @@ const ALL_ON = {
   logistics: true,
   hr: true,
   attendance: true,
+  leave: true,
   expense: true,
-} as const
+  crm: true,
+  chat: true,
+}
 
 export const MOCK_PERMISSIONS_RESPONSE: GetUsersPermissionsResponse = {
-  modules: ["recruitment", "employee_lifecycle", "accounts", "projects", "logistics", "hr", "attendance", "expense"],
+  modules: ["recruitment", "employee_lifecycle", "accounts", "projects", "logistics", "hr", "attendance", "leave", "expense", "crm", "chat"],
   users: [
     {
       name: "Owais Ahmed Khan",

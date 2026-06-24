@@ -6,7 +6,10 @@ export type PermissionModule =
   | "logistics"
   | "hr"
   | "attendance"
+  | "leave"
   | "expense"
+  | "crm"
+  | "chat"
 
 export const PERMISSION_MODULE_LABELS: Record<PermissionModule, string> = {
   recruitment: "Recruitment",
@@ -16,7 +19,10 @@ export const PERMISSION_MODULE_LABELS: Record<PermissionModule, string> = {
   logistics: "Logistics / Stock",
   hr: "HR",
   attendance: "Attendance",
+  leave: "Leave",
   expense: "Expense",
+  crm: "CRM",
+  chat: "Chat",
 }
 
 export const MODULE_ICONS: Record<PermissionModule, string> = {
@@ -27,7 +33,10 @@ export const MODULE_ICONS: Record<PermissionModule, string> = {
   logistics: "📦",
   hr: "🏢",
   attendance: "🕐",
+  leave: "🏖️",
   expense: "💳",
+  crm: "📈",
+  chat: "💬",
 }
 
 export interface UserPermissions {

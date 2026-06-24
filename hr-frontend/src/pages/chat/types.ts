@@ -23,12 +23,13 @@ export interface LastMessage {
 
 export interface ChatRoom {
   id: string
-  room_type: "General" | "Direct"
+  room_type: "General" | "Direct" | "Group"
   display_name: string
   created_at: string
   unread: number
   mention_count: number
   last_message: LastMessage | null
+  member_count?: number | null
 }
 
 export interface OnlineUser {

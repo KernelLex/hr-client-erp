@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { Hash, Plus, Search, X } from "lucide-react"
+import { Hash, Plus, Search, X, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ChatRoom, MentionUser, OnlineUser } from "./types"
-import { useGetOrCreateDM } from "./useChat"
+import { useGetOrCreateDM, useCreateGroup } from "./useChat"
 
 function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
@@ -40,11 +40,17 @@ export function RoomList({
   mentionUsers, onlineUsers, currentUser: _currentUser, unreadCounts,
 }: Props) {
   const [showNewDM, setShowNewDM] = useState(false)
+  const [showNewGroup, setShowNewGroup] = useState(false)
+  const [groupName, setGroupName] = useState("")
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+
   const { mutate: createDM, isPending: dmPending } = useGetOrCreateDM()
+  const { mutate: createGroup, isPending: groupPending } = useCreateGroup()
 
   const onlineSet = new Set(onlineUsers.map((u) => u.user))
   const generalRoom = rooms.find((r) => r.room_type === "General")
   const dmRooms = rooms.filter((r) => r.room_type === "Direct")
+  const groupRooms = rooms.filter((r) => r.room_type === "Group")
 
   function handleStartDM(user: string) {
     createDM(user, {
@@ -55,12 +61,34 @@ export function RoomList({
     })
   }
 
+  function toggleMember(user: string) {
+    setSelectedMembers((prev) =>
+      prev.includes(user) ? prev.filter((u) => u !== user) : [...prev, user]
+    )
+  }
+
+  function handleCreateGroup() {
+    if (!groupName.trim()) return
+    createGroup(
+      { display_name: groupName.trim(), members: selectedMembers },
+      {
+        onSuccess: (data) => {
+          setShowNewGroup(false)
+          setGroupName("")
+          setSelectedMembers([])
+          onSelectRoom(data.room_id)
+        },
+      }
+    )
+  }
+
   function RoomItem({ room }: { room: ChatRoom }) {
     const isActive = room.id === activeRoomId
     const counts = unreadCounts[room.id]
     const unread = counts?.unread ?? room.unread
     const mentions = counts?.mention_count ?? room.mention_count
     const isGeneral = room.room_type === "General"
+    const isGroup = room.room_type === "Group"
 
     return (
       <button
@@ -75,6 +103,13 @@ export function RoomList({
         <div className="flex items-center gap-2.5 min-w-0">
           {isGeneral ? (
             <Hash size={14} className={cn("shrink-0", isActive ? "text-indigo-200" : "text-[#475569]")} />
+          ) : isGroup ? (
+            <div className={cn(
+              "w-6 h-6 rounded-full shrink-0 flex items-center justify-center",
+              isActive ? "bg-indigo-400" : "bg-[#1E293B]"
+            )}>
+              <Users size={11} className={isActive ? "text-white" : "text-[#64748B]"} />
+            </div>
           ) : (
             <div className={cn(
               "w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold",
@@ -154,6 +189,86 @@ export function RoomList({
           </>
         )}
 
+        {/* Group chats */}
+        <div className="pt-2">
+          <div className="flex items-center justify-between px-3 py-1">
+            <p className="text-[10px] font-semibold text-[#334155] uppercase tracking-wider">
+              Groups
+            </p>
+            <button
+              onClick={() => { setShowNewGroup((v) => !v); setShowNewDM(false) }}
+              className="text-[#334155] hover:text-[#94A3B8] transition-colors"
+              title="New Group"
+            >
+              <Plus size={13} />
+            </button>
+          </div>
+
+          {/* New Group creator */}
+          {showNewGroup && (
+            <div className="mx-2 mb-2 bg-[#1E293B] rounded-lg overflow-hidden">
+              <div className="px-3 py-2 flex items-center justify-between border-b border-white/5">
+                <span className="text-[11px] text-[#94A3B8]">Create a group</span>
+                <button onClick={() => { setShowNewGroup(false); setGroupName(""); setSelectedMembers([]) }} className="text-[#475569] hover:text-[#94A3B8]">
+                  <X size={12} />
+                </button>
+              </div>
+              <div className="px-3 py-2 border-b border-white/5">
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="Group name…"
+                  maxLength={60}
+                  className="w-full text-[12px] bg-[#0F172A] text-[#E2E8F0] placeholder-[#475569] rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="px-3 py-1.5 max-h-40 overflow-y-auto">
+                <p className="text-[10px] text-[#475569] mb-1.5">Select members</p>
+                {mentionUsers.map((u) => (
+                  <button
+                    key={u.user}
+                    onClick={() => toggleMember(u.user)}
+                    className="w-full flex items-center gap-2.5 px-2 py-1.5 text-left hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    <div className={cn(
+                      "w-4 h-4 rounded border flex items-center justify-center shrink-0",
+                      selectedMembers.includes(u.user)
+                        ? "bg-indigo-500 border-indigo-500"
+                        : "border-[#334155]"
+                    )}>
+                      {selectedMembers.includes(u.user) && (
+                        <span className="text-white text-[8px] font-bold">✓</span>
+                      )}
+                    </div>
+                    <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                      {getInitials(u.full_name)}
+                    </div>
+                    <span className="text-[12px] text-[#CBD5E1] flex-1 truncate">{u.full_name}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="px-3 py-2 border-t border-white/5">
+                <button
+                  onClick={handleCreateGroup}
+                  disabled={!groupName.trim() || groupPending}
+                  className="w-full py-1.5 rounded-lg text-[12px] font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                >
+                  {groupPending ? "Creating…" : `Create Group${selectedMembers.length > 0 ? ` (${selectedMembers.length + 1})` : ""}`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {groupRooms.length === 0 && !showNewGroup && (
+            <p className="px-3 py-2 text-[11px] text-[#334155]">No group chats yet</p>
+          )}
+
+          {groupRooms.map((room) => (
+            <RoomItem key={room.id} room={room} />
+          ))}
+        </div>
+
         {/* Direct Messages */}
         <div className="pt-2">
           <div className="flex items-center justify-between px-3 py-1">
@@ -161,7 +276,7 @@ export function RoomList({
               Direct Messages
             </p>
             <button
-              onClick={() => setShowNewDM((v) => !v)}
+              onClick={() => { setShowNewDM((v) => !v); setShowNewGroup(false) }}
               className="text-[#334155] hover:text-[#94A3B8] transition-colors"
               title="New DM"
             >

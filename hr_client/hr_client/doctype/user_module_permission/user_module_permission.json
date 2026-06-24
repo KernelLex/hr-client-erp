@@ -14,7 +14,10 @@
   "logistics",
   "hr",
   "attendance",
-  "expense"
+  "leave",
+  "expense",
+  "crm",
+  "chat"
  ],
  "fields": [
   {
@@ -70,13 +73,31 @@
   },
   {
    "default": "1",
+   "fieldname": "leave",
+   "fieldtype": "Check",
+   "label": "Leave"
+  },
+  {
+   "default": "1",
    "fieldname": "expense",
    "fieldtype": "Check",
    "label": "Expense"
+  },
+  {
+   "default": "1",
+   "fieldname": "crm",
+   "fieldtype": "Check",
+   "label": "CRM"
+  },
+  {
+   "default": "1",
+   "fieldname": "chat",
+   "fieldtype": "Check",
+   "label": "Chat"
   }
  ],
  "links": [],
- "modified": "2026-05-14 00:00:00.000000",
+ "modified": "2026-06-24 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Hr Client",
  "name": "User Module Permission",

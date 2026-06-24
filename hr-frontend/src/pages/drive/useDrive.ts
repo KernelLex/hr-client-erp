@@ -39,16 +39,22 @@ export function useDashboardStats() {
   })
 }
 
-export function useDriveFiles(module: string, docType?: string, opts?: { enabled?: boolean }) {
+export function useDriveFiles(
+  module: string,
+  docType?: string,
+  opts?: { enabled?: boolean; search?: string }
+) {
+  const search = opts?.search?.trim() ?? ""
   return useQuery<DriveFile[]>({
-    queryKey: ["ve_drive_files", module, docType],
+    queryKey: ["ve_drive_files", module, docType, search],
     queryFn: async () => {
       const params: Record<string, string> = { module, page_length: "500" }
       if (docType && docType !== "All") params.doc_type = docType
+      if (search) params.search = search
       const res = await api.get(apiUrl("hr_client.drive_sync.api.get_files"), { params })
       return res.data.message ?? []
     },
-    staleTime: 1000 * 30,
+    staleTime: search ? 1000 * 60 : 1000 * 30,
     enabled: opts?.enabled !== false,
   })
 }

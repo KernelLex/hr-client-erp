@@ -216,6 +216,11 @@ def get_rooms():
         else:
             display_name = room["display_name"]
 
+        # For Group rooms, include member count
+        member_count = None
+        if room["room_type"] == "Group":
+            member_count = frappe.db.count("Vera Chat Room Member", {"parent": rid})
+
         result.append({
             "id": rid,
             "room_type": room["room_type"],
@@ -224,6 +229,7 @@ def get_rooms():
             "unread": unread,
             "mention_count": mention_count,
             "last_message": last_msg,
+            "member_count": member_count,
         })
 
     # Sort: General first, then DMs by last message
@@ -585,3 +591,50 @@ def get_users_for_mention():
             if u["name"] != _current_user()
         ],
     }
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def create_group(display_name, members_json=None):
+    """Create a new Group room. Any logged-in user can create groups."""
+    _require_login()
+    user = _current_user()
+
+    if not display_name or not str(display_name).strip():
+        frappe.throw("Group name is required", frappe.ValidationError)
+
+    display_name = str(display_name).strip()
+    if len(display_name) > 60:
+        frappe.throw("Group name too long (max 60 characters)", frappe.ValidationError)
+
+    # Parse member list
+    members = []
+    if members_json:
+        try:
+            parsed = json.loads(members_json) if isinstance(members_json, str) else members_json
+            if isinstance(parsed, list):
+                members = [m for m in parsed if frappe.db.exists("User", m)]
+        except Exception:
+            pass
+
+    # Always include creator
+    if user not in members:
+        members.append(user)
+
+    room = frappe.new_doc("Vera Chat Room")
+    room.room_type = "Group"
+    room.display_name = display_name
+    room.created_at = now_datetime()
+
+    for member_user in members:
+        full_name = frappe.db.get_value("User", member_user, "full_name") or member_user
+        room.append("members", {
+            "user": member_user,
+            "user_full_name": full_name,
+            "joined_at": now_datetime(),
+        })
+
+    room.insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {"success": True, "room_id": room.name, "created": True}

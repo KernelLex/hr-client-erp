@@ -157,6 +157,27 @@ export function getAIHealth(): Promise<AIHealth> {
   return call<AIHealth>("get_ai_health")
 }
 
+export interface BusinessSnapshot {
+  success: boolean
+  total_sales: number
+  si_count: number
+  total_purchases: number
+  pi_count: number
+  open_pos: number
+  open_po_value: number
+  open_quotations: number
+  open_quotation_value: number
+  overdue_invoices: number
+  overdue_amount: number
+  pending_invoices: number
+  pending_amount: number
+  total_order_book: number
+}
+
+export function getBusinessSnapshot(): Promise<BusinessSnapshot> {
+  return call<BusinessSnapshot>("get_business_snapshot")
+}
+
 // ── Verification System ───────────────────────────────────────────────────────
 
 export interface VerificationRecord {

@@ -17,7 +17,7 @@
    "fieldname": "room_type",
    "fieldtype": "Select",
    "label": "Room Type",
-   "options": "General\nDirect",
+   "options": "General\nDirect\nGroup",
    "reqd": 1,
    "in_list_view": 1
   },

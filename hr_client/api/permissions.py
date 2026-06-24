@@ -10,7 +10,10 @@ ALL_MODULES = [
     "logistics",
     "hr",
     "attendance",
+    "leave",
     "expense",
+    "crm",
+    "chat",
 ]
 
 # ERPNext roles assigned to every non-admin user (full access by default)
@@ -36,7 +39,10 @@ MODULE_ROLE_MAP = {
     "logistics":          ["Stock Manager", "Stock User"],
     "hr":                 ["HR Manager", "HR User", "Leave Approver"],
     "attendance":         ["HR Manager", "HR User"],
+    "leave":              ["HR Manager", "HR User", "Leave Approver"],
     "expense":            ["Expense Approver"],
+    "crm":                [],  # custom DocTypes only, no ERPNext desk roles needed
+    "chat":               [],  # custom DocTypes only, no ERPNext desk roles needed
 }
 
 # Roles always present regardless of module permissions

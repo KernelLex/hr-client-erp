@@ -27,12 +27,49 @@ def get_drive_stats():
     }
 
 
+_FILE_FIELDS = [
+    "name", "drive_file_id", "file_name", "folder_path", "module",
+    "doc_type", "party_name", "doc_date", "direction",
+    "mime_type", "web_view_link", "thumbnail_link",
+    "sync_status", "last_synced", "naming_valid",
+    "uploaded_by_name", "uploaded_by_email",
+]
+
 @frappe.whitelist()
-def get_files(module="All", direction=None, naming_valid=None, doc_type=None, page=1, page_length=100):
+def get_files(module="All", direction=None, naming_valid=None, doc_type=None, page=1, page_length=100, search=None):
     """
-    Return VE Drive File records with optional filtering.
+    Return VE Drive File records with optional filtering and full-text search.
+    When `search` is provided the query runs against the entire table (no page cap)
+    so all 7,000+ files can be searched. Without search, pagination applies.
     module: All | Sales | Purchase | Accounts | HR_Payroll | Logistics
     """
+    # ── Server-side search across all rows ──────────────────────────────────
+    if search and str(search).strip():
+        q = f"%{frappe.db.escape(str(search).strip(), percent=False)}%"
+        conditions = ["(file_name LIKE %(q)s OR party_name LIKE %(q)s OR doc_type LIKE %(q)s OR folder_path LIKE %(q)s)"]
+        values = {"q": f"%{str(search).strip()}%"}
+
+        if module and module != "All":
+            conditions.append("module = %(module)s")
+            values["module"] = module
+        if doc_type and doc_type != "All":
+            conditions.append("doc_type = %(doc_type)s")
+            values["doc_type"] = doc_type
+
+        where = " AND ".join(conditions)
+        fields_sql = ", ".join(f"`{f}`" for f in _FILE_FIELDS)
+        rows = frappe.db.sql(
+            f"""SELECT {fields_sql}
+                FROM `tabVE Drive File`
+                WHERE {where}
+                ORDER BY doc_date DESC, last_synced DESC
+                LIMIT 500""",
+            values,
+            as_dict=True,
+        )
+        return rows
+
+    # ── Normal paginated browse ──────────────────────────────────────────────
     filters = {}
     if module and module != "All":
         filters["module"] = module
@@ -49,13 +86,7 @@ def get_files(module="All", direction=None, naming_valid=None, doc_type=None, pa
     files = frappe.get_all(
         "VE Drive File",
         filters=filters,
-        fields=[
-            "name", "drive_file_id", "file_name", "folder_path", "module",
-            "doc_type", "party_name", "doc_date", "direction",
-            "mime_type", "web_view_link", "thumbnail_link",
-            "sync_status", "last_synced", "naming_valid",
-            "uploaded_by_name", "uploaded_by_email",
-        ],
+        fields=_FILE_FIELDS,
         order_by="doc_date desc, last_synced desc",
         start=(page - 1) * page_length,
         page_length=page_length,

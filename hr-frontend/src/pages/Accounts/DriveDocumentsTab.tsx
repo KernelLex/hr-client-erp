@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { RefreshCw, ExternalLink, Check, Flag, X } from "lucide-react"
+import { RefreshCw, ExternalLink, Check, Flag, X, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   getDriveStats,
@@ -294,6 +294,7 @@ function formatLastSync(dt: string): string {
 export function DriveDocumentsTab() {
   const qc = useQueryClient()
   const [category, setCategory] = useState<Category>("All")
+  const [searchQuery, setSearchQuery] = useState("")
   const [flagTarget, setFlagTarget] = useState<DriveFile | null>(null)
   const [analysisFile, setAnalysisFile] = useState<DriveFile | null>(null)
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
@@ -305,10 +306,16 @@ export function DriveDocumentsTab() {
     refetchInterval: 1000 * 60 * 5,
   })
 
-  // Files
+  const isSearching = searchQuery.trim().length > 0
+
+  // Search passes query to backend (searches all 7000+ files via SQL LIKE).
+  // Category is ignored when searching so results span the full dataset.
   const { data: files, isLoading: filesLoading, isError: filesError } = useQuery({
-    queryKey: ["drive_files", category],
-    queryFn: () => getDriveFiles(category),
+    queryKey: ["drive_files", isSearching ? "search" : category, isSearching ? searchQuery : ""],
+    queryFn: () => isSearching
+      ? getDriveFiles("All", undefined, searchQuery)
+      : getDriveFiles(category),
+    staleTime: 60_000,
   })
 
   // Mutations
@@ -410,26 +417,53 @@ export function DriveDocumentsTab() {
         />
       </div>
 
-      {/* Category pills */}
-      <div className="flex gap-2 flex-wrap overflow-x-auto pb-1">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => {
-              setCategory(cat)
-              setAnalysisFile(null)
-              setAnalysisResult(null)
-            }}
-            className="px-4 py-1.5 rounded-full text-[13px] font-medium border-2 transition-all whitespace-nowrap shrink-0"
-            style={{
-              borderColor: category === cat ? "#1D9E75" : "#e5e7eb",
-              backgroundColor: category === cat ? "#1D9E75" : "#fff",
-              color: category === cat ? "#fff" : "#555",
-            }}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Category pills + search */}
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-2 flex-wrap overflow-x-auto pb-1">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                setCategory(cat)
+                setAnalysisFile(null)
+                setAnalysisResult(null)
+              }}
+              className="px-4 py-1.5 rounded-full text-[13px] font-medium border-2 transition-all whitespace-nowrap shrink-0"
+              style={{
+                borderColor: category === cat ? "#1D9E75" : "#e5e7eb",
+                backgroundColor: category === cat ? "#1D9E75" : "#fff",
+                color: category === cat ? "#fff" : "#555",
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Search bar */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by file name, party, doc type, uploaded by, date…"
+            className="w-full pl-9 pr-9 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        {searchQuery && !filesLoading && (
+          <p className="text-xs text-gray-500 -mt-1">
+            {(files?.length ?? 0)} result{files?.length !== 1 ? "s" : ""} for "{searchQuery}" across all documents
+          </p>
+        )}
       </div>
 
       {/* File table */}
@@ -458,15 +492,17 @@ export function DriveDocumentsTab() {
               <tbody>
                 {filesLoading
                   ? Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
-                  : !files?.length
+                  : !(files?.length)
                   ? (
                     <tr>
                       <td colSpan={8} className="py-12 text-center text-sm text-gray-400">
-                        No documents found for this category
+                        {searchQuery
+                          ? `No documents match "${searchQuery}"`
+                          : "No documents found for this category"}
                       </td>
                     </tr>
                   )
-                  : files.map((f) => {
+                  : (files ?? []).map((f) => {
                       const catStyle = CATEGORY_STYLE[f.category] ?? CATEGORY_STYLE.Other
                       const stStyle = STATUS_STYLE[f.status] ?? STATUS_STYLE.New
                       return (

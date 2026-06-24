@@ -221,13 +221,8 @@ function FileTable({ files, isLoading, module: mod }: { files: any[]; isLoading:
 function SearchResults({ files, search, isLoading, onClear }: {
   files: any[]; search: string; isLoading: boolean; onClear: () => void
 }) {
-  const lower = search.toLowerCase().trim()
-  const results = files.filter((f) =>
-    (f.file_name || "").toLowerCase().includes(lower) ||
-    (f.party_name || "").toLowerCase().includes(lower) ||
-    (f.folder_path || "").toLowerCase().includes(lower) ||
-    (DOC_TYPE_LABELS[f.doc_type] || f.doc_type || "").toLowerCase().includes(lower)
-  )
+  // Results come pre-filtered from the server — no client-side filter needed
+  const results = files
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -285,11 +280,12 @@ export function VeDrivePage() {
   const { data: namingIssues = [] } = useNamingIssues()
   const syncNow = useSyncNow()
 
-  // Load files when at doc type level or searching (search overrides to "All" for global search)
+  // When searching: pass search term to backend (searches all 7000+ files server-side).
+  // When browsing: load only the current doc-type level.
   const { data: files = [], isLoading: filesLoading } = useDriveFiles(
     isSearching ? "All" : module,
     isSearching ? undefined : (docType === "All" ? undefined : docType),
-    { enabled: isAtDocType || isSearching }
+    { enabled: isAtDocType || isSearching, search: isSearching ? search : undefined }
   )
 
   function navigateTo(m: string, dt = "All") {

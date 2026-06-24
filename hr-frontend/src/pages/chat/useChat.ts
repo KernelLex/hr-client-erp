@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   getRooms, getOrCreateDM, markRoomRead,
   getMessages, getNewMessages, sendMessage, deleteMessage, searchMessages,
-  pingOnline, getOnlineUsers, getUnreadCounts, getUsersForMention,
+  pingOnline, getOnlineUsers, getUnreadCounts, getUsersForMention, createGroup,
 } from "@/api/chat"
 import type { ChatMessage } from "./types"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -23,6 +23,15 @@ export function useGetOrCreateDM() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (other_user: string) => getOrCreateDM(other_user),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["chat-rooms"] }),
+  })
+}
+
+export function useCreateGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ display_name, members }: { display_name: string; members: string[] }) =>
+      createGroup(display_name, members),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["chat-rooms"] }),
   })
 }

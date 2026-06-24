@@ -48,6 +48,75 @@ _ORIG_SKIP = frozenset([
 ])
 
 
+def _build_rich_context() -> str:
+    """Build an accurate LLM context using SQL aggregates + selective recent records."""
+    parts = []
+    try:
+        row = frappe.db.sql("""
+            SELECT
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice`) + (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Order`) as total_sales,
+                (SELECT COUNT(*) FROM `tabVE Sales Invoice`) + (SELECT COUNT(*) FROM `tabVE Sales Order`) as si_count,
+                (SELECT COUNT(*) FROM `tabVE Sales Invoice` WHERE payment_status = 'Overdue') as overdue_count,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice` WHERE payment_status = 'Overdue') as overdue_amt,
+                (SELECT COUNT(*) FROM `tabVE Sales Invoice` WHERE payment_status = 'Pending') as pending_count,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice` WHERE payment_status = 'Pending') as pending_amt,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Purchase Invoice`) as total_purchases,
+                (SELECT COUNT(*) FROM `tabVE Purchase Invoice`) as pi_count,
+                (SELECT COUNT(*) FROM `tabVE Purchase Order` WHERE status = 'Open' OR status IS NULL) as open_pos,
+                (SELECT COALESCE(SUM(total_value), 0) FROM `tabVE Purchase Order`) as total_po_value,
+                (SELECT COUNT(*) FROM `tabVE Quotation` WHERE status IN ('Draft', 'Sent') OR status IS NULL) as open_quotes,
+                (SELECT COALESCE(SUM(total_value), 0) FROM `tabVE Quotation`) as total_quoted,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Order`) as total_order_book,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Credit Note`) as total_credit_notes,
+                (SELECT COALESCE(SUM(amount), 0) FROM `tabVE Payment Record`) as total_payments
+        """, as_dict=True)
+        d = dict(row[0]) if row else {}
+        parts.append("=== VERA ENTERPRISES — BUSINESS SNAPSHOT ===")
+        parts.append(f"Sales Revenue: ₹{float(d.get('total_sales', 0)):,.0f} across {int(d.get('si_count', 0))} invoices")
+        parts.append(f"  Overdue: {int(d.get('overdue_count', 0))} invoices totalling ₹{float(d.get('overdue_amt', 0)):,.0f}")
+        parts.append(f"  Pending: {int(d.get('pending_count', 0))} invoices totalling ₹{float(d.get('pending_amt', 0)):,.0f}")
+        parts.append(f"Purchase Spend: ₹{float(d.get('total_purchases', 0)):,.0f} across {int(d.get('pi_count', 0))} invoices")
+        parts.append(f"Open POs: {int(d.get('open_pos', 0))} orders (total PO value ₹{float(d.get('total_po_value', 0)):,.0f})")
+        parts.append(f"Quotations: {int(d.get('open_quotes', 0))} open (pipeline ₹{float(d.get('total_quoted', 0)):,.0f})")
+        parts.append(f"Sales Order Book: ₹{float(d.get('total_order_book', 0)):,.0f}")
+        parts.append(f"Credit Notes Issued: ₹{float(d.get('total_credit_notes', 0)):,.0f}")
+        parts.append(f"Payments Recorded: ₹{float(d.get('total_payments', 0)):,.0f}")
+    except Exception as e:
+        frappe.log_error(str(e)[:300], "AI: _build_rich_context aggregates")
+
+    # Top clients by revenue
+    try:
+        top_clients = frappe.db.sql("""
+            SELECT client_name, COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as total
+            FROM `tabVE Sales Invoice`
+            WHERE client_name IS NOT NULL AND client_name != ''
+            GROUP BY client_name ORDER BY total DESC LIMIT 5
+        """, as_dict=True)
+        if top_clients:
+            parts.append("\n=== TOP 5 CLIENTS BY REVENUE ===")
+            for c in top_clients:
+                parts.append(f"- {c['client_name']}: ₹{float(c['total']):,.0f} ({int(c['cnt'])} invoices)")
+    except Exception:
+        pass
+
+    # Overdue invoices detail
+    try:
+        overdue = frappe.db.get_all(
+            "VE Sales Invoice",
+            filters={"payment_status": "Overdue"},
+            fields=["invoice_number", "client_name", "total_amount", "due_date"],
+            order_by="total_amount desc", limit=5
+        )
+        if overdue:
+            parts.append("\n=== OVERDUE INVOICES (Top 5 by amount) ===")
+            for inv in overdue:
+                parts.append(f"- {inv.get('invoice_number','N/A')} | {inv.get('client_name','N/A')} | ₹{float(inv.get('total_amount',0)):,.0f} | Due: {inv.get('due_date','N/A')}")
+    except Exception:
+        pass
+
+    return "\n".join(parts)
+
+
 def _orig_fallback(record, key, default=""):
     """Get a value from original_extracted JSON when structured field is empty."""
     try:
@@ -212,6 +281,49 @@ def analyse_selected(doc_names_json):
 
 
 @frappe.whitelist()
+def get_business_snapshot():
+    """Quick aggregate snapshot for AI Insights page — no LLM required."""
+    _require_admin()
+    try:
+        row = frappe.db.sql("""
+            SELECT
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice`) + (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Order`) as total_sales,
+                (SELECT COUNT(*) FROM `tabVE Sales Invoice`) + (SELECT COUNT(*) FROM `tabVE Sales Order`) as si_count,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Purchase Invoice`) as total_purchases,
+                (SELECT COUNT(*) FROM `tabVE Purchase Invoice`) as pi_count,
+                (SELECT COUNT(*) FROM `tabVE Purchase Order` WHERE status = 'Open' OR status IS NULL) as open_pos,
+                (SELECT COALESCE(SUM(total_value), 0) FROM `tabVE Purchase Order` WHERE status = 'Open' OR status IS NULL) as open_po_value,
+                (SELECT COUNT(*) FROM `tabVE Quotation` WHERE status IN ('Draft', 'Sent') OR status IS NULL) as open_quotations,
+                (SELECT COALESCE(SUM(total_value), 0) FROM `tabVE Quotation` WHERE status IN ('Draft', 'Sent') OR status IS NULL) as open_quotation_value,
+                (SELECT COUNT(*) FROM `tabVE Sales Invoice` WHERE payment_status = 'Overdue') as overdue_invoices,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice` WHERE payment_status = 'Overdue') as overdue_amount,
+                (SELECT COUNT(*) FROM `tabVE Sales Invoice` WHERE payment_status = 'Pending') as pending_invoices,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice` WHERE payment_status = 'Pending') as pending_amount,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Order`) as total_order_book
+        """, as_dict=True)
+        d = dict(row[0]) if row else {}
+        return {
+            "success": True,
+            "total_sales": float(d.get("total_sales") or 0),
+            "si_count": int(d.get("si_count") or 0),
+            "total_purchases": float(d.get("total_purchases") or 0),
+            "pi_count": int(d.get("pi_count") or 0),
+            "open_pos": int(d.get("open_pos") or 0),
+            "open_po_value": float(d.get("open_po_value") or 0),
+            "open_quotations": int(d.get("open_quotations") or 0),
+            "open_quotation_value": float(d.get("open_quotation_value") or 0),
+            "overdue_invoices": int(d.get("overdue_invoices") or 0),
+            "overdue_amount": float(d.get("overdue_amount") or 0),
+            "pending_invoices": int(d.get("pending_invoices") or 0),
+            "pending_amount": float(d.get("pending_amount") or 0),
+            "total_order_book": float(d.get("total_order_book") or 0),
+        }
+    except Exception as e:
+        frappe.log_error(str(e)[:300], "AI: get_business_snapshot")
+        return {"success": False}
+
+
+@frappe.whitelist()
 def get_dashboard_insights():
     """Generate AI health score and key insights for the business dashboard."""
     if not is_ollama_running():
@@ -223,15 +335,14 @@ def get_dashboard_insights():
             "alerts": [],
         }
 
-    data = _get_structured_data()
-    context = build_context(data)
+    context = _build_rich_context()
 
     prompt = (
-        "Based on this business data, provide a JSON response with:\n"
+        "Based on this business data for Vera Enterprises (Indian SME), provide a JSON response with:\n"
         "- health_score: integer 0-100 (overall financial health)\n"
         "- health_label: 'Excellent'|'Good'|'Fair'|'Poor'\n"
-        "- insights: array of 3-5 key insight strings\n"
-        "- alerts: array of urgent action items (overdue, risks)\n"
+        "- insights: array of 3-5 key insight strings (be specific with numbers from the data)\n"
+        "- alerts: array of urgent action items (overdue payments, high risks, anomalies)\n"
         "- recommendations: array of 2-3 strategic recommendations\n\n"
         f"Business Data:\n{context}"
     )
@@ -246,53 +357,70 @@ def get_dashboard_insights():
 
 @frappe.whitelist()
 def compare_periods(period1, period2):
-    """Compare two periods and return AI analysis."""
+    """Compare two periods using direct DB queries for accuracy."""
     if not is_ollama_running():
         return {"success": False, "reason": "Ollama not running"}
 
-    data = _get_structured_data()
-    sales = data.get("sales_invoices", [])
-    purchases = data.get("purchase_invoices", [])
+    def _get_period_stats(period):
+        try:
+            s = frappe.db.sql(
+                "SELECT COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as total FROM `tabVE Sales Invoice` WHERE invoice_date LIKE %s",
+                (f"{period}%",), as_dict=True,
+            )
+            p = frappe.db.sql(
+                "SELECT COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as total FROM `tabVE Purchase Invoice` WHERE invoice_date LIKE %s",
+                (f"{period}%",), as_dict=True,
+            )
+            return {
+                "sales": float(s[0]["total"]), "sales_count": int(s[0]["cnt"]),
+                "purchases": float(p[0]["total"]), "purchase_count": int(p[0]["cnt"]),
+            }
+        except Exception:
+            return {"sales": 0.0, "sales_count": 0, "purchases": 0.0, "purchase_count": 0}
 
-    def _filter_period(records, period, date_field):
-        return [r for r in records if str(r.get(date_field) or "").startswith(period)]
+    d1 = _get_period_stats(period1)
+    d2 = _get_period_stats(period2)
 
-    s1 = _filter_period(sales, period1, "invoice_date")
-    s2 = _filter_period(sales, period2, "invoice_date")
-    p1 = _filter_period(purchases, period1, "invoice_date")
-    p2 = _filter_period(purchases, period2, "invoice_date")
-
-    def _sum(records, field):
-        return sum(float(r.get(field) or 0) for r in records)
+    revenue_chg = ((d2["sales"] - d1["sales"]) / d1["sales"] * 100) if d1["sales"] > 0 else 0.0
+    expense_chg = ((d2["purchases"] - d1["purchases"]) / d1["purchases"] * 100) if d1["purchases"] > 0 else 0.0
 
     context = (
-        f"Period 1 ({period1}): Sales ₹{_sum(s1,'total_amount'):,.0f} ({len(s1)} invoices), "
-        f"Purchases ₹{_sum(p1,'total_amount'):,.0f} ({len(p1)} invoices)\n"
-        f"Period 2 ({period2}): Sales ₹{_sum(s2,'total_amount'):,.0f} ({len(s2)} invoices), "
-        f"Purchases ₹{_sum(p2,'total_amount'):,.0f} ({len(p2)} invoices)"
+        f"Period 1 ({period1}): Sales ₹{d1['sales']:,.0f} ({d1['sales_count']} invoices), "
+        f"Purchases ₹{d1['purchases']:,.0f} ({d1['purchase_count']} invoices)\n"
+        f"Period 2 ({period2}): Sales ₹{d2['sales']:,.0f} ({d2['sales_count']} invoices), "
+        f"Purchases ₹{d2['purchases']:,.0f} ({d2['purchase_count']} invoices)\n"
+        f"Revenue change: {revenue_chg:+.1f}%, Purchase change: {expense_chg:+.1f}%"
     )
 
     prompt = (
-        f"Compare business performance between {period1} and {period2}.\n{context}\n\n"
+        f"Compare business performance for Vera Enterprises between {period1} and {period2}.\n{context}\n\n"
         "Return JSON with:\n"
-        "- summary: one paragraph comparison\n"
+        "- summary: one paragraph comparison (2-3 sentences, mention specific numbers)\n"
         "- revenue_change_pct: number\n"
         "- expense_change_pct: number\n"
         "- trend: 'improving'|'declining'|'stable'\n"
-        "- key_differences: array of strings\n"
-        "- recommendation: string"
+        "- key_differences: array of 2-3 key insight strings\n"
+        "- recommendation: one actionable recommendation string"
     )
 
     result = ask_llm_json(prompt, system=VERA_SYSTEM_PROMPT)
     if not result:
-        return {"success": False, "reason": "LLM did not return valid JSON"}
+        trend = "improving" if revenue_chg > 5 else "declining" if revenue_chg < -5 else "stable"
+        result = {
+            "summary": f"Sales {'increased' if revenue_chg >= 0 else 'decreased'} by {abs(revenue_chg):.1f}% in {period2} compared to {period1}.",
+            "trend": trend,
+            "key_differences": [context],
+            "recommendation": "Review individual records in the Business Dashboard for more detail.",
+        }
 
     result.update({
         "success": True,
         "period1": period1,
         "period2": period2,
-        "period1_data": {"sales": _sum(s1, "total_amount"), "purchases": _sum(p1, "total_amount"), "count": len(s1) + len(p1)},
-        "period2_data": {"sales": _sum(s2, "total_amount"), "purchases": _sum(p2, "total_amount"), "count": len(s2) + len(p2)},
+        "revenue_change_pct": round(revenue_chg, 1),
+        "expense_change_pct": round(expense_chg, 1),
+        "period1_data": {"sales": d1["sales"], "purchases": d1["purchases"], "count": d1["sales_count"] + d1["purchase_count"]},
+        "period2_data": {"sales": d2["sales"], "purchases": d2["purchases"], "count": d2["sales_count"] + d2["purchase_count"]},
     })
     return result
 
@@ -350,21 +478,21 @@ def generate_report(report_type, filters_json=None):
     if filters_json:
         filters = json.loads(filters_json) if isinstance(filters_json, str) else filters_json
 
-    data = _get_structured_data()
-    context = build_context(data)
+    context = _build_rich_context()
 
     report_prompts = {
-        "executive_summary": "Write a concise executive summary of current business performance.",
-        "cash_flow": "Analyse cash flow: receivables vs payables, payment timing, cash position.",
-        "sales_analysis": "Analyse sales performance: top clients, trends, overdue invoices, quotation conversion.",
-        "vendor_analysis": "Analyse vendor relationships: top vendors, payment patterns, PO fulfilment.",
-        "risk_report": "Identify financial risks: overdue payments, concentration risk, pending approvals.",
+        "executive_summary": "Write a concise executive summary of current business performance for Vera Enterprises.",
+        "cash_flow": "Analyse cash flow for Vera Enterprises: receivables vs payables, overdue amounts, payment timing risks.",
+        "sales_analysis": "Analyse sales performance: top clients by revenue, payment status breakdown, overdue risks, quotation pipeline.",
+        "vendor_analysis": "Analyse vendor relationships: top vendors, purchase patterns, open POs, outstanding payment obligations.",
+        "risk_report": "Identify key financial risks: overdue payments, client concentration, pending obligations, recommended mitigations.",
     }
 
-    base_prompt = report_prompts.get(report_type, f"Generate a {report_type} report.")
+    base_prompt = report_prompts.get(report_type, f"Generate a {report_type} report for Vera Enterprises.")
     prompt = (
         f"{base_prompt}\n\nBusiness Data:\n{context}\n\n"
-        "Format as a professional report with sections. Use ₹ for Indian Rupees."
+        "Format as a professional business report with clear sections. Use ₹ for Indian Rupees. "
+        "Be specific — reference actual numbers from the data provided."
     )
 
     report = ask_llm(prompt, system=VERA_SYSTEM_PROMPT, temperature=0.3, max_tokens=2048)

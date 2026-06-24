@@ -22,7 +22,10 @@ const ALL_MODULES: PermissionModule[] = [
   "logistics",
   "hr",
   "attendance",
+  "leave",
   "expense",
+  "crm",
+  "chat",
 ]
 
 const DEPT_STYLES: Record<string, { badge: string; avatar: string }> = {
@@ -115,7 +118,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
 
       {/* Module toggles */}
       <div className="px-5 py-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
           {ALL_MODULES.map((mod) => (
             <div
               key={mod}
@@ -222,8 +225,8 @@ export function PermissionsPage() {
                   <div className="h-3 bg-gray-100 rounded w-48" />
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {Array.from({ length: 8 }).map((_, j) => (
+              <div className="grid grid-cols-4 lg:grid-cols-6 gap-2">
+                {Array.from({ length: 11 }).map((_, j) => (
                   <div key={j} className="h-10 bg-gray-100 rounded-xl" />
                 ))}
               </div>

@@ -99,6 +99,19 @@ export async function getUsersForMention(): Promise<MentionUser[]> {
   return r.data.message.users
 }
 
+// ─── Group creation ───────────────────────────────────────────────────────────
+
+export async function createGroup(
+  display_name: string,
+  members: string[]
+): Promise<{ room_id: string; created: boolean }> {
+  const r = await api.post(apiUrl("hr_client.api.chat.create_group"), {
+    display_name,
+    members_json: JSON.stringify(members),
+  })
+  return r.data.message
+}
+
 // ─── File upload (Frappe built-in) ───────────────────────────────────────────
 
 export async function uploadChatFile(
@@ -107,17 +120,18 @@ export async function uploadChatFile(
   const fd = new FormData()
   fd.append("file", file, file.name)
   fd.append("is_private", "0")
-  fd.append("folder", "Home/Chat Attachments")
+  // Do NOT specify a custom folder — Frappe will use the default Home folder.
+  // Custom sub-folders must be created manually first; if they don't exist the
+  // upload returns a 500/folder-not-found error which silently kills the upload.
 
-  // Use native fetch, not axios: axios's default Content-Type: application/json
-  // overrides FormData and the boundary is never set, breaking multipart parsing.
-  // fetch() with a FormData body sets Content-Type: multipart/form-data; boundary=...
-  // automatically, which is what Frappe's upload_file expects.
-  const csrfToken =
-    document.cookie
-      .split("; ")
-      .find((r) => r.startsWith("csrf_token="))
-      ?.split("=")[1] ?? "fetch"
+  // Use native fetch (not axios): axios overrides Content-Type to application/json
+  // which breaks multipart boundary — Frappe's upload_file requires multipart/form-data.
+  // fetch() with FormData sets the correct Content-Type automatically.
+  const csrfToken = (() => {
+    const match = document.cookie.split("; ").find((c) => c.startsWith("csrf_token="))
+    if (!match) return "fetch"
+    try { return decodeURIComponent(match.split("=")[1]) } catch { return "fetch" }
+  })()
 
   const res = await fetch("/api/method/upload_file", {
     method: "POST",
@@ -128,10 +142,11 @@ export async function uploadChatFile(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err?.exc_type ?? `Upload failed (${res.status})`)
+    throw new Error(err?.exc_type ?? err?.message ?? `Upload failed (${res.status})`)
   }
 
   const data = await res.json()
   const msg = data.message
-  return { file_url: msg.file_url, file_name: msg.file_name }
+  if (!msg?.file_url) throw new Error("No file URL returned from server")
+  return { file_url: msg.file_url, file_name: msg.file_name ?? file.name }
 }

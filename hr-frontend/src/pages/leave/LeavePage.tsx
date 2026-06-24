@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button"
 import { useMyLeaves, useApplyLeave, useLeaveDocuments, useUploadLeaveDocument } from "./useLeave"
 import { LEAVE_TYPES } from "./types"
 import type { LeaveApplication } from "./types"
+import { useAuth } from "@/context/AuthContext"
+import { LeaveAdminPanel } from "@/pages/admin/attendance/LeaveAdminPanel"
+
+const OWAIS_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 const MAX_LEAVES_PER_MONTH = 5
 
@@ -440,6 +444,26 @@ function LeaveHistoryTable({ leaves, isLoading }: { leaves: LeaveApplication[]; 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function LeavePage() {
+  const { user } = useAuth()
+  const isAdmin = user ? OWAIS_USERS.has(user.name) : false
+
+  // Admin (Owais) sees the approval panel; others see the apply form
+  if (isAdmin) {
+    return (
+      <div className="p-6 max-w-6xl space-y-6 min-h-full">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Leave Requests</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Review and approve team leave requests</p>
+        </div>
+        <LeaveAdminPanel />
+      </div>
+    )
+  }
+
+  return <EmployeeLeavePage />
+}
+
+function EmployeeLeavePage() {
   const [searchParams] = useSearchParams()
   const { data, isLoading } = useMyLeaves()
   const leaves = data?.success ? data.data : []

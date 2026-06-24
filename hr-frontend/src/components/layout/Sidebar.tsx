@@ -300,9 +300,11 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
 
   // Permissions
   const showAttendance = moduleEnabled("attendance")
-  const showLeave = moduleEnabled("attendance")
+  const showLeave = moduleEnabled("leave")
   const showRecruitment = moduleEnabled("recruitment")
   const showAccounts = moduleEnabled("accounts")
+  const showCRM = moduleEnabled("crm")
+  const showChat = moduleEnabled("chat")
 
   const sidebarBody = (
     <div
@@ -467,16 +469,20 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         <Sep />
 
         {/* CRM */}
-        <NavItem to="/crm" label="CRM" icon={TrendingUp} onClick={close} />
+        {showCRM && (
+          <NavItem to="/crm" label="CRM" icon={TrendingUp} onClick={close} />
+        )}
 
         {/* Chat */}
-        <NavItem
-          to="/chat"
-          label="Chat"
-          icon={MessageSquare}
-          unreadCount={totalUnread}
-          onClick={close}
-        />
+        {showChat && (
+          <NavItem
+            to="/chat"
+            label="Chat"
+            icon={MessageSquare}
+            unreadCount={totalUnread}
+            onClick={close}
+          />
+        )}
 
         <DisabledItem label="Performance" icon={BarChart2} />
 

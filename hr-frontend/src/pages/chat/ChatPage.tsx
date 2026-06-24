@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
-import { Hash, MessageSquare } from "lucide-react"
+import { Hash, MessageSquare, Users } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import {
   useRooms,
@@ -92,6 +92,13 @@ export function ChatPage() {
       : activeRoom.display_name
     : ""
 
+  function RoomIcon() {
+    if (!activeRoom) return <MessageSquare size={16} className="text-gray-400" />
+    if (activeRoom.room_type === "General") return <Hash size={16} className="text-gray-400" />
+    if (activeRoom.room_type === "Group") return <Users size={16} className="text-gray-400" />
+    return <MessageSquare size={16} className="text-gray-400" />
+  }
+
   return (
     <div className="flex h-full overflow-hidden" style={{ backgroundColor: "#F8FAFC" }}>
       {/* Left panel — room list */}
@@ -122,14 +129,13 @@ export function ChatPage() {
           <>
             {/* Room header */}
             <div className="shrink-0 px-5 py-3 bg-white border-b border-gray-100 flex items-center gap-2.5 shadow-sm">
-              {activeRoom?.room_type === "General" ? (
-                <Hash size={16} className="text-gray-400" />
-              ) : (
-                <MessageSquare size={16} className="text-gray-400" />
-              )}
+              <RoomIcon />
               <h2 className="text-sm font-semibold text-gray-800">{roomHeaderName || "Select a room"}</h2>
               {activeRoom?.room_type === "Direct" && (
                 <span className="text-xs text-gray-400">Direct Message</span>
+              )}
+              {activeRoom?.room_type === "Group" && activeRoom.member_count != null && (
+                <span className="text-xs text-gray-400">{activeRoom.member_count} members</span>
               )}
               <div className="ml-auto flex items-center gap-2">
                 {onlineUsers.length > 0 && (

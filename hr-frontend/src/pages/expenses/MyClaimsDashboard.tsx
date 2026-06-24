@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext"
 import { useMyClaims, useMonthlyExpenseSummary } from "./useExpenses"
 import type { ExpenseClaim, ClaimStatus } from "./types"
 import { MONTHS } from "./types"
+import { AdminClaimsView } from "./AdminClaimsView"
 
 const OWAIS_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
@@ -144,6 +145,9 @@ export function MyClaimsDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isOwais = user && OWAIS_USERS.has(user.name)
+
+  // Owais approves claims, not submits them — show admin view directly
+  if (isOwais) return <AdminClaimsView />
 
   const now = new Date()
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
