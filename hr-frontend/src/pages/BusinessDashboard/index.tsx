@@ -7,7 +7,7 @@ import {
 import { useNavigate } from "react-router-dom"
 import {
   getStructuredData, processSingleFile, autoLinkDocuments,
-  startBackgroundExtraction, getExtractionStatus, getExtractableFiles,
+  startBackgroundExtraction, retryFailedExtractions, getExtractionStatus, getExtractableFiles,
   updateDocStatus,
   type SalesInvoice, type Quotation, type CreditNote,
   type PurchaseInvoice, type PurchaseOrder, type DebitNote,
@@ -673,6 +673,7 @@ function ProcessFilesPanel() {
     staleTime: 30_000,
   })
 
+  const [retrying, setRetrying] = useState(false)
   const totalPending = status?.pending ?? extractable?.total_pending ?? 0
   const jobActive = status?.job_active ?? false
   const pendingFiles = extractable?.files ?? []
@@ -688,6 +689,21 @@ function ProcessFilesPanel() {
       setLog(`⚠ ${result.message}`)
     }
     await refetchStatus()
+  }
+
+  async function handleRetryFailed() {
+    setRetrying(true)
+    setLog(null)
+    const result = await retryFailedExtractions()
+    if (result.queued === 0) {
+      setLog("✅ No failed files found — all documents are already extracted")
+    } else if (result.already_running) {
+      setLog(`⟳ Extraction already running — ${result.queued} failed file(s) will be picked up in the next batch`)
+    } else {
+      setLog(`🔄 Retrying ${result.queued} failed file(s) in background — check back in a few minutes`)
+    }
+    await refetchStatus()
+    setRetrying(false)
   }
 
   async function handleExtractBatch() {
@@ -772,7 +788,16 @@ function ProcessFilesPanel() {
             ? <><RefreshCw className="w-3 h-3 animate-spin" /> Extracting {progress.current}/{progress.total}…</>
             : <>⚡ Extract Next 200 (browser)</>}
         </button>
-        <span className="text-xs text-gray-400">Requires this page to stay open</span>
+        <button
+          onClick={handleRetryFailed}
+          disabled={retrying || extracting}
+          className="flex items-center gap-1.5 bg-orange-500 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+        >
+          {retrying
+            ? <><RefreshCw className="w-3 h-3 animate-spin" /> Queuing…</>
+            : <>🔄 Retry Failed Files</>}
+        </button>
+        <span className="text-xs text-gray-400">Requires this page to stay open (browser) · failed files run on server</span>
       </div>
 
       {extracting && (

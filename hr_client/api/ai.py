@@ -420,21 +420,29 @@ def get_ai_health():
         processed = frappe.db.sql("""
             SELECT COUNT(DISTINCT drive_file_id) FROM `tabVE Drive File` df
             WHERE EXISTS (
-                SELECT 1 FROM `tabVE Sales Invoice` WHERE drive_file = df.drive_file_id
+                SELECT 1 FROM `tabVE Sales Invoice`    WHERE drive_file = df.drive_file_id
                 UNION ALL
-                SELECT 1 FROM `tabVE Sales Order` WHERE drive_file = df.drive_file_id
+                SELECT 1 FROM `tabVE Sales Order`      WHERE drive_file = df.drive_file_id
                 UNION ALL
                 SELECT 1 FROM `tabVE Purchase Invoice` WHERE drive_file = df.drive_file_id
                 UNION ALL
-                SELECT 1 FROM `tabVE Purchase Order` WHERE drive_file = df.drive_file_id
+                SELECT 1 FROM `tabVE Purchase Order`   WHERE drive_file = df.drive_file_id
                 UNION ALL
-                SELECT 1 FROM `tabVE Quotation` WHERE drive_file = df.drive_file_id
+                SELECT 1 FROM `tabVE Quotation`        WHERE drive_file = df.drive_file_id
                 UNION ALL
-                SELECT 1 FROM `tabVE GRN` WHERE drive_file = df.drive_file_id
+                SELECT 1 FROM `tabVE GRN`              WHERE drive_file = df.drive_file_id
                 UNION ALL
                 SELECT 1 FROM `tabVE Financial Report` WHERE drive_file = df.drive_file_id
                 UNION ALL
-                SELECT 1 FROM `tabVE Salary Record` WHERE drive_file = df.drive_file_id
+                SELECT 1 FROM `tabVE Salary Record`    WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Receipt`          WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Payment Record`   WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Credit Note`      WHERE drive_file = df.drive_file_id
+                UNION ALL
+                SELECT 1 FROM `tabVE Debit Note`       WHERE drive_file = df.drive_file_id
             )
         """)[0][0]
         pending = total - processed

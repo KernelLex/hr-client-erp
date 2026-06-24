@@ -215,7 +215,6 @@ def get_structured_data():
         FROM `tabVE Sales Invoice` si
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = si.drive_file
         ORDER BY si.creation DESC
-        LIMIT 200
     """, as_dict=True)
 
     # Also pull Sales Orders into the sales bucket
@@ -226,7 +225,6 @@ def get_structured_data():
         FROM `tabVE Sales Order` so
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = so.drive_file
         ORDER BY so.creation DESC
-        LIMIT 200
     """, as_dict=True)
 
     sales_invoices = []
@@ -272,7 +270,6 @@ def get_structured_data():
         FROM `tabVE Quotation` qt
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = qt.drive_file
         ORDER BY qt.creation DESC
-        LIMIT 200
     """, as_dict=True)
 
     quotations = [{
@@ -297,7 +294,6 @@ def get_structured_data():
         FROM `tabVE Purchase Invoice` pi
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = pi.drive_file
         ORDER BY pi.creation DESC
-        LIMIT 200
     """, as_dict=True)
 
     purchase_invoices = [{
@@ -326,7 +322,6 @@ def get_structured_data():
         FROM `tabVE Purchase Order` po
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = po.drive_file
         ORDER BY po.creation DESC
-        LIMIT 200
     """, as_dict=True)
 
     purchase_orders = [{
@@ -349,7 +344,6 @@ def get_structured_data():
         FROM `tabVE GRN` grn
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = grn.drive_file
         ORDER BY grn.creation DESC
-        LIMIT 100
     """, as_dict=True)
 
     grns = [{
@@ -372,7 +366,6 @@ def get_structured_data():
         FROM `tabVE Financial Report` fr
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = fr.drive_file
         ORDER BY fr.creation DESC
-        LIMIT 100
     """, as_dict=True)
 
     financial_reports = [{
@@ -397,7 +390,6 @@ def get_structured_data():
         FROM `tabVE Salary Record` sal
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = sal.drive_file
         ORDER BY sal.creation DESC
-        LIMIT 100
     """, as_dict=True)
 
     salary_records = [{
@@ -422,7 +414,6 @@ def get_structured_data():
         FROM `tabVE Payment Record` pr
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = pr.drive_file
         ORDER BY pr.creation DESC
-        LIMIT 500
     """, as_dict=True)
 
     payment_records = [{
@@ -437,27 +428,47 @@ def get_structured_data():
         "web_view_link": r.get("web_view_link"),
     } for r in pr_rows]
 
-    # Attendance and Receipt Voucher files — Drive file metadata fallback
+    # Attendance — Drive file metadata fallback
     attendance_records = []
-    receipt_records = []
-    df_fallback = frappe.get_all(
+    df_attendance = frappe.get_all(
         "VE Drive File",
-        filters={"doc_type": ["in", ["Attendance", "Receipt"]], "sync_status": ["in", ["Synced", "Pending"]]},
-        fields=["name", "file_name", "doc_type", "party_name", "doc_date", "web_view_link"],
+        filters={"doc_type": "Attendance", "sync_status": ["in", ["Synced", "Pending"]]},
+        fields=["name", "file_name", "party_name", "doc_date", "web_view_link"],
         order_by="doc_date desc",
-        limit=500,
     )
-    for f in df_fallback:
-        row = {
+    for f in df_attendance:
+        attendance_records.append({
             "name": f["name"],
             "file_name": f["file_name"],
             "party_name": f.get("party_name"),
+            "employee_name": f.get("party_name"),
+            "month_year": f.get("doc_date") or "",
             "web_view_link": f.get("web_view_link"),
-        }
-        if f["doc_type"] == "Attendance":
-            attendance_records.append({**row, "employee_name": f.get("party_name"), "month_year": f.get("doc_date") or ""})
-        else:
-            receipt_records.append(row)
+        })
+
+    # Receipt Vouchers — from VE Receipt DocType
+    rcv_rows = frappe.db.sql("""
+        SELECT rcv.name, rcv.receipt_number, rcv.receipt_date, rcv.amount,
+               rcv.party_name, rcv.payment_mode, rcv.reference_doc,
+               rcv.confidence_score, rcv.drive_file,
+               df.web_view_link, df.file_name, df.party_name as df_party
+        FROM `tabVE Receipt` rcv
+        LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = rcv.drive_file
+        ORDER BY rcv.receipt_date DESC, rcv.creation DESC
+    """, as_dict=True)
+
+    receipt_records = [{
+        "name": r["name"],
+        "file_name": r.get("file_name") or r["name"],
+        "receipt_number": r.get("receipt_number") or r.get("file_name") or r["name"],
+        "receipt_date": r.get("receipt_date") or "",
+        "amount": r.get("amount") or 0,
+        "party_name": r.get("party_name") or r.get("df_party") or "—",
+        "payment_mode": r.get("payment_mode") or "",
+        "reference_doc": r.get("reference_doc") or "",
+        "confidence_score": r.get("confidence_score"),
+        "web_view_link": r.get("web_view_link"),
+    } for r in rcv_rows]
 
     # --- Credit Notes (VE Credit Note) ---
     cn_rows = frappe.db.sql("""
@@ -468,7 +479,6 @@ def get_structured_data():
         FROM `tabVE Credit Note` cn
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = cn.drive_file
         ORDER BY cn.creation DESC
-        LIMIT 200
     """, as_dict=True)
 
     credit_notes = [{
@@ -494,7 +504,6 @@ def get_structured_data():
         FROM `tabVE Debit Note` dn
         LEFT JOIN `tabVE Drive File` df ON df.drive_file_id = dn.drive_file
         ORDER BY dn.creation DESC
-        LIMIT 200
     """, as_dict=True)
 
     debit_notes = [{
@@ -509,15 +518,23 @@ def get_structured_data():
         "file_name": r.get("file_name") or r["name"],
     } for r in dn_rows]
 
-    # --- Financial Totals ---
-    total_sales_invoiced = sum(r.get("total_amount") or 0 for r in si_rows)
-    total_order_book = sum(r.get("total_amount") or 0 for r in so_rows)
-    total_purchases = sum(r.get("total_amount") or 0 for r in pi_rows)
-    total_po_value = sum(r.get("total_value") or 0 for r in po_rows)
-    total_quoted = sum(r.get("total_value") or 0 for r in qt_rows)
-    total_payroll = sum(r.get("net_salary") or 0 for r in sal_rows)
-    open_pos = sum(1 for r in po_rows if (r.get("status") or "Open") == "Open")
-    open_quotations = sum(1 for r in qt_rows if (r.get("status") or "Draft") in ("Draft", "Sent"))
+    # --- Financial Totals (SQL aggregates — not limited by the list queries above) ---
+    def _sql_sum(table, field):
+        res = frappe.db.sql(f"SELECT COALESCE(SUM(`{field}`), 0) FROM `tab{table}`")
+        return float(res[0][0] or 0)
+
+    def _sql_count(table, where):
+        res = frappe.db.sql(f"SELECT COUNT(*) FROM `tab{table}` WHERE {where}")
+        return int(res[0][0] or 0)
+
+    total_sales_invoiced = _sql_sum("VE Sales Invoice", "total_amount")
+    total_order_book     = _sql_sum("VE Sales Order",   "total_amount")
+    total_purchases      = _sql_sum("VE Purchase Invoice", "total_amount")
+    total_po_value       = _sql_sum("VE Purchase Order",   "total_value")
+    total_quoted         = _sql_sum("VE Quotation",        "total_value")
+    total_payroll        = _sql_sum("VE Salary Record",    "net_salary")
+    open_pos             = _sql_count("VE Purchase Order", "status = 'Open' OR status IS NULL")
+    open_quotations      = _sql_count("VE Quotation", "status IN ('Draft', 'Sent') OR status IS NULL")
 
     totals = {
         "total_sales": total_sales_invoiced + total_order_book,
@@ -700,6 +717,8 @@ def get_extractable_files(limit=50):
               SELECT drive_file FROM `tabVE Debit Note`        WHERE drive_file IS NOT NULL AND drive_file != ''
               UNION
               SELECT drive_file FROM `tabVE Payment Record`    WHERE drive_file IS NOT NULL AND drive_file != ''
+              UNION
+              SELECT drive_file FROM `tabVE Receipt`           WHERE drive_file IS NOT NULL AND drive_file != ''
           )
         ORDER BY last_synced DESC
         """,
@@ -729,6 +748,7 @@ _NOT_IN_UNION = """
     UNION SELECT drive_file FROM `tabVE Credit Note`      WHERE drive_file IS NOT NULL AND drive_file != ''
     UNION SELECT drive_file FROM `tabVE Debit Note`       WHERE drive_file IS NOT NULL AND drive_file != ''
     UNION SELECT drive_file FROM `tabVE Payment Record`   WHERE drive_file IS NOT NULL AND drive_file != ''
+    UNION SELECT drive_file FROM `tabVE Receipt`          WHERE drive_file IS NOT NULL AND drive_file != ''
 """
 
 
@@ -785,6 +805,51 @@ def get_extraction_status():
     )
     pending = result[0]["cnt"] if result else 0
     return {"pending": pending, "job_active": job_active}
+
+
+@frappe.whitelist(methods=["POST"])
+def retry_failed_extractions():
+    """
+    Find all VE Drive Files that have a classifiable doc_type but no extracted VE record,
+    and enqueue them for background extraction. Stubs are created for files that fail
+    repeatedly so they are removed from the pending queue rather than blocking it.
+    Returns the count of files queued and whether a job was started or was already running.
+    """
+    from hr_client.drive_sync.extractor import _DOC_TYPE_CONFIG
+    known_types = list(_DOC_TYPE_CONFIG.keys())
+    if not known_types:
+        return {"success": True, "queued": 0, "message": "No extractable doc types configured"}
+
+    placeholders = ", ".join(["%s"] * len(known_types))
+    result = frappe.db.sql(
+        f"SELECT COUNT(*) as cnt FROM `tabVE Drive File` "
+        f"WHERE doc_type IN ({placeholders}) AND sync_status != 'Error' "
+        f"AND drive_file_id IS NOT NULL AND drive_file_id != '' "
+        f"AND drive_file_id NOT IN ({_NOT_IN_UNION})",
+        known_types, as_dict=True,
+    )
+    pending = result[0]["cnt"] if result else 0
+
+    if pending == 0:
+        return {"success": True, "queued": 0, "message": "All files already extracted — nothing to retry"}
+
+    already_running = bool(frappe.cache().get_value("ve_extraction_active"))
+    if not already_running:
+        frappe.cache().set_value("ve_extraction_active", 1, expires_in_sec=3600)
+        frappe.enqueue(
+            "hr_client.drive_sync.api._extract_batch_worker",
+            queue="long",
+            timeout=7200,
+            is_async=True,
+        )
+
+    return {
+        "success": True,
+        "queued": pending,
+        "already_running": already_running,
+        "message": f"{pending} file(s) queued for extraction" if not already_running
+                   else f"Extraction already running — {pending} file(s) still pending",
+    }
 
 
 def _extract_batch_worker(site=None, **kwargs):

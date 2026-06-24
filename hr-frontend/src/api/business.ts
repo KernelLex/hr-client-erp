@@ -324,6 +324,15 @@ export async function startBackgroundExtraction(): Promise<{ status: string; mes
   }
 }
 
+export async function retryFailedExtractions(): Promise<{ success: boolean; queued: number; already_running?: boolean; message: string }> {
+  try {
+    const res = await api.post(apiUrl("hr_client.drive_sync.api.retry_failed_extractions"))
+    return res.data.message ?? { success: false, queued: 0, message: "No response" }
+  } catch {
+    return { success: false, queued: 0, message: "Failed to retry extractions" }
+  }
+}
+
 export async function getExtractionStatus(): Promise<{ pending: number; job_active: boolean }> {
   try {
     const res = await api.get(apiUrl("hr_client.drive_sync.api.get_extraction_status"))

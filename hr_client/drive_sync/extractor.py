@@ -268,7 +268,7 @@ Return JSON with keys:
 - client_name: customer/client name
 - total_amount: total order value
 - delivery_date: delivery date (YYYY-MM-DD or null)
-- status: one of Open/Confirmed/Delivered/Cancelled (default Open)"""
+- status: one of Draft/Confirmed/Delivered/Cancelled (default Draft)"""
     return ask_llm_json(prompt, system=_BASE_SYSTEM, temperature=0.05)
 
 
@@ -307,6 +307,22 @@ Return JSON with keys:
 - sgst: SGST amount
 - igst: IGST amount
 - status: one of Pending/Applied/Cancelled (default Pending)"""
+    return ask_llm_json(prompt, system=_BASE_SYSTEM, temperature=0.05)
+
+
+def _prompt_receipt(text: str) -> dict | None:
+    prompt = f"""Extract from this Receipt Voucher document:
+
+{text[:4000]}
+
+Return JSON with keys:
+- receipt_number: voucher or receipt reference number
+- receipt_date: date of receipt (YYYY-MM-DD)
+- amount: total amount received (number only)
+- party_name: name of the party who made the payment
+- payment_mode: one of Cash/Cheque/NEFT/RTGS/UPI/Bank Transfer/Other
+- reference_doc: related invoice or document number being settled (or null)
+- narration: brief description of the transaction (or null)"""
     return ask_llm_json(prompt, system=_BASE_SYSTEM, temperature=0.05)
 
 
@@ -374,7 +390,7 @@ Return JSON with keys:
 
 _DOC_TYPE_CONFIG = {
     "SalesInvoice":  ("VE Sales Invoice",  _prompt_sales_invoice),
-    "Receipt":       ("VE Sales Invoice",  _prompt_sales_invoice),
+    "Receipt":       ("VE Receipt",        _prompt_receipt),
     "SalesOrder":    ("VE Sales Order",    _prompt_sales_order),
     "DeliveryNote":  ("VE Sales Order",    _prompt_sales_order),
     "CreditNote":    ("VE Credit Note",    _prompt_credit_note),
@@ -416,6 +432,10 @@ _FIELD_MAP = {
     ],
     "VE Sales Order": [
         "so_number", "so_date", "client_name", "total_amount", "delivery_date", "status",
+    ],
+    "VE Receipt": [
+        "receipt_number", "receipt_date", "amount", "party_name",
+        "payment_mode", "reference_doc", "narration",
     ],
     "VE Payment Record": [
         "payment_number", "payment_date", "amount", "party_name", "payment_type", "reference_doc",
@@ -495,7 +515,7 @@ def _apply_extracted(doc, extracted: dict, fields: list):
         "total_deductions", "net_salary", "amount",
     }
     date_fields = {"invoice_date", "due_date", "po_date", "delivery_date", "quote_date",
-                   "grn_date", "so_date", "cn_date", "dn_date", "payment_date"}
+                   "grn_date", "so_date", "cn_date", "dn_date", "payment_date", "receipt_date"}
     int_fields = {"validity_days", "tds_applicable"}
 
     for field in fields:
@@ -532,6 +552,7 @@ def create_stub_record(target_doctype: str, drive_file_id: str) -> bool:
         doc.confidence_score = 0
         doc.flags.ignore_mandatory = True
         doc.flags.ignore_links = True
+        doc.flags.ignore_validate = True
         doc.insert(ignore_permissions=True)
         frappe.db.commit()
         return True
@@ -590,6 +611,14 @@ def extract_and_save(drive_file_doc, prefetched_text: str | None = None, create_
     confidence = min(100, int((filled_total / max(len(fields), 1)) * 70) + (filled_amounts * 10))
 
     # Save to VE DocType
+    def _do_save(doc, existing):
+        if existing:
+            doc.save(ignore_permissions=True)
+            return existing
+        else:
+            doc.insert(ignore_permissions=True)
+            return doc.name
+
     try:
         if existing:
             doc = frappe.get_doc(target_doctype, existing)
@@ -602,15 +631,20 @@ def extract_and_save(drive_file_doc, prefetched_text: str | None = None, create_
         doc.confidence_score = confidence
         doc.extraction_method = doc.extraction_method or "llm_content"
 
-        if existing:
-            doc.save(ignore_permissions=True)
-            docname = existing
-        else:
-            doc.insert(ignore_permissions=True)
-            docname = doc.name
+        try:
+            docname = _do_save(doc, existing)
+        except frappe.exceptions.ValidationError as ve:
+            # Select field value from LLM doesn't match DocType options — clear it and retry
+            if "cannot be" in str(ve) and "should be one of" in str(ve):
+                if hasattr(doc, "status"):
+                    doc.status = None
+                if hasattr(doc, "payment_status"):
+                    doc.payment_status = None
+                docname = _do_save(doc, existing)
+            else:
+                raise
 
         frappe.db.commit()
-
         return {
             "success": True,
             "doctype": target_doctype,
@@ -620,4 +654,6 @@ def extract_and_save(drive_file_doc, prefetched_text: str | None = None, create_
         }
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"extract_and_save: {drive_file_id}")
+        if create_stub_on_fail:
+            create_stub_record(target_doctype, drive_file_id)
         return {"success": False, "reason": str(e)}
