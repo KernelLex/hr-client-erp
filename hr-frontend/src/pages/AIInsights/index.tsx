@@ -41,47 +41,83 @@ function ScoreRing({ score }: { score: number }) {
 function SnapshotCards({ data, loading }: { data?: BusinessSnapshot; loading: boolean }) {
   const cards = [
     {
-      label: "Total Sales",
-      value: fmtINR(data?.total_sales ?? 0),
-      sub: `${data?.si_count ?? 0} invoices`,
+      label: "FY 2025-26 Sales",
+      value: fmtINR(data?.fy_sales ?? 0),
+      sub: `${(data?.sales_count ?? 0).toLocaleString("en-IN")} sales vouchers`,
+      icon: TrendingUp,
+      bg: "bg-green-50",
+      text: "text-green-600",
+      border: "border-green-100",
+    },
+    {
+      label: "FY 2025-26 Purchases",
+      value: fmtINR(data?.fy_purchases ?? 0),
+      sub: `${(data?.purchase_count ?? 0).toLocaleString("en-IN")} purchase vouchers`,
+      icon: ShoppingCart,
+      bg: "bg-red-50",
+      text: "text-red-600",
+      border: "border-red-100",
+    },
+    {
+      label: "Sundry Debtors",
+      value: fmtINR(data?.sundry_debtors ?? 0),
+      sub: `${data?.debtor_count ?? 0} parties`,
       icon: IndianRupee,
       bg: "bg-indigo-50",
       text: "text-indigo-600",
       border: "border-indigo-100",
     },
     {
-      label: "Total Purchases",
-      value: fmtINR(data?.total_purchases ?? 0),
-      sub: `${data?.pi_count ?? 0} invoices`,
-      icon: ShoppingCart,
-      bg: "bg-purple-50",
-      text: "text-purple-600",
-      border: "border-purple-100",
+      label: "Sundry Creditors",
+      value: fmtINR(data?.sundry_creditors ?? 0),
+      sub: `${data?.creditor_count ?? 0} parties`,
+      icon: Package,
+      bg: "bg-orange-50",
+      text: "text-orange-600",
+      border: "border-orange-100",
     },
     {
-      label: "Open POs",
-      value: String(data?.open_pos ?? 0),
-      sub: `${fmtINR(data?.open_po_value ?? 0)} value`,
-      icon: Package,
+      label: "GST Payable (Output)",
+      value: fmtINR(data?.gst_payable ?? 0),
+      sub: `Input credit: ${fmtINR(data?.input_gst_credit ?? 0)}`,
+      icon: FileQuestion,
+      bg: "bg-yellow-50",
+      text: "text-yellow-600",
+      border: "border-yellow-100",
+    },
+    {
+      label: "Cash + Bank",
+      value: fmtINR((data?.cash_in_hand ?? 0) + (data?.bank_balance ?? 0)),
+      sub: `Cash ₹${fmtINR(data?.cash_in_hand ?? 0)} · Bank ${fmtINR(data?.bank_balance ?? 0)}`,
+      icon: BarChart2,
+      bg: "bg-emerald-50",
+      text: "text-emerald-600",
+      border: "border-emerald-100",
+    },
+    {
+      label: "FY Collections",
+      value: fmtINR(data?.fy_collections ?? 0),
+      sub: `${(data?.receipt_count ?? 0).toLocaleString("en-IN")} receipts`,
+      icon: Download,
       bg: "bg-blue-50",
       text: "text-blue-600",
       border: "border-blue-100",
     },
     {
-      label: "Open Quotations",
-      value: String(data?.open_quotations ?? 0),
-      sub: `${fmtINR(data?.open_quotation_value ?? 0)} pipeline`,
-      icon: FileQuestion,
-      bg: "bg-emerald-50",
-      text: "text-emerald-600",
-      border: "border-emerald-100",
+      label: "Total Vouchers",
+      value: (data?.total_vouchers ?? 0).toLocaleString("en-IN"),
+      sub: `${(data?.total_ledgers ?? 0).toLocaleString("en-IN")} ledgers · ${(data?.stock_item_count ?? 0).toLocaleString("en-IN")} SKUs`,
+      icon: FileText,
+      bg: "bg-gray-50",
+      text: "text-gray-600",
+      border: "border-gray-100",
     },
   ]
 
   if (loading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map(i => (
+        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
           <div key={i} className="bg-white rounded-xl border p-4 h-28 animate-pulse">
             <div className="w-9 h-9 rounded-lg bg-gray-100 mb-3" />
             <div className="h-6 bg-gray-100 rounded w-3/4 mb-1" />
@@ -107,6 +143,48 @@ function SnapshotCards({ data, loading }: { data?: BusinessSnapshot; loading: bo
           </div>
         )
       })}
+    </div>
+  )
+}
+
+function TopPartiesCard({ data }: { data?: BusinessSnapshot }) {
+  const debtors  = Object.entries(data?.top_debtors  ?? {}).slice(0, 5)
+  const creditors = Object.entries(data?.top_creditors ?? {}).slice(0, 5)
+  if (!debtors.length && !creditors.length) return null
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      {debtors.length > 0 && (
+        <div className="bg-white rounded-2xl border shadow-sm p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />
+            Top Debtors (Outstanding)
+          </h3>
+          <div className="space-y-2">
+            {debtors.map(([name, amt]) => (
+              <div key={name} className="flex items-center justify-between gap-2">
+                <span className="text-sm text-gray-700 truncate">{name}</span>
+                <span className="text-sm font-semibold text-indigo-600 whitespace-nowrap">{fmtINR(amt)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {creditors.length > 0 && (
+        <div className="bg-white rounded-2xl border shadow-sm p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-orange-500 inline-block" />
+            Top Creditors (Outstanding)
+          </h3>
+          <div className="space-y-2">
+            {creditors.map(([name, amt]) => (
+              <div key={name} className="flex items-center justify-between gap-2">
+                <span className="text-sm text-gray-700 truncate">{name}</span>
+                <span className="text-sm font-semibold text-orange-600 whitespace-nowrap">{fmtINR(amt)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -570,17 +648,19 @@ export default function AIInsights() {
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Business Snapshot</h2>
         <SnapshotCards data={snapshot as BusinessSnapshot | undefined} loading={snapshotLoading} />
 
-        {/* Overdue / pending alert bar */}
-        {snapshot?.overdue_invoices ? (
-          <div className="mt-3 flex items-center gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-            <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
-            <p className="text-sm text-red-700">
-              <strong>{snapshot.overdue_invoices} overdue invoices</strong> totalling{" "}
-              <strong>{fmtINR(snapshot.overdue_amount)}</strong> need attention.
+        {/* GST net position alert */}
+        {(snapshot?.gst_payable ?? 0) > (snapshot?.input_gst_credit ?? 0) && (
+          <div className="mt-3 flex items-center gap-3 bg-yellow-50 border border-yellow-100 rounded-xl px-4 py-3">
+            <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+            <p className="text-sm text-yellow-700">
+              Net GST payable: <strong>{fmtINR((snapshot?.gst_payable ?? 0) - (snapshot?.input_gst_credit ?? 0))}</strong> (Output GST minus Input Credit)
             </p>
           </div>
-        ) : null}
+        )}
       </section>
+
+      {/* Top debtors + creditors */}
+      <TopPartiesCard data={snapshot as BusinessSnapshot | undefined} />
 
       {/* AI Health Score */}
       <HealthCard

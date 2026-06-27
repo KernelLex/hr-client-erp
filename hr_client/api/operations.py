@@ -68,9 +68,16 @@ def get_operations_data():
     """, as_dict=True)
 
     # Use snapshot for correct aggregate totals
+    # Positive = we have the money; negative = overdraft/OD
     cash_total = flt(snap.get("cash_in_hand", 0))
     bank_total = flt(snap.get("bank_balance", 0))
     total_cash_bank = flt(snap.get("total_cash_bank", 0))
+
+    # Split bank into available funds (positive ledgers) vs OD drawn (negative ledgers)
+    bank_ledger_map = snap.get("bank_ledgers", {})
+    bank_credit = sum(v for v in bank_ledger_map.values() if v > 0)
+    bank_od = sum(abs(v) for v in bank_ledger_map.values() if v < 0)
+    liquid_assets = (cash_total if cash_total > 0 else 0) + bank_credit
 
     gst_payable_raw = flt(snap.get("gst_payable", 0))
     input_gst = flt(snap.get("input_gst_credit", 0))
@@ -125,6 +132,7 @@ def get_operations_data():
         FROM `tabVE Tally Voucher`
         WHERE is_cancelled = 0
           AND voucher_date >= '2025-04-01'
+          AND voucher_date < '2026-04-01'
           AND voucher_type IN ('Sales', 'PERFORMA INVOICE', 'Purchase', 'Receipt')
         GROUP BY voucher_type
     """, as_dict=True)
@@ -196,13 +204,21 @@ def get_operations_data():
     """, as_dict=True)
     vtype_map = {r.voucher_type: r.cnt for r in vtypes}
 
+    vtotals = frappe.db.sql("""
+        SELECT voucher_type, COUNT(*) as cnt, SUM(amount) as total
+        FROM `tabVE Tally Voucher`
+        WHERE is_cancelled = 0
+        GROUP BY voucher_type
+    """, as_dict=True)
+    vtotal_map = {r.voucher_type: {"cnt": r.cnt, "total": flt(r.total)} for r in vtotals}
+
     # ── Format everything ──────────────────────────────────────────
     return {
         "as_of": as_of,
         "finance": {
             "kpis": [
-                {"label": "Cash in Hand", "value": _fmt(max(0, cash_total)), "raw": cash_total},
-                {"label": "Bank Balance (Net)", "value": _fmt(bank_total), "raw": bank_total},
+                {"label": "Cash in Hand", "value": _fmt(cash_total if cash_total > 0 else 0), "raw": cash_total},
+                {"label": "Bank Funds", "value": _fmt(bank_credit), "raw": bank_credit},
                 {"label": "Net GST Liability", "value": _fmt(net_gst), "raw": net_gst},
                 {"label": "TDS Payable", "value": _fmt(tds_payable), "raw": tds_payable},
             ],
@@ -214,6 +230,9 @@ def get_operations_data():
                 {"name": r.ledger_name, "balance": flt(r.closing_balance), "balance_fmt": _fmt(r.closing_balance)}
                 for r in cash_rows
             ],
+            "bank_od": round(bank_od, 2),
+            "bank_od_fmt": _fmt(bank_od),
+            "net_bank": round(bank_total, 2),
             "gst_detail": {
                 "output_gst": round(abs(output_gst), 2),
                 "input_credit": round(input_gst, 2),
@@ -280,6 +299,20 @@ def get_operations_data():
                 {"label": "Purchase Vouchers", "value": f"{vtype_map.get('Purchase', 0):,}", "raw": vtype_map.get("Purchase", 0)},
             ],
             "brands": brand_names,
+            "voucher_totals": {
+                "sales_total":         round(vtotal_map.get("Sales", {}).get("total", 0), 2),
+                "sales_count":         vtotal_map.get("Sales", {}).get("cnt", 0),
+                "sales_order_total":   round(vtotal_map.get("Sales Order", {}).get("total", 0), 2),
+                "sales_order_count":   vtotal_map.get("Sales Order", {}).get("cnt", 0),
+                "purchase_total":      round(vtotal_map.get("Purchase", {}).get("total", 0), 2),
+                "purchase_count":      vtotal_map.get("Purchase", {}).get("cnt", 0),
+                "performa_total":      round(vtotal_map.get("PERFORMA INVOICE", {}).get("total", 0), 2),
+                "performa_count":      vtotal_map.get("PERFORMA INVOICE", {}).get("cnt", 0),
+                "credit_note_total":   round(vtotal_map.get("Credit Note", {}).get("total", 0), 2),
+                "credit_note_count":   vtotal_map.get("Credit Note", {}).get("cnt", 0),
+                "receipt_total":       round(vtotal_map.get("Receipt", {}).get("total", 0), 2),
+                "receipt_count":       vtotal_map.get("Receipt", {}).get("cnt", 0),
+            },
             "voucher_summary": {
                 "sales": vtype_map.get("Sales", 0),
                 "purchases": vtype_map.get("Purchase", 0),
@@ -294,11 +327,11 @@ def get_operations_data():
         "executive": {
             "kpis": [
                 {
-                    "label": "Cash + Bank",
-                    "value": _fmt(total_cash_bank),
-                    "raw": total_cash_bank,
-                    "delta": f"Bank: {_fmt(bank_total)}",
-                    "delta_class": "delta-neutral",
+                    "label": "Liquid Assets",
+                    "value": _fmt(liquid_assets),
+                    "raw": liquid_assets,
+                    "delta": f"Bank OD: {_fmt(bank_od)}" if bank_od > 0 else f"Bank: {_fmt(bank_credit)}",
+                    "delta_class": "delta-negative" if bank_od > 0 else "delta-neutral",
                 },
                 {
                     "label": "Receivables",
@@ -732,3 +765,254 @@ def get_tally_stock_items(group=None, search=None, limit=100):
         order_by="item_name",
         limit=int(limit),
     )
+
+
+@frappe.whitelist()
+def get_financial_summary(fy=None):
+    """
+    Returns voucher counts + totals from tabVE Tally Voucher.
+    fy: None / "all" = all-time; "2025-2026" = Apr 2025 – Mar 2026.
+    """
+    _require_admin()
+
+    where_parts = ["is_cancelled = 0"]
+    params = []
+
+    if fy and fy != "all":
+        try:
+            parts = fy.split("-")
+            start_year = int(parts[0])
+            end_year   = int(parts[1])
+            where_parts.append("voucher_date >= %s AND voucher_date < %s")
+            params = [f"{start_year}-04-01", f"{end_year}-04-01"]
+        except (ValueError, IndexError):
+            pass
+
+    where = " AND ".join(where_parts)
+
+    rows = frappe.db.sql(
+        f"SELECT voucher_type, COUNT(*) as cnt, SUM(amount) as total "
+        f"FROM `tabVE Tally Voucher` WHERE {where} GROUP BY voucher_type",
+        tuple(params), as_dict=True
+    )
+    vm = {r.voucher_type: {"cnt": int(r.cnt or 0), "total": flt(r.total or 0)} for r in rows}
+
+    dr = frappe.db.sql(
+        f"SELECT MIN(voucher_date) as min_d, MAX(voucher_date) as max_d "
+        f"FROM `tabVE Tally Voucher` WHERE {where}",
+        tuple(params), as_dict=True
+    )
+
+    def _v(vtype):
+        v = vm.get(vtype, {"cnt": 0, "total": 0.0})
+        return {"cnt": v["cnt"], "total": round(v["total"], 2), "fmt": _fmt(v["total"])}
+
+    return {
+        "sales":          _v("Sales"),
+        "performa":       _v("PERFORMA INVOICE"),
+        "sales_order":    _v("Sales Order"),
+        "purchase":       _v("Purchase"),
+        "purchase_order": _v("Purchase Order"),
+        "receipt":        _v("Receipt"),
+        "payment":        _v("Payment"),
+        "credit_note":    _v("Credit Note"),
+        "debit_note":     _v("Debit Note"),
+        "journal":        _v("Journal"),
+        "contra":         _v("Contra"),
+        "delivery_note":  _v("Delivery Note"),
+        "stock_journal":  _v("Stock Journal"),
+        "other":          _v("Other"),
+        "total_vouchers": sum(v["cnt"] for v in vm.values()),
+        "min_date": str(dr[0].min_d) if dr and dr[0].min_d else "",
+        "max_date": str(dr[0].max_d) if dr and dr[0].max_d else "",
+        "fy": fy or "all",
+    }
+
+
+@frappe.whitelist()
+def get_available_financial_years():
+    """Returns all FY strings that have tally data, newest first."""
+    _require_admin()
+    rows = frappe.db.sql("""
+        SELECT DISTINCT
+          CASE
+            WHEN MONTH(voucher_date) >= 4
+            THEN CONCAT(YEAR(voucher_date), '-', YEAR(voucher_date)+1)
+            ELSE CONCAT(YEAR(voucher_date)-1, '-', YEAR(voucher_date))
+          END AS fy
+        FROM `tabVE Tally Voucher`
+        WHERE is_cancelled = 0 AND voucher_date IS NOT NULL
+        ORDER BY fy DESC
+    """, as_dict=True)
+    return [r.fy for r in rows]
+
+
+@frappe.whitelist()
+def get_voucher_list(voucher_type, fy=None, search=None, page=1, page_size=50, sort="date_desc"):
+    """
+    Paginated list of Tally vouchers for the Ledger browser.
+    Returns all display fields; party_name and narration HTML-decoded.
+    """
+    _require_admin()
+    import html as _html
+
+    where_parts = ["is_cancelled = 0", "voucher_type = %s"]
+    params = [voucher_type]
+
+    if fy and fy != "all":
+        try:
+            parts = fy.split("-")
+            sy, ey = int(parts[0]), int(parts[1])
+            where_parts.append("voucher_date >= %s AND voucher_date < %s")
+            params += [f"{sy}-04-01", f"{ey}-04-01"]
+        except (ValueError, IndexError):
+            pass
+
+    if search and str(search).strip():
+        s = f"%{str(search).strip()}%"
+        where_parts.append("(party_name LIKE %s OR narration LIKE %s OR voucher_number LIKE %s)")
+        params += [s, s, s]
+
+    where = " AND ".join(where_parts)
+
+    # Total count
+    cnt_row = frappe.db.sql(
+        f"SELECT COUNT(*) as n FROM `tabVE Tally Voucher` WHERE {where}",
+        tuple(params), as_dict=True
+    )
+    total = int(cnt_row[0].n) if cnt_row else 0
+
+    # Sort order
+    sort_map = {
+        "date_desc":   "voucher_date DESC, name DESC",
+        "date_asc":    "voucher_date ASC,  name ASC",
+        "amount_desc": "amount DESC, voucher_date DESC",
+        "amount_asc":  "amount ASC,  voucher_date DESC",
+    }
+    order = sort_map.get(sort or "date_desc", "voucher_date DESC, name DESC")
+
+    # Pagination
+    pg      = max(1, int(flt(page)))
+    pg_size = max(10, min(100, int(flt(page_size))))
+    offset  = (pg - 1) * pg_size
+
+    rows = frappe.db.sql(
+        f"SELECT name, voucher_type, voucher_number, voucher_date, party_name, "
+        f"amount, narration, debit_ledger, credit_ledger "
+        f"FROM `tabVE Tally Voucher` WHERE {where} ORDER BY {order} LIMIT %s OFFSET %s",
+        tuple(params) + (pg_size, offset), as_dict=True
+    )
+
+    def _clean(s):
+        return _html.unescape(str(s or "").replace("&amp;", "&").replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">"))
+
+    result = []
+    for r in rows:
+        result.append({
+            "name":           r.name,
+            "voucher_type":   r.voucher_type or "",
+            "voucher_number": r.voucher_number or "",
+            "voucher_date":   str(r.voucher_date) if r.voucher_date else "",
+            "party_name":     _clean(r.party_name),
+            "amount":         round(float(r.amount or 0), 2),
+            "amount_fmt":     _fmt(r.amount),
+            "narration":      _clean(r.narration),
+            "debit_ledger":   _clean(r.debit_ledger),
+            "credit_ledger":  _clean(r.credit_ledger),
+        })
+
+    return {
+        "rows":      result,
+        "total":     total,
+        "page":      pg,
+        "page_size": pg_size,
+        "pages":     max(1, -(-total // pg_size)),
+    }
+
+
+@frappe.whitelist()
+def get_voucher_detail(name):
+    """Return full voucher detail including inventory + all ledger entries + party profile."""
+    import json as _json
+    import html as _html
+    _require_admin()
+
+    rows = frappe.db.sql(
+        """SELECT v.name, v.voucher_type, v.voucher_number, v.voucher_date, v.party_name,
+                  v.amount, v.narration, v.debit_ledger, v.credit_ledger,
+                  v.all_ledger_entries, v.inventory_entries,
+                  l.mailing_name, l.gstin as party_gstin, l.address as party_address,
+                  l.state as party_state, l.pincode as party_pincode,
+                  l.phone as party_phone, l.gst_registration_type
+           FROM `tabVE Tally Voucher` v
+           LEFT JOIN `tabVE Tally Ledger` l ON l.ledger_name = v.party_name
+           WHERE v.name = %s LIMIT 1""",
+        (name,), as_dict=True
+    )
+    if not rows:
+        frappe.throw("Voucher not found", frappe.DoesNotExistError)
+
+    r = rows[0]
+
+    def _clean(s):
+        return _html.unescape(str(s or "").replace("&amp;", "&").replace("&apos;", "'"))
+
+    def _parse_json(s):
+        try:
+            return _json.loads(s) if s else []
+        except Exception:
+            return []
+
+    return {
+        "name":                  r.name,
+        "voucher_type":          r.voucher_type or "",
+        "voucher_number":        r.voucher_number or "",
+        "voucher_date":          str(r.voucher_date) if r.voucher_date else "",
+        "party_name":            _clean(r.party_name),
+        "amount":                round(float(r.amount or 0), 2),
+        "amount_fmt":            _fmt(r.amount),
+        "narration":             _clean(r.narration),
+        "debit_ledger":          _clean(r.debit_ledger),
+        "credit_ledger":         _clean(r.credit_ledger),
+        "all_ledger_entries":    _parse_json(r.all_ledger_entries),
+        "inventory_entries":     _parse_json(r.inventory_entries),
+        # Party profile from ledger master
+        "party_mailing_name":    _clean(r.mailing_name),
+        "party_gstin":           _clean(r.party_gstin),
+        "party_address":         _clean(r.party_address),
+        "party_state":           _clean(r.party_state),
+        "party_pincode":         _clean(r.party_pincode),
+        "party_phone":           _clean(r.party_phone),
+        "party_gst_type":        _clean(r.gst_registration_type),
+    }
+
+
+@frappe.whitelist()
+def get_ledger_profile(ledger_name):
+    """Return full party profile for a ledger name (address, GSTIN, phone, balance)."""
+    _require_admin()
+    rows = frappe.db.sql(
+        """SELECT ledger_name, mailing_name, parent_group, closing_balance,
+                  gstin, pan_number, gst_registration_type, state, pincode, phone, address,
+                  is_debtors, is_creditors, is_bank, is_cash
+           FROM `tabVE Tally Ledger` WHERE ledger_name = %s LIMIT 1""",
+        (ledger_name,), as_dict=True
+    )
+    if not rows:
+        return None
+    r = rows[0]
+    return {
+        "ledger_name":          r.ledger_name,
+        "mailing_name":         r.mailing_name or r.ledger_name,
+        "parent_group":         r.parent_group or "",
+        "closing_balance":      round(float(r.closing_balance or 0), 2),
+        "gstin":                r.gstin or "",
+        "pan_number":           r.pan_number or "",
+        "gst_registration_type": r.gst_registration_type or "",
+        "state":                r.state or "",
+        "pincode":              r.pincode or "",
+        "phone":                r.phone or "",
+        "address":              r.address or "",
+        "is_debtors":           bool(r.is_debtors),
+        "is_creditors":         bool(r.is_creditors),
+    }

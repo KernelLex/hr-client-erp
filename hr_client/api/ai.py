@@ -48,69 +48,118 @@ _ORIG_SKIP = frozenset([
 ])
 
 
-def _build_rich_context() -> str:
-    """Build an accurate LLM context using SQL aggregates + selective recent records."""
-    parts = []
+def _load_tally_snapshot() -> dict:
+    """Load the tally_snapshot.json file. Returns empty dict on failure."""
+    import os
+    snap_path = os.path.join(os.path.dirname(__file__), "..", "tally_snapshot.json")
     try:
-        row = frappe.db.sql("""
-            SELECT
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice`) + (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Order`) as total_sales,
-                (SELECT COUNT(*) FROM `tabVE Sales Invoice`) + (SELECT COUNT(*) FROM `tabVE Sales Order`) as si_count,
-                (SELECT COUNT(*) FROM `tabVE Sales Invoice` WHERE payment_status = 'Overdue') as overdue_count,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice` WHERE payment_status = 'Overdue') as overdue_amt,
-                (SELECT COUNT(*) FROM `tabVE Sales Invoice` WHERE payment_status = 'Pending') as pending_count,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice` WHERE payment_status = 'Pending') as pending_amt,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Purchase Invoice`) as total_purchases,
-                (SELECT COUNT(*) FROM `tabVE Purchase Invoice`) as pi_count,
-                (SELECT COUNT(*) FROM `tabVE Purchase Order` WHERE status = 'Open' OR status IS NULL) as open_pos,
-                (SELECT COALESCE(SUM(total_value), 0) FROM `tabVE Purchase Order`) as total_po_value,
-                (SELECT COUNT(*) FROM `tabVE Quotation` WHERE status IN ('Draft', 'Sent') OR status IS NULL) as open_quotes,
-                (SELECT COALESCE(SUM(total_value), 0) FROM `tabVE Quotation`) as total_quoted,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Order`) as total_order_book,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Credit Note`) as total_credit_notes,
-                (SELECT COALESCE(SUM(amount), 0) FROM `tabVE Payment Record`) as total_payments
-        """, as_dict=True)
-        d = dict(row[0]) if row else {}
-        parts.append("=== VERA ENTERPRISES — BUSINESS SNAPSHOT ===")
-        parts.append(f"Sales Revenue: ₹{float(d.get('total_sales', 0)):,.0f} across {int(d.get('si_count', 0))} invoices")
-        parts.append(f"  Overdue: {int(d.get('overdue_count', 0))} invoices totalling ₹{float(d.get('overdue_amt', 0)):,.0f}")
-        parts.append(f"  Pending: {int(d.get('pending_count', 0))} invoices totalling ₹{float(d.get('pending_amt', 0)):,.0f}")
-        parts.append(f"Purchase Spend: ₹{float(d.get('total_purchases', 0)):,.0f} across {int(d.get('pi_count', 0))} invoices")
-        parts.append(f"Open POs: {int(d.get('open_pos', 0))} orders (total PO value ₹{float(d.get('total_po_value', 0)):,.0f})")
-        parts.append(f"Quotations: {int(d.get('open_quotes', 0))} open (pipeline ₹{float(d.get('total_quoted', 0)):,.0f})")
-        parts.append(f"Sales Order Book: ₹{float(d.get('total_order_book', 0)):,.0f}")
-        parts.append(f"Credit Notes Issued: ₹{float(d.get('total_credit_notes', 0)):,.0f}")
-        parts.append(f"Payments Recorded: ₹{float(d.get('total_payments', 0)):,.0f}")
-    except Exception as e:
-        frappe.log_error(str(e)[:300], "AI: _build_rich_context aggregates")
+        with open(snap_path) as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
-    # Top clients by revenue
+
+def _build_rich_context() -> str:
+    """Build an accurate LLM context from Tally snapshot + live voucher data."""
+    parts = []
+    snap = _load_tally_snapshot()
+
     try:
-        top_clients = frappe.db.sql("""
-            SELECT client_name, COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as total
-            FROM `tabVE Sales Invoice`
-            WHERE client_name IS NOT NULL AND client_name != ''
-            GROUP BY client_name ORDER BY total DESC LIMIT 5
-        """, as_dict=True)
-        if top_clients:
-            parts.append("\n=== TOP 5 CLIENTS BY REVENUE ===")
-            for c in top_clients:
-                parts.append(f"- {c['client_name']}: ₹{float(c['total']):,.0f} ({int(c['cnt'])} invoices)")
+        parts.append("=== VERA ENTERPRISES — FINANCIAL SNAPSHOT (Tally Data) ===")
+        parts.append(f"All-time Sales: ₹{float(snap.get('total_sales_alltime', 0)):,.0f}")
+        parts.append(f"FY 2025-26 Sales: ₹{float(snap.get('fy_sales', 0)):,.0f}")
+        parts.append(f"FY 2025-26 Purchases: ₹{float(snap.get('fy_purchases', 0)):,.0f}")
+        parts.append(f"FY 2025-26 Collections: ₹{float(snap.get('fy_collections', 0)):,.0f}")
+        parts.append(f"Sundry Debtors (Outstanding): ₹{float(snap.get('sundry_debtors', 0)):,.0f}")
+        parts.append(f"Sundry Creditors (Outstanding): ₹{float(snap.get('sundry_creditors', 0)):,.0f}")
+        parts.append(f"GST Payable (Output): ₹{float(snap.get('gst_payable', 0)):,.0f}")
+        parts.append(f"Input GST Credit: ₹{float(snap.get('input_gst_credit', 0)):,.0f}")
+        parts.append(f"Cash in Hand: ₹{float(snap.get('cash_in_hand', 0)):,.0f}")
+        parts.append(f"Bank Balance: ₹{float(snap.get('bank_balance', 0)):,.0f}")
+        parts.append(f"Total Vouchers: {int(snap.get('voucher_count', 0)):,}")
+        parts.append(f"Ledger Accounts: {int(snap.get('ledger_count', 0) or frappe.db.count('VE Tally Ledger')):,}")
+        parts.append(f"Stock SKUs: {int(snap.get('stock_item_count', 0)):,}")
+    except Exception as e:
+        frappe.log_error(str(e)[:300], "AI: _build_rich_context snapshot")
+
+    # Top debtors
+    try:
+        top_debtors = snap.get("top_debtors", {})
+        if top_debtors:
+            parts.append("\n=== TOP DEBTORS (Outstanding Receivables) ===")
+            for name, amt in list(top_debtors.items())[:5]:
+                parts.append(f"- {name}: ₹{float(amt):,.0f}")
     except Exception:
         pass
 
-    # Overdue invoices detail
+    # Top creditors
     try:
-        overdue = frappe.db.get_all(
-            "VE Sales Invoice",
-            filters={"payment_status": "Overdue"},
-            fields=["invoice_number", "client_name", "total_amount", "due_date"],
-            order_by="total_amount desc", limit=5
+        top_creds = snap.get("top_creditors", {})
+        if top_creds:
+            parts.append("\n=== TOP CREDITORS (Outstanding Payables) ===")
+            for name, amt in list(top_creds.items())[:5]:
+                parts.append(f"- {name}: ₹{float(amt):,.0f}")
+    except Exception:
+        pass
+
+    # Recent 6 months cashflow trend
+    try:
+        ms = snap.get("monthly_sales", {})
+        mp = snap.get("monthly_purchases", {})
+        if ms or mp:
+            parts.append("\n=== MONTHLY CASHFLOW (Last 6 Months) ===")
+            all_months = sorted(set(list(ms.keys()) + list(mp.keys())))[-6:]
+            for m in all_months:
+                yr, mo = m[:4], m[4:6]
+                import calendar
+                month_name = f"{calendar.month_abbr[int(mo)]} {yr}"
+                parts.append(f"  {month_name}: Sales ₹{float(ms.get(m,0)):,.0f}, Purchases ₹{float(mp.get(m,0)):,.0f}")
+    except Exception:
+        pass
+
+    # Voucher type breakdown
+    try:
+        breakdown = frappe.db.sql(
+            "SELECT voucher_type, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
+            "FROM `tabVE Tally Voucher` WHERE is_cancelled=0 GROUP BY voucher_type ORDER BY total DESC",
+            as_dict=True
         )
-        if overdue:
-            parts.append("\n=== OVERDUE INVOICES (Top 5 by amount) ===")
-            for inv in overdue:
-                parts.append(f"- {inv.get('invoice_number','N/A')} | {inv.get('client_name','N/A')} | ₹{float(inv.get('total_amount',0)):,.0f} | Due: {inv.get('due_date','N/A')}")
+        if breakdown:
+            parts.append("\n=== TRANSACTION BREAKDOWN ===")
+            for b in breakdown:
+                parts.append(f"- {b['voucher_type']}: {int(b['cnt']):,} entries totalling ₹{float(b['total']):,.0f}")
+    except Exception:
+        pass
+
+    # Top 5 customers by sales this FY
+    try:
+        top_customers = frappe.db.sql(
+            "SELECT party_name, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
+            "FROM `tabVE Tally Voucher` WHERE voucher_type='Sales' AND is_cancelled=0 "
+            "AND voucher_date >= '2025-04-01' AND party_name != '' "
+            "GROUP BY party_name ORDER BY total DESC LIMIT 5",
+            as_dict=True
+        )
+        if top_customers:
+            parts.append("\n=== TOP 5 CUSTOMERS (FY 2025-26 Sales) ===")
+            for c in top_customers:
+                parts.append(f"- {c['party_name']}: ₹{float(c['total']):,.0f} ({int(c['cnt'])} invoices)")
+    except Exception:
+        pass
+
+    # Top 5 vendors by purchases this FY
+    try:
+        top_vendors = frappe.db.sql(
+            "SELECT party_name, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
+            "FROM `tabVE Tally Voucher` WHERE voucher_type='Purchase' AND is_cancelled=0 "
+            "AND voucher_date >= '2025-04-01' AND party_name != '' "
+            "GROUP BY party_name ORDER BY total DESC LIMIT 5",
+            as_dict=True
+        )
+        if top_vendors:
+            parts.append("\n=== TOP 5 VENDORS (FY 2025-26 Purchases) ===")
+            for v in top_vendors:
+                parts.append(f"- {v['party_name']}: ₹{float(v['total']):,.0f} ({int(v['cnt'])} invoices)")
     except Exception:
         pass
 
@@ -282,41 +331,62 @@ def analyse_selected(doc_names_json):
 
 @frappe.whitelist()
 def get_business_snapshot():
-    """Quick aggregate snapshot for AI Insights page — no LLM required."""
+    """Quick aggregate snapshot for AI Insights page — from Tally data, no LLM required."""
     _require_admin()
     try:
-        row = frappe.db.sql("""
-            SELECT
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice`) + (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Order`) as total_sales,
-                (SELECT COUNT(*) FROM `tabVE Sales Invoice`) + (SELECT COUNT(*) FROM `tabVE Sales Order`) as si_count,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Purchase Invoice`) as total_purchases,
-                (SELECT COUNT(*) FROM `tabVE Purchase Invoice`) as pi_count,
-                (SELECT COUNT(*) FROM `tabVE Purchase Order` WHERE status = 'Open' OR status IS NULL) as open_pos,
-                (SELECT COALESCE(SUM(total_value), 0) FROM `tabVE Purchase Order` WHERE status = 'Open' OR status IS NULL) as open_po_value,
-                (SELECT COUNT(*) FROM `tabVE Quotation` WHERE status IN ('Draft', 'Sent') OR status IS NULL) as open_quotations,
-                (SELECT COALESCE(SUM(total_value), 0) FROM `tabVE Quotation` WHERE status IN ('Draft', 'Sent') OR status IS NULL) as open_quotation_value,
-                (SELECT COUNT(*) FROM `tabVE Sales Invoice` WHERE payment_status = 'Overdue') as overdue_invoices,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice` WHERE payment_status = 'Overdue') as overdue_amount,
-                (SELECT COUNT(*) FROM `tabVE Sales Invoice` WHERE payment_status = 'Pending') as pending_invoices,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Invoice` WHERE payment_status = 'Pending') as pending_amount,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM `tabVE Sales Order`) as total_order_book
-        """, as_dict=True)
-        d = dict(row[0]) if row else {}
+        snap = _load_tally_snapshot()
+
+        # Live voucher counts per type
+        counts = frappe.db.sql(
+            "SELECT voucher_type, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
+            "FROM `tabVE Tally Voucher` WHERE is_cancelled=0 GROUP BY voucher_type",
+            as_dict=True
+        )
+        by_type = {r["voucher_type"]: r for r in counts}
+
+        def _cnt(t): return int((by_type.get(t) or {}).get("cnt") or 0)
+        def _tot(t): return float((by_type.get(t) or {}).get("total") or 0)
+
+        # Debtor/creditor counts from ledger
+        debtor_count  = frappe.db.count("VE Tally Ledger", {"is_debtors": 1})
+        creditor_count = frappe.db.count("VE Tally Ledger", {"is_creditors": 1})
+
         return {
             "success": True,
-            "total_sales": float(d.get("total_sales") or 0),
-            "si_count": int(d.get("si_count") or 0),
-            "total_purchases": float(d.get("total_purchases") or 0),
-            "pi_count": int(d.get("pi_count") or 0),
-            "open_pos": int(d.get("open_pos") or 0),
-            "open_po_value": float(d.get("open_po_value") or 0),
-            "open_quotations": int(d.get("open_quotations") or 0),
-            "open_quotation_value": float(d.get("open_quotation_value") or 0),
-            "overdue_invoices": int(d.get("overdue_invoices") or 0),
-            "overdue_amount": float(d.get("overdue_amount") or 0),
-            "pending_invoices": int(d.get("pending_invoices") or 0),
-            "pending_amount": float(d.get("pending_amount") or 0),
-            "total_order_book": float(d.get("total_order_book") or 0),
+            # Tally snapshot aggregates
+            "total_sales":         float(snap.get("total_sales_alltime", 0)),
+            "fy_sales":            float(snap.get("fy_sales", 0)),
+            "fy_purchases":        float(snap.get("fy_purchases", 0)),
+            "fy_collections":      float(snap.get("fy_collections", 0)),
+            "sundry_debtors":      float(snap.get("sundry_debtors", 0)),
+            "sundry_creditors":    float(snap.get("sundry_creditors", 0)),
+            "gst_payable":         float(snap.get("gst_payable", 0)),
+            "input_gst_credit":    float(snap.get("input_gst_credit", 0)),
+            "cash_in_hand":        float(snap.get("cash_in_hand", 0)),
+            "bank_balance":        float(snap.get("bank_balance", 0)),
+            "tds_payable":         float(snap.get("tds_payable", 0)),
+            # Live counts
+            "sales_count":         _cnt("Sales"),
+            "sales_total":         _tot("Sales"),
+            "purchase_count":      _cnt("Purchase"),
+            "purchase_total":      _tot("Purchase"),
+            "receipt_count":       _cnt("Receipt"),
+            "receipt_total":       _tot("Receipt"),
+            "payment_count":       _cnt("Payment"),
+            "payment_total":       _tot("Payment"),
+            "credit_note_count":   _cnt("Credit Note"),
+            "debit_note_count":    _cnt("Debit Note"),
+            "journal_count":       _cnt("Journal"),
+            "total_vouchers":      int(snap.get("voucher_count", 0)),
+            "total_ledgers":       int(snap.get("ledger_count", debtor_count + creditor_count)),
+            "stock_item_count":    int(snap.get("stock_item_count", 0)),
+            "debtor_count":        debtor_count,
+            "creditor_count":      creditor_count,
+            "top_debtors":         snap.get("top_debtors", {}),
+            "top_creditors":       snap.get("top_creditors", {}),
+            "monthly_sales":       snap.get("monthly_sales", {}),
+            "monthly_purchases":   snap.get("monthly_purchases", {}),
+            "monthly_collections": snap.get("monthly_collections", {}),
         }
     except Exception as e:
         frappe.log_error(str(e)[:300], "AI: get_business_snapshot")
@@ -357,39 +427,68 @@ def get_dashboard_insights():
 
 @frappe.whitelist()
 def compare_periods(period1, period2):
-    """Compare two periods using direct DB queries for accuracy."""
+    """Compare two periods using Tally voucher data. period format: YYYY-MM."""
     if not is_ollama_running():
         return {"success": False, "reason": "Ollama not running"}
 
     def _get_period_stats(period):
+        """period = 'YYYY-MM'. Returns sales, purchases, receipts for that month."""
         try:
-            s = frappe.db.sql(
-                "SELECT COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as total FROM `tabVE Sales Invoice` WHERE invoice_date LIKE %s",
-                (f"{period}%",), as_dict=True,
+            # Convert YYYY-MM to date range
+            parts = period.split("-")
+            yr, mo = int(parts[0]), int(parts[1])
+            import calendar
+            _, last_day = calendar.monthrange(yr, mo)
+            date_from = f"{yr}-{mo:02d}-01"
+            date_to   = f"{yr}-{mo:02d}-{last_day:02d}"
+
+            rows = frappe.db.sql(
+                "SELECT voucher_type, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
+                "FROM `tabVE Tally Voucher` "
+                "WHERE is_cancelled=0 AND voucher_date BETWEEN %s AND %s "
+                "GROUP BY voucher_type",
+                (date_from, date_to), as_dict=True
             )
-            p = frappe.db.sql(
-                "SELECT COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as total FROM `tabVE Purchase Invoice` WHERE invoice_date LIKE %s",
-                (f"{period}%",), as_dict=True,
+            by_type = {r["voucher_type"]: r for r in rows}
+            def _t(t): return float((by_type.get(t) or {}).get("total") or 0)
+            def _c(t): return int((by_type.get(t) or {}).get("cnt") or 0)
+
+            # Top customers this period
+            top = frappe.db.sql(
+                "SELECT party_name, COALESCE(SUM(amount),0) as total "
+                "FROM `tabVE Tally Voucher` "
+                "WHERE voucher_type='Sales' AND is_cancelled=0 AND voucher_date BETWEEN %s AND %s "
+                "AND party_name != '' GROUP BY party_name ORDER BY total DESC LIMIT 3",
+                (date_from, date_to), as_dict=True
             )
             return {
-                "sales": float(s[0]["total"]), "sales_count": int(s[0]["cnt"]),
-                "purchases": float(p[0]["total"]), "purchase_count": int(p[0]["cnt"]),
+                "sales":          _t("Sales"),    "sales_count":    _c("Sales"),
+                "purchases":      _t("Purchase"), "purchase_count": _c("Purchase"),
+                "receipts":       _t("Receipt"),  "receipt_count":  _c("Receipt"),
+                "payments":       _t("Payment"),  "payment_count":  _c("Payment"),
+                "credit_notes":   _t("Credit Note"),
+                "top_customers":  [{"name": r["party_name"], "amount": float(r["total"])} for r in top],
             }
-        except Exception:
-            return {"sales": 0.0, "sales_count": 0, "purchases": 0.0, "purchase_count": 0}
+        except Exception as ex:
+            frappe.log_error(str(ex)[:200], "AI: compare_periods _get_period_stats")
+            return {"sales": 0.0, "sales_count": 0, "purchases": 0.0, "purchase_count": 0,
+                    "receipts": 0.0, "payments": 0.0, "credit_notes": 0.0, "top_customers": []}
 
     d1 = _get_period_stats(period1)
     d2 = _get_period_stats(period2)
 
     revenue_chg = ((d2["sales"] - d1["sales"]) / d1["sales"] * 100) if d1["sales"] > 0 else 0.0
     expense_chg = ((d2["purchases"] - d1["purchases"]) / d1["purchases"] * 100) if d1["purchases"] > 0 else 0.0
+    collection_chg = ((d2["receipts"] - d1["receipts"]) / d1["receipts"] * 100) if d1["receipts"] > 0 else 0.0
 
     context = (
-        f"Period 1 ({period1}): Sales ₹{d1['sales']:,.0f} ({d1['sales_count']} invoices), "
-        f"Purchases ₹{d1['purchases']:,.0f} ({d1['purchase_count']} invoices)\n"
-        f"Period 2 ({period2}): Sales ₹{d2['sales']:,.0f} ({d2['sales_count']} invoices), "
-        f"Purchases ₹{d2['purchases']:,.0f} ({d2['purchase_count']} invoices)\n"
-        f"Revenue change: {revenue_chg:+.1f}%, Purchase change: {expense_chg:+.1f}%"
+        f"Period 1 ({period1}): Sales ₹{d1['sales']:,.0f} ({d1['sales_count']} vouchers), "
+        f"Purchases ₹{d1['purchases']:,.0f} ({d1['purchase_count']} vouchers), "
+        f"Collections ₹{d1['receipts']:,.0f}\n"
+        f"Period 2 ({period2}): Sales ₹{d2['sales']:,.0f} ({d2['sales_count']} vouchers), "
+        f"Purchases ₹{d2['purchases']:,.0f} ({d2['purchase_count']} vouchers), "
+        f"Collections ₹{d2['receipts']:,.0f}\n"
+        f"Revenue change: {revenue_chg:+.1f}%, Purchase change: {expense_chg:+.1f}%, Collection change: {collection_chg:+.1f}%"
     )
 
     prompt = (
@@ -407,10 +506,10 @@ def compare_periods(period1, period2):
     if not result:
         trend = "improving" if revenue_chg > 5 else "declining" if revenue_chg < -5 else "stable"
         result = {
-            "summary": f"Sales {'increased' if revenue_chg >= 0 else 'decreased'} by {abs(revenue_chg):.1f}% in {period2} compared to {period1}.",
+            "summary": f"Sales {'increased' if revenue_chg >= 0 else 'decreased'} by {abs(revenue_chg):.1f}% in {period2} vs {period1}. Collections changed by {collection_chg:+.1f}%.",
             "trend": trend,
             "key_differences": [context],
-            "recommendation": "Review individual records in the Business Dashboard for more detail.",
+            "recommendation": "Review voucher details in the Operations Ledger browser for more context.",
         }
 
     result.update({
@@ -419,8 +518,18 @@ def compare_periods(period1, period2):
         "period2": period2,
         "revenue_change_pct": round(revenue_chg, 1),
         "expense_change_pct": round(expense_chg, 1),
-        "period1_data": {"sales": d1["sales"], "purchases": d1["purchases"], "count": d1["sales_count"] + d1["purchase_count"]},
-        "period2_data": {"sales": d2["sales"], "purchases": d2["purchases"], "count": d2["sales_count"] + d2["purchase_count"]},
+        "period1_data": {
+            "sales": d1["sales"], "purchases": d1["purchases"],
+            "receipts": d1["receipts"], "payments": d1["payments"],
+            "count": d1["sales_count"] + d1["purchase_count"],
+            "top_customers": d1.get("top_customers", []),
+        },
+        "period2_data": {
+            "sales": d2["sales"], "purchases": d2["purchases"],
+            "receipts": d2["receipts"], "payments": d2["payments"],
+            "count": d2["sales_count"] + d2["purchase_count"],
+            "top_customers": d2.get("top_customers", []),
+        },
     })
     return result
 

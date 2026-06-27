@@ -18,7 +18,10 @@
   "sec1",
   "debit_ledger",
   "credit_ledger",
-  "is_cancelled"
+  "is_cancelled",
+  "sec2",
+  "all_ledger_entries",
+  "inventory_entries"
  ],
  "fields": [
   {"fieldname": "tally_guid", "fieldtype": "Data", "label": "Tally GUID", "unique": 1, "in_list_view": 1},
@@ -32,10 +35,13 @@
   {"fieldname": "sec1", "fieldtype": "Section Break"},
   {"fieldname": "debit_ledger", "fieldtype": "Data", "label": "Debit Ledger"},
   {"fieldname": "credit_ledger", "fieldtype": "Data", "label": "Credit Ledger"},
-  {"fieldname": "is_cancelled", "fieldtype": "Check", "label": "Cancelled"}
+  {"fieldname": "is_cancelled", "fieldtype": "Check", "label": "Cancelled"},
+  {"fieldname": "sec2", "fieldtype": "Section Break", "label": "Detail"},
+  {"fieldname": "all_ledger_entries", "fieldtype": "Long Text", "label": "All Ledger Entries (JSON)"},
+  {"fieldname": "inventory_entries", "fieldtype": "Long Text", "label": "Inventory Entries (JSON)"}
  ],
  "links": [],
- "modified": "2026-06-24 00:00:00.000000",
+ "modified": "2026-06-27 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Hr Client",
  "name": "VE Tally Voucher",

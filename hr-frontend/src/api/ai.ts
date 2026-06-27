@@ -159,19 +159,40 @@ export function getAIHealth(): Promise<AIHealth> {
 
 export interface BusinessSnapshot {
   success: boolean
+  // Tally snapshot aggregates
   total_sales: number
-  si_count: number
-  total_purchases: number
-  pi_count: number
-  open_pos: number
-  open_po_value: number
-  open_quotations: number
-  open_quotation_value: number
-  overdue_invoices: number
-  overdue_amount: number
-  pending_invoices: number
-  pending_amount: number
-  total_order_book: number
+  fy_sales: number
+  fy_purchases: number
+  fy_collections: number
+  sundry_debtors: number
+  sundry_creditors: number
+  gst_payable: number
+  input_gst_credit: number
+  cash_in_hand: number
+  bank_balance: number
+  tds_payable: number
+  // Live voucher counts
+  sales_count: number
+  sales_total: number
+  purchase_count: number
+  purchase_total: number
+  receipt_count: number
+  receipt_total: number
+  payment_count: number
+  payment_total: number
+  credit_note_count: number
+  debit_note_count: number
+  journal_count: number
+  total_vouchers: number
+  total_ledgers: number
+  stock_item_count: number
+  debtor_count: number
+  creditor_count: number
+  top_debtors: Record<string, number>
+  top_creditors: Record<string, number>
+  monthly_sales: Record<string, number>
+  monthly_purchases: Record<string, number>
+  monthly_collections: Record<string, number>
 }
 
 export function getBusinessSnapshot(): Promise<BusinessSnapshot> {

@@ -52,19 +52,85 @@ def run(masters_path: str, transactions_path: str):
             gparent = gparent_m.group(1).strip().replace("&amp;", "&") if gparent_m else ''
             group_parents[gname] = gparent
 
+        def _clean(s):
+            return s.strip().replace("&amp;", "&").replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
+
         ledger_data = {}
         for block in re.finditer(r'<LEDGER NAME="([^"]+)".*?</LEDGER>', masters, re.DOTALL):
-            name = block.group(1).replace("&amp;", "&")
-            parent_m = re.search(r'<PARENT>([^<]*)</PARENT>', block.group(0))
-            parent = parent_m.group(1).strip().replace("&amp;", "&") if parent_m else ''
-            ledger_data[name] = {
-                "parent": parent,
+            raw_name = block.group(1).replace("&amp;", "&")
+            btext    = block.group(0)
+            parent_m = re.search(r'<PARENT>([^<]*)</PARENT>', btext)
+            parent   = _clean(parent_m.group(1)) if parent_m else ''
+
+            # Mailing name + address from LEDMAILINGDETAILS.LIST (use last/most-recent entry)
+            mailing_name = raw_name
+            address = ''
+            state   = ''
+            pincode = ''
+            for md in re.finditer(r'<LEDMAILINGDETAILS\.LIST>(.*?)</LEDMAILINGDETAILS\.LIST>', btext, re.DOTALL):
+                mdtext = md.group(1)
+                mn_m = re.search(r'<MAILINGNAME>([^<]*)</MAILINGNAME>', mdtext)
+                if mn_m and mn_m.group(1).strip():
+                    mailing_name = _clean(mn_m.group(1))
+                # Address is multi-line: collect all <ADDRESS> elements
+                addr_lines = [_clean(a.group(1)) for a in re.finditer(r'<ADDRESS>([^<]+)</ADDRESS>', mdtext) if a.group(1).strip()]
+                if addr_lines:
+                    address = ', '.join(addr_lines)
+                st_m  = re.search(r'<STATE>([^<]*)</STATE>', mdtext)
+                pin_m = re.search(r'<PINCODE>([^<]*)</PINCODE>', mdtext)
+                if st_m  and st_m.group(1).strip():  state   = _clean(st_m.group(1))
+                if pin_m and pin_m.group(1).strip():  pincode = _clean(pin_m.group(1))
+
+            # GSTIN — from LEDGSTREGDETAILS.LIST (take last/most-recent entry)
+            gstin = ''
+            partygstin_m = re.search(r'<PARTYGSTIN>([^<]*)</PARTYGSTIN>', btext)
+            if partygstin_m and partygstin_m.group(1).strip():
+                gstin = _clean(partygstin_m.group(1))
+            for gd in re.finditer(r'<LEDGSTREGDETAILS\.LIST>(.*?)</LEDGSTREGDETAILS\.LIST>', btext, re.DOTALL):
+                g_m = re.search(r'<GSTIN>([^<]*)</GSTIN>', gd.group(1))
+                if g_m and g_m.group(1).strip():
+                    gstin = _clean(g_m.group(1))
+
+            # Phone — from CONTACTDETAILS.LIST or direct LEDGERMOBILE scalar
+            phone = ''
+            mobile_m = re.search(r'<LEDGERMOBILE>([^<]*)</LEDGERMOBILE>', btext)
+            if mobile_m and mobile_m.group(1).strip():
+                phone = _clean(mobile_m.group(1))
+            for cd in re.finditer(r'<CONTACTDETAILS\.LIST>(.*?)</CONTACTDETAILS\.LIST>', btext, re.DOTALL):
+                ph_m = re.search(r'<PHONENUMBER>([^<]*)</PHONENUMBER>', cd.group(1))
+                if ph_m and ph_m.group(1).strip():
+                    phone = _clean(ph_m.group(1)); break
+
+            # PAN
+            pan_m = re.search(r'<INCOMETAXNUMBER>([^<]*)</INCOMETAXNUMBER>', btext)
+            pan   = _clean(pan_m.group(1)) if pan_m and pan_m.group(1).strip() else ''
+
+            # GST registration type
+            grtype_m = re.search(r'<GSTREGISTRATIONTYPE>([^<]*)</GSTREGISTRATIONTYPE>', btext)
+            grt = _clean(grtype_m.group(1)) if grtype_m and grtype_m.group(1).strip() else ''
+
+            # State fallback from PRIORSTATENAME
+            if not state:
+                psn_m = re.search(r'<PRIORSTATENAME>([^<]*)</PRIORSTATENAME>', btext)
+                if psn_m and psn_m.group(1).strip():
+                    state = _clean(psn_m.group(1))
+
+            ledger_data[raw_name] = {
+                "parent":              parent,
+                "mailing_name":        mailing_name[:200],
+                "address":             address[:500],
+                "state":               state[:100],
+                "pincode":             pincode[:20],
+                "gstin":               gstin[:20],
+                "pan_number":          pan[:20],
+                "gst_registration_type": grt[:50],
+                "phone":               phone[:30],
                 "is_debtor":   1 if 'Sundry Debtors' in parent else 0,
-                "is_creditor": 1 if parent == 'Sundry Creditors' else 0,
+                "is_creditor": 1 if parent in ('Sundry Creditors', 'Creditor For Expenses') else 0,
                 "is_bank":     1 if parent in ('Bank Accounts', 'Bank OD A/c') else 0,
                 "is_cash":     1 if parent == 'Cash-in-Hand' else 0,
-                "is_gst":      1 if any(kw in name.upper() for kw in ('CGST', 'SGST', 'IGST')) else 0,
-                "is_tds":      1 if 'TDS' in name.upper() else 0,
+                "is_gst":      1 if any(kw in raw_name.upper() for kw in ('CGST', 'SGST', 'IGST')) else 0,
+                "is_tds":      1 if 'TDS' in raw_name.upper() else 0,
             }
 
         stock_data = []
@@ -74,16 +140,66 @@ def run(masters_path: str, transactions_path: str):
             if name in seen_items:
                 continue
             seen_items.add(name)
-            parent_m = re.search(r'<PARENT>([^<]*)</PARENT>', block.group(0))
-            hsn_m    = re.search(r'<HSNCODE>([^<]*)</HSNCODE>', block.group(0))
-            rate_m   = re.search(r'<STANDARDCOST\.LIST>.*?<RATE>([^<]*)</RATE>', block.group(0), re.DOTALL)
-            unit_m   = re.search(r'<BASEUNITS>([^<]*)</BASEUNITS>', block.group(0))
+            btext    = block.group(0)
+            parent_m = re.search(r'<PARENT>([^<]*)</PARENT>', btext)
+            unit_m   = re.search(r'<BASEUNITS>([^<]*)</BASEUNITS>', btext)
+
+            # HSN code: stored inside HSNDETAILS.LIST as HSNCLASSIFICATIONNAME like "83024900 Gst @ 18%"
+            # Also check GSTDETAILS.LIST HSNMASTERNAME as fallback
+            hsn_code = ''
+            rate_pct = 0.0
+            for hd in re.finditer(r'<HSNDETAILS\.LIST>(.*?)</HSNDETAILS\.LIST>', btext, re.DOTALL):
+                hcn_m = re.search(r'<HSNCLASSIFICATIONNAME>([^<]*)</HSNCLASSIFICATIONNAME>', hd.group(1))
+                if hcn_m and hcn_m.group(1).strip():
+                    raw_hsn = hcn_m.group(1).strip()
+                    parts = raw_hsn.split()
+                    if parts and re.match(r'^\d{4,8}$', parts[0]):
+                        hsn_code = parts[0]; break
+            if not hsn_code:
+                for gd in re.finditer(r'<GSTDETAILS\.LIST>(.*?)</GSTDETAILS\.LIST>', btext, re.DOTALL):
+                    hmn_m = re.search(r'<HSNMASTERNAME>([^<]*)</HSNMASTERNAME>', gd.group(1))
+                    if hmn_m and hmn_m.group(1).strip():
+                        raw_hsn = hmn_m.group(1).strip()
+                        parts = raw_hsn.split()
+                        if parts and re.match(r'^\d{4,8}$', parts[0]):
+                            hsn_code = parts[0]; break
+
+            # GST rate: from GSTDETAILS.LIST → STATEWISEDETAILS.LIST → RATEDETAILS.LIST (CGST rate × 2)
+            for gd in re.finditer(r'<GSTDETAILS\.LIST>(.*?)</GSTDETAILS\.LIST>', btext, re.DOTALL):
+                for rd in re.finditer(r'<RATEDETAILS\.LIST>(.*?)</RATEDETAILS\.LIST>', gd.group(1), re.DOTALL):
+                    rdtext = rd.group(1)
+                    duty_m = re.search(r'<GSTRATEDUTYHEAD>([^<]*)</GSTRATEDUTYHEAD>', rdtext)
+                    rate_m = re.search(r'<GSTRATE>\s*([0-9.]+)</GSTRATE>', rdtext)
+                    if duty_m and rate_m and 'CGST' in duty_m.group(1).upper():
+                        try:
+                            rate_pct = float(rate_m.group(1)) * 2  # CGST + SGST
+                            break
+                        except ValueError:
+                            pass
+                if rate_pct:
+                    break
+
+            # Standard rate: from STANDARDPRICE.LIST → RATE (selling price), fallback STANDARDCOST
+            std_rate = 0.0
+            for sp in re.finditer(r'<STANDARDPRICE\.LIST>(.*?)</STANDARDPRICE\.LIST>', btext, re.DOTALL):
+                rm = re.search(r'<RATE>([^<]+)</RATE>', sp.group(1))
+                if rm and rm.group(1).strip():
+                    try: std_rate = abs(float(rm.group(1).split('/')[0].strip())); break
+                    except ValueError: pass
+            if not std_rate:
+                for sc in re.finditer(r'<STANDARDCOST\.LIST>(.*?)</STANDARDCOST\.LIST>', btext, re.DOTALL):
+                    rm = re.search(r'<RATE>([^<]+)</RATE>', sc.group(1))
+                    if rm and rm.group(1).strip():
+                        try: std_rate = abs(float(rm.group(1).split('/')[0].strip())); break
+                        except ValueError: pass
+
             stock_data.append({
                 "item_name":    name[:140],
-                "stock_group": (parent_m.group(1).strip().replace("&amp;", "&") if parent_m else '')[:140],
-                "hsn_code":    (hsn_m.group(1).strip() if hsn_m else '')[:20],
-                "unit":        (unit_m.group(1).strip() if unit_m else '')[:20],
-                "standard_rate": float(rate_m.group(1).split('/')[0].strip()) if rate_m and rate_m.group(1).strip() else 0.0,
+                "stock_group": (_clean(parent_m.group(1)) if parent_m else '')[:140],
+                "hsn_code":    hsn_code[:20],
+                "gst_rate":    rate_pct,
+                "unit":        (_clean(unit_m.group(1)) if unit_m else '')[:20],
+                "standard_rate": std_rate,
             })
 
         _set_status("running", 20, f"Masters loaded: {len(ledger_data)} ledgers, {len(stock_data)} SKUs. Parsing transactions…")
@@ -141,6 +257,8 @@ def run(masters_path: str, transactions_path: str):
 
                     debit_ledger = credit_ledger = ''
                     amount = 0.0
+                    party_ledger_amount = 0.0  # party-facing amount (more accurate for financial totals)
+                    all_ledger_list = []
 
                     for pattern in (
                         r'<ALLLEDGERENTRIES\.LIST>(.*?)</ALLLEDGERENTRIES\.LIST>',
@@ -148,20 +266,79 @@ def run(masters_path: str, transactions_path: str):
                     ):
                         for le in re.finditer(pattern, vtext, re.DOTALL):
                             letext = le.group(1)
-                            lname_m  = re.search(r'<LEDGERNAME>([^<]+)</LEDGERNAME>', letext)
-                            amounts  = re.findall(r'<AMOUNT>([^<]+)</AMOUNT>', letext)
+                            lname_m   = re.search(r'<LEDGERNAME>([^<]+)</LEDGERNAME>', letext)
+                            amounts   = re.findall(r'<AMOUNT>([^<]+)</AMOUNT>', letext)
+                            isparty_m = re.search(r'<ISPARTYLEDGER>([^<]+)</ISPARTYLEDGER>', letext)
                             if not lname_m or not amounts:
                                 continue
                             lname = lname_m.group(1).strip().replace("&amp;", "&")
                             amt   = float(amounts[-1])
                             if not is_cancelled and not is_deleted:
-                                ledger_balances[lname] += amt
+                                ledger_balances[lname] += -amt
                             if amt > 0 and not debit_ledger:
                                 debit_ledger = lname[:140]
                             elif amt < 0 and not credit_ledger:
                                 credit_ledger = lname[:140]
                             if abs(amt) > abs(amount):
                                 amount = abs(amt)
+                            # Capture party-ledger amount for transactional vouchers
+                            if isparty_m and isparty_m.group(1).strip() == 'Yes' \
+                               and party_ledger_amount == 0 and amounts:
+                                party_ledger_amount = abs(float(amounts[0]))
+                            all_ledger_list.append({
+                                "ledger": lname[:140],
+                                "amount": round(abs(amt), 2),
+                                "is_dr": amt > 0,
+                                "is_party": bool(isparty_m and isparty_m.group(1).strip() == 'Yes'),
+                            })
+
+                    # Extract inventory line items
+                    inv_list = []
+                    for inv in re.finditer(r'<ALLINVENTORYENTRIES\.LIST>(.*?)</ALLINVENTORYENTRIES\.LIST>', vtext, re.DOTALL):
+                        itext = inv.group(1)
+                        iname_m = re.search(r'<STOCKITEMNAME>([^<]+)</STOCKITEMNAME>', itext)
+                        if not iname_m:
+                            continue
+                        rate_m  = re.search(r'<RATE>([^<]+)</RATE>', itext)
+                        disc_m  = re.search(r'<DISCOUNT>([^<]*)</DISCOUNT>', itext)
+                        amt_m   = re.search(r'<AMOUNT>([^<]+)</AMOUNT>', itext)
+                        qty_m   = re.search(r'<BILLEDQTY>([^<]+)</BILLEDQTY>', itext)
+                        hsn_m   = re.search(r'<GSTHSNNAME>([^<]*)</GSTHSNNAME>', itext)
+                        # Parse rate "126900.00/PCS" → (126900.0, "PCS")
+                        rate_val, rate_unit = 0.0, ""
+                        if rate_m:
+                            rp = rate_m.group(1).strip().split("/")
+                            try: rate_val = abs(float(rp[0].strip()))
+                            except: pass
+                            if len(rp) > 1: rate_unit = rp[1].strip()
+                        # Parse qty " 1.00 PCS" → (1.0, "PCS")
+                        qty_val, qty_unit = 0.0, ""
+                        if qty_m:
+                            qp = qty_m.group(1).strip().split()
+                            try: qty_val = abs(float(qp[0]))
+                            except: pass
+                            if len(qp) > 1: qty_unit = qp[1]
+                        inv_list.append({
+                            "name": iname_m.group(1).strip().replace("&amp;", "&")[:200],
+                            "hsn": (hsn_m.group(1).strip() if hsn_m else ""),
+                            "rate": rate_val,
+                            "rate_unit": rate_unit,
+                            "discount": float(disc_m.group(1).strip()) if disc_m and disc_m.group(1).strip() else 0.0,
+                            "amount": round(abs(float(amt_m.group(1))), 2) if amt_m else 0.0,
+                            "qty": qty_val,
+                            "qty_unit": qty_unit,
+                        })
+
+                    # Use party-ledger amount when available — it matches Tally's own AR/AP figures
+                    # and eliminates the systematic discrepancy caused by using max-ledger-line amount
+                    _PARTY_AMOUNT_TYPES = {
+                        'Sales', 'PERFORMA INVOICE', 'Sales Order',
+                        'Purchase', 'Purchase Order',
+                        'Credit Note', 'Debit Note',
+                        'Receipt', 'Payment', 'Delivery Note',
+                    }
+                    if party_ledger_amount > 0 and vtype in _PARTY_AMOUNT_TYPES:
+                        amount = party_ledger_amount
 
                     # Monthly aggregates via party ledger (LEDGERENTRIES.LIST for Sales/Purchase)
                     if not is_cancelled and not is_deleted and month_key:
@@ -195,16 +372,18 @@ def run(masters_path: str, transactions_path: str):
 
                     vtype_norm = vtype if vtype in VALID_TYPES else 'Other'
                     vouchers.append({
-                        'tally_guid':    guid,
-                        'voucher_type':  vtype_norm,
-                        'voucher_number': vno,
-                        'voucher_date':  voucher_date,
-                        'party_name':    party,
-                        'amount':        round(amount, 2),
-                        'narration':     narr,
-                        'debit_ledger':  debit_ledger,
-                        'credit_ledger': credit_ledger,
-                        'is_cancelled':  1 if is_cancelled or is_deleted else 0,
+                        'tally_guid':         guid,
+                        'voucher_type':        vtype_norm,
+                        'voucher_number':      vno,
+                        'voucher_date':        voucher_date,
+                        'party_name':          party,
+                        'amount':              round(amount, 2),
+                        'narration':           narr,
+                        'debit_ledger':        debit_ledger,
+                        'credit_ledger':       credit_ledger,
+                        'is_cancelled':        1 if is_cancelled or is_deleted else 0,
+                        'all_ledger_entries':  json.dumps(all_ledger_list, ensure_ascii=False),
+                        'inventory_entries':   json.dumps(inv_list, ensure_ascii=False),
                     })
 
         _set_status("running", 60, f"Transactions parsed: {len(vouchers)} vouchers. Writing to database…")
@@ -270,25 +449,42 @@ def run(masters_path: str, transactions_path: str):
         frappe.db.sql("DELETE FROM `tabVE Tally Voucher`")
         frappe.db.commit()
 
-        # Ledgers
+        # Ledgers (with enriched party data)
         ledger_rows = []
         for name, d in ledger_data.items():
             closing = round(ledger_balances.get(name, 0.0), 2)
             ledger_rows.append((
-                name[:140], name[:140], d['parent'][:140], '',
+                name[:140], name[:140],
+                d.get('mailing_name', name)[:200],
+                d['parent'][:140], '',
                 0.0, closing,
                 d['is_debtor'], d['is_creditor'], d['is_bank'], d['is_cash'], d['is_gst'], d['is_tds'],
+                d.get('gstin', '')[:20],
+                d.get('pan_number', '')[:20],
+                d.get('gst_registration_type', '')[:50],
+                d.get('state', '')[:100],
+                d.get('pincode', '')[:20],
+                d.get('phone', '')[:30],
+                d.get('address', '')[:500],
                 NOW, NOW, OWNER, OWNER, 1, 0,
             ))
         for i in range(0, len(ledger_rows), BATCH):
             batch = ledger_rows[i:i+BATCH]
-            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
-            frappe.db.sql(f"INSERT INTO `tabVE Tally Ledger` (name,ledger_name,parent_group,root_group,opening_balance,closing_balance,is_debtors,is_creditors,is_bank,is_cash,is_gst,is_tds,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
+            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
+            frappe.db.sql(
+                f"INSERT INTO `tabVE Tally Ledger` "
+                f"(name,ledger_name,mailing_name,parent_group,root_group,opening_balance,closing_balance,"
+                f"is_debtors,is_creditors,is_bank,is_cash,is_gst,is_tds,"
+                f"gstin,pan_number,gst_registration_type,state,pincode,phone,address,"
+                f"creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}",
+                [x for row in batch for x in row]
+            )
         frappe.db.commit()
 
-        # Stock items
+        # Stock items (with fixed HSN + GST rate)
         stock_rows = [(d['item_name'], d['item_name'], d['stock_group'], d['hsn_code'],
-                       0.0, d['unit'], d['standard_rate'], NOW, NOW, OWNER, OWNER, 1, 0)
+                       d.get('gst_rate', 0.0), d['unit'], d['standard_rate'],
+                       NOW, NOW, OWNER, OWNER, 1, 0)
                       for d in stock_data]
         for i in range(0, len(stock_rows), BATCH):
             batch = stock_rows[i:i+BATCH]
@@ -310,15 +506,24 @@ def run(masters_path: str, transactions_path: str):
                 f"VTV-{counter:05d}", v['tally_guid'], v['voucher_type'], v['voucher_number'],
                 v['voucher_date'], v['party_name'], v['amount'], v['narration'],
                 v['debit_ledger'], v['credit_ledger'], v['is_cancelled'],
+                v.get('all_ledger_entries', '[]'), v.get('inventory_entries', '[]'),
                 NOW, NOW, OWNER, OWNER, 1, 0,
             ))
             counter += 1
 
-        VBATCH = 1000
+        VBATCH = 500
         for i in range(0, len(v_rows), VBATCH):
             batch = v_rows[i:i+VBATCH]
-            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
-            frappe.db.sql(f"INSERT INTO `tabVE Tally Voucher` (name,tally_guid,voucher_type,voucher_number,voucher_date,party_name,amount,narration,debit_ledger,credit_ledger,is_cancelled,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
+            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
+            frappe.db.sql(f"INSERT INTO `tabVE Tally Voucher` (name,tally_guid,voucher_type,voucher_number,voucher_date,party_name,amount,narration,debit_ledger,credit_ledger,is_cancelled,all_ledger_entries,inventory_entries,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
+        frappe.db.commit()
+
+        # Remove enrichments whose voucher no longer exists (cancelled/deleted in Tally)
+        frappe.db.sql("""
+            DELETE e FROM `tabVE Tally Enrichment` e
+            LEFT JOIN `tabVE Tally Voucher` v ON v.tally_guid = e.name
+            WHERE v.name IS NULL
+        """)
         frappe.db.commit()
 
         elapsed = round(time.time() - t0, 1)
