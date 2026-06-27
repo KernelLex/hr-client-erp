@@ -34,6 +34,7 @@ import AIChat from "@/components/AIChat"
 import { VeDrivePage } from "@/pages/drive/VeDrivePage"
 import { ChatPage } from "@/pages/chat/ChatPage"
 import OperationsPage from "@/pages/Operations"
+import GraphsPage from "@/pages/Graphs"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,6 +86,7 @@ function App() {
                 <Route path="/business" element={<BusinessDashboard />} />
                 <Route path="/verify" element={<VerificationPage />} />
                 <Route path="/ai-insights" element={<AIInsights key="ai-insights" />} />
+                <Route path="/graphs" element={<GraphsPage />} />
                 {/* Drive Index */}
                 <Route path="/drive" element={<VeDrivePage />} />
                 {/* Chat */}

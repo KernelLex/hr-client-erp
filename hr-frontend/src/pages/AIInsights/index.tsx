@@ -273,7 +273,7 @@ function HealthCard({
                   {data.insights.map((ins, i) => (
                     <li key={i} className="text-sm text-gray-700 flex gap-2">
                       <ChevronRight className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
-                      {ins}
+                      {typeof ins === "string" ? ins : JSON.stringify(ins)}
                     </li>
                   ))}
                 </ul>
@@ -291,7 +291,8 @@ function HealthCard({
                   <ul className="space-y-1.5">
                     {data.alerts.map((a, i) => (
                       <li key={i} className="text-xs text-red-700 flex gap-1.5">
-                        <span className="flex-shrink-0 mt-0.5">•</span>{a}
+                        <span className="flex-shrink-0 mt-0.5">•</span>
+                        {typeof a === "string" ? a : JSON.stringify(a)}
                       </li>
                     ))}
                   </ul>
@@ -305,7 +306,8 @@ function HealthCard({
                   <ul className="space-y-1.5">
                     {data.recommendations.map((r, i) => (
                       <li key={i} className="text-xs text-indigo-700 flex gap-1.5">
-                        <span className="font-bold flex-shrink-0">{i + 1}.</span>{r}
+                        <span className="font-bold flex-shrink-0">{i + 1}.</span>
+                        {typeof r === "string" ? r : JSON.stringify(r)}
                       </li>
                     ))}
                   </ul>

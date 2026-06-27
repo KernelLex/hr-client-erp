@@ -1,5 +1,5 @@
 # Vera ERP — Current State
-_Last updated: 2026-06-27 (session 2)_
+_Last updated: 2026-06-27 (session 3)_
 
 ## What this is
 
@@ -404,15 +404,56 @@ Route: `/ai-insights` — repurposed from dead Drive AI DocTypes to live Tally d
 
 ---
 
+## Financial Graphs Page (added 2026-06-27 session 3)
+
+Route: `/graphs` — admin only. Accessible from sidebar under Accounts group.
+
+**3 tabs:**
+
+| Tab | What it shows |
+|-----|---------------|
+| **Generate** | AI natural-language query input, chart type selector, date/FY filter, example queries, chart preview with save/export |
+| **Presets** | 15 preset charts grouped by category (Sales/Purchase/Finance/Inventory), click to load instantly |
+| **Saved** | Gallery of all saved graphs — grid or list view, search, category filter, stats strip, open/delete/CSV export |
+
+**15 presets available:**
+Monthly Sales vs Purchases, Top Customers, Top Vendors, Transaction Distribution (pie), Monthly Cashflow, FY Comparison, Collections Trend, GST Analysis, Top Debtors, Top Creditors, Sales Growth Rate, Stock Value, Payments vs Receipts, Credit/Debit Notes, State-wise Sales
+
+**Chart types:** Bar, Horizontal Bar, Line, Area, Pie, Donut, Composed (bar+line)
+
+**Export options per chart:** PNG (html2canvas), CSV (raw data), JSON (data dump), Save (persists to DB with thumbnail)
+
+**Backend:** `hr_client/api/graphs.py` — 8 endpoints
+**Frontend API:** `src/api/graphs.ts`
+**DocType:** `VE Saved Graph` (autoname `VEG-.YYYY.-.####`) — stores title, chart_type, category, data_json, config_json, query_text, thumbnail_data
+
+**Key endpoints:**
+- `get_available_presets()` — returns all 15 preset definitions
+- `get_preset_graph(preset_id, params_json)` — executes preset data query, returns chart-ready JSON
+- `generate_graph_data(query, chart_type_hint, date_from, date_to, fy)` — AI interprets query → executes SQL → returns chart data
+- `save_graph(...)` — saves to VE Saved Graph DocType with thumbnail
+- `get_saved_graphs(category, page)` — paginated list
+- `delete_graph(name)` — hard delete
+- `get_graph_csv_data(name)` — returns CSV string for download
+- `get_graph_stats()` — counts by category and chart type
+
+---
+
+## AI Insights Fixes (2026-06-27 session 3)
+
+1. **React Error #31 fix:** `getDashboardInsights` auto-fires when Ollama is running; llama3.1 was returning `insights`/`alerts`/`recommendations` as arrays of objects `[{type, vendor_name, amount}]` instead of strings. Fixed in both backend (normalize array fields after LLM call) and frontend (defensive `typeof` check before render).
+
+2. **Health Score speed fix:** Replaced `_build_rich_context()` (multiple live DB queries + long prompt) with `_build_fast_context()` that reads only from tally_snapshot.json. Prompt now fits well within 2048 token window. `num_predict` reduced from 512 → 400, `num_ctx` from 2048 → 1024. Expected time reduction: ~50%.
+
+---
+
 ## Pending / Known Issues
 
 1. **Missing Tally data (Apr 17 – Jun 27, 2026):** User hasn't uploaded the complete latest Tally export yet. When uploaded and re-imported, Sales should reach ~₹53 Cr and Purchases ~₹50 Cr all-time.
 
 2. **Ollama enrichment not yet run:** 0 of 23,719 vouchers enriched. Start from `/verify` → Overview → "Enrich N pending". Takes ~3 hours in background.
 
-3. **AI Insights page** (`/ai-insights`): Repurposed to use Tally data. Sidebar link still shows "AI Insights" — may want to rename to "Financial AI" or similar.
-
-4. **Verify page**: Padding fixed (added `p-6`). Enrichment flow is functional.
+3. **Verify page**: Padding fixed (added `p-6`). Enrichment flow is functional.
 
 ---
 

@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "autoname": "VEG-.YYYY.-.####",
+ "creation": "2026-06-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "category",
+  "chart_type",
+  "description",
+  "col_break_1",
+  "query_text",
+  "is_preset",
+  "preset_id",
+  "created_by_user",
+  "section_data",
+  "data_json",
+  "config_json",
+  "thumbnail_data"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "label": "Category",
+   "options": "\nSales\nPurchase\nFinance\nInventory\nCustom",
+   "default": "Custom",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "chart_type",
+   "fieldtype": "Select",
+   "label": "Chart Type",
+   "options": "\nbar\nline\narea\npie\ndonut\nbar_horizontal\ncomposed",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "query_text",
+   "fieldtype": "Text",
+   "label": "Query / Preset"
+  },
+  {
+   "fieldname": "is_preset",
+   "fieldtype": "Check",
+   "label": "From Preset",
+   "default": 0
+  },
+  {
+   "fieldname": "preset_id",
+   "fieldtype": "Data",
+   "label": "Preset ID"
+  },
+  {
+   "fieldname": "created_by_user",
+   "fieldtype": "Data",
+   "label": "Created By"
+  },
+  {
+   "fieldname": "section_data",
+   "fieldtype": "Section Break",
+   "label": "Chart Data"
+  },
+  {
+   "fieldname": "data_json",
+   "fieldtype": "Long Text",
+   "label": "Chart Data (JSON)"
+  },
+  {
+   "fieldname": "config_json",
+   "fieldtype": "Long Text",
+   "label": "Chart Config (JSON)"
+  },
+  {
+   "fieldname": "thumbnail_data",
+   "fieldtype": "Long Text",
+   "label": "Thumbnail (base64)"
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Saved Graph",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "HR Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

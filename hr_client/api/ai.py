@@ -393,6 +393,35 @@ def get_business_snapshot():
         return {"success": False}
 
 
+def _build_fast_context() -> str:
+    """Compact snapshot-only context — no live DB queries, fits well within 2048 token window."""
+    snap = _load_tally_snapshot()
+    def _c(k, default=0):
+        try: return float(snap.get(k, default) or default)
+        except Exception: return default
+
+    gst_net = max(0, _c("gst_payable") - _c("input_gst_credit"))
+    debtors = _c("sundry_debtors")
+    sales   = _c("fy_sales")
+    dsr     = round(debtors / sales * 365, 0) if sales > 0 else 0
+
+    lines = [
+        "Vera Enterprises — Financial Snapshot (Tally, FY 2025-26):",
+        f"Sales: ₹{_c('fy_sales'):,.0f} | Purchases: ₹{_c('fy_purchases'):,.0f} | Collections: ₹{_c('fy_collections'):,.0f}",
+        f"Debtors: ₹{debtors:,.0f} (DSR ~{dsr:.0f}d) | Creditors: ₹{_c('sundry_creditors'):,.0f}",
+        f"GST Payable: ₹{_c('gst_payable'):,.0f} | Input Credit: ₹{_c('input_gst_credit'):,.0f} | Net GST: ₹{gst_net:,.0f}",
+        f"Cash: ₹{_c('cash_in_hand'):,.0f} | Bank: ₹{_c('bank_balance'):,.0f}",
+        f"All-time Sales: ₹{_c('total_sales_alltime'):,.0f} | Vouchers: {int(_c('voucher_count')):,}",
+    ]
+    # Top 3 debtors if available
+    top_d = snap.get("top_debtors", {})
+    if isinstance(top_d, dict) and top_d:
+        top3 = list(top_d.items())[:3]
+        lines.append("Top debtors: " + ", ".join(f"{n} ₹{v:,.0f}" for n, v in top3))
+
+    return "\n".join(lines)
+
+
 @frappe.whitelist()
 def get_dashboard_insights():
     """Generate AI health score and key insights for the business dashboard."""
@@ -405,21 +434,32 @@ def get_dashboard_insights():
             "alerts": [],
         }
 
-    context = _build_rich_context()
+    # Use compact context (no live DB queries) so the prompt fits in the token window
+    context = _build_fast_context()
 
     prompt = (
-        "Based on this business data for Vera Enterprises (Indian SME), provide a JSON response with:\n"
-        "- health_score: integer 0-100 (overall financial health)\n"
-        "- health_label: 'Excellent'|'Good'|'Fair'|'Poor'\n"
-        "- insights: array of 3-5 key insight strings (be specific with numbers from the data)\n"
-        "- alerts: array of urgent action items (overdue payments, high risks, anomalies)\n"
-        "- recommendations: array of 2-3 strategic recommendations\n\n"
-        f"Business Data:\n{context}"
+        "Business data for Vera Enterprises (Indian SME interior design company):\n"
+        f"{context}\n\n"
+        "Respond with JSON only:\n"
+        '{"health_score":75,"health_label":"Good",'
+        '"insights":["insight 1","insight 2","insight 3"],'
+        '"alerts":["alert 1"],'
+        '"recommendations":["rec 1","rec 2"]}'
     )
 
     result = ask_llm_json(prompt, system=VERA_SYSTEM_PROMPT)
     if not result:
         return {"success": False, "reason": "LLM did not return valid JSON"}
+
+    # LLM sometimes returns objects instead of strings in array fields — flatten them
+    for key in ("insights", "alerts", "recommendations"):
+        if key in result and isinstance(result[key], list):
+            result[key] = [
+                item if isinstance(item, str)
+                else (item.get("text") or item.get("insight") or item.get("message") or str(item))
+                for item in result[key]
+                if item
+            ]
 
     result["success"] = True
     return result

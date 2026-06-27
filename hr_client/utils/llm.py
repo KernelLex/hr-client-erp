@@ -108,8 +108,8 @@ def ask_llm_json(
                 "format": "json",
                 "options": {
                     "temperature": temperature,
-                    "num_predict": 512,   # JSON output is ~100-200 tokens; 512 is a safe cap
-                    "num_ctx": 2048,      # keep context large enough for the document text
+                    "num_predict": 400,   # health score JSON ~150-300 tokens
+                    "num_ctx": 1024,      # shorter context = faster prefill
                 },
             },
             timeout=60,

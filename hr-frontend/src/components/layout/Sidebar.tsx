@@ -14,6 +14,7 @@ import {
   UploadCloud,
   TrendingUp,
   BarChart2,
+  LineChart,
   Bot,
   Shield,
   LogOut,
@@ -255,7 +256,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
     if (p.startsWith("/admin/attendance") || p === "/leave" || p.startsWith("/expenses") || p.startsWith("/admin/employees") || p === "/holidays") {
       setHrOpen(true)
     }
-    if (p.startsWith("/accounts") || p === "/drive" || p === "/business" || p === "/verify" || p === "/ai-insights") {
+    if (p.startsWith("/accounts") || p === "/drive" || p === "/verify" || p === "/ai-insights" || p === "/graphs") {
       setAccountsOpen(true)
     }
   }, [location.pathname])
@@ -294,10 +295,11 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
 
   const isAccountsDocActive = path === "/drive"
   const isAccountsUploadActive = path === "/accounts" && search === "?tab=upload"
-  const isBusinessActive = path === "/business"
+
   const isVerifyActive = path === "/verify"
   const isAIInsightsActive = path === "/ai-insights"
-  const isAccountsGroupActive = path === "/drive" || path.startsWith("/accounts") || path === "/business" || path === "/verify" || path === "/ai-insights"
+  const isGraphsActive = path === "/graphs"
+  const isAccountsGroupActive = path === "/drive" || path.startsWith("/accounts") || path === "/verify" || path === "/ai-insights" || path === "/graphs"
 
   // Permissions
   const showAttendance = moduleEnabled("attendance")
@@ -439,13 +441,6 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
                 {isAdmin && (
                   <>
                     <SubItem
-                      to="/business"
-                      label="Business Dashboard"
-                      icon={TrendingUp}
-                      isActive={isBusinessActive}
-                      onClick={close}
-                    />
-                    <SubItem
                       to="/verify"
                       label="Verify Data"
                       icon={CheckSquare}
@@ -458,6 +453,13 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
                       label="AI Insights"
                       icon={Bot}
                       isActive={isAIInsightsActive}
+                      onClick={close}
+                    />
+                    <SubItem
+                      to="/graphs"
+                      label="Graphs"
+                      icon={LineChart}
+                      isActive={isGraphsActive}
                       onClick={close}
                     />
                   </>
