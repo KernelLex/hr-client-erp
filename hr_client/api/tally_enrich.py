@@ -87,7 +87,8 @@ def _call_ollama(prompt: str) -> str:
             "system": _SYSTEM,
             "stream": False,
             "format": "json",
-            "options": {"temperature": 0.05, "num_ctx": 4096, "num_predict": 1200},
+            "keep_alive": -1,
+            "options": {"temperature": 0.05, "num_ctx": 2048, "num_predict": 600},
         }, timeout=120)
         resp.raise_for_status()
         return resp.json().get("response", "[]")

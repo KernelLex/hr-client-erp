@@ -1,23 +1,15 @@
 import json
+import re
 import socket
 import requests
 
 OLLAMA_BASE = "http://localhost:11434"
 DEFAULT_MODEL = "llama3.1"
 
-VERA_SYSTEM_PROMPT = """You are Vera, an AI financial assistant for Vera Enterprises — an Indian SME.
-You have access to real business data: sales invoices, purchase invoices, purchase orders, quotations, GRNs,
-financial reports, salary records, attendance records, and payment records.
-
-When answering:
-- Be concise and business-focused
-- Use INR (₹) for monetary values
-- Reference specific document numbers when available
-- Flag anomalies, overdue payments, or risks proactively
-- Format numbers with Indian comma notation (e.g. ₹1,00,000)
-- Today's date context should inform due date analysis
-
-Always respond in plain text unless the user explicitly asks for JSON or a report."""
+VERA_SYSTEM_PROMPT = (
+    "You are Vera, a concise financial assistant for Vera Enterprises (Indian SME, interior design). "
+    "Use ₹ for money. Indian comma notation. Be brief and business-focused."
+)
 
 
 def is_ollama_running() -> bool:
@@ -51,13 +43,73 @@ def _pick_model() -> str:
     return models[0]
 
 
+def _parse_json(raw: str) -> dict | None:
+    """Extract and parse the first JSON object from a string."""
+    raw = raw.strip().replace("```json", "").replace("```", "").strip()
+    match = re.search(r'\{.*\}', raw, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except Exception:
+            pass
+    return None
+
+
+def ask_llm_json(
+    prompt: str,
+    system: str | None = None,
+    model: str | None = None,
+    temperature: float = 0.1,
+    max_tokens: int = 200,
+) -> dict | None:
+    """
+    Fast JSON generation using /api/generate (single-shot, no chat overhead).
+    keep_alive=-1 keeps the model hot in memory between calls.
+    max_tokens: tune per-caller — smaller = faster. 80 for tiny, 200 for normal, 400 for reports.
+    """
+    if not is_ollama_running():
+        return None
+    model = model or _pick_model()
+
+    # Combine system + user into one string for /api/generate
+    full_prompt = f"{system}\n\n{prompt}" if system else prompt
+
+    try:
+        resp = requests.post(
+            f"{OLLAMA_BASE}/api/generate",
+            json={
+                "model": model,
+                "prompt": full_prompt,
+                "stream": False,
+                "format": "json",
+                "keep_alive": -1,           # keep model loaded forever
+                "options": {
+                    "temperature": temperature,
+                    "num_predict": max_tokens,
+                    "num_ctx": 512,          # fits any prompt we send; faster prefill than 1024
+                },
+            },
+            timeout=120,
+        )
+        if resp.status_code == 200:
+            raw = resp.json().get("response", "").strip()
+            return _parse_json(raw)
+    except Exception:
+        pass
+    return None
+
+
 def ask_llm(
     prompt: str,
-    system: str = None,
-    model: str = None,
+    system: str | None = None,
+    model: str | None = None,
     temperature: float = 0.3,
-    max_tokens: int = 1024,
+    max_tokens: int = 300,
 ) -> str:
+    """
+    Free-text generation (chat replies, reports).
+    Uses /api/chat for multi-turn conversation with keep_alive.
+    """
     if not is_ollama_running():
         return ""
     model = model or _pick_model()
@@ -72,58 +124,16 @@ def ask_llm(
                 "model": model,
                 "messages": messages,
                 "stream": False,
-                "options": {"temperature": temperature, "num_predict": max_tokens},
+                "keep_alive": -1,
+                "options": {"temperature": temperature, "num_predict": max_tokens, "num_ctx": 1024},
             },
-            timeout=60,
+            timeout=120,
         )
         if resp.status_code == 200:
             return resp.json().get("message", {}).get("content", "")
     except Exception:
         pass
     return ""
-
-
-_JSON_SYSTEM = "You are a JSON API. Output ONLY a single valid JSON object. No markdown, no code fences, no explanation."
-
-def ask_llm_json(
-    prompt: str,
-    system: str = None,
-    model: str = None,
-    temperature: float = 0.1,
-) -> dict | None:
-    if not is_ollama_running():
-        return None
-    model = model or _pick_model()
-    messages = [
-        {"role": "system", "content": _JSON_SYSTEM},
-        {"role": "user", "content": prompt},
-    ]
-    try:
-        resp = requests.post(
-            f"{OLLAMA_BASE}/api/chat",
-            json={
-                "model": model,
-                "messages": messages,
-                "stream": False,
-                "format": "json",
-                "options": {
-                    "temperature": temperature,
-                    "num_predict": 400,   # health score JSON ~150-300 tokens
-                    "num_ctx": 1024,      # shorter context = faster prefill
-                },
-            },
-            timeout=60,
-        )
-        if resp.status_code == 200:
-            raw = resp.json().get("message", {}).get("content", "").strip()
-            raw = raw.replace("```json", "").replace("```", "").strip()
-            import re
-            match = re.search(r'\{.*\}', raw, re.DOTALL)
-            if match:
-                return json.loads(match.group())
-    except Exception:
-        pass
-    return None
 
 
 def build_context(data: dict) -> str:
@@ -148,31 +158,11 @@ def build_context(data: dict) -> str:
             f"{len(pending_p)} pending payment."
         )
 
-    pos = data.get("purchase_orders", [])
-    if pos:
-        open_pos = [p for p in pos if p.get("status") == "Open"]
-        parts.append(f"Purchase Orders: {len(pos)} total, {len(open_pos)} open.")
-
-    quotes = data.get("quotations", [])
-    if quotes:
-        sent = [q for q in quotes if q.get("status") == "Sent"]
-        parts.append(f"Quotations: {len(quotes)} total, {len(sent)} awaiting response.")
-
-    fin = data.get("financial_reports", [])
-    if fin:
-        latest = fin[0]
-        parts.append(
-            f"Latest Financial Report ({latest.get('report_type', '')}, {latest.get('period', '')}): "
-            f"Revenue ₹{float(latest.get('total_revenue') or 0):,.0f}, "
-            f"Net Profit ₹{float(latest.get('net_profit') or 0):,.0f}."
-        )
-
     totals = data.get("totals", {})
     if totals:
         parts.append(
             f"Summary: Receivables ₹{float(totals.get('total_receivables') or 0):,.0f}, "
-            f"Payables ₹{float(totals.get('total_payables') or 0):,.0f}, "
-            f"Gross Margin ₹{float(totals.get('gross_margin') or 0):,.0f}."
+            f"Payables ₹{float(totals.get('total_payables') or 0):,.0f}."
         )
 
     return "\n".join(parts)

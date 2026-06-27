@@ -577,44 +577,25 @@ PRESET_FETCHERS = {
 
 # ── AI query interpretation ───────────────────────────────────────────────────
 
-_GRAPH_SYSTEM = """You are a financial data analyst AI for Vera Enterprises (Indian SME).
-Available data:
-- VE Tally Voucher: Sales, Purchase, Receipt, Payment, Journal, Contra, Credit Note, Debit Note, Sales Order, Purchase Order
-- VE Tally Ledger: ledger balances, debtors, creditors, GSTIN, state
-- VE Tally Stock Item: inventory items, HSN codes, stock quantities and values
-
-Always respond with valid JSON only. No extra text."""
-
-_GRAPH_PROMPT_TEMPLATE = """The user wants a financial chart: "{query}"
-{date_context}
-
-Return JSON with this exact structure:
-{{
-  "intent": "monthly_trend|top_parties|voucher_breakdown|cashflow|fy_comparison|gst|ledger_balances|stock|growth_rate|custom",
-  "chart_type": "bar|line|area|pie|bar_horizontal|composed",
-  "title": "descriptive chart title",
-  "description": "one sentence describing what this chart shows",
-  "category": "Sales|Purchase|Finance|Inventory|Custom",
-  "params": {{
-    "voucher_types": ["Sales"],
-    "group_by": "month|party|voucher_type|state",
-    "limit": 15,
-    "months": 12,
-    "fy": null,
-    "metric": "amount|count"
-  }}
-}}"""
+# Compact prompt — keeps token count low so prefill is fast
+_GRAPH_PROMPT_TEMPLATE = (
+    'Chart request: "{query}". {date_context}\n'
+    'Return JSON: {{"intent":"monthly_trend|top_parties|voucher_breakdown|cashflow|fy_comparison|gst|ledger_balances|stock|growth_rate|custom",'
+    '"chart_type":"bar|line|area|pie|bar_horizontal|composed","title":"short title",'
+    '"category":"Sales|Purchase|Finance|Inventory|Custom",'
+    '"params":{{"voucher_types":["Sales"],"group_by":"month","limit":15,"months":12,"fy":null,"metric":"amount"}}}}'
+)
 
 
 def _ai_interpret_query(query: str, date_from=None, date_to=None):
-    """Use Ollama to interpret a natural language graph query."""
-    if date_from and date_to:
-        date_context = f"Date range: {date_from} to {date_to}"
-    else:
-        date_context = f"Use current financial year ({_current_fy()}) unless specified."
-
+    """Use Ollama to interpret a natural language graph query. Needs ~80 tokens output."""
+    date_context = (
+        f"Date {date_from} to {date_to}." if (date_from and date_to)
+        else f"FY {_current_fy()} default."
+    )
     prompt = _GRAPH_PROMPT_TEMPLATE.format(query=query, date_context=date_context)
-    result = ask_llm_json(prompt, system=_GRAPH_SYSTEM)
+    # max_tokens=100: JSON intent object is ~60-80 tokens
+    result = ask_llm_json(prompt, max_tokens=100)
     return result
 
 

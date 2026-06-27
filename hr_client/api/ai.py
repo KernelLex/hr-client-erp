@@ -424,44 +424,43 @@ def _build_fast_context() -> str:
 
 @frappe.whitelist()
 def get_dashboard_insights():
-    """Generate AI health score and key insights for the business dashboard."""
+    """Generate AI health score. Cached 5 min in Redis — snapshot rarely changes."""
     if not is_ollama_running():
-        return {
-            "success": False,
-            "reason": "Ollama not running",
-            "health_score": None,
-            "insights": [],
-            "alerts": [],
-        }
+        return {"success": False, "reason": "Ollama not running",
+                "health_score": None, "insights": [], "alerts": []}
 
-    # Use compact context (no live DB queries) so the prompt fits in the token window
+    cache_key = "vera_ai_health_score"
+    cached = frappe.cache().get_value(cache_key)
+    if cached:
+        try:
+            return json.loads(cached)
+        except Exception:
+            pass
+
     context = _build_fast_context()
-
     prompt = (
-        "Business data for Vera Enterprises (Indian SME interior design company):\n"
-        f"{context}\n\n"
-        "Respond with JSON only:\n"
-        '{"health_score":75,"health_label":"Good",'
-        '"insights":["insight 1","insight 2","insight 3"],'
-        '"alerts":["alert 1"],'
-        '"recommendations":["rec 1","rec 2"]}'
+        f"Data: {context}\n"
+        'JSON: {"health_score":0-100,"health_label":"Good","insights":["s1","s2","s3"],'
+        '"alerts":["a1"],"recommendations":["r1","r2"]}'
     )
 
-    result = ask_llm_json(prompt, system=VERA_SYSTEM_PROMPT)
+    result = ask_llm_json(prompt, max_tokens=180)
     if not result:
         return {"success": False, "reason": "LLM did not return valid JSON"}
 
-    # LLM sometimes returns objects instead of strings in array fields — flatten them
     for key in ("insights", "alerts", "recommendations"):
         if key in result and isinstance(result[key], list):
             result[key] = [
                 item if isinstance(item, str)
                 else (item.get("text") or item.get("insight") or item.get("message") or str(item))
-                for item in result[key]
-                if item
+                for item in result[key] if item
             ]
 
     result["success"] = True
+    try:
+        frappe.cache().set_value(cache_key, json.dumps(result), expires_in_sec=300)
+    except Exception:
+        pass
     return result
 
 
@@ -531,18 +530,14 @@ def compare_periods(period1, period2):
         f"Revenue change: {revenue_chg:+.1f}%, Purchase change: {expense_chg:+.1f}%, Collection change: {collection_chg:+.1f}%"
     )
 
+    # Compute trend from numbers — only ask LLM for a short human-readable summary
+    trend = "improving" if revenue_chg > 5 else "declining" if revenue_chg < -5 else "stable"
     prompt = (
-        f"Compare business performance for Vera Enterprises between {period1} and {period2}.\n{context}\n\n"
-        "Return JSON with:\n"
-        "- summary: one paragraph comparison (2-3 sentences, mention specific numbers)\n"
-        "- revenue_change_pct: number\n"
-        "- expense_change_pct: number\n"
-        "- trend: 'improving'|'declining'|'stable'\n"
-        "- key_differences: array of 2-3 key insight strings\n"
-        "- recommendation: one actionable recommendation string"
+        f"{period1}→{period2}: Sales {revenue_chg:+.1f}%, Purchases {expense_chg:+.1f}%, Collections {collection_chg:+.1f}%.\n"
+        'JSON: {"summary":"1-2 sentences","key_differences":["s1","s2"],"recommendation":"s"}'
     )
 
-    result = ask_llm_json(prompt, system=VERA_SYSTEM_PROMPT)
+    result = ask_llm_json(prompt, max_tokens=120)
     if not result:
         trend = "improving" if revenue_chg > 5 else "declining" if revenue_chg < -5 else "stable"
         result = {
@@ -556,6 +551,7 @@ def compare_periods(period1, period2):
         "success": True,
         "period1": period1,
         "period2": period2,
+        "trend": result.get("trend") or trend,
         "revenue_change_pct": round(revenue_chg, 1),
         "expense_change_pct": round(expense_chg, 1),
         "period1_data": {
@@ -587,13 +583,12 @@ def chat(message, history_json=None, context_type="general"):
     if history_json:
         history = json.loads(history_json) if isinstance(history_json, str) else history_json
 
-    data = _get_structured_data()
-    context = build_context(data)
+    # Use snapshot context — no live DB queries needed for general chat
+    context = _build_fast_context()
+    system = VERA_SYSTEM_PROMPT + f"\n\nBusiness data:\n{context}\nAnswer concisely in 2-3 sentences."
 
-    system = VERA_SYSTEM_PROMPT + f"\n\nCurrent Business Context:\n{context}"
-
-    messages_for_llm = []
-    for h in history[-8:]:
+    messages_for_llm = [{"role": "system", "content": system}]
+    for h in history[-4:]:   # only last 4 turns to keep context short
         messages_for_llm.append({"role": h["role"], "content": h["content"]})
     messages_for_llm.append({"role": "user", "content": message})
 
@@ -601,12 +596,16 @@ def chat(message, history_json=None, context_type="general"):
         import requests as _requests
         from hr_client.utils.llm import _pick_model, OLLAMA_BASE
         model = _pick_model()
-        api_messages = [{"role": "system", "content": system}] + messages_for_llm
         resp = _requests.post(
             f"{OLLAMA_BASE}/api/chat",
-            json={"model": model, "messages": api_messages, "stream": False,
-                  "options": {"temperature": 0.4, "num_predict": 512}},
-            timeout=60,
+            json={
+                "model": model,
+                "messages": messages_for_llm,
+                "stream": False,
+                "keep_alive": -1,
+                "options": {"temperature": 0.4, "num_predict": 250, "num_ctx": 1024},
+            },
+            timeout=120,
         )
         if resp.status_code == 200:
             reply = resp.json().get("message", {}).get("content", "")
@@ -627,24 +626,23 @@ def generate_report(report_type, filters_json=None):
     if filters_json:
         filters = json.loads(filters_json) if isinstance(filters_json, str) else filters_json
 
-    context = _build_rich_context()
+    # Fast context — no live DB queries, fits in 512-token window
+    context = _build_fast_context()
 
     report_prompts = {
-        "executive_summary": "Write a concise executive summary of current business performance for Vera Enterprises.",
-        "cash_flow": "Analyse cash flow for Vera Enterprises: receivables vs payables, overdue amounts, payment timing risks.",
-        "sales_analysis": "Analyse sales performance: top clients by revenue, payment status breakdown, overdue risks, quotation pipeline.",
-        "vendor_analysis": "Analyse vendor relationships: top vendors, purchase patterns, open POs, outstanding payment obligations.",
-        "risk_report": "Identify key financial risks: overdue payments, client concentration, pending obligations, recommended mitigations.",
+        "executive_summary": "Write an executive summary of Vera Enterprises' current financial position.",
+        "cash_flow": "Analyse Vera Enterprises cash flow: debtors, creditors, GST position, cash balance.",
+        "sales_analysis": "Analyse Vera Enterprises FY 2025-26 sales: top customers, revenue trends, debtor risk.",
+        "vendor_analysis": "Analyse Vera Enterprises purchases: creditor exposure, payables, vendor concentration.",
+        "risk_report": "Identify top 3-5 financial risks for Vera Enterprises and mitigations.",
     }
 
     base_prompt = report_prompts.get(report_type, f"Generate a {report_type} report for Vera Enterprises.")
-    prompt = (
-        f"{base_prompt}\n\nBusiness Data:\n{context}\n\n"
-        "Format as a professional business report with clear sections. Use ₹ for Indian Rupees. "
-        "Be specific — reference actual numbers from the data provided."
-    )
+    prompt = f"{base_prompt}\n\nData:\n{context}\n\nUse ₹ for rupees. 3-4 short paragraphs."
 
-    report = ask_llm(prompt, system=VERA_SYSTEM_PROMPT, temperature=0.3, max_tokens=2048)
+    report = ask_llm(prompt, temperature=0.3, max_tokens=600)
+    if not report:
+        return {"success": False, "reason": "Ollama did not return a response"}
     return {"success": True, "report_type": report_type, "report": report}
 
 
