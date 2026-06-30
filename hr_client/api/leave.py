@@ -1,8 +1,13 @@
 import frappe
 from frappe.utils import now, getdate
 from datetime import timedelta
+from hr_client.api.utils import ADMIN_USERS as _ADMIN_USERS
 
-_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in"}
+_ALLOWED_LEAVE_TYPES = frozenset([
+    "Earned Leave", "Sick Leave", "Casual Leave",
+    "Happy Holiday", "Comp Off", "Maternity Leave",
+    "Paternity Leave", "Leave Without Pay",
+])
 
 
 def _is_admin():
@@ -49,6 +54,9 @@ def _calc_total_days(from_date_str, to_date_str):
 def apply_leave(leave_type, from_date, to_date, reason):
     if frappe.session.user == "Guest":
         frappe.throw("Login required", frappe.AuthenticationError)
+
+    if leave_type not in _ALLOWED_LEAVE_TYPES:
+        return {"success": False, "error": f"Invalid leave type: '{leave_type}'"}
 
     emp = _get_employee()
     if not emp:

@@ -593,3 +593,56 @@ def get_departments():
 		order_by="department_name asc",
 	)
 	return {"departments": [{"name": d.name, "label": d.department_name} for d in departments]}
+
+
+@frappe.whitelist(methods=["POST"])
+def generate_job_description(rough_description, job_title, department=""):
+	"""
+	Proxy OpenAI call server-side so the API key is never sent to the browser.
+	Key stored in site_config as openai_api_key:
+	  bench --site vera.local set-config openai_api_key "sk-..."
+	"""
+	_require_hr_role()
+
+	api_key = frappe.conf.get("openai_api_key")
+	if not api_key:
+		frappe.throw("OpenAI API key not configured. Run: bench set-config openai_api_key 'sk-...'")
+
+	# Validate inputs
+	if not rough_description or not job_title:
+		frappe.throw("rough_description and job_title are required", frappe.ValidationError)
+	if len(rough_description) > 2000:
+		frappe.throw("Description too long (max 2000 chars)", frappe.ValidationError)
+
+	import requests as _req
+	prompt = f"""Generate a professional job description as JSON for this role:
+Job Title: {job_title}
+Department: {department}
+Brief: {rough_description}
+
+Return JSON with keys: job_summary, responsibilities (list), qualifications (list),
+nice_to_have (list), what_we_offer (list), about_company."""
+
+	try:
+		resp = _req.post(
+			"https://api.openai.com/v1/chat/completions",
+			headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+			json={
+				"model": "gpt-4o-mini",
+				"response_format": {"type": "json_object"},
+				"temperature": 0.7,
+				"max_tokens": 2000,
+				"messages": [
+					{"role": "system", "content": "You are an expert HR professional. Return only valid JSON."},
+					{"role": "user", "content": prompt},
+				],
+			},
+			timeout=60,
+		)
+		resp.raise_for_status()
+		content = resp.json()["choices"][0]["message"]["content"]
+		import json as _json
+		return {"success": True, "data": _json.loads(content)}
+	except Exception as e:
+		frappe.log_error(str(e)[:500], "generate_job_description")
+		frappe.throw("Failed to generate job description. Check server logs.")

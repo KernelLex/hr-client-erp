@@ -40,62 +40,27 @@ async function callOpenAI(
   jobTitle: string,
   department: string
 ): Promise<GeminiJDRaw> {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-      max_tokens: 2000,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert HR professional. Return only valid JSON, no explanation.",
-        },
-        {
-          role: "user",
-          content: `Generate a complete professional Job Description based on this rough description:
-"${roughDescription}"
-
-Job Title hint: ${jobTitle || "extract from description"}
-Department hint: ${department || "extract from description"}
-
-Return a JSON object with exactly these keys:
-{
-  "job_title": "job title",
-  "department": "department",
-  "location": "location or Bangalore",
-  "employment_type": "Full-time",
-  "about_company": "2-3 sentences about a growing tech company",
-  "role_overview": "2-3 sentences about the role",
-  "responsibilities": ["item 1","item 2","item 3","item 4","item 5","item 6","item 7","item 8"],
-  "required_qualifications": ["qual 1","qual 2","qual 3","qual 4","qual 5","qual 6"],
-  "nice_to_have": ["nice 1","nice 2","nice 3","nice 4"],
-  "what_we_offer": ["offer 1","offer 2","offer 3","offer 4","offer 5"],
-  "how_to_apply": "one sentence instructions"
-}`,
-        },
-      ],
-    }),
-  })
-
-  if (!response.ok) {
-    const errBody = await response.text().catch(() => "(no body)")
-    throw new Error(`OpenAI ${response.status}: ${errBody}`)
-  }
-
-  const data = await response.json()
-  const text: string = data.choices?.[0]?.message?.content ?? ""
-  if (!text) throw new Error(`Unexpected OpenAI response: ${JSON.stringify(data)}`)
-
-  return JSON.parse(text) as GeminiJDRaw
+  // Route through backend proxy — API key never leaves the server
+  const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] ?? "fetch"
+  const response = await fetch(
+    "/api/method/hr_client.api.recruitment.generate_job_description",
+    {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Frappe-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify({
+        rough_description: roughDescription,
+        job_title: jobTitle,
+        department,
+      }),
+    }
+  )
+  const json = await response.json()
+  if (!json.message?.success) throw new Error(json.message?.error || "Failed")
+  return json.message.data as GeminiJDRaw
 }
 
 // ─── PDF generation ───────────────────────────────────────────────────────────

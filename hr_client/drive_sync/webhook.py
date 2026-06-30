@@ -20,13 +20,16 @@ def on_drive_change():
     """
     headers = frappe.request.headers
 
-    # Validate channel token
+    # Validate channel token — fail closed: reject if token not configured or mismatches
     expected_token = frappe.conf.get("ve_drive_channel_token")
-    if expected_token:
-        received_token = headers.get("X-Goog-Channel-Token", "")
-        if received_token != expected_token:
-            frappe.response.http_status_code = 403
-            return
+    if not expected_token:
+        frappe.log_error("ve_drive_channel_token not set in site_config — rejecting webhook", "DriveWebhook")
+        frappe.response.http_status_code = 403
+        return
+    received_token = headers.get("X-Goog-Channel-Token", "")
+    if received_token != expected_token:
+        frappe.response.http_status_code = 403
+        return
 
     resource_state = headers.get("X-Goog-Resource-State", "")
 

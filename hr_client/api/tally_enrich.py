@@ -147,6 +147,7 @@ def _require_admin():
 
 @frappe.whitelist()
 def get_enrichment_status():
+    _require_admin()
     return _get_status()
 
 

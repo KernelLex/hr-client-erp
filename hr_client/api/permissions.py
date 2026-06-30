@@ -187,14 +187,9 @@ def update_user_permissions(email: str, permissions: str):
     """
     try:
         current_user = frappe.session.user
-        frappe.logger().info(
-            f"update_user_permissions: user={current_user}, "
-            f"roles={frappe.get_roles(current_user)}"
-        )
+        # Enforce server-side admin check — frontend guard alone is insufficient
+        _require_admin()
 
-        # Any authenticated user reaching this endpoint must be logged in.
-        # The permissions page is already behind a frontend admin guard.
-        # Reject only actual unauthenticated (Guest) requests.
         if current_user == "Guest":
             return {"success": False, "error": "Not authorized — not logged in"}
 

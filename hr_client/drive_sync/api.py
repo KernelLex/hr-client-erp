@@ -4,10 +4,20 @@ Provides stats, file listing, and a sync trigger endpoint.
 """
 import frappe
 from frappe.utils import now_datetime
+from hr_client.api.utils import ADMIN_USERS
+
+
+def _require_admin():
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Not permitted", frappe.PermissionError)
+    if user not in ADMIN_USERS and "System Manager" not in frappe.get_roles(user):
+        frappe.throw("Not permitted", frappe.PermissionError)
 
 
 @frappe.whitelist()
 def get_drive_stats():
+    _require_admin()
     """Return counts and last-sync time for the dashboard."""
     total = frappe.db.count("VE Drive File", {"sync_status": "Synced"})
     pending = frappe.db.count("VE Drive File", {"sync_status": "Pending"})
@@ -37,6 +47,7 @@ _FILE_FIELDS = [
 
 @frappe.whitelist()
 def get_files(module="All", direction=None, naming_valid=None, doc_type=None, page=1, page_length=100, search=None):
+    _require_admin()
     """
     Return VE Drive File records with optional filtering and full-text search.
     When `search` is provided the query runs against the entire table (no page cap)
@@ -96,6 +107,7 @@ def get_files(module="All", direction=None, naming_valid=None, doc_type=None, pa
 
 @frappe.whitelist(methods=["POST"])
 def backfill_uploaders():
+    _require_admin()
     """Backfill uploaded_by_name/email for existing VE Drive File records from Google Drive API."""
     from hr_client.drive_sync.utils import get_drive_service
     service = get_drive_service()
@@ -125,6 +137,7 @@ def backfill_uploaders():
 
 @frappe.whitelist(methods=["POST"])
 def trigger_sync():
+    _require_admin()
     """Enqueue a delta sync (or full sync if delta is not yet initialised)."""
     settings = frappe.get_single("VE Drive Settings")
 
@@ -149,6 +162,7 @@ def trigger_sync():
 
 @frappe.whitelist()
 def get_folder_counts():
+    _require_admin()
     """Return file counts grouped by module and doc_type for folder-navigation UI."""
     rows = frappe.db.sql(
         """SELECT module, doc_type, COUNT(*) as cnt
@@ -171,6 +185,7 @@ def get_folder_counts():
 
 @frappe.whitelist()
 def get_naming_issues():
+    _require_admin()
     """Return all files where naming_valid = 0, for QA review."""
     files = frappe.get_all(
         "VE Drive File",
@@ -235,6 +250,7 @@ def _get_drive_link(drive_file_id):
 
 @frappe.whitelist()
 def get_structured_data():
+    _require_admin()
     """Return AI-extracted financial records from VE structured DocTypes for the Business Dashboard."""
 
     # --- Sales Invoices (VE Sales Invoice) ---
@@ -601,6 +617,7 @@ def get_structured_data():
 
 @frappe.whitelist(methods=["POST"])
 def process_file(drive_file_name, force=0):
+    _require_admin()
     """
     Process a VE Drive File: parse filename metadata then AI-extract financial content.
     force=1 re-extracts even if a VE structured record already exists.
@@ -645,6 +662,7 @@ def process_file(drive_file_name, force=0):
 
 @frappe.whitelist(methods=["POST"])
 def process_all_files(limit=100, force=0):
+    _require_admin()
     """Re-run filename + folder parsing for all VE Drive File records."""
     from hr_client.drive_sync.parser import (
         parse_filename, folder_path_to_module,
@@ -685,24 +703,28 @@ def process_all_files(limit=100, force=0):
 
 @frappe.whitelist(methods=["POST"])
 def auto_link_documents():
+    _require_admin()
     """Stub — document linking not yet implemented for VE Drive File."""
     return {"success": True, "links_created": 0}
 
 
 @frappe.whitelist(methods=["POST"])
 def update_payment_status(doctype, docname, status):
+    _require_admin()
     """Stub — payment status not yet stored on VE Drive File."""
     return {"success": True}
 
 
 @frappe.whitelist(methods=["POST"])
 def update_doc_status(doctype, docname, status):
+    _require_admin()
     """Stub — doc status not yet stored on VE Drive File."""
     return {"success": True}
 
 
 @frappe.whitelist()
 def get_extractable_files(limit=50):
+    _require_admin()
     """
     Return VE Drive Files that have a classifiable doc_type but no AI-extracted VE record yet.
     Also returns total_pending count (across all such files).
@@ -785,6 +807,7 @@ _NOT_IN_UNION = """
 
 @frappe.whitelist(methods=["POST"])
 def start_background_extraction():
+    _require_admin()
     """
     Enqueue a long-running background job that processes all pending VE Drive Files.
     Safe to call multiple times — will return 'already_running' if a job is active.
@@ -817,6 +840,7 @@ def start_background_extraction():
 
 @frappe.whitelist()
 def get_extraction_status():
+    _require_admin()
     """Return current background job status and accurate pending file count."""
     from hr_client.drive_sync.extractor import _DOC_TYPE_CONFIG
     known_types = list(_DOC_TYPE_CONFIG.keys())
@@ -840,6 +864,7 @@ def get_extraction_status():
 
 @frappe.whitelist(methods=["POST"])
 def retry_failed_extractions():
+    _require_admin()
     """
     Find all VE Drive Files that have a classifiable doc_type but no extracted VE record,
     and enqueue them for background extraction. Stubs are created for files that fail

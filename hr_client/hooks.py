@@ -5,8 +5,12 @@ app_description = "Custom HR module for client"
 app_email = "amoghprashanth158@gmail.com"
 app_license = "mit"
 
-# CORS — allow React frontend on same host different port
-allow_cors = "*"
+# CORS — restrict to the production domain and local dev origins
+allow_cors = [
+    "https://veraenterprises.in",
+    "http://localhost:5173",
+    "http://192.168.1.16:5173",
+]
 
 # Custom Fields shipped with the app (synced on bench migrate)
 fixtures = [

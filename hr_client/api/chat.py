@@ -403,6 +403,13 @@ def send_message(room_id, content=None, file_url=None, file_name=None,
     if has_content and len(str(content)) > 2000:
         frappe.throw("Message too long (max 2000 characters)", frappe.ValidationError)
 
+    # Validate file attachment — must be a Frappe-hosted file (not arbitrary URL)
+    if has_file:
+        if not str(file_url).startswith("/files/") and not str(file_url).startswith("/private/files/"):
+            frappe.throw("File must be uploaded via Frappe file upload", frappe.ValidationError)
+        if file_size and int(file_size) > 50 * 1024 * 1024:  # 50 MB cap
+            frappe.throw("File too large (max 50 MB)", frappe.ValidationError)
+
     msg_type = "file" if has_file else "text"
 
     # Parse + validate mentions JSON
@@ -483,20 +490,20 @@ def search_messages(query, room_id=None, limit=50):
     if room_id and room_id in member_rows:
         room_filter = [room_id]
 
-    safe_query = frappe.db.escape(f"%{query.strip()}%")
+    like_param = f"%{query.strip()}%"
     room_placeholders = ", ".join(["%s"] * len(room_filter))
 
-    # Search both message text AND file names
+    # Search both message text AND file names — use %s params, never f-string for values
     rows = frappe.db.sql(
         f"""SELECT name, room, sender, sender_name, content, message_type,
                    file_url, file_name, file_type, file_size, sent_at, is_deleted
             FROM `tabVera Chat Message`
             WHERE room IN ({room_placeholders})
               AND is_deleted = 0
-              AND (content LIKE {safe_query} OR file_name LIKE {safe_query})
+              AND (content LIKE %s OR file_name LIKE %s)
             ORDER BY sent_at DESC
             LIMIT %s""",
-        tuple(room_filter) + (limit,),
+        tuple(room_filter) + (like_param, like_param, limit),
         as_dict=True,
     )
 
@@ -543,15 +550,15 @@ def get_room_media(room_id, search=None, limit=100):
     limit = min(int(limit), 500)
 
     if search and str(search).strip():
-        safe_q = frappe.db.escape(f"%{str(search).strip()}%")
+        like_q = f"%{str(search).strip()}%"
         rows = frappe.db.sql(
-            f"""SELECT name, sender, sender_name, file_url, file_name, file_type, file_size, sent_at
-                FROM `tabVera Chat Message`
-                WHERE room = %s AND message_type = 'file' AND is_deleted = 0
-                  AND file_name LIKE {safe_q}
-                ORDER BY sent_at DESC
-                LIMIT %s""",
-            (room_id, limit),
+            """SELECT name, sender, sender_name, file_url, file_name, file_type, file_size, sent_at
+               FROM `tabVera Chat Message`
+               WHERE room = %s AND message_type = 'file' AND is_deleted = 0
+                 AND file_name LIKE %s
+               ORDER BY sent_at DESC
+               LIMIT %s""",
+            (room_id, like_q, limit),
             as_dict=True,
         )
     else:

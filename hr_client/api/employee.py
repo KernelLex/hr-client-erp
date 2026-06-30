@@ -193,6 +193,10 @@ def admin_update_profile(email=None, fields_to_update=None):
     return {"success": True, "message": "Profile updated"}
 
 
+_ALLOWED_IMAGE_EXT  = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+_ALLOWED_IMAGE_MIME = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+
+
 @frappe.whitelist(methods=["POST"])
 def upload_profile_photo():
     if "file" not in frappe.request.files:
@@ -205,14 +209,32 @@ def upload_profile_photo():
     if not _is_admin() and email != frappe.session.user:
         frappe.throw("Not permitted", frappe.PermissionError)
 
+    # Validate file type by extension AND MIME
+    import os as _os
+    fname = file_obj.filename or ""
+    _, ext = _os.path.splitext(fname.lower())
+    mime = (file_obj.content_type or "").lower().split(";")[0].strip()
+    if ext not in _ALLOWED_IMAGE_EXT or (mime and mime not in _ALLOWED_IMAGE_MIME):
+        frappe.throw(
+            "Only image files are allowed (JPEG, PNG, GIF, WebP)",
+            frappe.ValidationError,
+        )
+    # Sanitize filename
+    import re as _re
+    safe_fname = _re.sub(r'[^\w\s\-.]', '_', fname)[:100] or f"photo{ext}"
+
     emp_name = _get_employee_by_email(email)
     if not emp_name:
         frappe.throw("No employee record found")
 
+    content = file_obj.read()
+    if len(content) > 5 * 1024 * 1024:  # 5 MB cap
+        frappe.throw("File too large (max 5 MB)", frappe.ValidationError)
+
     file_doc = frappe.get_doc({
         "doctype": "File",
-        "file_name": file_obj.filename,
-        "content": file_obj.read(),
+        "file_name": safe_fname,
+        "content": content,
         "attached_to_doctype": "Employee",
         "attached_to_name": emp_name,
         "attached_to_field": "image",

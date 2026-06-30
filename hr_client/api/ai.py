@@ -1,5 +1,6 @@
 import frappe
 import json
+from hr_client.api.utils import ADMIN_USERS, COMPANY_NAME
 from hr_client.utils.llm import (
     is_ollama_running,
     get_available_models,
@@ -184,6 +185,12 @@ def _require_admin():
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("Not permitted", frappe.PermissionError)
+    if user not in ADMIN_USERS and "System Manager" not in frappe.get_roles(user):
+        frappe.throw("Not permitted", frappe.PermissionError)
+
+
+# Allowed doctype list — prevent verify_record/quick_action from writing arbitrary Frappe docs
+_ALLOWED_DOCTYPES = frozenset(_VE_DOCTYPES + ["VE Receipt"])
 
 
 def _get_structured_data():
@@ -431,6 +438,7 @@ def _build_fast_context() -> str:
 @frappe.whitelist()
 def get_dashboard_insights():
     """Generate AI health score. Cached 5 min in Redis — snapshot rarely changes."""
+    _require_admin()
     if not is_ollama_running():
         return {"success": False, "reason": "Ollama not running",
                 "health_score": None, "insights": [], "alerts": []}
@@ -473,6 +481,7 @@ def get_dashboard_insights():
 @frappe.whitelist()
 def compare_periods(period1, period2):
     """Compare two periods using Tally voucher data. period format: YYYY-MM."""
+    _require_admin()
     if not is_ollama_running():
         return {"success": False, "reason": "Ollama not running"}
 
@@ -579,6 +588,11 @@ def compare_periods(period1, period2):
 @frappe.whitelist()
 def chat(message, history_json=None, context_type="general"):
     """Chat with Vera AI. context_type: general|dashboard|file"""
+    _require_admin()
+    if not message or not str(message).strip():
+        return {"success": False, "reply": "Empty message."}
+    if len(str(message)) > 1000:
+        return {"success": False, "reply": "Message too long (max 1000 characters)."}
     if not is_ollama_running():
         return {
             "success": False,
@@ -625,6 +639,7 @@ def chat(message, history_json=None, context_type="general"):
 @frappe.whitelist()
 def generate_report(report_type, filters_json=None):
     """Generate a natural language business report."""
+    _require_admin()
     if not is_ollama_running():
         return {"success": False, "reason": "Ollama not running"}
 
@@ -657,6 +672,7 @@ def generate_report(report_type, filters_json=None):
 @frappe.whitelist()
 def get_ai_health():
     """Comprehensive AI and system health check for the admin dashboard widget."""
+    _require_admin()
     import time
     import requests as _req
     from hr_client.utils.llm import is_ollama_running, get_available_models, OLLAMA_BASE
@@ -960,6 +976,8 @@ def get_verification_detail(doctype, docname):
 def verify_record(doctype, docname, corrections=None, status="Verified"):
     """Mark a record verified. Optionally apply field corrections."""
     _require_admin()
+    if doctype not in _ALLOWED_DOCTYPES:
+        frappe.throw(f"DocType '{doctype}' is not allowed", frappe.PermissionError)
     doc = frappe.get_doc(doctype, docname)
 
     if corrections:
@@ -1071,8 +1089,15 @@ def get_accuracy_stats():
 def ai_crosscheck(doctype, docname, source_content):
     """Use Ollama to cross-check extracted data against source document text."""
     _require_admin()
+    if doctype not in _ALLOWED_DOCTYPES:
+        frappe.throw(f"DocType '{doctype}' is not allowed", frappe.PermissionError)
     if not is_ollama_running():
         return {"success": False, "error": "Vera AI offline — run: ollama serve"}
+    # Sanitize source_content to prevent prompt injection:
+    # strip any LLM-control markers that could hijack the system prompt
+    safe_content = str(source_content or "")[:3000]
+    for marker in ("SYSTEM:", "ASSISTANT:", "INSTRUCTION:", "IGNORE PREVIOUS", "###"):
+        safe_content = safe_content.replace(marker, "---")
 
     record = frappe.get_doc(doctype, docname)
     record_dict = record.as_dict()
@@ -1085,7 +1110,7 @@ def ai_crosscheck(doctype, docname, source_content):
     prompt = f"""You are verifying data extracted from a business document.
 
 SOURCE DOCUMENT TEXT:
-{str(source_content)[:4000]}
+{safe_content}
 
 EXTRACTED DATA TO VERIFY:
 {json.dumps(check_fields, indent=2, default=str)}
@@ -1285,6 +1310,10 @@ def quick_action(doctype, docname, action, corrections=None):
     Reject automatically triggers background re-extraction.
     """
     _require_admin()
+    if doctype not in _ALLOWED_DOCTYPES:
+        frappe.throw(f"DocType '{doctype}' is not allowed", frappe.PermissionError)
+    if action not in ("approve", "reject", "correct", "skip"):
+        frappe.throw(f"Invalid action '{action}'", frappe.ValidationError)
 
     if action == "approve":
         frappe.db.set_value(doctype, docname, {

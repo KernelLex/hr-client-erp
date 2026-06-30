@@ -381,6 +381,10 @@ def get_operations_data():
     }
 
 
+_TALLY_UPLOAD_DIR = "/home/vera/tally_uploads"
+_ALLOWED_UPLOAD_EXT = {".xml"}
+
+
 @frappe.whitelist()
 def upload_tally_file():
     """
@@ -388,8 +392,7 @@ def upload_tally_file():
     Saves to a writable path and returns the saved path.
     """
     _require_admin()
-    upload_dir = "/home/vera/tally_uploads"
-    os.makedirs(upload_dir, exist_ok=True)
+    os.makedirs(_TALLY_UPLOAD_DIR, exist_ok=True)
 
     files = frappe.request.files
     if not files:
@@ -399,11 +402,22 @@ def upload_tally_file():
     uploaded = files[file_key]
     filename = uploaded.filename or "tally_upload.xml"
 
-    # Sanitize filename
-    safe_name = filename.replace(" ", "_").replace("/", "_")
-    dest = os.path.join(upload_dir, safe_name)
-    uploaded.save(dest)
+    # Validate extension — only XML accepted
+    _, ext = os.path.splitext(filename.lower())
+    if ext not in _ALLOWED_UPLOAD_EXT:
+        frappe.throw(f"Only .xml files are accepted (got '{ext}')", frappe.ValidationError)
 
+    # Sanitize filename — strip path separators and traversal sequences
+    import re as _re
+    safe_name = _re.sub(r'[^\w\s\-.]', '_', filename.replace("/", "_").replace("\\", "_"))
+    safe_name = safe_name[:200] or "tally_upload.xml"
+
+    dest = os.path.join(_TALLY_UPLOAD_DIR, safe_name)
+    # Final guard: ensure dest stays within the upload directory
+    if not os.path.realpath(dest).startswith(os.path.realpath(_TALLY_UPLOAD_DIR)):
+        frappe.throw("Invalid filename", frappe.ValidationError)
+
+    uploaded.save(dest)
     return {"path": dest, "filename": safe_name, "size": os.path.getsize(dest)}
 
 
@@ -415,10 +429,17 @@ def run_tally_import(masters_path: str, transactions_path: str):
     """
     _require_admin()
 
-    if not os.path.exists(masters_path):
-        frappe.throw(f"Masters file not found: {masters_path}")
-    if not os.path.exists(transactions_path):
-        frappe.throw(f"Transactions file not found: {transactions_path}")
+    # Restrict paths to the upload directory — prevent traversal to sensitive files
+    upload_real = os.path.realpath(_TALLY_UPLOAD_DIR)
+    for label, path in (("masters", masters_path), ("transactions", transactions_path)):
+        real = os.path.realpath(path)
+        if not real.startswith(upload_real):
+            frappe.throw(
+                f"Path for {label} must be inside the upload directory",
+                frappe.PermissionError,
+            )
+        if not os.path.exists(real):
+            frappe.throw(f"{label.capitalize()} file not found: {path}")
 
     from hr_client.api import tally_import_job
     import json as _json
@@ -450,6 +471,7 @@ def get_tally_financial_summary():
     Returns a compact financial summary for use in other pages (Dashboard, Business).
     No heavy computation — reads snapshot + 3 fast DB queries.
     """
+    _require_admin()
     snap = _load_snapshot()
     if not snap:
         return None
