@@ -1,4 +1,4 @@
-import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
+import { OWAIS_USERS } from "@/lib/constants"
 import { useState } from "react"
 import type React from "react"
 import { useNavigate } from "react-router-dom"

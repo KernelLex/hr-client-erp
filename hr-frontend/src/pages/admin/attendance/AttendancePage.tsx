@@ -1,4 +1,4 @@
-import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
+import { ADMIN_USERS } from "@/lib/constants"
 import { useState, useMemo } from "react"
 import { Navigate } from "react-router-dom"
 import { LeaveAdminPanel } from "./LeaveAdminPanel"

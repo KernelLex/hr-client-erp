@@ -1,4 +1,4 @@
-import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
+import { ADMIN_USERS } from "@/lib/constants"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate, Navigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"

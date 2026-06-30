@@ -1,4 +1,4 @@
-import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
+import { ADMIN_USERS } from "@/lib/constants"
 import { useState, useEffect } from "react"
 import { NavLink, useLocation } from "react-router-dom"
 import {

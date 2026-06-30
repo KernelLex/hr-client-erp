@@ -1,4 +1,4 @@
-import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
+import { OWAIS_USERS } from "@/lib/constants"
 import { useRef, useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
 import { toast } from "sonner"

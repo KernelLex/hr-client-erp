@@ -1,4 +1,4 @@
-import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
+import { ADMIN_USERS } from "@/lib/constants"
 import { createContext, useContext, ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { api, apiUrl } from "@/lib/api"
