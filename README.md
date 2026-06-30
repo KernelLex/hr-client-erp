@@ -1,265 +1,305 @@
-# Vera ERP — Monorepo
+# Vera ERP
 
-Full ERP system for Vera Enterprises built on ERPNext v15 + Frappe HRMS.
-This repo contains both the **backend** (Frappe custom app) and the **React frontend** in one place.
+Full-stack ERP system for **Vera Enterprises** built on ERPNext v15 + Frappe HRMS with a React SPA frontend.  
+Employees interact exclusively with the React app — the Frappe/ERPNext desk is blocked from public access.
 
-```
-hr-client-erp/
-├── hr_client/        ← Frappe custom app (Python backend)
-├── hr-frontend/      ← React + Vite frontend
-├── mcp-brain/        ← MCP server for Claude Code context
-└── README.md
-```
-
-Employees only ever see the React app — the ERPNext/Frappe desk is completely hidden.
+Live at: **https://veraenterprises.in**
 
 ---
 
-## Quick Start (Development)
+## Tech Stack
 
-```bash
-# 1. Start ERPNext bench (port 8001)
-cd ~/frappe-bench
-bench start
-
-# 2. Start React dev server (port 5173)
-cd hr-client-erp/hr-frontend
-npm install
-npm run dev
-```
-
-App runs at **http://localhost:5173**
-
-> Port 8001, not 8000 — Windows Hyper-V reserves 8000 on WSL2. Bench Procfile is already set to 8001.
+| Layer | Technology |
+|---|---|
+| Backend framework | ERPNext v15 + Frappe HRMS (Python) |
+| Custom backend app | `hr_client` (this repo) |
+| Database | MariaDB (managed by Frappe bench) |
+| Cache / queue | Redis (managed by Frappe bench) |
+| Frontend | React 18 + Vite + TypeScript |
+| UI components | Tailwind CSS v3 + shadcn/ui |
+| Data fetching | TanStack Query (React Query) |
+| HTTP client | Axios (with CSRF interceptor) + native fetch for file uploads |
+| Charts | Recharts |
+| Local AI | Ollama (llama3.1 / mistral) — optional, for AI features |
+| Tunnelling | Cloudflare Tunnel → nginx → ERPNext |
+| Attendance sync | Jibble API (OAuth2 client credentials) |
+| Document storage | Google Drive (service account sync) |
+| Server OS | Ubuntu (bare metal, static IP via nmcli) |
+| Process manager | Supervisor (7 ERPNext processes) |
+| Web server | nginx (serves React SPA + proxies /api/ to gunicorn) |
 
 ---
 
 ## Repository Structure
 
-### `hr_client/` — Backend (Frappe custom app)
+```
+hr-client-erp/
+├── hr_client/              ← Frappe custom app (Python backend)
+│   ├── api/                ← Whitelisted API endpoints
+│   │   ├── utils.py        ← Shared constants (ADMIN_USERS, current_fy(), etc.)
+│   │   ├── ai.py           ← Document AI, extraction, verification
+│   │   ├── chat.py         ← Real-time chat (polling-based)
+│   │   ├── crm.py          ← Lead pipeline with Owais approval flow
+│   │   ├── dashboard.py    ← Dashboard stats
+│   │   ├── employee.py     ← Employee profiles
+│   │   ├── employee_lifecycle.py
+│   │   ├── expenses.py     ← Expense claims
+│   │   ├── graphs.py       ← Financial chart data (preset + AI-generated)
+│   │   ├── jibble.py       ← Jibble attendance integration
+│   │   ├── leave.py        ← Leave applications + holidays
+│   │   ├── operations.py   ← Tally financial operations dashboard
+│   │   ├── permissions.py  ← Per-user module access control
+│   │   ├── recruitment.py  ← Job openings + candidate pipeline
+│   │   ├── tally_enrich.py ← Tally voucher enrichment (Ollama)
+│   │   ├── tally_import_job.py ← Background Tally XML import worker
+│   │   └── user_management.py ← Admin user CRUD
+│   ├── drive_sync/         ← Google Drive sync module
+│   │   ├── api.py          ← Drive file listing, processing, extraction
+│   │   ├── full_sync.py    ← BFS walk from Drive root folder
+│   │   ├── delta_sync.py   ← Incremental sync via Drive changes API
+│   │   ├── extractor.py    ← PDF/Excel text extraction + AI parsing
+│   │   ├── parser.py       ← Filename → metadata parsing
+│   │   ├── watch_manager.py ← Drive push notification channels
+│   │   └── webhook.py      ← Google Drive push notification receiver
+│   └── hr_client/
+│       └── doctype/        ← Custom DocType definitions
+├── hr-frontend/            ← React + Vite SPA
+│   └── src/
+│       ├── api/            ← Typed fetch functions per module
+│       ├── components/     ← Shared UI components + layout
+│       ├── context/        ← Auth, Permissions React contexts
+│       ├── lib/
+│       │   ├── api.ts      ← Axios instance with CSRF interceptor
+│       │   ├── constants.ts ← ADMIN_USERS, currentFYLabel(), etc.
+│       │   └── utils.ts
+│       └── pages/          ← One folder per route
+└── README.md
+```
 
-| Module | File | Description |
+---
+
+## Features
+
+### HR & People
+| Feature | Route | Access |
 |---|---|---|
-| Dashboard | `api/dashboard.py` | Live stats for React dashboard |
-| Employee | `api/employee.py` | Profile view/edit, default-password check |
-| Employee Lifecycle | `api/employee_lifecycle.py` | Onboarding, offboarding, exit interview |
-| Recruitment | `api/recruitment.py` | Job openings, candidate pipeline |
-| CRM | `api/crm.py` | Lead pipeline with approval flow |
-| Attendance | `api/jibble.py` | Jibble time-tracking integration |
-| Leave | `api/leave.py` | Leave applications + admin approval |
-| Expenses | `api/expenses.py` | Expense claims + admin approval |
-| Permissions | `api/permissions.py` | Per-user module access control |
-| User Management | `api/user_management.py` | Create/disable/delete users (admin only) |
-| AI / Drive | `api/ai.py` | Document extraction, verification, AI health |
-| Notes | `api/notes.py` | Internal employee notes |
-| Utils | `api/utils.py` | `handle_api_error` decorator |
+| Employee profiles — view/edit personal info, bank details, skills | `/my-profile` | All |
+| Admin team management — full employee detail, leave history, permissions | `/admin/employees` | Admin |
+| Leave applications + history, policy, holiday calendar | `/leave`, `/holidays` | All |
+| Expense claims (Petrol/Material) with admin approval | `/expenses` | All |
+| Recruitment pipeline — job openings, kanban stages, AI JD generator | `/recruitment` | All |
+| Jibble live attendance dashboard (who's in, late, absent, overtime) | `/admin/attendance` | Admin |
+| User management — create/disable/delete users, role assignment | `/admin/users` | Admin |
+| Module-level permission control per employee | `/admin/permissions` | Admin |
+| CRM lead pipeline with stage-advance approval flow | `/crm` | All |
 
-### `hr-frontend/` — Frontend (React + Vite)
-
-| Route | Description | Access |
+### Finance & Accounting (Tally-powered)
+| Feature | Route | Notes |
 |---|---|---|
-| `/` | Dashboard — stats, activity, AI health | All |
-| `/recruitment` | Job openings + candidate pipeline | All |
-| `/crm` | CRM lead pipeline with approval flow | All |
-| `/my-profile` | Employee self-view/edit profile | All |
-| `/leave` | Leave applications + history | All |
-| `/expenses` | Expense claims | All |
-| `/holidays` | 2026 holiday calendar + leave policy | All |
-| `/admin/employees` | Team management | Admin |
-| `/admin/attendance` | Live Jibble attendance dashboard | Admin |
-| `/admin/users` | User Management panel | Admin |
-| `/admin/permissions` | Module access control | Admin |
-| `/accounts` | Google Drive sync + structured data | Admin |
-| `/business` | Business intelligence dashboard | Admin |
-| `/verify` | AI document verification | Admin |
-| `/ai-insights` | AI health dashboard | Admin |
+| Operations dashboard — bank balance, debtors, creditors, FY totals | `/operations` | Reads from imported Tally data |
+| Debtor aging buckets, creditor list, party statement | `/operations` | Live DB queries |
+| Full voucher browser — paginated, filterable by type/date/party | `/operations` | 25,000+ vouchers |
+| Tally XML import (Masters + Transactions, up to 1.5 GB) | `/operations → Import & AI` | Background job |
+| Tally data enrichment via Ollama (party normalisation, anomaly detection) | `/operations → Import & AI` | Requires Ollama |
+| Financial year cashflow trend (12-month area chart) | `/operations` | Dynamic current FY |
+
+### AI & Drive Documents
+| Feature | Route | Notes |
+|---|---|---|
+| Google Drive document management (7,000+ files synced) | `/accounts` | Service account sync |
+| Document extraction pipeline — PDF/Excel → structured ERP records | `/accounts`, `/verify` | Regex + Ollama |
+| AI verification — confidence scoring, auto-verify, swipe review | `/verify` | Admin only |
+| Business dashboard — KPI cards over extracted VE DocTypes | `/business` | Admin only |
+| Financial preset charts (15 presets) + natural language chart generation | `/graphs` | Requires Ollama for NL |
+| AI insights — health score, alerts, executive summary, period compare | `/ai-insights` | Requires Ollama |
+| AI JD generator — generates job descriptions via OpenAI (proxied) | `/recruitment` | Requires OpenAI key in site_config |
+
+### Chat
+| Feature | Notes |
+|---|---|
+| Polling-based chatroom (no WebSocket required) | General room + direct messages + group rooms |
+| File attachments (images, PDFs, docs) | Stored in Frappe file system |
+| @mention notifications + unread badge | Active room: 3s poll; sidebar: 10s poll |
+| Soft delete (tombstone), message search, media gallery | All via REST API |
+
+---
+
+## Custom DocTypes
+
+| DocType | Purpose |
+|---|---|
+| `VE Tally Ledger` | Party/account master from Tally (1,924 records) |
+| `VE Tally Stock Item` | Inventory master from Tally (4,559 records) |
+| `VE Tally Voucher` | All transactions from Tally (25,000+ records) |
+| `VE Tally Enrichment` | Per-voucher AI enrichment (category, party norm, anomaly) |
+| `VE Drive File` | Google Drive file index (7,000+ records) |
+| `VE Drive Settings` | Single — root folder ID, delta page token, watch channels |
+| `VE Sales Invoice`, `VE Purchase Invoice`, `VE Purchase Order` | Extracted structured data |
+| `VE Quotation`, `VE Credit Note`, `VE Debit Note` | Extracted structured data |
+| `VE GRN`, `VE Financial Report`, `VE Payment Record` | Extracted structured data |
+| `VE Sales Order`, `VE Stock Record`, `VE Salary Record` | Extracted structured data |
+| `VE Attendance Record`, `VE Receipt` | Extracted structured data |
+| `VE Saved Graph` | Saved chart configs from the Graphs page |
+| `Vera Chat Room`, `Vera Chat Room Member`, `Vera Chat Message` | Chat system |
+| `Vera Leave Application` | Custom leave (simpler than HRMS default) |
+| `Vera Expense Claim` | Petrol + material expense claims |
+| `Vera CRM Lead`, `Vera CRM Quotation`, `Vera CRM Approval Request` | CRM pipeline |
+| `User Module Permission` | Per-user module access flags |
 
 ---
 
 ## Required Configuration
 
-These secrets are **not in git** — you must set them up manually on each machine.
+None of these are in git. Set them up on each server.
 
-### 1. Jibble Attendance API
-
-Get from: **Jibble Dashboard → Settings → Integrations → API** (OAuth2 client credentials)
+### 1. Jibble Attendance
 
 ```bash
-bench --site hrms.localhost set-config jibble_client_id "YOUR_JIBBLE_CLIENT_ID"
-bench --site hrms.localhost set-config jibble_client_secret "YOUR_JIBBLE_CLIENT_SECRET"
+bench --site vera.local set-config jibble_client_id "YOUR_CLIENT_ID"
+bench --site vera.local set-config jibble_client_secret "YOUR_CLIENT_SECRET"
 ```
 
-### 2. Google Drive Integration
+Get from: Jibble Dashboard → Settings → Integrations → API (OAuth2 credentials).
 
-Place the Google service account JSON key at:
+### 2. Google Drive Service Account
+
+Place the service account JSON at:
 ```
-frappe-bench/apps/vera_drive/vera_drive/service_account.json
+/home/frappe/frappe-bench/sites/vera.local/private/vera_drive_service_account.json
 ```
+This path is **gitignored and never committed**.
 
-**This file is gitignored — never commit it.**
-
-To generate it:
-1. [Google Cloud Console](https://console.cloud.google.com) → Enable **Google Drive API**
-2. Create a **Service Account** → Keys → Add Key → JSON → download
-3. Share your Drive root folder with the service account email (Viewer permission)
-4. Update `ROOT_FOLDER_ID` in `vera_drive/vera_drive/google_drive.py` with your folder's ID (from the URL when you open it in Drive)
-
-Also update `VERA_EMPLOYEES` and `FOLDER_OWNER_MAP` in `google_drive.py` to match your team.
+Set the root folder ID and credentials path in `drive_sync/utils.py` and `drive_sync/full_sync.py`.
 
 ### 3. OpenAI (AI Job Description Generator — optional)
 
-```env
-# hr-frontend/.env.local
-VITE_OPENAI_API_KEY=sk-proj-...
+```bash
+bench --site vera.local set-config openai_api_key "sk-..."
 ```
 
-Used client-side for the AI JD generator only. Everything else works without it.
-Model: `gpt-4o-mini`. Get a key at [platform.openai.com](https://platform.openai.com/api-keys).
+The frontend calls a backend proxy (`hr_client.api.recruitment.generate_job_description`) — the key is never sent to the browser. Feature is disabled if the key is not set.
 
-### 4. Ollama (local AI for document extraction — optional)
+### 4. Drive Webhook Token (optional but recommended)
 
 ```bash
-ollama serve          # runs on localhost:11434
-ollama pull mistral   # or whichever model is set in hr_client/api/ai.py
+bench --site vera.local set-config ve_drive_channel_token "$(openssl rand -hex 32)"
 ```
 
-Document extraction falls back to regex rules if Ollama is offline.
+Used to validate Google Drive push notifications. The webhook fails closed (403) if not configured.
+
+### 5. Ollama (local AI — optional)
+
+```bash
+ollama serve
+ollama pull mistral    # or llama3.1
+```
+
+Used for: AI JD generator fallback, Tally enrichment, document cross-check, financial chat.  
+All AI features gracefully degrade to rule-based or disabled if Ollama is offline.
 
 ---
 
-## Frontend Setup (`hr-frontend/`)
+## `site_config.json` reference
 
-```bash
-cd hr-frontend
-npm install
-```
-
-Create `hr-frontend/.env.local`:
-
-```env
-# Empty = Vite proxy handles /api/* → ERPNext in dev
-VITE_API_BASE=
-
-# Always false in real usage
-VITE_USE_MOCK=false
-
-# Optional — only for AI Job Description Generator
-VITE_OPENAI_API_KEY=sk-proj-...
-```
-
-| Variable | Required | Description |
-|---|---|---|
-| `VITE_API_BASE` | No | Empty in dev. Set to server IP/domain in production. |
-| `VITE_USE_MOCK` | No | `"false"` for real backend. `"true"` for UI development without ERPNext. |
-| `VITE_OPENAI_API_KEY` | No | OpenAI key for AI JD generator. Feature disabled if missing. |
-
----
-
-## Backend Setup (`hr_client/`)
-
-### Install the Frappe app
-
-```bash
-cd ~/frappe-bench
-bench get-app https://github.com/KernelLex/hr-client-erp.git
-bench install-app hr_client
-bench --site hrms.localhost migrate
-bench --site hrms.localhost clear-cache
-```
-
-### `site_config.json` reference
-
-`~/frappe-bench/sites/hrms.localhost/site_config.json`:
+`/home/frappe/frappe-bench/sites/vera.local/site_config.json`:
 
 ```json
 {
-  "db_name": "_auto_generated_by_bench",
-  "db_password": "_auto_generated_by_bench",
-  "db_type": "mariadb",
+  "db_name": "...",
+  "db_password": "...",
   "developer_mode": 0,
-  "host_name": "http://hrms.localhost:8001",
-  "jibble_client_id": "YOUR_JIBBLE_CLIENT_ID",
-  "jibble_client_secret": "YOUR_JIBBLE_CLIENT_SECRET",
+  "host_name": "https://veraenterprises.in",
+  "jibble_client_id": "...",
+  "jibble_client_secret": "...",
+  "openai_api_key": "sk-...",
+  "ve_drive_channel_token": "...",
   "session_expiry": "06:00:00",
   "session_expiry_mobile": "720:00:00"
 }
 ```
 
-### Seed initial users
+---
+
+## Development Setup
 
 ```bash
-bench --site hrms.localhost execute hr_client.patches.create_all_users
-bench --site hrms.localhost execute hr_client.patches.create_owais_user
+# 1. Start ERPNext bench (gunicorn on 127.0.0.1:8000)
+cd /home/frappe/frappe-bench
+bench start
+
+# 2. Start React dev server (port 5173, proxies /api/ to bench)
+cd /home/vera/vera-erp/hr-client-erp/hr-frontend
+npm install
+npm run dev
 ```
 
-Default password for all users: **`Vera@2026`** — change immediately after first login.
-Any user still on the default password sees a warning banner on the dashboard.
+`hr-frontend/.env.local`:
+```env
+VITE_API_BASE=
+VITE_USE_MOCK=false
+```
 
 ---
 
 ## Production Deployment
 
-### nginx config
-
-```nginx
-server {
-    listen 80;
-    server_name _;   # replace with your domain
-
-    root /path/to/hr-client-erp/hr-frontend/dist;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8001;
-        proxy_set_header Host hrms.localhost;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /assets/ {
-        proxy_pass http://127.0.0.1:8001;
-        proxy_set_header Host hrms.localhost;
-    }
-
-    # Block Frappe desk from public internet — CRITICAL
-    location /desk  { return 403; }
-    location /app   { return 403; }
-    location /login { return 403; }
-}
-```
-
-### Firewall
+### Deploy backend changes
 
 ```bash
-sudo ufw allow OpenSSH
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw deny 8001/tcp    # ERPNext — internal only
-sudo ufw deny 11434/tcp   # Ollama — internal only
-sudo ufw --force enable
+sudo rsync -av /home/vera/vera-erp/hr-client-erp/hr_client/ \
+    /home/frappe/frappe-bench/apps/hr_client/hr_client/ \
+    --exclude __pycache__ --exclude "*.pyc"
+
+sudo -u frappe bash -c "cd /home/frappe/frappe-bench && \
+    bench --site vera.local migrate && bench --site vera.local clear-cache"
+
+sudo supervisorctl restart frappe-bench-workers: frappe-bench-web:
 ```
 
-### Build frontend for production
+### Deploy frontend changes
 
 ```bash
-cd hr-frontend
+cd /home/vera/vera-erp/hr-client-erp/hr-frontend
 npm run build
-# output → hr-frontend/dist/
-sudo systemctl reload nginx
+sudo rsync -a --delete dist/ /var/www/hr-frontend/
 ```
+
+### Tally XML Import
+
+Upload XML files to `/home/vera/tally_uploads/` (or use the import UI at `/operations → Import & AI`),
+then run:
+```bash
+cd /home/frappe/frappe-bench
+env/bin/python3 /home/vera/tally_import.py
+```
+Runtime ~20 seconds for a full re-import (DELETE + INSERT). Masters file ~120 MB, Transactions ~1.5 GB.
 
 ---
 
-## Security Model
+## Security
 
-- All API endpoints: `@frappe.whitelist()` + `@handle_api_error` — unauthenticated requests rejected, errors return clean JSON
-- Admin-only endpoints: `_require_admin()` checks `frappe.session.user`
-- `owais@veraenterprises.in` is a protected superuser — cannot be disabled, deleted, or have password changed via admin panel
-- All user management actions logged to Frappe Activity Log
-- Password policy enforced server-side: 8+ chars, uppercase, number, special character
-- No secrets in any tracked file — Jibble creds in `site_config.json`, Drive key in gitignored file
-- `developer_mode: 0` in production — no stack traces in API responses
-- Session expiry: 6 hours (web), 30 days (mobile)
+- **Server-side admin check**: `_require_admin()` in `hr_client/api/utils.py` verifies `System Manager` role — not just email comparison. Shared across all API modules.
+- **DocType whitelist**: `verify_record` / `quick_action` validate `doctype` against `_ALLOWED_DOCTYPES` to prevent writing to arbitrary Frappe documents.
+- **CORS**: Restricted to `veraenterprises.in`, `localhost:5173`, and LAN dev IP. No wildcard `*`.
+- **File uploads**: Extension and MIME type validated on profile photos; path traversal guarded via `os.path.realpath()` on Tally XML uploads; chat attachments must be Frappe-hosted (`/files/` or `/private/files/`).
+- **SQL injection**: All user-supplied values use `%s` parameterized queries. No f-string injection.
+- **Secrets**: Never in code or git. All credentials in `site_config.json` (Jibble, OpenAI, Drive webhook token). Drive service account JSON is gitignored.
+- **OpenAI key**: Routed through backend proxy — never compiled into the browser JS bundle.
+- **Session**: 6-hour expiry (web), 30-day (mobile). `developer_mode: 0` in production.
+- **Frappe desk**: Blocked at nginx level (`/desk`, `/app` → 403).
+- **Password policy**: 8+ chars, uppercase, number, special character — enforced server-side on create/change.
+- **Protected admin**: `owais@veraenterprises.in` cannot be disabled, deleted, or have password changed via admin panel.
+- **Drive webhook**: Fails closed — rejects all requests if `ve_drive_channel_token` is not configured.
+- **Prompt injection**: `source_content` in `ai_crosscheck` sanitized before passing to LLM.
+
+---
+
+## Team (Vera Enterprises)
+
+| Name | Email | Role |
+|---|---|---|
+| Owais Ahmed Khan | owais@veraenterprises.in | Administrator |
+| Maaz | maazdgr8.mma@gmail.com | Project Manager |
+| Manjunath M N | manju.veraaccnts@outlook.com | Accounts Manager |
+| Lookman | lookman.vera@outlook.com | Accounts Executive |
+| Bhagya Shree | Bhagyashree.veraenterprises@outlook.com | Logistics Manager |
