@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { COMPANY_NAME } from "@/lib/constants"
 import { useNavigate } from "react-router-dom"
 import { CalendarDays, Gift, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react"
 import { useHolidays, useLeavePolicy, useMyLeaves } from "@/pages/leave/useLeave"
@@ -188,7 +189,7 @@ function CalendarSection() {
               <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50"
                 style={{ backgroundColor: allPast ? "#F8FAFC" : "#FAFBFF" }}>
                 <h3 className="text-sm font-semibold" style={{ color: allPast ? "#94A3B8" : "#4F46E5" }}>
-                  {month} 2026
+                  {month} {currentYear}
                 </h3>
                 <span className="text-[11px] text-gray-400">
                   {monthHolidays.length} holiday{monthHolidays.length !== 1 ? "s" : ""}
@@ -361,7 +362,7 @@ function RulesSection() {
     <div className="rounded-xl p-6" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
       <div className="flex items-center gap-2 mb-5">
         <AlertTriangle size={18} style={{ color: "#D97706" }} />
-        <h3 className="font-semibold text-base" style={{ color: "#92400E" }}>Important Leave Rules for 2026</h3>
+        <h3 className="font-semibold text-base" style={{ color: "#92400E" }}>Important Leave Rules for {new Date().getFullYear()}</h3>
       </div>
       <ul className="space-y-3">
         {policy.important_rules.map((rule, i) => (
@@ -383,7 +384,7 @@ export function HolidaysContent() {
   const [activeSection, setActiveSection] = useState<HolidayTab>("calendar")
 
   const SECTIONS: { id: HolidayTab; label: string; icon: string }[] = [
-    { id: "calendar", label: "2026 Holidays", icon: "📅" },
+    { id: "calendar", label: `${new Date().getFullYear()} Holidays`, icon: "📅" },
     { id: "policy",   label: "Leave Policy",  icon: "📋" },
     { id: "rules",    label: "Important Rules", icon: "⚠️" },
   ]
@@ -430,7 +431,7 @@ export function HolidaysPage() {
             <h1 className="text-xl font-bold leading-tight" style={{ color: "var(--text-primary)" }}>
               Holidays & Leave Policy
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">Vera Enterprises — 2026</p>
+            <p className="text-xs text-gray-400 mt-0.5">{`${COMPANY_NAME} — ${new Date().getFullYear()}`}</p>
           </div>
         </div>
 

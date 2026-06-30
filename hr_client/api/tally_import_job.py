@@ -285,10 +285,11 @@ def run(masters_path: str, transactions_path: str):
                             if isparty_m and isparty_m.group(1).strip() == 'Yes' \
                                and party_ledger_amount == 0 and amounts:
                                 party_ledger_amount = abs(float(amounts[0]))
+                            # Tally sign: amt > 0 = Credit, amt < 0 = Debit
                             all_ledger_list.append({
                                 "ledger": lname[:140],
                                 "amount": round(abs(amt), 2),
-                                "is_dr": amt > 0,
+                                "is_dr": amt < 0,
                                 "is_party": bool(isparty_m and isparty_m.group(1).strip() == 'Yes'),
                             })
 
@@ -397,9 +398,15 @@ def run(masters_path: str, transactions_path: str):
         gst_in       = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_gst') and v > 0)
         tds_pay      = sum(abs(v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_tds') and v < 0)
 
-        fy_sales  = sum(v for m, v in monthly_sales.items()   if m >= '202504')
-        fy_purch  = sum(v for m, v in monthly_purch.items()   if m >= '202504')
-        fy_coll   = sum(v for m, v in monthly_receipt.items() if m >= '202504')
+        # Compute current FY month bounds (format YYYYMM)
+        import datetime as _dt
+        _today = _dt.date.today()
+        _fy_yr = _today.year if _today.month >= 4 else _today.year - 1
+        _fy_start = f"{_fy_yr}04"
+        _fy_end   = f"{_fy_yr + 1}03"
+        fy_sales  = sum(v for m, v in monthly_sales.items()   if _fy_start <= m <= _fy_end)
+        fy_purch  = sum(v for m, v in monthly_purch.items()   if _fy_start <= m <= _fy_end)
+        fy_coll   = sum(v for m, v in monthly_receipt.items() if _fy_start <= m <= _fy_end)
 
         top_debtors   = {k: round(v, 2) for k, v in sorted(
             ((k, v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_debtor') and v > 0),

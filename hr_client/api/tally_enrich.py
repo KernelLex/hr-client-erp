@@ -132,8 +132,14 @@ def _fmt(amount):
     return f"₹ {v:.0f}"
 
 
+_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator"}
+
+
 def _require_admin():
-    if frappe.session.user == "Guest":
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Not permitted", frappe.PermissionError)
+    if user not in _ADMIN_USERS and "System Manager" not in frappe.get_roles(user):
         frappe.throw("Not permitted", frappe.PermissionError)
 
 

@@ -10,26 +10,33 @@ from hr_client.utils.llm import ask_llm_json, is_ollama_running
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
+_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator"}
+
+
 def _require_admin():
-    if frappe.session.user == "Guest":
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Not permitted", frappe.PermissionError)
+    if user not in _ADMIN_USERS and "System Manager" not in frappe.get_roles(user):
         frappe.throw("Not permitted", frappe.PermissionError)
 
 
 def _fy_dates(fy: str):
-    """Return (start_date, end_date) for a FY string like '2025-26'."""
+    """Return (start_date, end_date_inclusive) for a FY string like '2025-26'."""
     try:
         yr = int(fy.split("-")[0])
         return f"{yr}-04-01", f"{yr + 1}-03-31"
     except Exception:
-        return "2025-04-01", "2026-03-31"
+        from hr_client.api.utils import current_fy as _cfy
+        start, _, _ = _cfy()
+        import datetime
+        start_yr = int(start[:4])
+        return f"{start_yr}-04-01", f"{start_yr + 1}-03-31"
 
 
 def _current_fy():
-    import datetime
-    today = datetime.date.today()
-    if today.month >= 4:
-        return f"{today.year}-{str(today.year + 1)[2:]}"
-    return f"{today.year - 1}-{str(today.year)[2:]}"
+    from hr_client.api.utils import current_fy_label
+    return current_fy_label()
 
 
 def _month_name(yyyymm: str) -> str:
@@ -105,7 +112,7 @@ PRESETS = [
         "category": "Finance",
         "icon": "BarChart2",
         "color": "#d97706",
-        "params_schema": {"fy1": "2024-25", "fy2": "2025-26"},
+        "params_schema": {"fy1": None, "fy2": None},
     },
     {
         "id": "monthly_collections",
@@ -205,9 +212,11 @@ PRESETS = [
 def _fetch_monthly_sales_purchases(months=12, fy=None):
     if fy:
         d_from, d_to = _fy_dates(fy)
-        date_filter = f"AND voucher_date BETWEEN '{d_from}' AND '{d_to}'"
+        date_clause = "AND voucher_date BETWEEN %s AND %s"
+        date_params = (d_from, d_to)
     else:
-        date_filter = f"AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL {int(months)} MONTH)"
+        date_clause = "AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)"
+        date_params = (int(months),)
 
     rows = frappe.db.sql(
         f"""
@@ -216,12 +225,12 @@ def _fetch_monthly_sales_purchases(months=12, fy=None):
                COALESCE(SUM(amount), 0) AS total,
                COUNT(*) AS cnt
         FROM `tabVE Tally Voucher`
-        WHERE is_cancelled = 0 {date_filter}
+        WHERE is_cancelled = 0 {date_clause}
           AND voucher_type IN ('Sales','Purchase','Receipt','Payment')
         GROUP BY month, voucher_type
         ORDER BY month
         """,
-        ('%Y%m',), as_dict=True
+        ('%Y%m',) + date_params, as_dict=True
     )
     pivot = {}
     for r in rows:
@@ -271,20 +280,22 @@ def _fetch_top_parties(voucher_type="Sales", limit=15, fy="current"):
 def _fetch_voucher_breakdown(fy=None):
     if fy:
         d_from, d_to = _fy_dates(fy)
-        date_filter = f"AND voucher_date BETWEEN '{d_from}' AND '{d_to}'"
+        date_clause = "AND voucher_date BETWEEN %s AND %s"
+        date_params = (d_from, d_to)
     else:
-        date_filter = ""
+        date_clause = ""
+        date_params = ()
     rows = frappe.db.sql(
         f"""
         SELECT voucher_type AS name,
                COUNT(*) AS count,
                COALESCE(SUM(amount), 0) AS value
         FROM `tabVE Tally Voucher`
-        WHERE is_cancelled = 0 {date_filter}
+        WHERE is_cancelled = 0 {date_clause}
         GROUP BY voucher_type
         ORDER BY value DESC
         """,
-        as_dict=True
+        date_params, as_dict=True
     )
     colors = [
         "#16a34a","#dc2626","#0891b2","#d97706","#7c3aed",
@@ -329,7 +340,10 @@ def _fetch_cashflow_trend(months=12):
     }
 
 
-def _fetch_fy_comparison(fy1="2024-25", fy2="2025-26"):
+def _fetch_fy_comparison(fy1=None, fy2=None):
+    from hr_client.api.utils import current_fy_label, prev_fy_label
+    fy2 = fy2 or current_fy_label()
+    fy1 = fy1 or prev_fy_label()
     results = {}
     for fy in (fy1, fy2):
         d_from, d_to = _fy_dates(fy)
@@ -438,32 +452,19 @@ def _fetch_sales_growth(months=12):
 
 
 def _fetch_stock_value(limit=20):
+    # VE Tally Stock Item only stores standard_rate (no closing_qty/closing_value columns)
     rows = frappe.db.sql(
         """
-        SELECT item_name, standard_rate,
-               COALESCE(closing_qty, 0) AS qty,
-               COALESCE(closing_value, 0) AS value
+        SELECT item_name,
+               COALESCE(standard_rate, 0) AS value
         FROM `tabVE Tally Stock Item`
-        WHERE closing_value > 0
-        ORDER BY closing_value DESC
+        WHERE standard_rate > 0
+        ORDER BY standard_rate DESC
         LIMIT %s
         """,
         (cint(limit),), as_dict=True
     )
-    if not rows:
-        rows = frappe.db.sql(
-            """
-            SELECT item_name, standard_rate,
-                   0 AS qty,
-                   COALESCE(standard_rate, 0) AS value
-            FROM `tabVE Tally Stock Item`
-            WHERE standard_rate > 0
-            ORDER BY standard_rate DESC
-            LIMIT %s
-            """,
-            (cint(limit),), as_dict=True
-        )
-    data = [{"item": r["item_name"][:40], "value": _fmt(r["value"]), "qty": _fmt(r["qty"])} for r in rows]
+    data = [{"item": r["item_name"][:40], "value": _fmt(r["value"]), "qty": 0} for r in rows]
     return {
         "data": data,
         "x_key": "value",
@@ -562,7 +563,7 @@ PRESET_FETCHERS = {
     "top_vendors":             lambda p: _fetch_top_parties("Purchase", p.get("limit", 15), p.get("fy", "current")),
     "voucher_breakdown":       lambda p: _fetch_voucher_breakdown(p.get("fy")),
     "cashflow_trend":          lambda p: _fetch_cashflow_trend(p.get("months", 12)),
-    "fy_comparison":           lambda p: _fetch_fy_comparison(p.get("fy1", "2024-25"), p.get("fy2", "2025-26")),
+    "fy_comparison":           lambda p: _fetch_fy_comparison(p.get("fy1"), p.get("fy2")),
     "monthly_collections":     lambda p: _fetch_payments_receipts(p.get("months", 12)),
     "gst_analysis":            lambda p: _fetch_gst_analysis(),
     "top_debtors":             lambda p: _fetch_ledger_balances("debtors",  p.get("limit", 15)),
@@ -627,7 +628,7 @@ def _execute_ai_query(interpretation, query, date_from=None, date_to=None):
     elif intent == "cashflow":
         chart_data = _fetch_cashflow_trend(months)
     elif intent == "fy_comparison":
-        chart_data = _fetch_fy_comparison("2024-25", "2025-26")
+        chart_data = _fetch_fy_comparison()
     elif intent == "gst":
         chart_data = _fetch_gst_analysis()
     elif intent == "ledger_balances":
@@ -641,12 +642,15 @@ def _execute_ai_query(interpretation, query, date_from=None, date_to=None):
         # Custom: group by party or month for a given voucher type
         vt = v_types[0] if v_types else "Sales"
         if date_from and date_to:
-            date_filter = f"AND voucher_date BETWEEN '{date_from}' AND '{date_to}'"
+            date_clause = "AND voucher_date BETWEEN %s AND %s"
+            date_params = (date_from, date_to)
         elif fy:
             d_from, d_to = _fy_dates(fy)
-            date_filter = f"AND voucher_date BETWEEN '{d_from}' AND '{d_to}'"
+            date_clause = "AND voucher_date BETWEEN %s AND %s"
+            date_params = (d_from, d_to)
         else:
-            date_filter = f"AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL {months} MONTH)"
+            date_clause = "AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)"
+            date_params = (int(months),)
 
         if group_by == "party":
             rows = frappe.db.sql(
@@ -654,11 +658,11 @@ def _execute_ai_query(interpretation, query, date_from=None, date_to=None):
                 SELECT party_name AS label,
                        {'COUNT(*) AS value' if metric == 'count' else 'COALESCE(SUM(amount),0) AS value'}
                 FROM `tabVE Tally Voucher`
-                WHERE voucher_type = %s AND is_cancelled = 0 {date_filter}
+                WHERE voucher_type = %s AND is_cancelled = 0 {date_clause}
                   AND party_name != ''
                 GROUP BY party_name ORDER BY value DESC LIMIT %s
                 """,
-                (vt, limit), as_dict=True
+                (vt,) + date_params + (limit,), as_dict=True
             )
             data = [{"party": r["label"], "amount": _fmt(r["value"])} for r in rows]
             chart_data = {"data": data, "label_key": "party", "value_key": "amount",
@@ -669,10 +673,10 @@ def _execute_ai_query(interpretation, query, date_from=None, date_to=None):
                 SELECT DATE_FORMAT(voucher_date, %s) AS month,
                        {'COUNT(*) AS value' if metric == 'count' else 'COALESCE(SUM(amount),0) AS value'}
                 FROM `tabVE Tally Voucher`
-                WHERE voucher_type = %s AND is_cancelled = 0 {date_filter}
+                WHERE voucher_type = %s AND is_cancelled = 0 {date_clause}
                 GROUP BY month ORDER BY month
                 """,
-                ('%Y%m', vt), as_dict=True
+                ('%Y%m', vt) + date_params, as_dict=True
             )
             data = [{"month": _month_name(r["month"]), "amount": _fmt(r["value"])} for r in rows]
             chart_data = {"data": data, "x_key": "month", "y_keys": ["amount"],

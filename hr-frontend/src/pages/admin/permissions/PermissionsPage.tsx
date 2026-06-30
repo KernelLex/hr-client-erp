@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState } from "react"
 import { toast } from "sonner"
 import { Shield, Save, Users, CheckCircle2 } from "lucide-react"
@@ -12,7 +13,6 @@ import {
 } from "./types"
 import { Navigate } from "react-router-dom"
 
-const ADMIN_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 const ALL_MODULES: PermissionModule[] = [
   "recruitment",

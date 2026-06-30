@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState, useMemo } from "react"
 import { Navigate } from "react-router-dom"
 import { LeaveAdminPanel } from "./LeaveAdminPanel"
@@ -21,7 +22,6 @@ import {
   type AttendanceEntry,
 } from "./useJibble"
 
-const ADMIN_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 const PIE_COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4"]
 
 // ── Date helpers ─────────────────────────────────────────────────────────────

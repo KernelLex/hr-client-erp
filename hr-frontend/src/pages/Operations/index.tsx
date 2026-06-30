@@ -5,9 +5,11 @@ import {
   RefreshCw, AlertTriangle,
   Upload, CheckCircle2, XCircle,
   Loader2, Activity, Search, ArrowLeft, ChevronRight,
-  BarChart2, AlertCircle,
+  BarChart2, AlertCircle, Brain, BookOpen,
+  ArrowDownCircle, ArrowUpCircle,
 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
+import { VoucherBrowser } from "./VoucherBrowser"
 
 function getCsrf(): string {
   const m = document.cookie.match(/csrf_token=([^;]+)/)
@@ -73,6 +75,16 @@ interface PartyStatement {
 interface SearchResult { type: string; number: string; date: string; party: string; amount: number; amount_fmt: string; narration: string }
 
 interface CreditorRow { party: string; balance: number; balance_fmt: string; last_purchase: string | null; days: number | null }
+
+interface VoucherLine { cnt: number; total: number; fmt: string }
+interface FinancialSummary {
+  sales: VoucherLine; performa: VoucherLine; sales_order: VoucherLine
+  purchase: VoucherLine; purchase_order: VoucherLine
+  receipt: VoucherLine; payment: VoucherLine
+  credit_note: VoucherLine; debit_note: VoucherLine
+  journal: VoucherLine; contra: VoucherLine
+  total_vouchers: number; min_date: string; max_date: string; fy: string
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -392,7 +404,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
 
 // ── Voucher Search Tab ─────────────────────────────────────────────────────────
 
-function SearchTab({ onSelectParty }: { onSelectParty: (p: string) => void }) {
+function SearchTab({ onSelectParty, totalVouchers }: { onSelectParty: (p: string) => void; totalVouchers?: number }) {
   const [q, setQ]            = useState("")
   const [vtype, setVtype]    = useState("")
   const [fromD, setFromD]    = useState("")
@@ -490,7 +502,7 @@ function SearchTab({ onSelectParty }: { onSelectParty: (p: string) => void }) {
       {!triggered && (
         <div className="py-12 text-center text-gray-300">
           <Search size={32} className="mx-auto mb-2" />
-          <p className="text-sm">Search across 23,000+ Tally vouchers</p>
+          <p className="text-sm">Search across {totalVouchers ? `${totalVouchers.toLocaleString()}+` : "thousands of"} Tally vouchers</p>
           <p className="text-xs mt-1">By party name, narration, or voucher number</p>
         </div>
       )}
@@ -501,13 +513,14 @@ function SearchTab({ onSelectParty }: { onSelectParty: (p: string) => void }) {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: "overview",     label: "Overview",    icon: Activity },
-  { id: "cashflow",     label: "Cashflow",    icon: BarChart2 },
-  { id: "receivables",  label: "Receivables", icon: TrendingUp },
-  { id: "payables",     label: "Payables",    icon: TrendingDown },
-  { id: "search",       label: "Search",      icon: Search },
-  { id: "inventory",    label: "Inventory",   icon: Package },
-  { id: "import",       label: "Import",      icon: Upload },
+  { id: "overview",     label: "Overview",      icon: Activity },
+  { id: "cashflow",     label: "Cashflow",      icon: BarChart2 },
+  { id: "receivables",  label: "Receivables",   icon: TrendingUp },
+  { id: "payables",     label: "Payables",      icon: TrendingDown },
+  { id: "search",       label: "Search",        icon: Search },
+  { id: "ledger",       label: "Ledger",        icon: BookOpen },
+  { id: "inventory",    label: "Inventory",     icon: Package },
+  { id: "import",       label: "Import & AI",   icon: Brain },
 ] as const
 
 type TabId = typeof TABS[number]["id"]
@@ -545,6 +558,22 @@ export default function OperationsPage() {
     enabled: tab === "payables",
   })
 
+  // Year filter for transaction volume KPIs
+  const [fy, setFy] = useState<string>("all")
+
+  const { data: finSummary, isLoading: finLoading } = useQuery<FinancialSummary>({
+    queryKey: ["financial-summary", fy],
+    queryFn: () => apiPost("hr_client.api.operations.get_financial_summary", { fy }),
+    staleTime: 5 * 60_000,
+    retry: 1,
+  })
+
+  const { data: availableFY = [] } = useQuery<string[]>({
+    queryKey: ["available-fy"],
+    queryFn: () => apiFetch("hr_client.api.operations.get_available_financial_years"),
+    staleTime: 60 * 60_000,
+  })
+
   const handlePartyClick = useCallback((party: string) => { if (party) setSelectedParty(party) }, [])
 
   const invalidateAll = useCallback(() => {
@@ -553,6 +582,8 @@ export default function OperationsPage() {
     qc.invalidateQueries({ queryKey: ["tally-aging"] })
     qc.invalidateQueries({ queryKey: ["tally-creditors"] })
     qc.invalidateQueries({ queryKey: ["tally-summary"] })
+    qc.invalidateQueries({ queryKey: ["financial-summary"] })
+    qc.invalidateQueries({ queryKey: ["available-fy"] })
     refetch()
   }, [qc, refetch])
 
@@ -590,13 +621,16 @@ export default function OperationsPage() {
     <div className="p-6 max-w-6xl mx-auto space-y-5">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <div className="flex items-center gap-2">
             <Activity size={20} className="text-indigo-600" />
             <h1 className="text-2xl font-bold text-gray-900">Operations</h1>
           </div>
-          <p className="text-sm mt-0.5 text-gray-500">Tally ground truth · {fmtDate(data.as_of)}</p>
+          <p className="text-xs mt-0.5 text-gray-400">
+            Tally data as of {fmtDate(data.as_of)}
+            {finSummary?.min_date && ` · ${finSummary.min_date} → ${finSummary.max_date}`}
+          </p>
         </div>
         <button onClick={() => refetch()} disabled={isFetching}
           className="flex items-center gap-1.5 text-sm border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50 disabled:opacity-50">
@@ -638,81 +672,178 @@ export default function OperationsPage() {
 
       {/* ── Tab: Overview ── */}
       {tab === "overview" && (
-        <div className="space-y-5">
-          {/* Executive KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {executive.kpis.map((kpi, i) => (
-              <KpiCard key={i} kpi={kpi} accent={["border-l-indigo-500","border-l-emerald-500","border-l-red-400","border-l-violet-500"][i]} />
-            ))}
-          </div>
+        <div className="space-y-6">
 
-          {/* Financial health row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="rounded-xl p-5 bg-white" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Bank Accounts</p>
-              <div className="space-y-2">
-                {[...finance.bank_accounts, ...finance.cash_accounts].map((b, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 truncate pr-3">{b.name}</span>
-                    <span className={`text-sm font-bold ${b.balance >= 0 ? "text-gray-900" : "text-red-500"}`}>{b.balance_fmt}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-xl p-5 bg-white" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">GST Position</p>
-              <div className="space-y-2.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Output GST</span>
-                  <span className="font-semibold text-sm text-red-500">{finance.gst_detail.output_fmt}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Input Credit</span>
-                  <span className="font-semibold text-sm text-emerald-600">{finance.gst_detail.input_fmt}</span>
-                </div>
-                <div className="border-t border-gray-100 pt-2.5 flex justify-between items-center">
-                  <span className="text-sm font-semibold text-gray-800">Net Payable</span>
-                  <span className={`text-base font-bold ${finance.gst_detail.net_liability > 0 ? "text-red-500" : "text-emerald-600"}`}>
-                    {finance.gst_detail.net_fmt}
+          {/* Data gap notice */}
+          {finSummary?.max_date && (() => {
+            const gapDays = Math.floor((Date.now() - new Date(finSummary.max_date).getTime()) / 86_400_000)
+            return gapDays > 20 ? (
+              <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                  <span className="text-sm text-amber-800">
+                    Tally data is <strong>{gapDays} days</strong> behind. Last import: {finSummary.max_date}.
+                    Upload the latest XML to get current numbers.
                   </span>
                 </div>
+                <button onClick={() => setTab("import" as TabId)}
+                  className="shrink-0 text-xs bg-amber-600 text-white px-3 py-1.5 rounded-lg hover:bg-amber-700 ml-3">
+                  Upload XML →
+                </button>
+              </div>
+            ) : null
+          })()}
+
+          {/* Transaction Volume — year-filtered hero section */}
+          <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Transaction Volume</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {fy === "all"
+                    ? `All time · ${finSummary?.min_date ?? "…"} → ${finSummary?.max_date ?? "…"}`
+                    : `FY ${fy.replace("-", "–")} · Apr ${fy.split("-")[0]} – Mar ${fy.split("-")[1]}`}
+                </p>
+              </div>
+              {/* FY filter — inline with the section it controls */}
+              <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-1">
+                <button onClick={() => setFy("all")}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${fy === "all" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+                  All Time
+                </button>
+                {availableFY.slice(0, 3).map(y => (
+                  <button key={y} onClick={() => setFy(y)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${fy === y ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+                    {y.replace("-", "–")}
+                  </button>
+                ))}
+                {availableFY.length > 3 && (
+                  <select value={availableFY.slice(3).includes(fy) ? fy : ""}
+                    onChange={e => e.target.value && setFy(e.target.value)}
+                    className="px-2 py-1 rounded-md text-xs font-medium text-gray-500 bg-transparent focus:outline-none cursor-pointer">
+                    <option value="">Older…</option>
+                    {availableFY.slice(3).map(y => <option key={y} value={y}>{y.replace("-", "–")}</option>)}
+                  </select>
+                )}
               </div>
             </div>
-
-            <div className="rounded-xl p-5 bg-white" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">HR Snapshot</p>
-              <div className="space-y-2.5">
-                {hr.kpis.map((k, i) => (
-                  <div key={i} className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{k.label}</span>
-                    <span className="text-sm font-bold text-gray-900">{k.value}</span>
+            <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-50">
+              {finLoading
+                ? [...Array(4)].map((_, i) => (
+                    <div key={i} className="p-5">
+                      <div className="h-3 w-20 bg-gray-100 rounded animate-pulse mb-3" />
+                      <div className="h-7 w-32 bg-gray-100 rounded animate-pulse mb-2" />
+                      <div className="h-2.5 w-24 bg-gray-100 rounded animate-pulse" />
+                    </div>
+                  ))
+                : finSummary
+                ? [
+                    { label: "Sales Invoices", line: finSummary.sales,    Icon: TrendingUp,       hint: `+${finSummary.performa?.cnt?.toLocaleString() ?? 0} performa`, color: "#16a34a", bg: "#f0fdf4" },
+                    { label: "Purchases",      line: finSummary.purchase, Icon: Package,          hint: `+${finSummary.purchase_order?.cnt?.toLocaleString() ?? 0} POs`, color: "#dc2626", bg: "#fef2f2" },
+                    { label: "Collections",    line: finSummary.receipt,  Icon: ArrowDownCircle,  hint: `cash received`,                                                  color: "#2563eb", bg: "#eff6ff" },
+                    { label: "Payments Out",   line: finSummary.payment,  Icon: ArrowUpCircle,    hint: `cash paid`,                                                      color: "#d97706", bg: "#fffbeb" },
+                  ].map(({ label, line, Icon, hint, color, bg }) => (
+                    <div key={label} className="p-5">
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
+                          <Icon size={14} style={{ color }} strokeWidth={2} />
+                        </div>
+                        <span className="text-xs text-gray-500 font-medium">{label}</span>
+                      </div>
+                      <p className="text-2xl font-bold font-mono" style={{ color }}>{line.fmt}</p>
+                      <p className="text-xs text-gray-400 mt-1">{line.cnt.toLocaleString()} txns · {hint}</p>
+                    </div>
+                  ))
+                : (
+                  <div className="col-span-4 py-8 text-center text-gray-400 text-sm">
+                    Failed to load transaction data. Check connection and retry.
                   </div>
+                )}
+            </div>
+          </div>
+
+          {/* Financial Position + Details in a 2-column layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            {/* Left: KPI cards (3/5 width) */}
+            <div className="lg:col-span-3 space-y-4">
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Financial Position</p>
+              <div className="grid grid-cols-2 gap-3">
+                {executive.kpis.map((kpi, i) => (
+                  <KpiCard key={i} kpi={kpi} accent={["border-l-indigo-500","border-l-emerald-500","border-l-red-400","border-l-violet-500"][i]} />
                 ))}
+              </div>
+              {/* Mini cashflow */}
+              {cashflow && cashflow.length > 0 && (
+                <div className="rounded-xl p-4 bg-white" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
+                  <CashflowChart data={cashflow.slice(-6)} />
+                </div>
+              )}
+            </div>
+
+            {/* Right: Bank + GST + HR (2/5 width) */}
+            <div className="lg:col-span-2 space-y-3">
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Accounts Detail</p>
+              <div className="rounded-xl bg-white overflow-hidden" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
+                <div className="px-4 py-3 border-b border-gray-50">
+                  <p className="text-xs font-semibold text-gray-500">Bank & Cash</p>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {[...finance.bank_accounts, ...finance.cash_accounts].map((b, i) => (
+                    <div key={i} className="flex items-center justify-between px-4 py-2.5">
+                      <span className="text-xs text-gray-600 truncate pr-2">{b.name}</span>
+                      <span className={`text-xs font-bold whitespace-nowrap ${b.balance >= 0 ? "text-gray-900" : "text-red-500"}`}>{b.balance_fmt}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl bg-white overflow-hidden" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
+                <div className="px-4 py-3 border-b border-gray-50">
+                  <p className="text-xs font-semibold text-gray-500">GST Position</p>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {[
+                    { label: "Output GST", value: finance.gst_detail.output_fmt, cls: "text-red-500" },
+                    { label: "Input Credit", value: finance.gst_detail.input_fmt, cls: "text-emerald-600" },
+                    { label: "Net Payable", value: finance.gst_detail.net_fmt, cls: finance.gst_detail.net_liability > 0 ? "text-red-600 font-bold" : "text-emerald-600 font-bold" },
+                  ].map(({ label, value, cls }) => (
+                    <div key={label} className="flex items-center justify-between px-4 py-2.5">
+                      <span className="text-xs text-gray-600">{label}</span>
+                      <span className={`text-xs ${cls}`}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl bg-white overflow-hidden" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
+                <div className="px-4 py-3 border-b border-gray-50">
+                  <p className="text-xs font-semibold text-gray-500">HR</p>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {hr.kpis.map((k, i) => (
+                    <div key={i} className="flex items-center justify-between px-4 py-2.5">
+                      <span className="text-xs text-gray-600">{k.label}</span>
+                      <span className="text-xs font-bold text-gray-900">{k.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Mini cashflow preview */}
-          {cashflow && cashflow.length > 0 && (
-            <div className="rounded-xl p-5 bg-white" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
-              <CashflowChart data={cashflow.slice(-6)} />
-            </div>
-          )}
-
-          {/* Quick links */}
+          {/* Quick navigation */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: "View Receivables", sub: accounts.kpis[0]?.value ?? "—", tab: "receivables" as TabId, color: "text-indigo-600" },
-              { label: "View Payables", sub: accounts.kpis[1]?.value ?? "—", tab: "payables" as TabId, color: "text-red-500" },
-              { label: "Search Vouchers", sub: `${(23719).toLocaleString()} transactions`, tab: "search" as TabId, color: "text-violet-600" },
-              { label: "Update Tally", sub: "Upload new export", tab: "import" as TabId, color: "text-gray-600" },
-            ].map(({ label, sub, tab: t, color }) => (
+              { label: "Receivables", sub: accounts.kpis[0]?.value ?? "—", tab: "receivables" as TabId, icon: "→", color: "text-indigo-600 bg-indigo-50" },
+              { label: "Payables",    sub: accounts.kpis[1]?.value ?? "—", tab: "payables"    as TabId, icon: "→", color: "text-red-500 bg-red-50" },
+              { label: "Search",      sub: `${finSummary?.total_vouchers?.toLocaleString() ?? "—"} vouchers`, tab: "search" as TabId, icon: "⌕", color: "text-violet-600 bg-violet-50" },
+              { label: "Update Tally",sub: "Upload new XML",                tab: "import"     as TabId, icon: "↑", color: "text-gray-600 bg-gray-50" },
+            ].map(({ label, sub, tab: t, icon, color }) => (
               <button key={label} onClick={() => setTab(t)}
-                className="rounded-xl p-4 bg-white text-left hover:shadow-md transition-all duration-150 group"
-                style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
-                <p className={`text-sm font-semibold ${color} group-hover:underline`}>{label}</p>
-                <p className="text-xs text-gray-400 mt-1">{sub}</p>
+                className="flex items-center gap-3 rounded-xl p-4 bg-white text-left hover:shadow-md transition-all duration-150 group border border-gray-100">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${color}`}>{icon}</div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors">{label}</p>
+                  <p className="text-xs text-gray-400 truncate">{sub}</p>
+                </div>
               </button>
             ))}
           </div>
@@ -870,8 +1001,18 @@ export default function OperationsPage() {
       {/* ── Tab: Search ── */}
       {tab === "search" && (
         <div className="rounded-xl p-5 bg-white" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
-          <SearchTab onSelectParty={handlePartyClick} />
+          <SearchTab onSelectParty={handlePartyClick} totalVouchers={finSummary?.total_vouchers} />
         </div>
+      )}
+
+      {/* ── Tab: Ledger (Voucher Browser) ── */}
+      {tab === "ledger" && (
+        <VoucherBrowser
+          globalFy={fy}
+          availableFY={availableFY}
+          finSummary={finSummary as Record<string, { cnt: number; total: number; fmt: string }> | undefined}
+          onViewParty={handlePartyClick}
+        />
       )}
 
       {/* ── Tab: Inventory ── */}
@@ -914,13 +1055,13 @@ export default function OperationsPage() {
         </div>
       )}
 
-      {/* ── Tab: Import ── */}
+      {/* ── Tab: Import & AI ── */}
       {tab === "import" && (
         <div className="rounded-xl p-5 bg-white" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
           <div className="flex items-center gap-2 mb-5">
             <Upload size={16} className="text-indigo-500" />
             <p className="text-base font-semibold text-gray-900">Update Tally Data</p>
-            <span className="text-xs text-gray-400">Upload new exports to refresh all values across the app</span>
+            <span className="text-xs text-gray-400">Upload new Tally XML exports to refresh all values across the app</span>
           </div>
           <TallyUpload onDone={invalidateAll} />
         </div>

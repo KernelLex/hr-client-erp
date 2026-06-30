@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState, useRef, useMemo } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -21,7 +22,6 @@ import { useMyLeaves, useApplyLeave } from "@/pages/leave/useLeave"
 import { LEAVE_TYPES, type LeaveApplication } from "@/pages/leave/types"
 import { HolidaysContent } from "@/pages/holidays/HolidaysPage"
 
-const ADMIN_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 const SELF_EDITABLE = new Set([
   "image", "personal_email", "cell_number", "person_to_be_contacted",

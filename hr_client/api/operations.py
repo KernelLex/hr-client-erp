@@ -4,6 +4,8 @@ import os
 from frappe.utils import flt
 
 
+import datetime
+
 _ADMIN_USERS = {"owais@veraenterprises.in", "Administrator"}
 _SNAPSHOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tally_snapshot.json")
 
@@ -17,8 +19,25 @@ def _load_snapshot():
 
 
 def _require_admin():
-    if frappe.session.user == "Guest":
+    user = frappe.session.user
+    if user == "Guest":
         frappe.throw("Not permitted", frappe.PermissionError)
+    if user not in _ADMIN_USERS and "System Manager" not in frappe.get_roles(user):
+        frappe.throw("Not permitted", frappe.PermissionError)
+
+
+def _current_fy():
+    """Returns (fy_start_date, fy_end_date_exclusive, fy_label) for the current Indian financial year."""
+    today = datetime.date.today()
+    if today.month >= 4:
+        start_year = today.year
+    else:
+        start_year = today.year - 1
+    return (
+        f"{start_year}-04-01",
+        f"{start_year + 1}-04-01",
+        f"{start_year}-{str(start_year + 1)[2:]}",
+    )
 
 
 def _fmt(amount, decimals=2):
@@ -127,15 +146,18 @@ def get_operations_data():
     chart_data = [{"month": v["month"], "sales": round(v["sales"], 2), "purchases": round(v["purchases"], 2), "collections": round(v["collections"], 2)}
                   for v in chart_map.values()]
 
-    fy_totals = frappe.db.sql("""
+    fy_start, fy_end, fy_label = _current_fy()
+    fy_totals = frappe.db.sql(
+        """
         SELECT voucher_type, SUM(amount) as total
         FROM `tabVE Tally Voucher`
         WHERE is_cancelled = 0
-          AND voucher_date >= '2025-04-01'
-          AND voucher_date < '2026-04-01'
+          AND voucher_date >= %s AND voucher_date < %s
           AND voucher_type IN ('Sales', 'PERFORMA INVOICE', 'Purchase', 'Receipt')
         GROUP BY voucher_type
-    """, as_dict=True)
+        """,
+        (fy_start, fy_end), as_dict=True
+    )
 
     fy_sales = sum(flt(r.total) for r in fy_totals if r.voucher_type in ("Sales", "PERFORMA INVOICE"))
     fy_purch = sum(flt(r.total) for r in fy_totals if r.voucher_type == "Purchase")
@@ -246,7 +268,7 @@ def get_operations_data():
             "kpis": [
                 {"label": "Sundry Debtors", "value": _fmt(debtor_total), "raw": debtor_total},
                 {"label": "Sundry Creditors", "value": _fmt(creditor_total), "raw": creditor_total},
-                {"label": "FY Sales (2025-26)", "value": _fmt(fy_sales), "raw": fy_sales},
+                {"label": f"FY Sales ({fy_label})", "value": _fmt(fy_sales), "raw": fy_sales},
                 {"label": "FY Collections", "value": _fmt(fy_coll), "raw": fy_coll},
             ],
             "top_debtors": [

@@ -119,14 +119,21 @@ def _count_unread(room_id, user):
 def _count_mentions(room_id, user):
     """Count unread messages that mention the current user."""
     last_read = _get_member_last_read(room_id, user)
-    where_extra = f"AND name > {frappe.db.escape(last_read)}" if last_read else ""
-    rows = frappe.db.sql(
-        f"""SELECT mentions FROM `tabVera Chat Message`
-            WHERE room = %s AND is_deleted = 0 AND mentions IS NOT NULL AND mentions != ''
-            {where_extra}""",
-        (room_id,),
-        as_dict=False,
-    )
+    if last_read:
+        rows = frappe.db.sql(
+            """SELECT mentions FROM `tabVera Chat Message`
+               WHERE room = %s AND is_deleted = 0 AND mentions IS NOT NULL AND mentions != ''
+               AND name > %s""",
+            (room_id, last_read),
+            as_dict=False,
+        )
+    else:
+        rows = frappe.db.sql(
+            """SELECT mentions FROM `tabVera Chat Message`
+               WHERE room = %s AND is_deleted = 0 AND mentions IS NOT NULL AND mentions != ''""",
+            (room_id,),
+            as_dict=False,
+        )
     count = 0
     for (raw,) in rows:
         try:
@@ -289,10 +296,10 @@ def mark_room_read(room_id):
     if not _is_room_member(room_id):
         frappe.throw("Not a member of this room", frappe.PermissionError)
 
-    # Get latest message id
+    # Get latest non-deleted message id
     latest = frappe.get_all(
         "Vera Chat Message",
-        filters={"room": room_id},
+        filters={"room": room_id, "is_deleted": 0},
         fields=["name"],
         order_by="sent_at desc",
         limit=1,
@@ -587,7 +594,7 @@ def get_room_media(room_id, search=None, limit=100):
 def ping_online():
     _require_login()
     user = _current_user()
-    frappe.cache().set(f"chat_online_{user}", "1", expires_in_sec=_ONLINE_TTL)
+    frappe.cache().set_value(f"chat_online_{user}", "1", expires_in_sec=_ONLINE_TTL)
     return {"success": True}
 
 
@@ -598,7 +605,7 @@ def get_online_users():
     users = _get_all_active_users()
     online = []
     for u in users:
-        if frappe.cache().get(f"chat_online_{u['name']}"):
+        if frappe.cache().get_value(f"chat_online_{u['name']}"):
             online.append({
                 "user": u["name"],
                 "full_name": u["full_name"],

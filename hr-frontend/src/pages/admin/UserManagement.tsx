@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
@@ -29,7 +30,6 @@ interface Role {
   description: string
 }
 
-const ADMIN_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 // ── API hooks ─────────────────────────────────────────────────────────────────
 function useUsers() {

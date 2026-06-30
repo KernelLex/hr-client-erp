@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState } from "react"
 import type React from "react"
 import { useNavigate } from "react-router-dom"
@@ -11,7 +12,6 @@ import type { ExpenseClaim, ClaimStatus } from "./types"
 import { MONTHS } from "./types"
 import { AdminClaimsView } from "./AdminClaimsView"
 
-const OWAIS_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 function fmt(amount: number) {
   return `₹${amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`

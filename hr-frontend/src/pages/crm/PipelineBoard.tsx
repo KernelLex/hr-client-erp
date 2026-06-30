@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Plus, Briefcase, CheckCircle, XCircle, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react"
@@ -10,7 +11,6 @@ import { useCRMLeads, usePendingApprovals, useApproveStage, useRejectStage } fro
 import type { CRMLead, CRMStage, CRMApprovalRequest } from "./types"
 import { STAGE_ORDER, STAGE_COLUMN_COLORS, STAGE_HEADER_COLORS } from "./types"
 
-const OWAIS_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 const ALL_STAGES: CRMStage[] = [...STAGE_ORDER, "Failed"]
 
 function daysSince(dateStr: string): number {

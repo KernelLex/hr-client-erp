@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState } from "react"
 import { useNavigate, Navigate } from "react-router-dom"
 import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, ExternalLink } from "lucide-react"
@@ -10,7 +11,6 @@ import { useAllClaims, useApproveClaim, useRejectClaim, useMonthlyExpenseSummary
 import type { ExpenseClaim, ClaimStatus } from "./types"
 import { MONTHS } from "./types"
 
-const OWAIS_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 function fmt(amount: number) {
   return `₹${amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`

@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
@@ -21,7 +22,6 @@ import {
 import type { CRMStage, CRMQuotationItem } from "./types"
 import { STAGE_ORDER, STAGE_COLORS, STAGE_HEADER_COLORS } from "./types"
 
-const OWAIS_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 function daysSince(dateStr: string): number {
   return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000)

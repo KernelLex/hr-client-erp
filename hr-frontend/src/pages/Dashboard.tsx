@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,7 +27,6 @@ function useDefaultPasswordCheck() {
   })
 }
 
-const ADMIN_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 function useDashboardStats() {
   return useQuery({

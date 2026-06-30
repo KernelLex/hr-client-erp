@@ -61,15 +61,19 @@ def _load_tally_snapshot() -> dict:
 
 def _build_rich_context() -> str:
     """Build an accurate LLM context from Tally snapshot + live voucher data."""
+    from hr_client.api.utils import current_fy, current_fy_label as _fy_label, COMPANY_NAME
+    _cfy = _fy_label()
+    current_fy_start_date = current_fy()[0]
+
     parts = []
     snap = _load_tally_snapshot()
 
     try:
-        parts.append("=== VERA ENTERPRISES — FINANCIAL SNAPSHOT (Tally Data) ===")
+        parts.append(f"=== {COMPANY_NAME} — FINANCIAL SNAPSHOT (Tally Data) ===")
         parts.append(f"All-time Sales: ₹{float(snap.get('total_sales_alltime', 0)):,.0f}")
-        parts.append(f"FY 2025-26 Sales: ₹{float(snap.get('fy_sales', 0)):,.0f}")
-        parts.append(f"FY 2025-26 Purchases: ₹{float(snap.get('fy_purchases', 0)):,.0f}")
-        parts.append(f"FY 2025-26 Collections: ₹{float(snap.get('fy_collections', 0)):,.0f}")
+        parts.append(f"FY {_cfy} Sales: ₹{float(snap.get('fy_sales', 0)):,.0f}")
+        parts.append(f"FY {_cfy} Purchases: ₹{float(snap.get('fy_purchases', 0)):,.0f}")
+        parts.append(f"FY {_cfy} Collections: ₹{float(snap.get('fy_collections', 0)):,.0f}")
         parts.append(f"Sundry Debtors (Outstanding): ₹{float(snap.get('sundry_debtors', 0)):,.0f}")
         parts.append(f"Sundry Creditors (Outstanding): ₹{float(snap.get('sundry_creditors', 0)):,.0f}")
         parts.append(f"GST Payable (Output): ₹{float(snap.get('gst_payable', 0)):,.0f}")
@@ -136,12 +140,12 @@ def _build_rich_context() -> str:
         top_customers = frappe.db.sql(
             "SELECT party_name, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
             "FROM `tabVE Tally Voucher` WHERE voucher_type='Sales' AND is_cancelled=0 "
-            "AND voucher_date >= '2025-04-01' AND party_name != '' "
+            "AND voucher_date >= %s AND party_name != '' "
             "GROUP BY party_name ORDER BY total DESC LIMIT 5",
-            as_dict=True
+            (current_fy_start_date,), as_dict=True
         )
         if top_customers:
-            parts.append("\n=== TOP 5 CUSTOMERS (FY 2025-26 Sales) ===")
+            parts.append(f"\n=== TOP 5 CUSTOMERS (FY {_cfy} Sales) ===")
             for c in top_customers:
                 parts.append(f"- {c['party_name']}: ₹{float(c['total']):,.0f} ({int(c['cnt'])} invoices)")
     except Exception:
@@ -152,12 +156,12 @@ def _build_rich_context() -> str:
         top_vendors = frappe.db.sql(
             "SELECT party_name, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
             "FROM `tabVE Tally Voucher` WHERE voucher_type='Purchase' AND is_cancelled=0 "
-            "AND voucher_date >= '2025-04-01' AND party_name != '' "
+            "AND voucher_date >= %s AND party_name != '' "
             "GROUP BY party_name ORDER BY total DESC LIMIT 5",
-            as_dict=True
+            (current_fy_start_date,), as_dict=True
         )
         if top_vendors:
-            parts.append("\n=== TOP 5 VENDORS (FY 2025-26 Purchases) ===")
+            parts.append(f"\n=== TOP 5 VENDORS (FY {_cfy} Purchases) ===")
             for v in top_vendors:
                 parts.append(f"- {v['party_name']}: ₹{float(v['total']):,.0f} ({int(v['cnt'])} invoices)")
     except Exception:
@@ -405,8 +409,10 @@ def _build_fast_context() -> str:
     sales   = _c("fy_sales")
     dsr     = round(debtors / sales * 365, 0) if sales > 0 else 0
 
+    from hr_client.api.utils import current_fy_label as _cfy_label, COMPANY_NAME
+    _cfy = _cfy_label()
     lines = [
-        "Vera Enterprises — Financial Snapshot (Tally, FY 2025-26):",
+        f"{COMPANY_NAME} — Financial Snapshot (Tally, FY {_cfy}):",
         f"Sales: ₹{_c('fy_sales'):,.0f} | Purchases: ₹{_c('fy_purchases'):,.0f} | Collections: ₹{_c('fy_collections'):,.0f}",
         f"Debtors: ₹{debtors:,.0f} (DSR ~{dsr:.0f}d) | Creditors: ₹{_c('sundry_creditors'):,.0f}",
         f"GST Payable: ₹{_c('gst_payable'):,.0f} | Input Credit: ₹{_c('input_gst_credit'):,.0f} | Net GST: ₹{gst_net:,.0f}",
@@ -629,15 +635,17 @@ def generate_report(report_type, filters_json=None):
     # Fast context — no live DB queries, fits in 512-token window
     context = _build_fast_context()
 
+    from hr_client.api.utils import current_fy_label as _cfy_label, COMPANY_NAME
+    _cfy = _cfy_label()
     report_prompts = {
-        "executive_summary": "Write an executive summary of Vera Enterprises' current financial position.",
-        "cash_flow": "Analyse Vera Enterprises cash flow: debtors, creditors, GST position, cash balance.",
-        "sales_analysis": "Analyse Vera Enterprises FY 2025-26 sales: top customers, revenue trends, debtor risk.",
-        "vendor_analysis": "Analyse Vera Enterprises purchases: creditor exposure, payables, vendor concentration.",
-        "risk_report": "Identify top 3-5 financial risks for Vera Enterprises and mitigations.",
+        "executive_summary": f"Write an executive summary of {COMPANY_NAME}'s current financial position.",
+        "cash_flow": f"Analyse {COMPANY_NAME} cash flow: debtors, creditors, GST position, cash balance.",
+        "sales_analysis": f"Analyse {COMPANY_NAME} FY {_cfy} sales: top customers, revenue trends, debtor risk.",
+        "vendor_analysis": f"Analyse {COMPANY_NAME} purchases: creditor exposure, payables, vendor concentration.",
+        "risk_report": f"Identify top 3-5 financial risks for {COMPANY_NAME} and mitigations.",
     }
 
-    base_prompt = report_prompts.get(report_type, f"Generate a {report_type} report for Vera Enterprises.")
+    base_prompt = report_prompts.get(report_type, f"Generate a {report_type} report for {COMPANY_NAME}.")
     prompt = f"{base_prompt}\n\nData:\n{context}\n\nUse ₹ for rupees. 3-4 short paragraphs."
 
     report = ask_llm(prompt, temperature=0.3, max_tokens=600)

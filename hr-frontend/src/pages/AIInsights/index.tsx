@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { isAdmin as _isAdmin, currentFYLabel } from "@/lib/constants"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 import {
@@ -41,7 +42,7 @@ function ScoreRing({ score }: { score: number }) {
 function SnapshotCards({ data, loading }: { data?: BusinessSnapshot; loading: boolean }) {
   const cards = [
     {
-      label: "FY 2025-26 Sales",
+      label: `FY ${currentFYLabel()} Sales`,
       value: fmtINR(data?.fy_sales ?? 0),
       sub: `${(data?.sales_count ?? 0).toLocaleString("en-IN")} sales vouchers`,
       icon: TrendingUp,
@@ -50,7 +51,7 @@ function SnapshotCards({ data, loading }: { data?: BusinessSnapshot; loading: bo
       border: "border-green-100",
     },
     {
-      label: "FY 2025-26 Purchases",
+      label: `FY ${currentFYLabel()} Purchases`,
       value: fmtINR(data?.fy_purchases ?? 0),
       sub: `${(data?.purchase_count ?? 0).toLocaleString("en-IN")} purchase vouchers`,
       icon: ShoppingCart,
@@ -560,7 +561,7 @@ export default function AIInsights() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const isAdmin = user?.name === "owais@veraenterprises.in" || user?.name === "Administrator"
+  const isAdmin = _isAdmin(user?.name)
 
   const { data: status } = useQuery({
     queryKey: ["ai-status"],

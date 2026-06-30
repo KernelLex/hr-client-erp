@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useRef, useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -10,7 +11,6 @@ import type { LeaveApplication } from "./types"
 import { useAuth } from "@/context/AuthContext"
 import { LeaveAdminPanel } from "@/pages/admin/attendance/LeaveAdminPanel"
 
-const OWAIS_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 const MAX_LEAVES_PER_MONTH = 5
 

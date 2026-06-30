@@ -1,9 +1,9 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate, Navigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 import { getAllEmployees, type EmployeeListItem } from "@/api/employee"
 
-const ADMIN_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 const GRADIENTS = [
   "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react"
+import { isAdmin as _isAdmin, currentFYLabel, prevFYLabel, recentFYLabels } from "@/lib/constants"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
@@ -582,7 +583,7 @@ function SavedCard({ graph, onOpen, onDelete, onExportCSV, deleting }: SavedCard
 export default function GraphsPage() {
   const { user } = useAuth()
   const qc = useQueryClient()
-  const isAdmin = user?.name === "owais@veraenterprises.in" || user?.name === "Administrator"
+  const isAdmin = _isAdmin(user?.name)
 
   const [activeTab, setActiveTab] = useState<Tab>("generate")
   const [currentChart, setCurrentChart] = useState<ChartData | null>(null)
@@ -750,7 +751,7 @@ export default function GraphsPage() {
     "Top vendors by purchase amount",
     "Sales growth rate month over month",
     "Outstanding debtors by balance",
-    "Compare FY 2024-25 vs FY 2025-26",
+    `Compare FY ${prevFYLabel()} vs FY ${currentFYLabel()}`,
   ]
 
   if (!isAdmin) {
@@ -874,7 +875,7 @@ export default function GraphsPage() {
                   <div>
                     <label className="text-xs text-gray-500 block mb-1.5">Financial year</label>
                     <div className="flex flex-wrap gap-1.5 mb-2">
-                      {["", "2025-26", "2024-25", "2023-24"].map(f => (
+                      {["", ...recentFYLabels(3)].map(f => (
                         <button key={f} onClick={() => { setFy(f); setDateFrom(""); setDateTo("") }}
                           className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                             fy === f ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"

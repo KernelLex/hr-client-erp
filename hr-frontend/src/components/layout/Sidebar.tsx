@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState, useEffect } from "react"
 import { NavLink, useLocation } from "react-router-dom"
 import {
@@ -28,7 +29,6 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
 import { usePermissions } from "@/context/PermissionsContext"
 
-const ADMIN_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)

@@ -80,8 +80,15 @@ export async function uploadProfilePhoto(file: File, email?: string): Promise<st
   const form = new FormData()
   form.append("file", file)
   if (email) form.append("email", email)
-  const res = await api.post(apiUrl("hr_client.api.employee.upload_profile_photo"), form, {
-    headers: { "Content-Type": "multipart/form-data" },
+  // Must use fetch (not axios) — axios's manual Content-Type overrides the boundary,
+  // breaking Frappe's multipart parser. Let the browser set it automatically.
+  const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] ?? "fetch"
+  const res = await fetch(apiUrl("hr_client.api.employee.upload_profile_photo"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-Frappe-CSRF-Token": csrfToken },
+    body: form,
   })
-  return res.data.message.file_url
+  const data = await res.json()
+  return data.message.file_url
 }

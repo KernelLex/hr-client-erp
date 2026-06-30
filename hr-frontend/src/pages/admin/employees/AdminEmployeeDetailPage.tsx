@@ -1,3 +1,4 @@
+import { ADMIN_USERS, OWAIS_USERS } from "@/lib/constants"
 import { useState, useRef } from "react"
 import { useParams, useNavigate, Navigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -25,7 +26,6 @@ import {
   type PermissionModule,
 } from "@/pages/admin/permissions/types"
 
-const ADMIN_USERS = new Set(["Administrator", "owais@veraenterprises.in"])
 
 const ALL_MODULES: PermissionModule[] = [
   "recruitment", "employee_lifecycle", "accounts", "projects",
