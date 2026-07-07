@@ -68,16 +68,14 @@ def _parse_month(m):
 def get_operations_data():
     _require_admin()
 
-    # Load pre-computed snapshot for accurate financial aggregates
-    # (Tally XML sign conventions differ between voucher types; these are computed correctly)
-    snap = _load_snapshot()
-
-    # ── Finance: bank/cash from DB (per-account breakdown) ─────────
+    # ── Finance: bank/cash/GST/TDS directly from live DB ──────────
+    # Sign convention: closing_balance < 0 = Dr balance (asset: money in account)
+    #                  closing_balance > 0 = Cr balance (liability: OD / owe to vendor)
     bank_rows = frappe.db.sql("""
-        SELECT ledger_name, closing_balance
+        SELECT ledger_name, closing_balance, parent_group
         FROM `tabVE Tally Ledger`
         WHERE is_bank = 1
-        ORDER BY closing_balance DESC
+        ORDER BY closing_balance
     """, as_dict=True)
     cash_rows = frappe.db.sql("""
         SELECT ledger_name, closing_balance
@@ -86,40 +84,64 @@ def get_operations_data():
         ORDER BY closing_balance DESC
     """, as_dict=True)
 
-    # Use snapshot for correct aggregate totals
-    # Positive = we have the money; negative = overdraft/OD
-    cash_total = flt(snap.get("cash_in_hand", 0))
-    bank_total = flt(snap.get("bank_balance", 0))
-    total_cash_bank = flt(snap.get("total_cash_bank", 0))
+    # Bank Accounts group: Dr balance (negative) = money in account
+    bank_credit = sum(abs(flt(r.closing_balance)) for r in bank_rows
+                      if r.closing_balance < 0 and r.parent_group == "Bank Accounts")
+    # Bank OD group: Cr balance (positive) = overdraft utilised
+    bank_od = sum(flt(r.closing_balance) for r in bank_rows
+                  if r.closing_balance > 0 and r.parent_group == "Bank OD A/c")
+    bank_total = bank_credit - bank_od
 
-    # Split bank into available funds (positive ledgers) vs OD drawn (negative ledgers)
-    bank_ledger_map = snap.get("bank_ledgers", {})
-    bank_credit = sum(v for v in bank_ledger_map.values() if v > 0)
-    bank_od = sum(abs(v) for v in bank_ledger_map.values() if v < 0)
-    liquid_assets = (cash_total if cash_total > 0 else 0) + bank_credit
+    # Cash: positive closing_balance = cash held (import stores cash as positive Dr)
+    cash_total = sum(flt(r.closing_balance) for r in cash_rows)
+    liquid_assets = max(cash_total, 0) + bank_credit
 
-    gst_payable_raw = flt(snap.get("gst_payable", 0))
-    input_gst = flt(snap.get("input_gst_credit", 0))
-    net_gst = gst_payable_raw - input_gst
-    tds_payable = flt(snap.get("tds_payable", 0))
-    output_gst = gst_payable_raw
+    # GST: Cr balance (positive) = output GST owed to govt; Dr balance = input ITC claim
+    gst_rows = frappe.db.sql(
+        "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE is_gst = 1", as_dict=True
+    )
+    output_gst = sum(flt(r.closing_balance) for r in gst_rows if r.closing_balance > 0)
+    input_gst = sum(abs(flt(r.closing_balance)) for r in gst_rows if r.closing_balance < 0)
+    net_gst = output_gst - input_gst
 
-    # ── Accounts: snapshot aggregates + DB for individual names ────
-    debtor_total = flt(snap.get("sundry_debtors", 0))
-    creditor_total = flt(snap.get("sundry_creditors", 0))
+    # TDS: Cr balance (positive) = TDS payable to govt
+    tds_rows = frappe.db.sql(
+        "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE is_tds = 1", as_dict=True
+    )
+    tds_payable = sum(flt(r.closing_balance) for r in tds_rows if r.closing_balance > 0)
 
-    # Top debtors/creditors from snapshot (pre-sorted by amount)
-    top_debtors_snap = snap.get("top_debtors", {})
-    top_creditors_snap = snap.get("top_creditors", {})
+    # ── Accounts: debtors/creditors from live DB ───────────────────
+    # Debtors with Dr balance (closing_balance < 0) = money owed TO Vera
+    dr = frappe.db.sql(
+        "SELECT COALESCE(SUM(ABS(closing_balance)),0) as tot FROM `tabVE Tally Ledger` "
+        "WHERE is_debtors=1 AND closing_balance < 0", as_dict=True
+    )
+    debtor_total = flt(dr[0].tot if dr else 0)
 
-    top_debtors = [
-        frappe._dict(party=k, amount=v)
-        for k, v in sorted(top_debtors_snap.items(), key=lambda x: -x[1])[:10]
-    ]
-    top_creditors = [
-        frappe._dict(party=k, amount=v)
-        for k, v in sorted(top_creditors_snap.items(), key=lambda x: -x[1])[:10]
-    ]
+    # Creditors with Cr balance (closing_balance > 0) = Vera owes vendor
+    cr = frappe.db.sql(
+        "SELECT COALESCE(SUM(closing_balance),0) as tot FROM `tabVE Tally Ledger` "
+        "WHERE is_creditors=1 AND closing_balance > 0", as_dict=True
+    )
+    creditor_total = flt(cr[0].tot if cr else 0)
+
+    # Top debtors from live DB (Dr balance debtors, largest first)
+    top_debtors_rows = frappe.db.sql("""
+        SELECT ledger_name as party, ABS(closing_balance) as amount
+        FROM `tabVE Tally Ledger`
+        WHERE is_debtors = 1 AND closing_balance < 0
+        ORDER BY closing_balance ASC LIMIT 10
+    """, as_dict=True)
+    top_debtors = [frappe._dict(party=r.party, amount=flt(r.amount)) for r in top_debtors_rows]
+
+    # Top creditors from live DB (Cr balance creditors, largest first)
+    top_creditors_rows = frappe.db.sql("""
+        SELECT ledger_name as party, closing_balance as amount
+        FROM `tabVE Tally Ledger`
+        WHERE is_creditors = 1 AND closing_balance > 0
+        ORDER BY closing_balance DESC LIMIT 10
+    """, as_dict=True)
+    top_creditors = [frappe._dict(party=r.party, amount=flt(r.amount)) for r in top_creditors_rows]
 
     # ── Monthly sales/purchases from VE Tally Voucher ──────────────
     monthly_raw = frappe.db.sql(
@@ -162,14 +184,6 @@ def get_operations_data():
     fy_sales = sum(flt(r.total) for r in fy_totals if r.voucher_type in ("Sales", "PERFORMA INVOICE"))
     fy_purch = sum(flt(r.total) for r in fy_totals if r.voucher_type == "Purchase")
     fy_coll = sum(flt(r.total) for r in fy_totals if r.voucher_type == "Receipt")
-
-    # Fall back to snapshot FY figures if DB shows zero (sign issue in import)
-    if fy_sales < 1000:
-        fy_sales = flt(snap.get("fy_sales", 0))
-    if fy_purch < 1000:
-        fy_purch = flt(snap.get("fy_purchases", 0))
-    if fy_coll < 1000:
-        fy_coll = flt(snap.get("fy_collections", 0))
 
     # ── Latest voucher date ─────────────────────────────────────────
     latest = frappe.db.sql("""
@@ -245,11 +259,18 @@ def get_operations_data():
                 {"label": "TDS Payable", "value": _fmt(tds_payable), "raw": tds_payable},
             ],
             "bank_accounts": [
-                {"name": r.ledger_name, "balance": flt(r.closing_balance), "balance_fmt": _fmt(r.closing_balance)}
+                {
+                    "name": r.ledger_name,
+                    # Dr accounts (closing_balance < 0): show abs value as positive (money in bank)
+                    # OD accounts (closing_balance > 0): show as positive (amount overdrawn)
+                    "balance": abs(flt(r.closing_balance)),
+                    "balance_fmt": _fmt(abs(flt(r.closing_balance))) + (" (OD)" if r.closing_balance > 0 else ""),
+                    "is_od": r.closing_balance > 0,
+                }
                 for r in bank_rows
             ],
             "cash_accounts": [
-                {"name": r.ledger_name, "balance": flt(r.closing_balance), "balance_fmt": _fmt(r.closing_balance)}
+                {"name": r.ledger_name, "balance": abs(flt(r.closing_balance)), "balance_fmt": _fmt(abs(flt(r.closing_balance)))}
                 for r in cash_rows
             ],
             "bank_od": round(bank_od, 2),
@@ -545,9 +566,9 @@ def get_debtor_aging():
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
         "AND v.voucher_type IN ('Sales','PERFORMA INVOICE') AND v.is_cancelled = 0 "
-        "WHERE l.is_debtors = 1 AND l.closing_balance > 0 "
+        "WHERE l.is_debtors = 1 AND l.closing_balance < 0 "
         "GROUP BY l.ledger_name, l.closing_balance "
-        "ORDER BY l.closing_balance DESC",
+        "ORDER BY l.closing_balance ASC",
         as_dict=True
     )
 
@@ -557,7 +578,7 @@ def get_debtor_aging():
     debtors = []
 
     for r in rows:
-        bal = flt(r.closing_balance)
+        bal = abs(flt(r.closing_balance))  # Dr balance is negative in DB; show as positive
         if r.last_sale:
             days = (today - r.last_sale).days
         else:
@@ -713,9 +734,9 @@ def get_creditor_list():
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
         "AND v.voucher_type = 'Purchase' AND v.is_cancelled = 0 "
-        "WHERE l.is_creditors = 1 AND l.closing_balance < 0 "
+        "WHERE l.is_creditors = 1 AND l.closing_balance > 0 "
         "GROUP BY l.ledger_name, l.closing_balance "
-        "ORDER BY l.closing_balance ASC LIMIT 50",
+        "ORDER BY l.closing_balance DESC LIMIT 50",
         as_dict=True
     )
     from datetime import date
@@ -735,7 +756,8 @@ def get_creditor_list():
 
 @frappe.whitelist()
 def get_advance_from_debtors():
-    """Debtor ledgers in credit (closing_balance < 0) — customers who have prepaid us.
+    """Debtor ledgers in credit (closing_balance > 0) — customers who have prepaid us.
+    Cr balance means the customer has paid us more than what we've invoiced.
     Aged in months since their last sale voucher, mirroring get_debtor_aging's day-based aging."""
     _require_admin()
     rows = frappe.db.sql(
@@ -744,9 +766,9 @@ def get_advance_from_debtors():
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
         "AND v.voucher_type IN ('Sales','PERFORMA INVOICE') AND v.is_cancelled = 0 "
-        "WHERE l.is_debtors = 1 AND l.closing_balance < 0 "
+        "WHERE l.is_debtors = 1 AND l.closing_balance > 0 "
         "GROUP BY l.ledger_name, l.closing_balance "
-        "ORDER BY l.closing_balance ASC LIMIT 50",
+        "ORDER BY l.closing_balance DESC LIMIT 50",
         as_dict=True
     )
     from datetime import date
@@ -768,7 +790,8 @@ def get_advance_from_debtors():
 
 @frappe.whitelist()
 def get_advance_to_creditors():
-    """Creditor ledgers in debit (closing_balance > 0) — vendors we have prepaid.
+    """Creditor ledgers in debit (closing_balance < 0) — vendors we have prepaid.
+    Dr balance means the vendor owes us (we overpaid / paid advance).
     Aged in months since our last purchase voucher, mirroring get_creditor_list's day-based aging."""
     _require_admin()
     rows = frappe.db.sql(
@@ -777,9 +800,9 @@ def get_advance_to_creditors():
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
         "AND v.voucher_type = 'Purchase' AND v.is_cancelled = 0 "
-        "WHERE l.is_creditors = 1 AND l.closing_balance > 0 "
+        "WHERE l.is_creditors = 1 AND l.closing_balance < 0 "
         "GROUP BY l.ledger_name, l.closing_balance "
-        "ORDER BY l.closing_balance DESC LIMIT 50",
+        "ORDER BY l.closing_balance ASC LIMIT 50",
         as_dict=True
     )
     from datetime import date
