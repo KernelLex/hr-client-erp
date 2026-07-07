@@ -69,8 +69,8 @@ const VTYPE_CONFIG: Record<string, TypeConfig> = {
   "Purchase Order":    { label: "Purchase Order",   color: "#e11d48", bg: "#fff1f2", border: "#fecdd3", icon: ShoppingBag,    partyLabel: "Vendor" },
   "Receipt":           { label: "Receipt",          color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", icon: Download,       partyLabel: "Received From" },
   "Payment":           { label: "Payment",          color: "#d97706", bg: "#fffbeb", border: "#fde68a", icon: Upload,         partyLabel: "Paid To" },
-  "Journal":           { label: "Journal Entry",    color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", icon: BookOpen,       partyLabel: "Party" },
-  "Contra":            { label: "Contra Entry",     color: "#4f46e5", bg: "#eef2ff", border: "#c7d2fe", icon: ArrowLeftRight, partyLabel: "Party" },
+  "Journal":           { label: "Journal Entry",    color: "#c8a45c", bg: "#fdf8ef", border: "#ddd6fe", icon: BookOpen,       partyLabel: "Party" },
+  "Contra":            { label: "Contra Entry",     color: "#1e3a2f", bg: "#eef5f1", border: "#b0d1bd", icon: ArrowLeftRight, partyLabel: "Party" },
   "Credit Note":       { label: "Credit Note",      color: "#b45309", bg: "#fffbeb", border: "#fde68a", icon: FileMinus,      partyLabel: "Issued To" },
   "Debit Note":        { label: "Debit Note",       color: "#be185d", bg: "#fdf2f8", border: "#fbcfe8", icon: FilePlus,       partyLabel: "Issued By" },
   "Delivery Note":     { label: "Delivery Note",    color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", icon: Truck,          partyLabel: "Delivered To" },
@@ -130,7 +130,7 @@ function FolderCard({
         </span>
       </div>
 
-      <p className="font-semibold text-[14px] text-gray-800 group-hover:text-indigo-600 transition-colors leading-tight">
+      <p className="font-semibold text-[14px] text-gray-800 group-hover:text-forest-600 transition-colors leading-tight">
         {cfg.label}
       </p>
       <p className="text-xl font-bold mt-1 font-mono tracking-tight" style={{ color: cfg.color }}>
@@ -138,7 +138,7 @@ function FolderCard({
       </p>
 
       <ChevronRight size={14}
-        className="absolute right-4 bottom-4 text-gray-200 group-hover:text-indigo-400 transition-all group-hover:translate-x-0.5" />
+        className="absolute right-4 bottom-4 text-gray-200 group-hover:text-forest-400 transition-all group-hover:translate-x-0.5" />
     </button>
   )
 }
@@ -499,7 +499,7 @@ export function VoucherDocument({
           {party && voucher.party_name && (
             <div className="px-8 pb-6 flex items-center justify-between border-t border-gray-50 pt-4">
               <button onClick={() => { onClose(); onViewParty(voucher.party_name) }}
-                className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                className="flex items-center gap-2 text-sm font-medium text-forest-600 hover:text-forest-800 transition-colors">
                 <ExternalLink size={13} />
                 View full statement for {voucher.party_name}
               </button>
@@ -514,7 +514,7 @@ export function VoucherDocument({
 
 // ── Voucher List view (Level 2) ───────────────────────────────────────────────
 
-function VoucherListView({
+export function VoucherListView({
   vtype, initialFy, availableFY, onBack, onOpen,
 }: {
   vtype: string; initialFy: string; availableFY: string[]
@@ -582,7 +582,7 @@ function VoucherListView({
             onKeyDown={e => e.key === "Enter" && doSearch()}
             placeholder="Search party, narration or voucher number…"
             className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white
-                       focus:outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-100 transition-colors"
+                       focus:outline-none focus:border-forest-300 focus:ring-1 focus:ring-forest-100 transition-colors"
           />
           {searchInput && (
             <button onClick={clearSearch}
@@ -597,13 +597,13 @@ function VoucherListView({
         </button>
         {/* FY filter */}
         <select value={localFy} onChange={e => { setLocalFy(e.target.value); setPage(1) }}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-indigo-300">
+          className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-forest-300">
           <option value="all">All Time</option>
           {availableFY.map(y => <option key={y} value={y}>{y.replace("-", "–")}</option>)}
         </select>
         {/* Sort */}
         <select value={sort} onChange={e => { setSort(e.target.value); setPage(1) }}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-indigo-300">
+          className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-forest-300">
           <option value="date_desc">Newest first</option>
           <option value="date_asc">Oldest first</option>
           <option value="amount_desc">Highest amount</option>
@@ -615,7 +615,7 @@ function VoucherListView({
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         {isLoading ? (
           <div className="py-16 flex flex-col items-center gap-3">
-            <Loader2 size={24} className="text-indigo-400 animate-spin" />
+            <Loader2 size={24} className="text-forest-400 animate-spin" />
             <p className="text-sm text-gray-400">Loading entries…</p>
           </div>
         ) : !data || data.rows.length === 0 ? (

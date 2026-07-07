@@ -149,7 +149,7 @@ function LeaveCard({ leave }: { leave: LeaveApplication }) {
           <div className="flex items-start gap-4">
             {/* Avatar */}
             <div className="size-11 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-              <span className="text-sm font-bold text-blue-700">{initials(leave.employee_name)}</span>
+              <span className="text-sm font-bold text-forest-800">{initials(leave.employee_name)}</span>
             </div>
 
             {/* Info */}
@@ -255,7 +255,7 @@ function AllRequestsTab() {
             key={s}
             onClick={() => setStatusFilter(s)}
             className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
-              statusFilter === s ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              statusFilter === s ? "bg-forest-700 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {s}
@@ -339,7 +339,7 @@ function EmployeeHistoryModal({ email, name, onClose }: { email: string; name: s
         {Object.keys(byType).length > 0 && (
           <div className="px-6 py-3 border-b border-gray-50 flex gap-4 flex-wrap">
             {Object.entries(byType).map(([type, days]) => (
-              <span key={type} className="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
+              <span key={type} className="text-xs bg-blue-50 text-forest-800 px-2.5 py-1 rounded-full">
                 {type}: <strong>{days}d</strong>
               </span>
             ))}
@@ -418,7 +418,7 @@ function ByEmployeeTab() {
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="size-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-sm font-bold text-blue-700">{initials(emp.name)}</span>
+                    <span className="text-sm font-bold text-forest-800">{initials(emp.name)}</span>
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{emp.name}</p>

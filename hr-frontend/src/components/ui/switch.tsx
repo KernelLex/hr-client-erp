@@ -18,8 +18,8 @@ export function Switch({ checked, onCheckedChange, disabled, id }: SwitchProps) 
       className={cn(
         "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent",
         "transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2",
-        "focus-visible:ring-blue-500 focus-visible:ring-offset-2",
-        checked ? "bg-blue-600" : "bg-gray-200",
+        "focus-visible:ring-offset-2",
+        checked ? "bg-forest-700 focus-visible:ring-forest-500" : "bg-gray-200 focus-visible:ring-gray-400",
         disabled && "cursor-not-allowed opacity-50"
       )}
     >

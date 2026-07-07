@@ -130,7 +130,7 @@ function CalendarSection() {
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Holidays" value={stats.total} accent="#6366F1" />
+        <StatCard label="Total Holidays" value={stats.total} accent="#3d7d5c" />
         <StatCard label="Past Holidays" value={stats.past} accent="#94A3B8" />
         <StatCard label="Remaining" value={stats.remaining} accent="#1D9E75" />
         <StatCard
@@ -143,15 +143,15 @@ function CalendarSection() {
       {/* Next holiday banner */}
       {nextHoliday && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
-          style={{ backgroundColor: "#F5F3FF", border: "1px solid #DDD6FE" }}>
-          <CalendarDays size={18} style={{ color: "#7C3AED" }} />
-          <p className="text-sm font-semibold" style={{ color: "#6D28D9" }}>
+          style={{ backgroundColor: "#fdf8ef", border: "1px solid #DDD6FE" }}>
+          <CalendarDays size={18} style={{ color: "#c8a45c" }} />
+          <p className="text-sm font-semibold" style={{ color: "#b8934c" }}>
             {nextHoliday.name} — {
               nextHoliday.days_until === 0 ? "Today!" :
               nextHoliday.days_until === 1 ? "Tomorrow!" :
               `in ${nextHoliday.days_until} days`
             }
-            <span className="ml-2 font-normal text-purple-400">
+            <span className="ml-2 font-normal text-gold-400">
               ({nextHoliday.day}, {formatDisplayDate(nextHoliday.date)})
             </span>
           </p>
@@ -167,9 +167,9 @@ function CalendarSection() {
               <div key={type} className="flex items-center justify-between gap-3">
                 <span className="text-[13px] text-gray-600 min-w-[140px]">{type}</span>
                 <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${Math.min((days / 12) * 100, 100)}%`, backgroundColor: "#6366F1" }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.min((days / 12) * 100, 100)}%`, backgroundColor: "#3d7d5c" }} />
                 </div>
-                <span className="text-[13px] font-semibold text-indigo-600 min-w-[40px] text-right">{days}d</span>
+                <span className="text-[13px] font-semibold text-forest-600 min-w-[40px] text-right">{days}d</span>
               </div>
             ))}
           </div>
@@ -188,7 +188,7 @@ function CalendarSection() {
               {/* Month header */}
               <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50"
                 style={{ backgroundColor: allPast ? "#F8FAFC" : "#FAFBFF" }}>
-                <h3 className="text-sm font-semibold" style={{ color: allPast ? "#94A3B8" : "#4F46E5" }}>
+                <h3 className="text-sm font-semibold" style={{ color: allPast ? "#94A3B8" : "#1e3a2f" }}>
                   {month} {currentYear}
                 </h3>
                 <span className="text-[11px] text-gray-400">
@@ -237,8 +237,8 @@ function CalendarSection() {
         style={{ background: "linear-gradient(135deg, #EDE9FE 0%, #FAE8FF 100%)", border: "1px solid #DDD6FE" }}>
         <div className="text-4xl">🎊</div>
         <div className="flex-1">
-          <p className="font-semibold text-purple-800 mb-0.5">Happy Holiday</p>
-          <p className="text-sm text-purple-600">
+          <p className="font-semibold text-gold-800 mb-0.5">Happy Holiday</p>
+          <p className="text-sm text-gold-600">
             You have 1 extra holiday to use for any personal occasion — birthday, anniversary,
             or a festival not on the official calendar.
           </p>
@@ -246,7 +246,7 @@ function CalendarSection() {
         <button
           onClick={() => navigate("/leave?type=Happy+Holiday")}
           className="shrink-0 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-          style={{ backgroundColor: "#7C3AED", color: "white" }}>
+          style={{ backgroundColor: "#c8a45c", color: "white" }}>
           Apply Happy Holiday
         </button>
       </div>
@@ -259,7 +259,7 @@ function CalendarSection() {
 const COLOR_MAP: Record<string, { bg: string; text: string; border: string }> = {
   green:  { bg: "#F0FDF4", text: "#15803D", border: "#86EFAC" },
   blue:   { bg: "#EFF6FF", text: "#1D4ED8", border: "#93C5FD" },
-  purple: { bg: "#F5F3FF", text: "#6D28D9", border: "#C4B5FD" },
+  purple: { bg: "#fdf8ef", text: "#b8934c", border: "#C4B5FD" },
   pink:   { bg: "#FDF2F8", text: "#9D174D", border: "#F9A8D4" },
   teal:   { bg: "#F0FDFA", text: "#0F766E", border: "#5EEAD4" },
   grey:   { bg: "#F8FAFC", text: "#475569", border: "#CBD5E1" },
@@ -320,7 +320,7 @@ function PolicySection() {
     <div className="space-y-5">
       {/* Summary pills */}
       <div className="flex flex-wrap gap-3">
-        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#EEF2FF", color: "#4338CA" }}>
+        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#eef5f1", color: "#1e3a2f" }}>
           🏖️ {policy.summary.public_holidays} Public Holidays
         </div>
         <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#F0FDF4", color: "#15803D" }}>
@@ -424,7 +424,7 @@ export function HolidaysPage() {
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)" }}>
+            style={{ background: "linear-gradient(135deg, #3d7d5c 0%, #8B5CF6 100%)" }}>
             <Gift size={18} className="text-white" />
           </div>
           <div>

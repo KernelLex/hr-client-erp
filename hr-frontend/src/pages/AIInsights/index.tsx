@@ -64,9 +64,9 @@ function SnapshotCards({ data, loading }: { data?: BusinessSnapshot; loading: bo
       value: fmtINR(data?.sundry_debtors ?? 0),
       sub: `${data?.debtor_count ?? 0} parties`,
       icon: IndianRupee,
-      bg: "bg-indigo-50",
-      text: "text-indigo-600",
-      border: "border-indigo-100",
+      bg: "bg-forest-50",
+      text: "text-forest-600",
+      border: "border-forest-100",
     },
     {
       label: "Sundry Creditors",
@@ -157,14 +157,14 @@ function TopPartiesCard({ data }: { data?: BusinessSnapshot }) {
       {debtors.length > 0 && (
         <div className="bg-white rounded-2xl border shadow-sm p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-forest-500 inline-block" />
             Top Debtors (Outstanding)
           </h3>
           <div className="space-y-2">
             {debtors.map(([name, amt]) => (
               <div key={name} className="flex items-center justify-between gap-2">
                 <span className="text-sm text-gray-700 truncate">{name}</span>
-                <span className="text-sm font-semibold text-indigo-600 whitespace-nowrap">{fmtINR(amt)}</span>
+                <span className="text-sm font-semibold text-forest-600 whitespace-nowrap">{fmtINR(amt)}</span>
               </div>
             ))}
           </div>
@@ -214,7 +214,7 @@ function HealthCard({
         <button
           onClick={onRefresh}
           disabled={isLoading || !aiReady}
-          className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 border border-indigo-200 px-3 py-1.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 text-sm text-forest-600 hover:text-forest-800 border border-forest-200 px-3 py-1.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           {isLoading ? "Analysing…" : "Refresh"}
@@ -230,7 +230,7 @@ function HealthCard({
       ) : isLoading ? (
         <div className="flex items-center justify-center py-10">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-400 mx-auto mb-2" />
+            <Loader2 className="w-8 h-8 animate-spin text-forest-400 mx-auto mb-2" />
             <p className="text-sm text-gray-500">Vera AI is analysing your data…</p>
             <p className="text-xs text-gray-400 mt-1">This takes 15–30 seconds</p>
           </div>
@@ -273,7 +273,7 @@ function HealthCard({
                 <ul className="space-y-1.5">
                   {data.insights.map((ins, i) => (
                     <li key={i} className="text-sm text-gray-700 flex gap-2">
-                      <ChevronRight className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+                      <ChevronRight className="w-4 h-4 text-forest-400 flex-shrink-0 mt-0.5" />
                       {typeof ins === "string" ? ins : JSON.stringify(ins)}
                     </li>
                   ))}
@@ -300,13 +300,13 @@ function HealthCard({
                 </div>
               )}
               {data.recommendations && data.recommendations.length > 0 && (
-                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-                  <h4 className="text-sm font-semibold text-indigo-800 mb-2 flex items-center gap-1.5">
+                <div className="bg-forest-50 border border-forest-100 rounded-xl p-4">
+                  <h4 className="text-sm font-semibold text-forest-800 mb-2 flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4" /> Recommendations
                   </h4>
                   <ul className="space-y-1.5">
                     {data.recommendations.map((r, i) => (
-                      <li key={i} className="text-xs text-indigo-700 flex gap-1.5">
+                      <li key={i} className="text-xs text-forest-700 flex gap-1.5">
                         <span className="font-bold flex-shrink-0">{i + 1}.</span>
                         {typeof r === "string" ? r : JSON.stringify(r)}
                       </li>
@@ -361,17 +361,17 @@ function PeriodCompareCard({ aiReady }: { aiReady: boolean }) {
         <div>
           <label className="text-xs text-gray-500 block mb-1">Period 1</label>
           <input type="month" value={p1} onChange={e => setP1(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-300" />
         </div>
         <div>
           <label className="text-xs text-gray-500 block mb-1">Period 2</label>
           <input type="month" value={p2} onChange={e => setP2(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-300" />
         </div>
         <button
           onClick={() => mutate()}
           disabled={isPending || !aiReady}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 bg-forest-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-forest-700 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <BarChart2 className="w-4 h-4" />}
           Compare
@@ -397,8 +397,8 @@ function PeriodCompareCard({ aiReady }: { aiReady: boolean }) {
                 </p>
                 <div className="space-y-2">
                   {([
-                    { period: p1, data: result.period1_data, shade: metric === "sales" ? "bg-indigo-400" : "bg-purple-400" },
-                    { period: p2, data: result.period2_data, shade: metric === "sales" ? "bg-indigo-600" : "bg-purple-600" },
+                    { period: p1, data: result.period1_data, shade: metric === "sales" ? "bg-forest-400" : "bg-gold-400" },
+                    { period: p2, data: result.period2_data, shade: metric === "sales" ? "bg-forest-600" : "bg-gold-600" },
                   ] as const).map(({ period, data: pd, shade }) => {
                     const val = pd?.[metric] ?? 0
                     return (
@@ -451,7 +451,7 @@ function PeriodCompareCard({ aiReady }: { aiReady: boolean }) {
           )}
 
           {result.recommendation && (
-            <div className="border-l-4 border-indigo-300 pl-3 text-sm text-indigo-700 italic">
+            <div className="border-l-4 border-forest-300 pl-3 text-sm text-forest-700 italic">
               {result.recommendation}
             </div>
           )}
@@ -504,8 +504,8 @@ function ReportCard({ aiReady }: { aiReady: boolean }) {
             onClick={() => { setSelected(rt.id); reset() }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
               selected === rt.id
-                ? "bg-indigo-600 text-white border-indigo-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-indigo-300"
+                ? "bg-forest-600 text-white border-forest-600"
+                : "bg-white text-gray-700 border-gray-200 hover:border-forest-300"
             }`}
           >
             <span>{rt.icon}</span> {rt.label}
@@ -516,7 +516,7 @@ function ReportCard({ aiReady }: { aiReady: boolean }) {
       <button
         onClick={() => mutate()}
         disabled={isPending || !aiReady}
-        className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed mb-4"
+        className="flex items-center gap-2 bg-forest-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-forest-700 disabled:opacity-40 disabled:cursor-not-allowed mb-4"
       >
         {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
         {isPending ? "Generating report…" : "Generate Report"}
@@ -606,7 +606,7 @@ export default function AIInsights() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-forest-600 to-gold-600 flex items-center justify-center flex-shrink-0">
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>

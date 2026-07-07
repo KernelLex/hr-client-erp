@@ -413,7 +413,7 @@ export function DriveDocumentsTab() {
         <StatCard
           label="Last Sync"
           value={statsLoading ? "…" : formatLastSync(stats?.last_sync ?? "Never")}
-          accent="#6366F1"
+          accent="#3d7d5c"
         />
       </div>
 

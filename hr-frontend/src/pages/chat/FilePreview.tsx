@@ -54,7 +54,7 @@ export function FilePreview({ file_url, file_name, file_type, file_size, compact
       download={name}
       className={
         compact
-          ? "inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800"
+          ? "inline-flex items-center gap-1.5 text-xs text-forest-600 hover:text-forest-800"
           : "mt-1 flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors max-w-[280px]"
       }
     >
@@ -65,8 +65,8 @@ export function FilePreview({ file_url, file_name, file_type, file_size, compact
         </>
       ) : (
         <>
-          <div className="w-8 h-8 rounded-md bg-indigo-100 flex items-center justify-center shrink-0">
-            <FileText size={16} className="text-indigo-600" />
+          <div className="w-8 h-8 rounded-md bg-forest-100 flex items-center justify-center shrink-0">
+            <FileText size={16} className="text-forest-600" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-800 truncate">{name}</p>

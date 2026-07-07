@@ -150,7 +150,7 @@ export function ChatPage() {
                 {activeRoomId && (
                   <button
                     onClick={() => setShowSearch(true)}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-forest-600 hover:bg-forest-50 transition-colors"
                     title="Search in this chat"
                   >
                     <Search size={15} />

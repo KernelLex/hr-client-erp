@@ -85,7 +85,7 @@ function ProfileField({
           {label}
         </p>
         <select
-          className="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-forest-500"
           value={current}
           onChange={(e) => onChange(field, e.target.value)}
         >
@@ -111,7 +111,7 @@ function InfoSection({ title, children }: { title: string; children: React.React
       style={{
         border: "1px solid #E2E8F0",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-        borderLeft: "4px solid #4F46E5",
+        borderLeft: "4px solid #1e3a2f",
       }}
     >
       <p className="text-sm font-semibold text-gray-800 mb-4">{title}</p>
@@ -159,7 +159,7 @@ function ProfileTab({ email, profile }: { email: string; profile: EmployeeProfil
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending || Object.keys(draft).length === 0}
               className="gap-1"
-              style={{ backgroundColor: "#4F46E5", color: "white" }}
+              style={{ backgroundColor: "#1e3a2f", color: "white" }}
             >
               <Check size={14} /> {saveMutation.isPending ? "Saving…" : "Save Changes"}
             </Button>
@@ -296,7 +296,7 @@ function LeaveHistoryTab({ email }: { email: string }) {
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-5 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900">Reject Leave Request</h3>
             <textarea
-              className="w-full border border-gray-300 rounded-md text-sm p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md text-sm p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-forest-500"
               rows={3}
               placeholder="Reason for rejection (required)"
               value={remarks}
@@ -389,7 +389,7 @@ function PermissionsTab({ email }: { email: string }) {
           size="sm"
           disabled={!dirty || updateMutation.isPending}
           onClick={handleSave}
-          style={saved ? { backgroundColor: "#059669", color: "white" } : { backgroundColor: "#4F46E5", color: "white" }}
+          style={saved ? { backgroundColor: "#059669", color: "white" } : { backgroundColor: "#1e3a2f", color: "white" }}
         >
           {saved ? <><Check size={14} className="mr-1" /> Saved</> : updateMutation.isPending ? "Saving…" : "Save Permissions"}
         </Button>
@@ -535,7 +535,7 @@ function NotesColumn({ email }: { email: string }) {
         className="bg-white rounded-xl p-4"
         style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
       >
-        <p className="text-sm font-semibold mb-3 flex items-center gap-1.5" style={{ color: "#4F46E5" }}>
+        <p className="text-sm font-semibold mb-3 flex items-center gap-1.5" style={{ color: "#1e3a2f" }}>
           <Plus size={14} /> Add Private Note
         </p>
         <form onSubmit={handleAdd} className="space-y-3">
@@ -553,7 +553,7 @@ function NotesColumn({ email }: { email: string }) {
               minHeight: "80px",
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = "#4F46E5"
+              e.target.style.borderColor = "#1e3a2f"
               e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)"
             }}
             onBlur={(e) => {
@@ -570,7 +570,7 @@ function NotesColumn({ email }: { email: string }) {
               disabled={submitting || !noteText.trim()}
               style={{
                 marginLeft: "auto",
-                backgroundColor: "#4F46E5",
+                backgroundColor: "#1e3a2f",
                 color: "white",
                 borderRadius: "8px",
                 padding: "8px 20px",
@@ -580,8 +580,8 @@ function NotesColumn({ email }: { email: string }) {
                 cursor: submitting ? "not-allowed" : "pointer",
                 opacity: submitting || !noteText.trim() ? 0.6 : 1,
               }}
-              onMouseEnter={(e) => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#3730A3" }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#4F46E5" }}
+              onMouseEnter={(e) => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#16291f" }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1e3a2f" }}
             >
               {submitting ? "Saving…" : "Add Note"}
             </button>
@@ -619,7 +619,7 @@ function NotesColumn({ email }: { email: string }) {
                     className="w-full text-sm rounded-lg px-3 py-2.5 resize-none"
                     style={{ border: "1px solid #E2E8F0", outline: "none", minHeight: "80px" }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = "#4F46E5"
+                      e.target.style.borderColor = "#1e3a2f"
                       e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)"
                     }}
                     onBlur={(e) => {
@@ -636,7 +636,7 @@ function NotesColumn({ email }: { email: string }) {
                         <X size={12} className="mr-1" /> Cancel
                       </Button>
                       <Button size="sm" onClick={() => handleUpdate(note.name)}
-                        className="h-7 text-xs" style={{ backgroundColor: "#4F46E5", color: "white" }}>
+                        className="h-7 text-xs" style={{ backgroundColor: "#1e3a2f", color: "white" }}>
                         <Check size={12} className="mr-1" /> Save
                       </Button>
                     </div>
@@ -656,7 +656,7 @@ function NotesColumn({ email }: { email: string }) {
                     <button
                       className="p-1 rounded"
                       style={{ color: "#94A3B8", transition: "color 0.15s" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = "#4F46E5")}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "#1e3a2f")}
                       onMouseLeave={(e) => (e.currentTarget.style.color = "#94A3B8")}
                       onClick={() => { setEditId(note.name); setEditText(note.note_content); setEditTag(note.tag) }}
                     >
@@ -709,7 +709,7 @@ function ProfileHeaderCard({ profile, email }: { profile: EmployeeProfile; email
       style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
     >
       {/* Gradient banner */}
-      <div className="h-20" style={{ background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)" }} />
+      <div className="h-20" style={{ background: "linear-gradient(135deg, #1e3a2f 0%, #c8a45c 100%)" }} />
 
       {/* Avatar overlapping banner */}
       <div className="relative px-5 pb-4" style={{ marginTop: "-40px" }}>
@@ -746,7 +746,7 @@ function ProfileHeaderCard({ profile, email }: { profile: EmployeeProfile; email
         <div className="mt-3 space-y-1.5">
           <h2 className="text-xl font-bold text-gray-900">{profile.employee_name}</h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className="text-xs font-normal bg-indigo-50 text-indigo-700 border-0">
+            <Badge variant="secondary" className="text-xs font-normal bg-forest-50 text-forest-700 border-0">
               {profile.designation}
             </Badge>
             <Badge variant="secondary" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-0">

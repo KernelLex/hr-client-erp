@@ -23,7 +23,7 @@ function statusClass(status: ClaimStatus) {
 }
 
 function typeClass(type: string) {
-  return type === "Petrol" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
+  return type === "Petrol" ? "bg-blue-100 text-blue-800" : "bg-gold-100 text-gold-800"
 }
 
 function PendingClaimCard({ claim }: { claim: ExpenseClaim }) {
@@ -92,7 +92,7 @@ function PendingClaimCard({ claim }: { claim: ExpenseClaim }) {
       )}
       {receipt && (
         <a href={receipt} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-purple-600 hover:underline">
+          className="inline-flex items-center gap-1 text-xs text-gold-600 hover:underline">
           <ExternalLink size={11} /> {claim.claim_type === "Material" ? "View Invoice" : "View Receipt"}
         </a>
       )}
@@ -220,7 +220,7 @@ function AllClaimsTable({ claims }: { claims: ExpenseClaim[] }) {
                     )}
                     {c.claim_type === "Material" && c.material_receipt && (
                       <a href={c.material_receipt} target="_blank" rel="noopener noreferrer"
-                        className="text-purple-600 hover:underline flex items-center gap-1">
+                        className="text-gold-600 hover:underline flex items-center gap-1">
                         <ExternalLink size={10} /> Invoice
                       </a>
                     )}
@@ -328,7 +328,7 @@ export function AdminClaimsView() {
                     <td className="px-4 py-2 text-xs text-right text-orange-700">{fmt(s.total_pending)}</td>
                     <td className="px-4 py-2 text-xs text-right text-red-700">{fmt(s.total_rejected)}</td>
                     <td className="px-4 py-2 text-xs text-right text-blue-700">{fmt(s.petrol_total)}</td>
-                    <td className="px-4 py-2 text-xs text-right text-purple-700">{fmt(s.material_total)}</td>
+                    <td className="px-4 py-2 text-xs text-right text-gold-700">{fmt(s.material_total)}</td>
                   </tr>
                 ))}
               </tbody>

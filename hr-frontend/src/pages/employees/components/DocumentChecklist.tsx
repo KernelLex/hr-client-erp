@@ -27,7 +27,7 @@ export function DocumentChecklist({ checklist, onChange, readonly = false }: Pro
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-gray-700">{done}/{total} documents</span>
           <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${Math.round((done / total) * 100)}%` }} />
+            <div className="h-full bg-forest-500 rounded-full transition-all" style={{ width: `${Math.round((done / total) * 100)}%` }} />
           </div>
         </div>
       </div>

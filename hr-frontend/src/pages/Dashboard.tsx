@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 import { api, apiUrl } from "@/lib/api"
 import { getAIHealth, type AIHealth } from "@/api/ai"
+import { PageHeader, StatCard } from "@/components/dashboard"
 
 function useDefaultPasswordCheck() {
   return useQuery({
@@ -98,7 +99,7 @@ const ACTIVITY_ICONS: Record<string, React.ElementType> = {
 
 const ACTIVITY_ICON_COLORS: Record<string, string> = {
   blue: "#3B82F6",
-  violet: "#7C3AED",
+  violet: "#c8a45c",
   emerald: "#10B981",
   red: "#EF4444",
   orange: "#F59E0B",
@@ -153,7 +154,7 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
         onClick={() => setOpen((v) => !v)}
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-forest-600 to-gold-600 flex items-center justify-center flex-shrink-0">
             <Bot className="w-4 h-4 text-white" />
           </div>
           <div className="text-left">
@@ -175,14 +176,14 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
         <div className="px-5 pb-5 border-t border-gray-50">
           <div className="flex justify-between items-center py-3">
             <p className="text-xs text-gray-400">Auto-refreshes every 60s</p>
-            <button onClick={() => refetch()} disabled={isFetching} className="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1">
+            <button onClick={() => refetch()} disabled={isFetching} className="text-xs text-forest-500 hover:text-forest-700 flex items-center gap-1">
               <RefreshCw className={`w-3 h-3 ${isFetching ? "animate-spin" : ""}`} /> Refresh
             </button>
           </div>
 
           {isLoading && (
             <div className="flex items-center justify-center py-10">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-forest-400" />
             </div>
           )}
 
@@ -213,7 +214,7 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
                       <span className="text-xs text-gray-500">{health.ollama.response_time_ms}ms</span>
                     </div>
                   )}
-                  <button onClick={() => { }} className="mt-2 text-xs text-indigo-500 hover:text-indigo-700">Test AI</button>
+                  <button onClick={() => { }} className="mt-2 text-xs text-forest-500 hover:text-forest-700">Test AI</button>
                 </div>
 
                 {/* Extraction */}
@@ -224,9 +225,9 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
                   </div>
                   <p className="text-xs text-gray-500">{health.extraction.success_rate}% success</p>
                   <p className="text-xs text-gray-400">{health.extraction.processed} done · {health.extraction.pending} pending</p>
-                  <ProgressBar value={health.extraction.success_rate} color="#6366f1" />
+                  <ProgressBar value={health.extraction.success_rate} color="#3d7d5c" />
                   {health.extraction.pending > 0 && (
-                    <button onClick={onProcess} className="mt-2 text-xs text-indigo-500 hover:text-indigo-700">⚡ Process Pending</button>
+                    <button onClick={onProcess} className="mt-2 text-xs text-forest-500 hover:text-forest-700">⚡ Process Pending</button>
                   )}
                 </div>
 
@@ -244,7 +245,7 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
                       : "Never synced"}
                   </p>
                   <p className="text-xs text-gray-400">{health.drive_sync.files_found} files · {health.drive_sync.last_sync_status || "—"}</p>
-                  <button onClick={onSync} className="mt-2 text-xs text-indigo-500 hover:text-indigo-700">🔄 Sync Now</button>
+                  <button onClick={onSync} className="mt-2 text-xs text-forest-500 hover:text-forest-700">🔄 Sync Now</button>
                 </div>
 
                 {/* Data Quality */}
@@ -261,7 +262,7 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
 
               <button
                 onClick={onNavigate}
-                className="w-full text-sm text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1.5 py-2 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors"
+                className="w-full text-sm text-forest-600 hover:text-forest-800 flex items-center justify-center gap-1.5 py-2 border border-forest-200 rounded-xl hover:bg-forest-50 transition-colors"
               >
                 View Full AI Insights <ExternalLink className="w-3.5 h-3.5" />
               </button>
@@ -291,16 +292,16 @@ export function Dashboard() {
       value: stats?.total_employees ?? "—",
       sub: "Active employees",
       icon: Users,
-      iconBg: "#EEF2FF",
-      iconColor: "#4F46E5",
+      iconBg: "#eef5f1",
+      iconColor: "#1e3a2f",
     },
     {
       label: "Open Positions",
       value: stats?.open_positions ?? "—",
       sub: "Job openings",
       icon: Briefcase,
-      iconBg: "#F5F3FF",
-      iconColor: "#7C3AED",
+      iconBg: "#fdf8ef",
+      iconColor: "#c8a45c",
     },
     {
       label: "Candidates",
@@ -324,15 +325,15 @@ export function Dashboard() {
     {
       label: "Post New Job",
       icon: Plus,
-      bg: "#4F46E5",
-      hover: "#3730A3",
+      bg: "#1e3a2f",
+      hover: "#2d5544",
       onClick: () => navigate("/recruitment"),
     },
     {
       label: "Add Candidate",
       icon: UserPlus,
-      bg: "#7C3AED",
-      hover: "#6D28D9",
+      bg: "#c8a45c",
+      hover: "#b8934c",
       onClick: () => navigate("/recruitment"),
     },
     {
@@ -345,23 +346,17 @@ export function Dashboard() {
   ]
 
   return (
-    <div className="p-6 max-w-5xl space-y-6 min-h-full">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="font-bold" style={{ fontSize: "26px", color: "var(--text-primary)" }}>
-            {getGreeting()}{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
-            Here's what's happening today.
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+    <div className="min-h-full" style={{ background: "var(--bg-app)" }}>
+      <PageHeader
+        workspaceLabel="Vera Enterprises Workspace"
+        title={`${getGreeting()}${user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}`}
+        right={
+          <div className="text-xs px-3.5 py-1.5 rounded-full" style={{ background: "#fff", border: "var(--border-card)", color: "var(--text-secondary)" }}>
             {formatTodayDate()}
-          </p>
-        </div>
-      </div>
+          </div>
+        }
+      />
+      <div className="px-6 md:px-7 pb-8 max-w-5xl space-y-6">
 
       {/* Default password warning banner */}
       {showPasswordBanner && (
@@ -383,43 +378,8 @@ export function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
-          : STAT_CARDS.map(({ label, value, sub, icon: Icon, iconBg, iconColor }) => (
-              <div
-                key={label}
-                className="rounded-xl p-5 cursor-default transition-all duration-200"
-                style={{
-                  background: "#FFFFFF",
-                  border: "var(--border-card)",
-                  boxShadow: "var(--shadow-card)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = "var(--shadow-card-hover)"
-                  e.currentTarget.style.transform = "translateY(-1px)"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "var(--shadow-card)"
-                  e.currentTarget.style.transform = "translateY(0)"
-                }}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{label}</p>
-                    <p
-                      className="font-extrabold mt-1 leading-none"
-                      style={{ fontSize: "32px", color: "var(--text-primary)" }}
-                    >
-                      {value}
-                    </p>
-                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{sub}</p>
-                  </div>
-                  <div
-                    className="rounded-full p-2.5 shrink-0"
-                    style={{ backgroundColor: iconBg }}
-                  >
-                    <Icon size={18} style={{ color: iconColor }} />
-                  </div>
-                </div>
-              </div>
+          : STAT_CARDS.map(({ label, value, sub }) => (
+              <StatCard key={label} label={label} value={value} sub={sub} />
             ))}
       </div>
 
@@ -560,7 +520,7 @@ export function Dashboard() {
                 onClick={() => navigate("/admin/permissions")}
                 className="w-full flex items-center gap-2.5 text-sm font-semibold transition-all duration-150"
                 style={{
-                  backgroundColor: "#F5F3FF",
+                  backgroundColor: "#fdf8ef",
                   color: "#4C1D95",
                   borderRadius: "var(--radius-button)",
                   padding: "10px 16px",
@@ -571,10 +531,10 @@ export function Dashboard() {
                   e.currentTarget.style.backgroundColor = "#EDE9FE"
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#F5F3FF"
+                  e.currentTarget.style.backgroundColor = "#fdf8ef"
                 }}
               >
-                <Shield size={15} style={{ color: "#7C3AED" }} />
+                <Shield size={15} style={{ color: "#c8a45c" }} />
                 Role Control
               </button>
             )}
@@ -586,18 +546,19 @@ export function Dashboard() {
       {isAdmin && tallySnap && (
         <div
           className="rounded-xl p-5"
-          style={{ background: "#0B2545", border: "none", borderRadius: "var(--radius-card)" }}
+          style={{ background: "var(--brand-primary)", border: "none", borderRadius: "var(--radius-card)" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Activity size={15} className="text-yellow-400" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-yellow-400">
+              <Activity size={15} style={{ color: "var(--gold)" }} />
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--gold)" }}>
                 Tally Financial Snapshot · {tallyFmtDate(tallySnap.as_of)}
               </span>
             </div>
             <button
-              onClick={() => navigate("/operations")}
-              className="text-xs text-blue-300 hover:text-white transition-colors"
+              onClick={() => navigate("/accounting")}
+              className="text-xs transition-colors"
+              style={{ color: "var(--gold-light)" }}
             >
               Full View →
             </button>
@@ -635,6 +596,7 @@ export function Dashboard() {
           onProcess={() => navigate("/business")}
         />
       )}
+      </div>
     </div>
   )
 }

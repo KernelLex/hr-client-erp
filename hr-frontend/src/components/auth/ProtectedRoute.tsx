@@ -3,8 +3,8 @@ import { useAuth } from "@/context/AuthContext"
 
 function Spinner() {
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-50">
-      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    <div className="flex items-center justify-center h-screen" style={{ background: "var(--bg-app)" }}>
+      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--brand-primary)", borderTopColor: "transparent" }} />
     </div>
   )
 }

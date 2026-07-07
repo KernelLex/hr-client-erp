@@ -31,24 +31,37 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex" style={{ background: "var(--bg-app)" }}>
       {/* Left panel */}
-      <div className="hidden md:flex md:w-2/5 bg-slate-900 flex-col p-10 relative overflow-hidden">
-        {/* Subtle background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pointer-events-none" />
+      <div
+        className="hidden md:flex md:w-2/5 flex-col p-10 relative overflow-hidden"
+        style={{ background: "var(--brand-primary)" }}
+      >
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "linear-gradient(160deg, var(--brand-primary), var(--bg-sidebar-hover))" }}
+        />
 
         <div className="relative z-10 flex flex-col h-full">
-          <span className="text-lg font-bold text-white tracking-tight">ClientERP</span>
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-9 h-9 rounded-md flex items-center justify-center shrink-0 font-heading text-base"
+              style={{ background: "linear-gradient(150deg, var(--gold-light), var(--gold))", color: "var(--brand-primary)" }}
+            >
+              V
+            </div>
+            <span className="font-heading text-lg text-white tracking-tight">Vera Enterprises</span>
+          </div>
 
           <div className="flex-1 flex flex-col justify-center">
-            <h1 className="text-4xl font-bold text-white leading-tight">Welcome back</h1>
-            <p className="text-slate-400 mt-3 text-lg">Sign in to your HR workspace</p>
+            <h1 className="font-heading text-4xl text-white leading-tight">Welcome back</h1>
+            <p className="mt-3 text-lg" style={{ color: "#d4c8a8" }}>Sign in to your ERP workspace</p>
           </div>
 
           <div className="space-y-3">
             {FEATURES.map((f) => (
-              <div key={f} className="flex items-center gap-3 text-slate-300">
-                <CheckCircle2 size={16} className="text-blue-400 shrink-0" />
+              <div key={f} className="flex items-center gap-3" style={{ color: "#d4c8a8" }}>
+                <CheckCircle2 size={16} style={{ color: "var(--gold)" }} className="shrink-0" />
                 <span className="text-sm">{f}</span>
               </div>
             ))}
@@ -57,13 +70,21 @@ export function Login() {
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 bg-white flex flex-col items-center justify-center p-8">
+      <div className="flex-1 flex flex-col items-center justify-center p-8" style={{ background: "#fff" }}>
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
-          <p className="md:hidden text-base font-bold text-gray-900 mb-8">ClientERP</p>
+          <div className="md:hidden flex items-center gap-2 mb-8">
+            <div
+              className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 font-heading text-sm"
+              style={{ background: "linear-gradient(150deg, var(--gold-light), var(--gold))", color: "var(--brand-primary)" }}
+            >
+              V
+            </div>
+            <span className="font-heading text-base" style={{ color: "var(--text-primary)" }}>Vera Enterprises</span>
+          </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Sign in to your account</h2>
+            <h2 className="font-heading text-2xl" style={{ color: "var(--text-primary)" }}>Sign in to your account</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -111,7 +132,10 @@ export function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-10 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full h-10 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              style={{ background: "var(--brand-primary)" }}
+              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "var(--bg-sidebar-hover)" }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--brand-primary)" }}
             >
               {loading && (
                 <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -120,7 +144,7 @@ export function Login() {
             </button>
           </form>
 
-          <p className="mt-10 text-center text-xs text-gray-400">HR Module v0.1 · ClientERP</p>
+          <p className="mt-10 text-center text-xs text-gray-400">Vera ERP · Vera Enterprises</p>
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ import { ScheduleInterviewModal } from "./ScheduleInterviewModal"
 const STAGE_COLORS: Record<PipelineStage, string> = {
   "Application Received": "bg-gray-100 text-gray-700",
   "Screening":            "bg-blue-100 text-blue-700",
-  "Interview":            "bg-purple-100 text-purple-700",
+  "Interview":            "bg-gold-100 text-gold-700",
   "Offer Sent":           "bg-orange-100 text-orange-700",
   "Hired":                "bg-green-100 text-green-700",
   "Rejected":             "bg-red-100 text-red-700",

@@ -42,7 +42,7 @@ const EMPLOYEES: Employee[] = [
     categories: ["Accounts"],
     required: ["Trial Balance", "Profit & Loss", "Balance Sheet", "Ledger"],
     color: "#8B5CF6",
-    bg: "#f5f3ff",
+    bg: "#fdf8ef",
     border: "#ddd6fe",
   },
   {
@@ -373,7 +373,7 @@ export function UploadStatusTab() {
           <select
             value={selectedMonth}
             onChange={e => setSelectedMonth(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-indigo-400"
+            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-forest-400"
           >
             {MONTH_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>

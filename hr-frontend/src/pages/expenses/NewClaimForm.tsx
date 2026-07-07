@@ -140,12 +140,12 @@ export function NewClaimForm() {
             </div>
           </button>
           <button
-            className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-all group"
+            className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-gray-200 hover:border-gold-400 hover:bg-gold-50 transition-all group"
             onClick={() => setClaimType("Material")}
           >
             <span className="text-4xl">📦</span>
             <div className="text-center">
-              <p className="font-semibold text-gray-900 group-hover:text-purple-700">Material Claim</p>
+              <p className="font-semibold text-gray-900 group-hover:text-gold-700">Material Claim</p>
               <p className="text-xs text-gray-500 mt-1">Purchases &amp; supplies</p>
             </div>
           </button>
@@ -248,11 +248,11 @@ export function NewClaimForm() {
                   <Label>Invoice / Receipt</Label>
                   <div className="mt-1">
                     {invoiceFile ? (
-                      <div className="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2">
-                        <Paperclip size={14} className="text-purple-500 shrink-0" />
-                        <span className="text-sm text-purple-700 truncate flex-1">{invoiceFile.name}</span>
+                      <div className="flex items-center gap-2 bg-gold-50 border border-gold-200 rounded-lg px-3 py-2">
+                        <Paperclip size={14} className="text-gold-500 shrink-0" />
+                        <span className="text-sm text-gold-700 truncate flex-1">{invoiceFile.name}</span>
                         <button type="button" onClick={() => setInvoiceFile(null)}
-                          className="text-purple-400 hover:text-purple-700">
+                          className="text-gold-400 hover:text-gold-700">
                           <X size={14} />
                         </button>
                       </div>
@@ -260,7 +260,7 @@ export function NewClaimForm() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-500 hover:border-purple-300 hover:text-purple-600 hover:bg-purple-50 transition-all"
+                        className="flex items-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-500 hover:border-gold-300 hover:text-gold-600 hover:bg-gold-50 transition-all"
                       >
                         <Paperclip size={14} />
                         Attach invoice (PDF, JPG, PNG)

@@ -11,18 +11,22 @@ import {
   Users,
   Briefcase,
   BookOpen,
-  FileText,
   UploadCloud,
   TrendingUp,
-  BarChart2,
-  LineChart,
   Bot,
   Shield,
   LogOut,
   Minus,
   CheckSquare,
   MessageSquare,
-  Activity,
+  Landmark,
+  Package,
+  ShoppingBag,
+  Truck,
+  Undo2,
+  FileStack,
+  LineChart,
+  UsersRound,
 } from "lucide-react"
 import { useUnreadCounts } from "@/pages/chat/useChat"
 import { cn } from "@/lib/utils"
@@ -40,20 +44,9 @@ function AdminBadge() {
   return (
     <span
       className="ml-auto text-[10px] font-semibold rounded px-1.5 py-0.5"
-      style={{ backgroundColor: "#312e81", color: "#a5b4fc" }}
+      style={{ backgroundColor: "var(--gold)", color: "var(--brand-primary)" }}
     >
       admin
-    </span>
-  )
-}
-
-function SoonBadge() {
-  return (
-    <span
-      className="ml-auto text-[10px] font-semibold rounded px-1.5 py-0.5"
-      style={{ backgroundColor: "#1E293B", color: "#64748B" }}
-    >
-      soon
     </span>
   )
 }
@@ -83,23 +76,19 @@ function NavItem({
       onClick={onClick}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap",
-          isActive ? "text-white" : "text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-white/5"
+          "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap border-l-[3px]",
+          isActive ? "text-white" : "text-[#d4c8a8] hover:text-white hover:bg-white/5 border-transparent"
         )
       }
       style={({ isActive }) =>
         isActive
-          ? {
-              backgroundColor: "var(--bg-sidebar-active)",
-              color: "var(--text-sidebar-active)",
-              boxShadow: "0 2px 8px rgba(79,70,229,0.4)",
-            }
+          ? { backgroundColor: "var(--bg-sidebar-hover)", color: "#fff", borderLeftColor: "var(--gold)" }
           : {}
       }
     >
       {({ isActive }) => (
         <>
-          <Icon size={15} style={{ color: isActive ? "#FFFFFF" : "#64748B" }} />
+          <Icon size={15} style={{ color: isActive ? "var(--gold)" : "#8a9c8a" }} />
           <span className="flex-1">{label}</span>
           {adminBadge && <AdminBadge />}
           {unreadCount > 0 && (
@@ -136,45 +125,20 @@ function SubItem({
       to={to}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 whitespace-nowrap",
+        "flex items-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 whitespace-nowrap border-l-[3px]",
         indent ? "pl-8 pr-3" : "pl-5 pr-3",
-        isActive
-          ? "text-white"
-          : "text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-white/5"
+        isActive ? "text-white" : "text-[#d4c8a8] hover:text-white hover:bg-white/5 border-transparent"
       )}
-      style={
-        isActive
-          ? {
-              backgroundColor: "var(--bg-sidebar-active)",
-              color: "var(--text-sidebar-active)",
-              boxShadow: "0 2px 8px rgba(79,70,229,0.4)",
-            }
-          : {}
-      }
+      style={isActive ? { backgroundColor: "var(--bg-sidebar-hover)", color: "#fff", borderLeftColor: "var(--gold)" } : {}}
     >
       {Icon ? (
-        <Icon size={13} style={{ color: isActive ? "#FFFFFF" : "#64748B" }} />
+        <Icon size={13} style={{ color: isActive ? "var(--gold)" : "#8a9c8a" }} />
       ) : (
-        <Minus size={10} style={{ color: isActive ? "#c7d2fe" : "#334155" }} />
+        <Minus size={10} style={{ color: isActive ? "var(--gold)" : "#4a6354" }} />
       )}
       <span>{label}</span>
       {adminBadge && <AdminBadge />}
     </NavLink>
-  )
-}
-
-// Disabled item (coming soon)
-function DisabledItem({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
-  return (
-    <div
-      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium cursor-not-allowed select-none whitespace-nowrap"
-      title="Coming soon"
-      style={{ color: "#475569" }}
-    >
-      <Icon size={15} style={{ color: "#334155" }} />
-      <span>{label}</span>
-      <SoonBadge />
-    </div>
   )
 }
 
@@ -197,22 +161,29 @@ function GroupHeader({
       onClick={onToggle}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-150",
-        active
-          ? "text-[#A5B4FC]"
-          : "text-[#94A3B8] hover:text-[#CBD5E1] hover:bg-white/5"
+        active ? "text-white" : "text-[#d4c8a8] hover:text-white hover:bg-white/5"
       )}
     >
-      <Icon size={15} style={{ color: active ? "#A5B4FC" : "#64748B" }} />
+      <Icon size={15} style={{ color: active ? "var(--gold)" : "#8a9c8a" }} />
       <span className="flex-1 text-left">{label}</span>
       <ChevronRight
         size={13}
         className="transition-transform duration-200 shrink-0"
-        style={{
-          color: "#475569",
-          transform: open ? "rotate(90deg)" : "rotate(0deg)",
-        }}
+        style={{ color: "#5c7364", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}
       />
     </button>
+  )
+}
+
+// Section title (e.g. OVERVIEW, OPERATIONS)
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="px-3 pt-3.5 pb-1.5 text-[10px] font-semibold uppercase tracking-widest"
+      style={{ color: "#8a9c8a" }}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -248,34 +219,38 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
 
   // Dropdown open state — persisted in localStorage
   const [hrOpen, setHrOpen] = useState(() => readLS("sidebar_hr_open", true))
-  const [accountsOpen, setAccountsOpen] = useState(() => readLS("sidebar_accounts_open", true))
+  const [salesOpen, setSalesOpen] = useState(() => readLS("sidebar_sales_open", true))
+  const [docsOpen, setDocsOpen] = useState(() => readLS("sidebar_docs_open", false))
+  const [adminOpen, setAdminOpen] = useState(() => readLS("sidebar_admin_open", false))
 
   // Auto-expand the group that contains the active route
   useEffect(() => {
     const p = location.pathname
-    if (p.startsWith("/admin/attendance") || p === "/leave" || p.startsWith("/expenses") || p.startsWith("/admin/employees") || p === "/holidays") {
+    if (p.startsWith("/admin/attendance") || p === "/leave" || p.startsWith("/expenses") || p.startsWith("/admin/employees") || p === "/holidays" || p === "/recruitment" || p.startsWith("/recruitment/")) {
       setHrOpen(true)
     }
-    if (p.startsWith("/accounts") || p === "/drive" || p === "/verify" || p === "/ai-insights" || p === "/graphs") {
-      setAccountsOpen(true)
+    if (p === "/crm" || p.startsWith("/crm/") || p === "/sales-register") {
+      setSalesOpen(true)
+    }
+    if (p === "/drive" || p.startsWith("/accounts") || p === "/verify" || p === "/ai-insights" || p === "/graphs") {
+      setDocsOpen(true)
+    }
+    if (p === "/admin/users" || p === "/admin/permissions") {
+      setAdminOpen(true)
     }
   }, [location.pathname])
 
-  function toggleHR() {
-    setHrOpen((v) => {
+  function makeToggle(setter: React.Dispatch<React.SetStateAction<boolean>>, key: string) {
+    return () => setter((v) => {
       const next = !v
-      try { localStorage.setItem("sidebar_hr_open", String(next)) } catch {}
+      try { localStorage.setItem(key, String(next)) } catch { /* localStorage unavailable */ }
       return next
     })
   }
-
-  function toggleAccounts() {
-    setAccountsOpen((v) => {
-      const next = !v
-      try { localStorage.setItem("sidebar_accounts_open", String(next)) } catch {}
-      return next
-    })
-  }
+  const toggleHR = makeToggle(setHrOpen, "sidebar_hr_open")
+  const toggleSales = makeToggle(setSalesOpen, "sidebar_sales_open")
+  const toggleDocs = makeToggle(setDocsOpen, "sidebar_docs_open")
+  const toggleAdmin = makeToggle(setAdminOpen, "sidebar_admin_open")
 
   // Close sidebar on mobile when a nav item is clicked
   function close() {
@@ -291,15 +266,23 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const isLeaveActive = path === "/leave"
   const isExpensesActive = path.startsWith("/expenses")
   const isTeamActive = path.startsWith("/admin/employees")
-  const isHrGroupActive = isAttendanceActive || isHolidaysActive || isLeaveActive || isExpensesActive || isTeamActive
+  const isRecruitmentActive = path.startsWith("/recruitment")
+  const isHrGroupActive = isAttendanceActive || isHolidaysActive || isLeaveActive || isExpensesActive || isTeamActive || isRecruitmentActive
+
+  const isPipelineActive = path === "/crm" || path.startsWith("/crm/")
+  const isSalesRegisterActive = path === "/sales-register"
+  const isSalesGroupActive = isPipelineActive || isSalesRegisterActive
 
   const isAccountsDocActive = path === "/drive"
   const isAccountsUploadActive = path === "/accounts" && search === "?tab=upload"
-
   const isVerifyActive = path === "/verify"
   const isAIInsightsActive = path === "/ai-insights"
   const isGraphsActive = path === "/graphs"
-  const isAccountsGroupActive = path === "/drive" || path.startsWith("/accounts") || path === "/verify" || path === "/ai-insights" || path === "/graphs"
+  const isDocsGroupActive = isAccountsDocActive || path.startsWith("/accounts") || isVerifyActive || isAIInsightsActive || isGraphsActive
+
+  const isUsersActive = path === "/admin/users"
+  const isPermsActive = path === "/admin/permissions"
+  const isAdminGroupActive = isUsersActive || isPermsActive
 
   // Permissions
   const showAttendance = moduleEnabled("attendance")
@@ -318,150 +301,104 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
       <div className="px-4 pt-5 pb-3 shrink-0">
         <div className="flex items-center gap-2.5">
           <div
-            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-            style={{ backgroundColor: "var(--brand-primary)" }}
+            className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 font-heading text-base"
+            style={{ background: "linear-gradient(150deg, var(--gold-light), var(--gold))", color: "var(--brand-primary)" }}
           >
-            <span className="text-white font-bold text-xs">V</span>
+            V
           </div>
-          <span className="text-white font-bold text-[17px] tracking-tight whitespace-nowrap">Vera ERP</span>
+          <div className="leading-tight">
+            <div className="font-heading text-[16px] text-white whitespace-nowrap">Vera Enterprises</div>
+            <div className="text-[9px] tracking-widest" style={{ color: "#8a9c8a" }}>ERP WORKSPACE</div>
+          </div>
         </div>
-        <div className="mt-3 h-px" style={{ backgroundColor: "rgba(79,70,229,0.4)" }} />
+        <div className="mt-3 h-px" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
       </div>
 
       {/* Nav items */}
       <nav className="flex-1 py-1 px-2 space-y-0.5 overflow-y-auto">
 
-        {/* Dashboard */}
+        <SectionTitle>Overview</SectionTitle>
         <NavItem to="/" label="Dashboard" icon={LayoutDashboard} end onClick={close} />
-
-        {/* My Profile */}
         <NavItem to="/my-profile" label="My Profile" icon={UserCircle} onClick={close} />
+        {showChat && (
+          <NavItem to="/chat" label="Chat" icon={MessageSquare} unreadCount={totalUnread} onClick={close} />
+        )}
 
         <Sep />
+        <SectionTitle>Operations</SectionTitle>
 
-        {/* HR group */}
-        <GroupHeader
-          label="HR"
-          icon={Users}
-          open={hrOpen}
-          active={isHrGroupActive}
-          onToggle={toggleHR}
-        />
-        <div
-          className="overflow-hidden transition-all duration-200"
-          style={{ maxHeight: hrOpen ? "400px" : "0px", opacity: hrOpen ? 1 : 0 }}
-        >
+        {/* Sales (CRM) group */}
+        {showCRM && (
+          <>
+            <GroupHeader label="Sales (CRM)" icon={TrendingUp} open={salesOpen} active={isSalesGroupActive} onToggle={toggleSales} />
+            <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: salesOpen ? "200px" : "0px", opacity: salesOpen ? 1 : 0 }}>
+              <div className="pt-0.5 space-y-0.5">
+                <SubItem to="/crm" label="Pipeline" icon={Briefcase} isActive={isPipelineActive} onClick={close} />
+                {isAdmin && (
+                  <SubItem to="/sales-register" label="Sales Register" icon={Receipt} isActive={isSalesRegisterActive} adminBadge onClick={close} />
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {isAdmin && (
+          <>
+            <NavItem to="/inventory" label="Inventory" icon={Package} adminBadge onClick={close} />
+            <NavItem to="/purchasing" label="Purchasing" icon={ShoppingBag} adminBadge onClick={close} />
+            <NavItem to="/logistics" label="Logistics" icon={Truck} adminBadge onClick={close} />
+            <NavItem to="/returns" label="Returns" icon={Undo2} adminBadge onClick={close} />
+          </>
+        )}
+
+        <Sep />
+        <SectionTitle>Finance &amp; Governance</SectionTitle>
+        {isAdmin && (
+          <NavItem to="/accounting" label="Accounting" icon={Landmark} adminBadge onClick={close} />
+        )}
+
+        <Sep />
+        <SectionTitle>People &amp; Work</SectionTitle>
+
+        {/* HRMS group */}
+        <GroupHeader label="HRMS" icon={UsersRound} open={hrOpen} active={isHrGroupActive} onToggle={toggleHR} />
+        <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: hrOpen ? "400px" : "0px", opacity: hrOpen ? 1 : 0 }}>
           <div className="pt-0.5 space-y-0.5">
             {showAttendance && (
               <>
-                <SubItem
-                  to="/admin/attendance"
-                  label="Attendance"
-                  icon={Clock}
-                  isActive={isAttendanceActive}
-                  onClick={close}
-                />
-                <SubItem
-                  to="/holidays"
-                  label="Holidays"
-                  icon={null}
-                  isActive={isHolidaysActive}
-                  indent
-                  onClick={close}
-                />
+                <SubItem to="/admin/attendance" label="Attendance" icon={Clock} isActive={isAttendanceActive} onClick={close} />
+                <SubItem to="/holidays" label="Holidays" icon={null} isActive={isHolidaysActive} indent onClick={close} />
               </>
             )}
             {showLeave && (
-              <SubItem
-                to="/leave"
-                label="Leave"
-                icon={CalendarDays}
-                isActive={isLeaveActive}
-                onClick={close}
-              />
+              <SubItem to="/leave" label="Leave" icon={CalendarDays} isActive={isLeaveActive} onClick={close} />
             )}
-            <SubItem
-              to="/expenses"
-              label="Expenses"
-              icon={Receipt}
-              isActive={isExpensesActive}
-              onClick={close}
-            />
+            <SubItem to="/expenses" label="Expenses" icon={Receipt} isActive={isExpensesActive} onClick={close} />
+            {showRecruitment && (
+              <SubItem to="/recruitment" label="Recruitment" icon={Briefcase} isActive={isRecruitmentActive} onClick={close} />
+            )}
             {isAdmin && (
-              <SubItem
-                to="/admin/employees"
-                label="Team"
-                icon={Users}
-                isActive={isTeamActive}
-                adminBadge
-                onClick={close}
-              />
+              <SubItem to="/admin/employees" label="Team" icon={Users} isActive={isTeamActive} adminBadge onClick={close} />
             )}
           </div>
         </div>
 
         <Sep />
+        <SectionTitle>Platform</SectionTitle>
 
-        {/* Recruitment */}
-        {showRecruitment && (
-          <NavItem to="/recruitment" label="Recruitment" icon={Briefcase} onClick={close} />
-        )}
-
-        <Sep />
-
-        {/* Accounts group */}
+        {/* Document Management group */}
         {showAccounts && (
           <>
-            <GroupHeader
-              label="Accounts"
-              icon={BookOpen}
-              open={accountsOpen}
-              active={isAccountsGroupActive}
-              onToggle={toggleAccounts}
-            />
-            <div
-              className="overflow-hidden transition-all duration-200"
-              style={{ maxHeight: accountsOpen ? "400px" : "0px", opacity: accountsOpen ? 1 : 0 }}
-            >
+            <GroupHeader label="Document Management" icon={FileStack} open={docsOpen} active={isDocsGroupActive} onToggle={toggleDocs} />
+            <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: docsOpen ? "400px" : "0px", opacity: docsOpen ? 1 : 0 }}>
               <div className="pt-0.5 space-y-0.5">
-                <SubItem
-                  to="/drive"
-                  label="Drive Documents"
-                  icon={FileText}
-                  isActive={isAccountsDocActive}
-                  onClick={close}
-                />
-                <SubItem
-                  to="/accounts?tab=upload"
-                  label="Upload Status"
-                  icon={UploadCloud}
-                  isActive={isAccountsUploadActive}
-                  onClick={close}
-                />
+                <SubItem to="/drive" label="Drive Documents" icon={BookOpen} isActive={isAccountsDocActive} onClick={close} />
+                <SubItem to="/accounts?tab=upload" label="Upload Status" icon={UploadCloud} isActive={isAccountsUploadActive} onClick={close} />
                 {isAdmin && (
                   <>
-                    <SubItem
-                      to="/verify"
-                      label="Verify Data"
-                      icon={CheckSquare}
-                      isActive={isVerifyActive}
-                      adminBadge
-                      onClick={close}
-                    />
-                    <SubItem
-                      to="/ai-insights"
-                      label="AI Insights"
-                      icon={Bot}
-                      isActive={isAIInsightsActive}
-                      onClick={close}
-                    />
-                    <SubItem
-                      to="/graphs"
-                      label="Graphs"
-                      icon={LineChart}
-                      isActive={isGraphsActive}
-                      onClick={close}
-                    />
+                    <SubItem to="/verify" label="Verify Data" icon={CheckSquare} isActive={isVerifyActive} adminBadge onClick={close} />
+                    <SubItem to="/ai-insights" label="AI Insights" icon={Bot} isActive={isAIInsightsActive} onClick={close} />
+                    <SubItem to="/graphs" label="Graphs" icon={LineChart} isActive={isGraphsActive} onClick={close} />
                   </>
                 )}
               </div>
@@ -469,68 +406,26 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
           </>
         )}
 
-        <Sep />
-
-        {/* Operations — admin only */}
-        {isAdmin && (
-          <NavItem
-            to="/operations"
-            label="Operations"
-            icon={Activity}
-            adminBadge
-            onClick={close}
-          />
-        )}
-
-        {/* CRM */}
-        {showCRM && (
-          <NavItem to="/crm" label="CRM" icon={TrendingUp} onClick={close} />
-        )}
-
-        {/* Chat */}
-        {showChat && (
-          <NavItem
-            to="/chat"
-            label="Chat"
-            icon={MessageSquare}
-            unreadCount={totalUnread}
-            onClick={close}
-          />
-        )}
-
-        <DisabledItem label="Performance" icon={BarChart2} />
-
-        {/* Admin-only section */}
+        {/* Administration group */}
         {isAdmin && (
           <>
-            <Sep />
-            <NavItem
-              to="/admin/users"
-              label="User Management"
-              icon={Users}
-              adminBadge
-              onClick={close}
-            />
-            <NavItem
-              to="/admin/permissions"
-              label="Permissions"
-              icon={Shield}
-              adminBadge
-              onClick={close}
-            />
+            <GroupHeader label="Administration" icon={Shield} open={adminOpen} active={isAdminGroupActive} onToggle={toggleAdmin} />
+            <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: adminOpen ? "160px" : "0px", opacity: adminOpen ? 1 : 0 }}>
+              <div className="pt-0.5 space-y-0.5">
+                <SubItem to="/admin/users" label="User Management" icon={Users} isActive={isUsersActive} adminBadge onClick={close} />
+                <SubItem to="/admin/permissions" label="Permissions" icon={Shield} isActive={isPermsActive} adminBadge onClick={close} />
+              </div>
+            </div>
           </>
         )}
       </nav>
 
       {/* Bottom profile + sign out */}
-      <div
-        className="shrink-0 px-3 py-3"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
-      >
+      <div className="shrink-0 px-3 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="flex items-center gap-2.5 mb-2.5">
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold text-white"
-            style={{ backgroundColor: "var(--brand-primary)" }}
+            className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold"
+            style={{ background: "linear-gradient(150deg, var(--gold-light), var(--gold))", color: "var(--brand-primary)" }}
           >
             {user?.full_name ? getInitials(user.full_name) : "?"}
           </div>
@@ -538,7 +433,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
             <p className="text-white text-xs font-semibold truncate leading-tight">
               {user?.full_name ?? "—"}
             </p>
-            <p className="text-[11px] truncate leading-tight" style={{ color: "#64748B" }}>
+            <p className="text-[11px] truncate leading-tight" style={{ color: "#8a9c8a" }}>
               {user?.name ?? ""}
             </p>
           </div>
@@ -546,14 +441,14 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         <button
           onClick={() => logout()}
           className="w-full flex items-center gap-2 text-xs rounded-md px-2 py-1.5 transition-colors"
-          style={{ color: "#64748B" }}
+          style={{ color: "#8a9c8a" }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#1E293B"
-            e.currentTarget.style.color = "#94A3B8"
+            e.currentTarget.style.backgroundColor = "var(--bg-sidebar-hover)"
+            e.currentTarget.style.color = "#d4c8a8"
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = "transparent"
-            e.currentTarget.style.color = "#64748B"
+            e.currentTarget.style.color = "#8a9c8a"
           }}
         >
           <LogOut size={13} />
@@ -568,8 +463,8 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
       {/* Desktop inline sidebar — collapses width */}
       <div
         className={cn(
-          "hidden md:flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
-          open ? "w-[220px]" : "w-0"
+          "no-print hidden md:flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
+          open ? "w-[240px]" : "w-0"
         )}
       >
         {sidebarBody}
@@ -578,7 +473,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
       {/* Mobile fixed overlay sidebar — slides in/out */}
       <div
         className={cn(
-          "flex flex-col md:hidden fixed inset-y-0 left-0 z-30 w-[220px] transition-transform duration-300",
+          "no-print flex flex-col md:hidden fixed inset-y-0 left-0 z-30 w-[240px] transition-transform duration-300",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >

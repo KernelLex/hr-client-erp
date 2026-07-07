@@ -35,7 +35,7 @@ const METHOD_CONFIG: Record<string, { dot: string; label: string }> = {
 const FOLDER_COLOR: Record<string, { bg: string; icon: string; label: string }> = {
   "01_Sales":      { bg: "#dcfce7", icon: "#16a34a", label: "Sales" },
   "02_Purchase":   { bg: "#fee2e2", icon: "#dc2626", label: "Purchase" },
-  "03_Accounts":   { bg: "#ede9fe", icon: "#7c3aed", label: "Accounts" },
+  "03_Accounts":   { bg: "#ede9fe", icon: "#c8a45c", label: "Accounts" },
   "04_HR_Payroll": { bg: "#fef3c7", icon: "#d97706", label: "HR & Payroll" },
   "05_Logistics":  { bg: "#dbeafe", icon: "#2563eb", label: "Logistics" },
 }
@@ -250,7 +250,7 @@ function RightPanel({ file, onClose }: RightPanelProps) {
               <div className="flex items-center gap-2">
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                  style={{ backgroundColor: "#4f46e5" }}
+                  style={{ backgroundColor: "#1e3a2f" }}
                 >
                   {file.uploaded_by_name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
                 </div>

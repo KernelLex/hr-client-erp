@@ -44,7 +44,7 @@ function renderContent(content: string) {
   return parts.map((part, i) => {
     if (part.startsWith("@")) {
       return (
-        <span key={i} className="text-indigo-600 font-semibold bg-indigo-50 rounded px-0.5">
+        <span key={i} className="text-forest-600 font-semibold bg-forest-50 rounded px-0.5">
           {part}
         </span>
       )
@@ -159,7 +159,7 @@ export function MessageItem({ message, prevMessage, currentUser, mentionUserName
           {!sameGroup ? (
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-              style={{ backgroundColor: isOwn ? "#4F46E5" : "#334155" }}
+              style={{ backgroundColor: isOwn ? "#1e3a2f" : "#334155" }}
             >
               {getInitials(message.sender_name)}
             </div>
@@ -171,7 +171,7 @@ export function MessageItem({ message, prevMessage, currentUser, mentionUserName
           {/* Name + time — only for first in group */}
           {!sameGroup && (
             <div className="flex items-baseline gap-2 mb-0.5">
-              <span className={cn("text-sm font-semibold", isOwn ? "text-indigo-700" : "text-gray-800")}>
+              <span className={cn("text-sm font-semibold", isOwn ? "text-forest-700" : "text-gray-800")}>
                 {message.sender_name}
                 {isOwn && <span className="text-xs font-normal text-gray-400 ml-1">(you)</span>}
               </span>

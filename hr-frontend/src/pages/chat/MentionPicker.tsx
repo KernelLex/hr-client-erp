@@ -49,10 +49,10 @@ export function MentionPicker({ query, users, onSelect, onClose, highlightIndex 
           }}
           className={cn(
             "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
-            i === highlightIndex ? "bg-indigo-50" : "hover:bg-gray-50"
+            i === highlightIndex ? "bg-forest-50" : "hover:bg-gray-50"
           )}
         >
-          <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+          <div className="w-6 h-6 rounded-full bg-forest-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
             {getInitials(u.full_name)}
           </div>
           <span className="text-sm text-gray-700">{u.full_name}</span>

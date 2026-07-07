@@ -133,7 +133,7 @@ function Field({ label, field, value, editMode, canEditThis, draft, onChange, ty
         {labelEl}
         <select
           className="w-full rounded-lg text-sm font-medium"
-          style={{ border: "1px solid #C7D2FE", backgroundColor: "#EEF2FF", color: "var(--text-primary)", padding: "6px 10px" }}
+          style={{ border: "1px solid #b0d1bd", backgroundColor: "#eef5f1", color: "var(--text-primary)", padding: "6px 10px" }}
           value={current}
           onChange={(e) => onChange(field, e.target.value)}
         >
@@ -150,7 +150,7 @@ function Field({ label, field, value, editMode, canEditThis, draft, onChange, ty
         <textarea
           rows={2}
           className="w-full rounded-lg text-sm font-medium resize-none"
-          style={{ border: "1px solid #C7D2FE", backgroundColor: "#EEF2FF", color: "var(--text-primary)", padding: "6px 10px" }}
+          style={{ border: "1px solid #b0d1bd", backgroundColor: "#eef5f1", color: "var(--text-primary)", padding: "6px 10px" }}
           value={current}
           onChange={(e) => onChange(field, e.target.value)}
         />
@@ -166,7 +166,7 @@ function Field({ label, field, value, editMode, canEditThis, draft, onChange, ty
         value={current}
         onChange={(e) => onChange(field, e.target.value)}
         className="h-8 text-sm font-medium"
-        style={{ borderColor: "#C7D2FE", backgroundColor: "#EEF2FF" }}
+        style={{ borderColor: "#b0d1bd", backgroundColor: "#eef5f1" }}
       />
     </div>
   )
@@ -197,7 +197,7 @@ function SkillsEditor({ value, editMode, canEdit, onChange }: {
       <div className="flex flex-wrap gap-2">
         {skills.map((s) => (
           <span key={s} className="text-xs font-medium px-3 py-1 rounded-full"
-            style={{ border: "1px solid #A5B4FC", color: "#4338CA", backgroundColor: "#EEF2FF" }}>
+            style={{ border: "1px solid #85b89a", color: "#1e3a2f", backgroundColor: "#eef5f1" }}>
             {s}
           </span>
         ))}
@@ -210,7 +210,7 @@ function SkillsEditor({ value, editMode, canEdit, onChange }: {
       <div className="flex flex-wrap gap-2 min-h-[28px]">
         {skills.map((s) => (
           <span key={s} className="flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full"
-            style={{ border: "1px solid #A5B4FC", color: "#4338CA", backgroundColor: "#EEF2FF" }}>
+            style={{ border: "1px solid #85b89a", color: "#1e3a2f", backgroundColor: "#eef5f1" }}>
             {s}
             <button onClick={() => onChange(skills.filter((x) => x !== s).join(", "))}
               className="hover:text-red-500 transition-colors ml-0.5" type="button">
@@ -223,7 +223,7 @@ function SkillsEditor({ value, editMode, canEdit, onChange }: {
         <Input placeholder="Add a skill…" value={newSkill}
           onChange={(e) => setNewSkill(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill() } }}
-          className="h-8 text-sm flex-1" style={{ borderColor: "#C7D2FE", backgroundColor: "#EEF2FF" }} />
+          className="h-8 text-sm flex-1" style={{ borderColor: "#b0d1bd", backgroundColor: "#eef5f1" }} />
         <Button type="button" size="sm" onClick={addSkill} className="gap-1 text-white"
           style={{ backgroundColor: "var(--brand-primary)" }}>
           <Plus size={13} /> Add
@@ -262,7 +262,7 @@ function ProfileHeader({
   return (
     <div className="bg-white" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
       {/* Gradient banner */}
-      <div className="relative w-full" style={{ height: "120px", background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)" }}>
+      <div className="relative w-full" style={{ height: "120px", background: "linear-gradient(135deg, #1e3a2f 0%, #c8a45c 100%)" }}>
         {/* Back button */}
         {isAdmin && !isSelf && (
           <button onClick={() => navigate("/admin/employees")}
@@ -301,7 +301,7 @@ function ProfileHeader({
           {/* Avatar */}
           <div className="relative shrink-0" style={{ flexShrink: 0 }}>
             <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden"
-              style={{ backgroundColor: "#EEF2FF", border: "4px solid white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+              style={{ backgroundColor: "#eef5f1", border: "4px solid white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
               {photoUrl ? (
                 <img src={photoUrl} alt={profile.employee_name} className="w-full h-full object-cover" />
               ) : (
@@ -376,8 +376,8 @@ function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void 
               onClick={() => onChange(id)}
               className="flex items-center gap-1.5 px-5 py-3.5 text-sm font-medium transition-colors border-b-2 whitespace-nowrap"
               style={{
-                borderColor: isActive ? "#6366F1" : "transparent",
-                color: isActive ? "#6366F1" : "#64748B",
+                borderColor: isActive ? "#3d7d5c" : "transparent",
+                color: isActive ? "#3d7d5c" : "#64748B",
                 fontWeight: isActive ? 600 : 500,
               }}
               onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "#F8F7FF" }}
@@ -458,7 +458,7 @@ function ProfileTabContent({
                             value={String((draft[fld] as string | undefined) ?? "")}
                             onChange={(e) => onChange(fld, e.target.value)}
                             className="h-8 text-sm font-medium"
-                            style={{ borderColor: "#C7D2FE", backgroundColor: "#EEF2FF" }} />
+                            style={{ borderColor: "#b0d1bd", backgroundColor: "#eef5f1" }} />
                         ) : (
                           <p className="font-medium flex items-center gap-1.5" style={{ fontSize: "14px", color: "var(--text-primary)" }}>
                             {profile[fld]
@@ -618,7 +618,7 @@ function ApplyLeaveModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {totalDays > 0 && (
-            <p className="text-xs font-medium px-3 py-2 rounded-lg" style={{ backgroundColor: "#EEF2FF", color: "#4338CA" }}>
+            <p className="text-xs font-medium px-3 py-2 rounded-lg" style={{ backgroundColor: "#eef5f1", color: "#1e3a2f" }}>
               📅 {totalDays} working day{totalDays !== 1 ? "s" : ""} (Sundays excluded)
             </p>
           )}
@@ -697,7 +697,7 @@ function LeaveHistoryTabContent() {
     <div className="p-6 space-y-5">
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <SummaryCard label="Days Approved This Year" value={totalDays} accent="#6366F1" />
+        <SummaryCard label="Days Approved This Year" value={totalDays} accent="#3d7d5c" />
         <SummaryCard label="Approved Requests" value={approvedCount} accent="#1D9E75" />
         <SummaryCard label="Pending Requests" value={pendingCount} accent="#F59E0B" />
         <SummaryCard label="Rejected Requests" value={rejectedCount} accent="#EF4444" />
@@ -863,7 +863,7 @@ export function EmployeeProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-full" style={{ backgroundColor: "var(--bg-app)" }}>
-        <div className="h-[188px] animate-pulse" style={{ background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)" }} />
+        <div className="h-[188px] animate-pulse" style={{ background: "linear-gradient(135deg, #1e3a2f 0%, #c8a45c 100%)" }} />
         <div className="h-14 bg-white border-b border-gray-100 animate-pulse" />
         <div className="p-6 space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">

@@ -32,7 +32,7 @@ export function CandidateCard({ candidate, onClick }: Props) {
       <p className="text-xs text-gray-400 truncate">{candidate.email_id}</p>
 
       {candidate.custom_current_interview_round_name && (
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-purple-600 border-purple-200 bg-purple-50">
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-gold-600 border-gold-200 bg-gold-50">
           {candidate.custom_current_interview_round_name}
         </Badge>
       )}

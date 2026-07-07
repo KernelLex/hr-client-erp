@@ -22,7 +22,7 @@ const CAT_COLORS: Record<string, string> = {
   "Stock Movement":  "#6b7280",
   "Collection":      "#059669",
   "Payment":         "#d97706",
-  "Journal/Contra":  "#7c3aed",
+  "Journal/Contra":  "#c8a45c",
   "Other":           "#94a3b8",
 }
 
@@ -53,7 +53,7 @@ function anomalyToVoucherRow(a: AnomalyRow): VoucherRow {
 function StatsStrip({ stats }: { stats: EnrichmentStats }) {
   const pct = stats.total > 0 ? Math.round((stats.enriched / stats.total) * 100) : 0
   const cards = [
-    { label: "Total Vouchers", value: stats.total.toLocaleString(),     color: "#4f46e5", bg: "#eef2ff" },
+    { label: "Total Vouchers", value: stats.total.toLocaleString(),     color: "#1e3a2f", bg: "#eef5f1" },
     { label: "Enriched by AI", value: stats.enriched.toLocaleString(),  color: "#059669", bg: "#ecfdf5" },
     { label: "Pending",        value: stats.pending.toLocaleString(),    color: "#d97706", bg: "#fffbeb" },
     { label: "Anomalies",      value: stats.anomalies.toLocaleString(),  color: "#dc2626", bg: "#fef2f2" },
@@ -73,10 +73,10 @@ function StatsStrip({ stats }: { stats: EnrichmentStats }) {
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-medium text-gray-600">Enrichment coverage</span>
-            <span className="text-xs font-bold text-indigo-600">{pct}%</span>
+            <span className="text-xs font-bold text-forest-600">{pct}%</span>
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+            <div className="h-full bg-forest-500 rounded-full transition-all duration-500"
                  style={{ width: `${pct}%` }} />
           </div>
         </div>
@@ -130,14 +130,14 @@ function OverviewTab({ stats, onRefreshStats }: { stats: EnrichmentStats; onRefr
       {/* Enrichment control card */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-            <BookOpen size={18} className="text-indigo-600" strokeWidth={1.5} />
+          <div className="w-10 h-10 bg-forest-50 rounded-xl flex items-center justify-center">
+            <BookOpen size={18} className="text-forest-600" strokeWidth={1.5} />
           </div>
           <div>
             <h3 className="font-semibold text-gray-800">Ollama Enrichment</h3>
             <p className="text-xs text-gray-400">Uses local llama3.1 model</p>
           </div>
-          {isRunning && <Loader2 size={16} className="text-indigo-500 animate-spin ml-auto" />}
+          {isRunning && <Loader2 size={16} className="text-forest-500 animate-spin ml-auto" />}
         </div>
 
         {isRunning && statusData && (
@@ -147,7 +147,7 @@ function OverviewTab({ stats, onRefreshStats }: { stats: EnrichmentStats; onRefr
               <span>{statusData.progress}%</span>
             </div>
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+              <div className="h-full bg-forest-500 rounded-full transition-all duration-300"
                    style={{ width: `${statusData.progress}%` }} />
             </div>
             <p className="text-xs text-gray-400 mt-1.5">
@@ -168,7 +168,7 @@ function OverviewTab({ stats, onRefreshStats }: { stats: EnrichmentStats; onRefr
           {!isRunning ? (
             <button onClick={() => startMut.mutate()}
               disabled={startMut.isPending || stats.pending === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-40 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-forest-600 text-white rounded-xl hover:bg-forest-700 disabled:opacity-40 transition-colors">
               {startMut.isPending ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
               {stats.pending === 0 ? "All enriched" : `Enrich ${stats.pending.toLocaleString()} pending`}
             </button>
@@ -270,7 +270,7 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
           <div className="flex items-center gap-3">
             <input type="checkbox" checked={allSelected}
               onChange={() => allSelected ? setSelected(new Set()) : setSelected(new Set(allGuids))}
-              className="rounded border-gray-300 text-indigo-600 cursor-pointer" />
+              className="rounded border-gray-300 text-forest-600 cursor-pointer" />
             <span className="text-xs text-gray-500">
               {selected.size > 0 ? `${selected.size} selected` : `${data?.total ?? anomalyCount} anomalies`}
             </span>
@@ -287,7 +287,7 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
         </div>
 
         {isLoading ? (
-          <div className="py-12 flex justify-center"><Loader2 size={22} className="text-indigo-400 animate-spin" /></div>
+          <div className="py-12 flex justify-center"><Loader2 size={22} className="text-forest-400 animate-spin" /></div>
         ) : rows.length === 0 ? (
           <div className="py-12 text-center text-gray-400 text-sm">No anomalies need review</div>
         ) : (
@@ -315,14 +315,14 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
                         e.target.checked ? s.add(row.tally_guid) : s.delete(row.tally_guid)
                         setSelected(s)
                       }}
-                      className="rounded border-gray-300 text-indigo-600 cursor-pointer" />
+                      className="rounded border-gray-300 text-forest-600 cursor-pointer" />
                   </td>
                   <td className="py-3 px-4 text-gray-400 text-xs font-mono whitespace-nowrap">{fmtShort(row.voucher_date)}</td>
                   <td className="py-3 px-4 text-xs font-medium text-gray-600">{row.voucher_type}</td>
                   <td className="py-3 px-4">
                     <p className="font-medium text-gray-800 truncate max-w-[160px]">{row.party_name || row.debit_ledger || "—"}</p>
                     {row.party_norm && row.party_norm !== row.party_name && (
-                      <p className="text-[10px] text-indigo-500 truncate max-w-[160px]">{row.party_norm}</p>
+                      <p className="text-[10px] text-forest-500 truncate max-w-[160px]">{row.party_norm}</p>
                     )}
                   </td>
                   <td className="py-3 px-4">
@@ -418,7 +418,7 @@ function NormalizationsTab() {
         </p>
       </div>
       {isLoading ? (
-        <div className="py-12 flex justify-center"><Loader2 size={22} className="text-indigo-400 animate-spin" /></div>
+        <div className="py-12 flex justify-center"><Loader2 size={22} className="text-forest-400 animate-spin" /></div>
       ) : (
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100">
@@ -487,7 +487,7 @@ export default function VerificationPage() {
   if (isLoading || !stats) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-3">
-        <Loader2 size={28} className="text-indigo-400 animate-spin" />
+        <Loader2 size={28} className="text-forest-400 animate-spin" />
         <p className="text-sm text-gray-400">Loading verification data…</p>
       </div>
     )
@@ -523,7 +523,7 @@ export default function VerificationPage() {
           return (
             <button key={t.id} onClick={() => setTab(t.id as TabId)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                tab === t.id ? "border-indigo-500 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                tab === t.id ? "border-forest-500 text-forest-600" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}>
               <Icon size={14} />
               {t.label}

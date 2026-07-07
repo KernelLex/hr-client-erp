@@ -22,7 +22,7 @@ const MODULE_DOC_TYPES: Record<string, { label: string; value: string }[]> = {
 const MODULE_COLORS: Record<string, { bg: string; text: string; border: string; accent: string }> = {
   Sales:      { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0", accent: "#22c55e" },
   Purchase:   { bg: "#fff1f2", text: "#be123c", border: "#fecdd3", accent: "#f43f5e" },
-  Accounts:   { bg: "#f5f3ff", text: "#6d28d9", border: "#ddd6fe", accent: "#8b5cf6" },
+  Accounts:   { bg: "#fdf8ef", text: "#b8934c", border: "#ddd6fe", accent: "#8b5cf6" },
   HR_Payroll: { bg: "#fffbeb", text: "#92400e", border: "#fde68a", accent: "#f59e0b" },
   Logistics:  { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe", accent: "#3b82f6" },
   Unknown:    { bg: "#f9fafb", text: "#374151", border: "#e5e7eb", accent: "#9ca3af" },
@@ -44,7 +44,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 const DIR_COLORS: Record<string, string> = {
   Outgoing: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
   Incoming: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
-  Internal: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
+  Internal: "bg-gold-50 text-gold-700 ring-1 ring-gold-200",
   Unknown:  "bg-gray-100 text-gray-500",
 }
 
@@ -94,10 +94,10 @@ function ModuleFolderCard({ moduleKey, count, onClick }: { moduleKey: string; co
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 mt-1" style={{ backgroundColor: c.bg }}>
         <Folder size={26} style={{ color: c.accent }} fill={c.bg} strokeWidth={1.5} />
       </div>
-      <p className="font-bold text-[15px] text-gray-800 group-hover:text-indigo-600 transition-colors mb-0.5">{label}</p>
+      <p className="font-bold text-[15px] text-gray-800 group-hover:text-forest-600 transition-colors mb-0.5">{label}</p>
       <p className="text-[12px] text-gray-400">{subCount} categories</p>
       <p className="text-[13px] font-semibold mt-2" style={{ color: c.text }}>{count.toLocaleString()} files</p>
-      <ChevronRight size={15} className="absolute right-4 bottom-4 text-gray-200 group-hover:text-indigo-400 transition-all group-hover:translate-x-0.5" />
+      <ChevronRight size={15} className="absolute right-4 bottom-4 text-gray-200 group-hover:text-forest-400 transition-all group-hover:translate-x-0.5" />
     </button>
   )
 }
@@ -115,10 +115,10 @@ function DocTypeFolderCard({ label, moduleKey, count, onClick }: {
         <FileText size={18} style={{ color: c.accent }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-[13px] text-gray-800 group-hover:text-indigo-600 transition-colors truncate">{label}</p>
+        <p className="font-semibold text-[13px] text-gray-800 group-hover:text-forest-600 transition-colors truncate">{label}</p>
         <p className="text-[11px] mt-0.5 font-medium" style={{ color: c.text }}>{count.toLocaleString()} files</p>
       </div>
-      <ChevronRight size={14} className="text-gray-200 group-hover:text-indigo-400 transition-all group-hover:translate-x-0.5 shrink-0" />
+      <ChevronRight size={14} className="text-gray-200 group-hover:text-forest-400 transition-all group-hover:translate-x-0.5 shrink-0" />
     </button>
   )
 }
@@ -171,7 +171,7 @@ function FileTable({ files, isLoading, module: mod }: { files: any[]; isLoading:
                   <div className="flex items-center gap-2.5 min-w-0">
                     <ExtBadge filename={f.file_name} />
                     <div className="min-w-0">
-                      <span className="block truncate text-[12px] font-medium text-gray-800 group-hover:text-indigo-700 transition-colors max-w-[220px]" title={f.file_name}>
+                      <span className="block truncate text-[12px] font-medium text-gray-800 group-hover:text-forest-700 transition-colors max-w-[220px]" title={f.file_name}>
                         {f.file_name}
                       </span>
                       {f.folder_path && (
@@ -202,7 +202,7 @@ function FileTable({ files, isLoading, module: mod }: { files: any[]; isLoading:
                 <td className="px-4 py-3">
                   {f.web_view_link && (
                     <a href={f.web_view_link} target="_blank" rel="noreferrer"
-                       className="inline-flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded-lg font-medium transition-colors">
+                       className="inline-flex items-center gap-1 text-[11px] text-forest-600 hover:text-forest-800 hover:bg-forest-50 px-2 py-1 rounded-lg font-medium transition-colors">
                       <ExternalLink size={10} /> Open
                     </a>
                   )}
@@ -230,7 +230,7 @@ function SearchResults({ files, search, isLoading, onClear }: {
         <span className="text-[12px] text-gray-500">
           {isLoading ? "Searching…" : <><strong className="text-gray-800">{results.length}</strong> result{results.length !== 1 ? "s" : ""} for <em className="text-gray-700">"{search}"</em></>}
         </span>
-        <button onClick={onClear} className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1">
+        <button onClick={onClear} className="text-[11px] text-forest-600 hover:underline flex items-center gap-1">
           <X size={11} /> Clear search
         </button>
       </div>
@@ -314,7 +314,7 @@ export function VeDrivePage() {
           placeholder="Search all files by name, party, folder, or document type…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-11 pr-10 py-3 border border-gray-200 rounded-xl text-[13px] bg-white shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 transition"
+          className="w-full pl-11 pr-10 py-3 border border-gray-200 rounded-xl text-[13px] bg-white shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-forest-300 focus:border-forest-300 transition"
         />
         {search && (
           <button onClick={() => setSearch("")} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded">
@@ -326,7 +326,7 @@ export function VeDrivePage() {
       {/* Header: breadcrumb + sync */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <nav className="flex items-center gap-1 text-[13px]">
-          <button onClick={() => navigateTo("All")} className="flex items-center gap-1.5 text-gray-500 hover:text-indigo-600 transition-colors font-medium">
+          <button onClick={() => navigateTo("All")} className="flex items-center gap-1.5 text-gray-500 hover:text-forest-600 transition-colors font-medium">
             <Home size={13} /> Drive
           </button>
           {!isAtHome && (
@@ -334,7 +334,7 @@ export function VeDrivePage() {
               <ChevronRight size={13} className="text-gray-300 shrink-0" />
               <button
                 onClick={() => navigateTo(module)}
-                className={`transition-colors font-medium ${isAtModule && !isSearching ? "text-gray-800" : "text-indigo-600 hover:text-indigo-800"}`}
+                className={`transition-colors font-medium ${isAtModule && !isSearching ? "text-gray-800" : "text-forest-600 hover:text-forest-800"}`}
               >
                 {breadcrumbModule}
               </button>
@@ -398,7 +398,7 @@ export function VeDrivePage() {
               {(namingIssues as any[]).map((f) => (
                 <tr key={f.name} className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="px-4 py-2.5 font-mono text-[11px] text-gray-700 max-w-[280px] truncate">
-                    <a href={f.web_view_link} target="_blank" rel="noreferrer" className="hover:text-indigo-600 hover:underline">{f.file_name}</a>
+                    <a href={f.web_view_link} target="_blank" rel="noreferrer" className="hover:text-forest-600 hover:underline">{f.file_name}</a>
                   </td>
                   <td className="px-4 py-2.5 text-gray-500">{f.module || "—"}</td>
                   <td className="px-4 py-2.5 text-gray-400 text-[11px] truncate max-w-[200px]">{f.folder_path || "—"}</td>

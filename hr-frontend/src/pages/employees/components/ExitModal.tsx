@@ -115,15 +115,15 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
         {/* Step indicator */}
         {step !== "done" && (
           <div className="flex items-center gap-2 mb-2">
-            <div className={cn("flex items-center gap-1.5 text-xs font-medium", step === "resignation" ? "text-blue-600" : "text-green-600")}>
-              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === "resignation" ? "bg-blue-600 text-white" : "bg-green-500 text-white")}>
+            <div className={cn("flex items-center gap-1.5 text-xs font-medium", step === "resignation" ? "text-forest-700" : "text-green-600")}>
+              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === "resignation" ? "bg-forest-700 text-white" : "bg-green-500 text-white")}>
                 {step === "resignation" ? "1" : <CheckCircle2 size={12} />}
               </div>
               Resignation
             </div>
             <div className="flex-1 h-px bg-gray-200" />
-            <div className={cn("flex items-center gap-1.5 text-xs font-medium", step === "interview" ? "text-blue-600" : "text-gray-400")}>
-              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === "interview" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500")}>
+            <div className={cn("flex items-center gap-1.5 text-xs font-medium", step === "interview" ? "text-forest-700" : "text-gray-400")}>
+              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === "interview" ? "bg-forest-700 text-white" : "bg-gray-200 text-gray-500")}>
                 2
               </div>
               Exit Interview
@@ -159,7 +159,7 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
               >
                 {file ? (
                   <div className="flex items-center justify-center gap-3">
-                    <FileText size={20} className="text-blue-500 shrink-0" />
+                    <FileText size={20} className="text-forest-500 shrink-0" />
                     <div className="text-left min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
                       <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(0)} KB</p>

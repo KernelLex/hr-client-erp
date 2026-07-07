@@ -81,7 +81,7 @@ function StatusBadge({ status }: { status?: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     on_time: { label: "On Time",  cls: "bg-green-100 text-green-700" },
     late:    { label: "Late",     cls: "bg-orange-100 text-orange-700" },
-    working: { label: "Working",  cls: "bg-blue-100 text-blue-700" },
+    working: { label: "Working",  cls: "bg-blue-100 text-forest-800" },
     absent:  { label: "Absent",   cls: "bg-red-100 text-red-700" },
   }
   const s = map[status ?? ""] ?? { label: status ?? "—", cls: "bg-gray-100 text-gray-600" }
@@ -128,7 +128,7 @@ function DateRangePicker({
                 onClick={() => onPreset(key)}
                 className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                   preset === key
-                    ? "bg-blue-600 text-white"
+                    ? "bg-forest-700 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -299,7 +299,7 @@ function AttendanceTable({ dateFrom, dateTo }: AttendanceTableProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <Clock size={15} className="text-blue-500" />
+            <Clock size={15} className="text-forest-500" />
             Attendance
           </CardTitle>
           <Button
@@ -464,7 +464,7 @@ function WeeklyHoursChart() {
     <Card className="bg-white shadow-sm border-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <TrendingUp size={15} className="text-violet-500" />
+          <TrendingUp size={15} className="text-gold-500" />
           Weekly Hours
           {data?.success && "week_start" in data && (
             <span className="text-[11px] text-gray-400 font-normal">

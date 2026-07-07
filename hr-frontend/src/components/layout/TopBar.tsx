@@ -26,7 +26,7 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
     : "HR"
 
   return (
-    <header className="h-14 border-b border-gray-200 bg-white shadow-sm flex items-center justify-between px-4 shrink-0">
+    <header className="no-print h-14 border-b border-gray-200 bg-white shadow-sm flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-2">
         <button
           onClick={onToggleSidebar}
@@ -39,7 +39,7 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
       <DropdownMenu>
         <DropdownMenuTrigger className="outline-none">
           <Avatar className="h-8 w-8 cursor-pointer">
-            <AvatarFallback className="bg-blue-600 text-white text-xs font-semibold">
+            <AvatarFallback className="bg-forest-700 text-white text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>

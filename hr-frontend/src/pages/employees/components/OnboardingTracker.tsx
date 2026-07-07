@@ -97,12 +97,12 @@ export function OnboardingTracker({ employeeId, currentStage, docsChecklist, itC
                 <div className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all",
                   done ? "bg-green-500 border-green-500 text-white"
-                    : active ? "bg-blue-600 border-blue-600 text-white"
+                    : active ? "bg-forest-700 border-forest-700 text-white"
                     : "bg-white border-gray-200 text-gray-400"
                 )}>
                   {done ? <Check size={14} /> : i + 1}
                 </div>
-                <span className={cn("text-[10px] mt-1 font-medium", active ? "text-blue-600" : done ? "text-green-600" : "text-gray-400")}>
+                <span className={cn("text-[10px] mt-1 font-medium", active ? "text-forest-700" : done ? "text-green-600" : "text-gray-400")}>
                   {stage.short}
                 </span>
               </div>

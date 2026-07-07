@@ -1,11 +1,11 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
-// BusinessDashboard is retired — all financial data lives in Operations.
+// BusinessDashboard is retired — all financial data lives in Accounting.
 // This redirect exists so any bookmarked /business URL lands in the right place.
 export default function BusinessDashboard() {
   const navigate = useNavigate()
-  useEffect(() => { navigate("/operations", { replace: true }) }, [navigate])
+  useEffect(() => { navigate("/accounting", { replace: true }) }, [navigate])
   return null
 }
 

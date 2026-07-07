@@ -51,7 +51,7 @@ function EmployeeCardItem({ emp }: { emp: EmployeeListItem }) {
     <div
       role="button"
       tabIndex={0}
-      className="flex flex-col items-center text-center p-6 rounded-2xl bg-white select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+      className="flex flex-col items-center text-center p-6 rounded-2xl bg-white select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-400"
       style={{
         border: "1px solid #E2E8F0",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
@@ -64,7 +64,7 @@ function EmployeeCardItem({ emp }: { emp: EmployeeListItem }) {
         const el = e.currentTarget as HTMLDivElement
         el.style.boxShadow = "0 8px 24px rgba(79,70,229,0.12)"
         el.style.transform = "translateY(-2px)"
-        el.style.borderColor = "#A5B4FC"
+        el.style.borderColor = "#85b89a"
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLDivElement

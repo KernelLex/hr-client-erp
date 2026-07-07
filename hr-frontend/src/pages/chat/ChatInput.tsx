@@ -188,7 +188,7 @@ export function ChatInput({ onSend, isSending, mentionUsers, disabled }: Props) 
         <div className="mb-2 flex items-start gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
           {pendingFile.uploading ? (
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Loader2 size={13} className="animate-spin text-indigo-500" />
+              <Loader2 size={13} className="animate-spin text-forest-500" />
               <span>Uploading {pendingFile.file.name}…</span>
             </div>
           ) : pendingFile.error ? (
@@ -231,7 +231,7 @@ export function ChatInput({ onSend, isSending, mentionUsers, disabled }: Props) 
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={!!pendingFile || disabled}
-            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-40 shrink-0"
+            className="p-2 text-gray-400 hover:text-forest-600 hover:bg-forest-50 rounded-lg transition-colors disabled:opacity-40 shrink-0"
             title="Attach file"
           >
             <Paperclip size={18} />
@@ -253,7 +253,7 @@ export function ChatInput({ onSend, isSending, mentionUsers, disabled }: Props) 
             placeholder={disabled ? "Select a room to chat" : "Message… (@ to mention, Shift+Enter for newline)"}
             disabled={disabled}
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:opacity-50 bg-gray-50 focus:bg-white transition-colors"
+            className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-300 disabled:opacity-50 bg-gray-50 focus:bg-white transition-colors"
             style={{ maxHeight: "120px", overflowY: "auto" }}
           />
 
@@ -261,7 +261,7 @@ export function ChatInput({ onSend, isSending, mentionUsers, disabled }: Props) 
           <button
             onClick={handleSend}
             disabled={!canSend || isSending}
-            className="p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-40 transition-colors flex items-center justify-center shrink-0"
+            className="p-2 bg-forest-600 text-white rounded-xl hover:bg-forest-700 disabled:opacity-40 transition-colors flex items-center justify-center shrink-0"
           >
             {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </button>

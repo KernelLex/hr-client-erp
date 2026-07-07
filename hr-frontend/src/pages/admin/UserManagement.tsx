@@ -1,8 +1,6 @@
-import { ADMIN_USERS } from "@/lib/constants"
 import { useState, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "react-router-dom"
-import { useAuth } from "@/context/AuthContext"
+import { useAdminGuard } from "@/lib/useAdminGuard"
 import { api, apiUrl } from "@/lib/api"
 import { toast } from "sonner"
 import {
@@ -61,7 +59,7 @@ function getInitials(name: string) {
 }
 
 function getAvatarColor(name: string) {
-  const colors = ["#4F46E5", "#7C3AED", "#059669", "#DC2626", "#D97706", "#0891B2"]
+  const colors = ["#1e3a2f", "#c8a45c", "#059669", "#DC2626", "#D97706", "#0891B2"]
   let hash = 0
   for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) % colors.length
   return colors[Math.abs(hash)]
@@ -71,7 +69,7 @@ function getRoleBadgeStyle(role: string): string {
   if (role.toLowerCase().includes("administrator") || role.toLowerCase().includes("system manager"))
     return "bg-red-100 text-red-700"
   if (role.toLowerCase().includes("hr"))
-    return "bg-purple-100 text-purple-700"
+    return "bg-gold-100 text-gold-700"
   if (role.toLowerCase().includes("account"))
     return "bg-green-100 text-green-700"
   if (role.toLowerCase().includes("sales") || role.toLowerCase().includes("crm"))
@@ -99,7 +97,7 @@ function checkPasswordStrength(pw: string): { score: number; label: string; colo
   if (pw.length >= 8) score++
   if (/[A-Z]/.test(pw)) score++
   if (/[0-9]/.test(pw)) score++
-  if (/[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/\\'"~`]/.test(pw)) score++
+  if (/[!@#$%^&*()\-_=+[\]{}|;:,.<>?/\\'"~`]/.test(pw)) score++
   if (score <= 1) return { score, label: "Weak", color: "#EF4444" }
   if (score === 2) return { score, label: "Fair", color: "#F59E0B" }
   if (score === 3) return { score, label: "Good", color: "#3B82F6" }
@@ -127,7 +125,7 @@ function PasswordField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-forest-500"
         />
         <button
           type="button"
@@ -154,7 +152,7 @@ function PasswordField({
               [value.length >= 8, "8+ characters"],
               [/[A-Z]/.test(value), "Uppercase letter"],
               [/[0-9]/.test(value), "Number"],
-              [/[!@#$%^&*()\-_=+\[\]{}|;:,.<>?]/.test(value), "Special character"],
+              [/[!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(value), "Special character"],
             ].map(([ok, label], i) => (
               <li key={i} className="flex items-center gap-1" style={{ color: ok ? "#10B981" : "#9CA3AF" }}>
                 <CheckCircle2 size={10} />
@@ -200,7 +198,7 @@ function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: (
   const [loading, setLoading] = useState(false)
 
   const field = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }))
-  const toggleRole = (r: string) => setSelectedRoles((s) => { const n = new Set(s); n.has(r) ? n.delete(r) : n.add(r); return n })
+  const toggleRole = (r: string) => setSelectedRoles((s) => { const n = new Set(s); if (n.has(r)) { n.delete(r) } else { n.add(r) }; return n })
 
   async function submit() {
     setError("")
@@ -234,19 +232,19 @@ function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: (
         <div className="grid grid-cols-2 gap-3">
           <FormField label="First Name *">
             <input value={form.firstName} onChange={(e) => field("firstName")(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500"
               placeholder="First name" />
           </FormField>
           <FormField label="Last Name *">
             <input value={form.lastName} onChange={(e) => field("lastName")(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500"
               placeholder="Last name" />
           </FormField>
         </div>
         <FormField label="Email *">
           <input value={form.email} onChange={(e) => field("email")(e.target.value)}
             type="email"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500"
             placeholder="email@company.com" />
         </FormField>
         <FormField label="Password *">
@@ -275,7 +273,7 @@ function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: (
         <div className="flex gap-2 pt-1">
           <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={submit} disabled={loading}
-            className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50">
+            className="flex-1 rounded-lg bg-forest-600 py-2 text-sm text-white hover:bg-forest-700 disabled:opacity-50">
             {loading ? "Creating..." : "Create User"}
           </button>
         </div>
@@ -290,7 +288,7 @@ function EditRolesModal({ user, roles, onClose, onSuccess }: { user: UserRecord;
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const toggle = (r: string) => setSelected((s) => { const n = new Set(s); n.has(r) ? n.delete(r) : n.add(r); return n })
+  const toggle = (r: string) => setSelected((s) => { const n = new Set(s); if (n.has(r)) { n.delete(r) } else { n.add(r) }; return n })
 
   async function submit() {
     setError("")
@@ -341,7 +339,7 @@ function EditRolesModal({ user, roles, onClose, onSuccess }: { user: UserRecord;
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={submit} disabled={loading}
-            className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50">
+            className="flex-1 rounded-lg bg-forest-600 py-2 text-sm text-white hover:bg-forest-700 disabled:opacity-50">
             {loading ? "Saving..." : "Save Roles"}
           </button>
         </div>
@@ -400,7 +398,7 @@ function ChangePasswordModal({ user, onClose, onSuccess }: { user: UserRecord; o
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={submit} disabled={loading}
-            className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50">
+            className="flex-1 rounded-lg bg-forest-600 py-2 text-sm text-white hover:bg-forest-700 disabled:opacity-50">
             {loading ? "Changing..." : "Change Password"}
           </button>
         </div>
@@ -452,15 +450,8 @@ function ConfirmDialog({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function UserManagement() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
+  const guard = useAdminGuard()
   const queryClient = useQueryClient()
-
-  // Admin guard
-  if (user && !ADMIN_USERS.has(user.name)) {
-    navigate("/", { replace: true })
-    return null
-  }
 
   const { data: users = [], isLoading } = useUsers()
   const { data: roles = [] } = useAvailableRoles()
@@ -513,6 +504,8 @@ export function UserManagement() {
     },
   })
 
+  if (guard) return guard
+
   return (
     <div className="p-6 max-w-6xl space-y-6 min-h-full">
       {/* Header */}
@@ -527,7 +520,7 @@ export function UserManagement() {
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+          className="flex items-center gap-2 rounded-xl bg-forest-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-forest-700 transition-colors"
         >
           <Plus size={15} />
           Add New User
@@ -541,7 +534,7 @@ export function UserManagement() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name or email..."
-          className="w-full rounded-xl border border-gray-200 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full rounded-xl border border-gray-200 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500"
         />
       </div>
 
@@ -593,7 +586,7 @@ export function UserManagement() {
                         <p className="font-medium text-gray-900">{u.full_name}</p>
                         <p className="text-xs text-gray-400">{u.name}</p>
                         {u.linked_designation && (
-                          <p className="text-xs text-indigo-500">{u.linked_designation}</p>
+                          <p className="text-xs text-forest-500">{u.linked_designation}</p>
                         )}
                       </div>
                       {u.is_protected && (
@@ -728,7 +721,7 @@ function ActionBtn({
   icon: React.ReactNode; label: string; onClick: () => void; color?: "default" | "amber" | "green" | "red"
 }) {
   const styles = {
-    default: "text-gray-400 hover:text-indigo-600 hover:bg-indigo-50",
+    default: "text-gray-400 hover:text-forest-600 hover:bg-forest-50",
     amber: "text-gray-400 hover:text-amber-600 hover:bg-amber-50",
     green: "text-gray-400 hover:text-green-600 hover:bg-green-50",
     red: "text-gray-400 hover:text-red-600 hover:bg-red-50",

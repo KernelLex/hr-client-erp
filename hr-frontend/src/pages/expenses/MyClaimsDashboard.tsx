@@ -41,7 +41,7 @@ function ClaimRow({ claim }: { claim: ExpenseClaim }) {
       style={{ border: "1px solid #E2E8F0", marginBottom: "8px" }}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLDivElement
-        el.style.borderColor = "#A5B4FC"
+        el.style.borderColor = "#85b89a"
         el.style.boxShadow = "var(--shadow-card-hover)"
       }}
       onMouseLeave={(e) => {
@@ -146,15 +146,18 @@ export function MyClaimsDashboard() {
   const { user } = useAuth()
   const isOwais = user && OWAIS_USERS.has(user.name)
 
-  // Owais approves claims, not submits them — show admin view directly
-  if (isOwais) return <AdminClaimsView />
-
   const now = new Date()
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
 
+  // Owais approves claims, not submits them — show admin view directly.
+  // Hooks below still run every render (Rules of Hooks) even though
+  // their results go unused in the admin case; enabled:false would also
+  // work but these queries are cheap and this keeps the branch simple.
   const { data: allClaims = [], isLoading } = useMyClaims()
   const { data: summaryData } = useMonthlyExpenseSummary(selectedMonth, selectedYear)
+
+  if (isOwais) return <AdminClaimsView />
 
   const summary = summaryData?.summary?.[0]
 
@@ -214,7 +217,7 @@ export function MyClaimsDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryCard
           label="Total Claimed" amount={summary?.total_claimed ?? 0}
-          bg="#FFFFFF" border="#A5B4FC" amountColor="#3730A3" labelColor="#4338CA"
+          bg="#FFFFFF" border="#85b89a" amountColor="#16291f" labelColor="#1e3a2f"
         />
         <SummaryCard
           label="Approved" amount={summary?.total_approved ?? 0}

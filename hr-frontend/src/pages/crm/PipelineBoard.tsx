@@ -33,7 +33,7 @@ function LeadCard({ lead }: { lead: CRMLead }) {
       </p>
       <p className="text-xs text-gray-500 mb-2">{lead.contact_person}</p>
       <div className="flex flex-wrap gap-1 mb-2">
-        <span className="text-[10px] px-1.5 py-0.5 rounded border font-medium bg-blue-50 text-blue-700 border-blue-200">
+        <span className="text-[10px] px-1.5 py-0.5 rounded border font-medium bg-blue-50 text-forest-800 border-blue-200">
           {lead.service_interest}
         </span>
         {isPending && (
@@ -113,7 +113,7 @@ function ApprovalCard({ approval }: { approval: CRMApprovalRequest }) {
           <p className="font-semibold text-gray-900 text-sm">{approval.company_name}</p>
           <p className="text-xs text-gray-500">{approval.contact_person} · {approval.phone}</p>
         </div>
-        <div className="flex items-center gap-1 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded px-2 py-1 shrink-0">
+        <div className="flex items-center gap-1 text-xs font-medium bg-blue-50 text-forest-800 border border-blue-200 rounded px-2 py-1 shrink-0">
           {approval.current_stage} → {approval.requested_stage}
         </div>
       </div>
@@ -219,7 +219,7 @@ export function PipelineBoard() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b bg-white shrink-0">
         <div className="flex items-center gap-2">
-          <Briefcase size={20} className="text-blue-600" />
+          <Briefcase size={20} className="text-forest-700" />
           <h1 className="text-xl font-bold text-gray-900">CRM Pipeline</h1>
           {!isLoading && (
             <Badge variant="secondary" className="ml-2">
@@ -265,8 +265,8 @@ export function PipelineBoard() {
             <div key={stage} className="flex items-center gap-1.5 shrink-0">
               <span className={cn(
                 "inline-block w-2 h-2 rounded-full",
-                stage === "Lead" ? "bg-blue-500"
-                  : stage === "Discussion" ? "bg-purple-500"
+                stage === "Lead" ? "bg-forest-500"
+                  : stage === "Discussion" ? "bg-gold-500"
                   : stage === "Quotation" ? "bg-amber-500"
                   : stage === "Order" ? "bg-orange-500"
                   : stage === "Delivery" ? "bg-teal-500"

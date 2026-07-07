@@ -35,6 +35,11 @@ import { VeDrivePage } from "@/pages/drive/VeDrivePage"
 import { ChatPage } from "@/pages/chat/ChatPage"
 import OperationsPage from "@/pages/Operations"
 import GraphsPage from "@/pages/Graphs"
+import InventoryPage from "@/pages/Inventory"
+import PurchasingPage from "@/pages/Purchasing"
+import SalesRegisterPage from "@/pages/SalesRegister"
+import LogisticsPage from "@/pages/Logistics"
+import ReturnsPage from "@/pages/Returns"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,8 +96,15 @@ function App() {
                 <Route path="/drive" element={<VeDrivePage />} />
                 {/* Chat */}
                 <Route path="/chat" element={<ChatPage />} />
-                {/* Operations Dashboard */}
-                <Route path="/operations" element={<OperationsPage />} />
+                {/* Accounting Dashboard (formerly Operations) */}
+                <Route path="/accounting" element={<OperationsPage />} />
+                <Route path="/operations" element={<Navigate to="/accounting" replace />} />
+                {/* Tally-derived modules */}
+                <Route path="/inventory" element={<InventoryPage />} />
+                <Route path="/purchasing" element={<PurchasingPage />} />
+                <Route path="/sales-register" element={<SalesRegisterPage />} />
+                <Route path="/logistics" element={<LogisticsPage />} />
+                <Route path="/returns" element={<ReturnsPage />} />
                 {/* Holidays */}
                 <Route path="/holidays" element={<HolidaysPage />} />
                 {/* Catch-all: redirect unknown paths to dashboard */}

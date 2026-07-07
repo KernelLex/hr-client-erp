@@ -29,7 +29,7 @@ const ALL_MODULES: PermissionModule[] = [
 ]
 
 const DEPT_STYLES: Record<string, { badge: string; avatar: string }> = {
-  Admin:     { badge: "bg-purple-100 text-purple-700 border-purple-200", avatar: "bg-purple-600" },
+  Admin:     { badge: "bg-gold-100 text-gold-700 border-gold-200", avatar: "bg-gold-600" },
   Project:   { badge: "bg-blue-100 text-blue-700 border-blue-200",       avatar: "bg-blue-600" },
   Accounts:  { badge: "bg-amber-100 text-amber-700 border-amber-200",    avatar: "bg-amber-500" },
   Logistics: { badge: "bg-green-100 text-green-700 border-green-200",    avatar: "bg-green-600" },
@@ -79,7 +79,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
 
   return (
     <div className={`bg-white rounded-2xl shadow-sm overflow-hidden border ${
-      user.is_admin ? "border-purple-200 ring-1 ring-purple-100" : "border-gray-200"
+      user.is_admin ? "border-gold-200 ring-1 ring-gold-100" : "border-gray-200"
     }`}>
       {/* Card header */}
       <div className="flex items-center justify-between px-5 py-4">
@@ -91,7 +91,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold text-gray-900">{user.name}</p>
               {user.is_admin && (
-                <span className="text-[10px] font-semibold bg-purple-600 text-white px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold bg-gold-600 text-white px-2 py-0.5 rounded-full">
                   Full Access
                 </span>
               )}
@@ -125,7 +125,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
               onClick={() => !user.is_admin && toggle(mod)}
               className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 border cursor-pointer select-none transition-all ${
                 user.is_admin
-                  ? "bg-purple-50 border-purple-100 cursor-default"
+                  ? "bg-gold-50 border-gold-100 cursor-default"
                   : perms[mod]
                   ? "bg-blue-50 border-blue-100 hover:border-blue-300"
                   : "bg-gray-50 border-gray-100 hover:border-gray-300"
@@ -134,7 +134,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="text-sm leading-none">{MODULE_ICONS[mod]}</span>
                 <span className={`text-xs font-medium truncate ${
-                  user.is_admin ? "text-purple-700" : perms[mod] ? "text-blue-700" : "text-gray-500"
+                  user.is_admin ? "text-gold-700" : perms[mod] ? "text-blue-700" : "text-gray-500"
                 }`}>
                   {PERMISSION_MODULE_LABELS[mod]}
                 </span>
@@ -152,7 +152,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
       {/* Footer */}
       <div className="px-5 pb-4 flex items-center justify-between">
         {user.is_admin ? (
-          <p className="text-xs text-purple-400">Administrator — permissions cannot be modified</p>
+          <p className="text-xs text-gold-400">Administrator — permissions cannot be modified</p>
         ) : (
           <p className="text-xs text-gray-400">
             {enabledCount === ALL_MODULES.length ? "All modules enabled" : `${ALL_MODULES.length - enabledCount} module${ALL_MODULES.length - enabledCount !== 1 ? "s" : ""} restricted`}
@@ -166,7 +166,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
               saved
                 ? "bg-green-100 text-green-700"
                 : dirty
-                ? "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                ? "bg-forest-700 text-white hover:bg-forest-800 shadow-sm"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
@@ -197,8 +197,8 @@ export function PermissionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-7">
         <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-purple-50 flex items-center justify-center shadow-sm">
-            <Shield size={22} className="text-purple-600" />
+          <div className="h-11 w-11 rounded-2xl bg-gold-50 flex items-center justify-center shadow-sm">
+            <Shield size={22} className="text-gold-600" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Role Control</h1>

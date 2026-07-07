@@ -71,7 +71,7 @@ function LeaveDocumentsPanel({ leaveId }: { leaveId: string }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 mt-1"
+        className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-forest-700 mt-1"
       >
         <Paperclip size={11} />
         {files.length > 0 ? `${files.length} document${files.length > 1 ? "s" : ""}` : "Attach documents"}
@@ -101,7 +101,7 @@ function LeaveDocumentsPanel({ leaveId }: { leaveId: string }) {
                 href={f.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:underline truncate"
+                className="text-xs text-forest-700 hover:underline truncate"
               >
                 {f.file_name}
               </a>
@@ -114,7 +114,7 @@ function LeaveDocumentsPanel({ leaveId }: { leaveId: string }) {
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={upload.isPending}
-        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
+        className="flex items-center gap-1 text-xs text-forest-700 hover:text-forest-800 disabled:opacity-50"
       >
         <Upload size={11} />
         {upload.isPending ? "Uploading…" : "Upload document"}
@@ -181,11 +181,11 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
     <Card id="apply-leave-form" className="bg-white shadow-sm border-0">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <Plus size={15} className="text-blue-500" />
+          <Plus size={15} className="text-forest-500" />
           Apply for Leave
           {initialType && (
             <span className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#F3E8FF", color: "#7C3AED" }}>
+              style={{ backgroundColor: "#F3E8FF", color: "#c8a45c" }}>
               {initialType}
             </span>
           )}
@@ -200,7 +200,7 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
             <select
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-500 bg-white"
             >
               <option value="">Select leave type…</option>
               {LEAVE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -220,7 +220,7 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
                   setFromDate(e.target.value)
                   if (toDate && e.target.value > toDate) setToDate(e.target.value)
                 }}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-500"
               />
             </div>
             <div>
@@ -232,15 +232,15 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
                 value={toDate}
                 min={fromDate || today}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-500"
               />
             </div>
           </div>
 
           {fromDate && toDate && (
             <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 flex items-center gap-2">
-              <Clock size={14} className="text-blue-500" />
-              <span className="text-sm text-blue-700">
+              <Clock size={14} className="text-forest-500" />
+              <span className="text-sm text-forest-800">
                 <span className="font-semibold">{totalDays}</span> working day{totalDays !== 1 ? "s" : ""} (Sundays excluded)
               </span>
             </div>
@@ -268,14 +268,14 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
               onChange={(e) => setReason(e.target.value)}
               rows={3}
               placeholder="Briefly explain the reason for your leave…"
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-500 resize-none"
             />
           </div>
 
           <Button
             type="submit"
             disabled={applyMutation.isPending || leavesThisMonth >= MAX_LEAVES_PER_MONTH}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg text-sm"
+            className="w-full bg-forest-700 hover:bg-forest-800 text-white font-semibold py-2 rounded-lg text-sm"
           >
             {applyMutation.isPending ? "Submitting…" : "Submit Leave Request"}
           </Button>
@@ -332,7 +332,7 @@ function LeaveBalanceCard({ leaves }: { leaves: LeaveApplication[] }) {
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-gray-200 rounded-full h-1.5">
               <div
-                className={`h-1.5 rounded-full ${thisMonthCount >= MAX_LEAVES_PER_MONTH ? "bg-red-500" : "bg-blue-500"}`}
+                className={`h-1.5 rounded-full ${thisMonthCount >= MAX_LEAVES_PER_MONTH ? "bg-red-500" : "bg-forest-500"}`}
                 style={{ width: `${Math.min((thisMonthCount / MAX_LEAVES_PER_MONTH) * 100, 100)}%` }}
               />
             </div>

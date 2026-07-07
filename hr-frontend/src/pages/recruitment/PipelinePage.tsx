@@ -52,9 +52,9 @@ export function PipelinePage() {
           <button
             onClick={() => setAddCandidateOpen(true)}
             className="flex items-center gap-1.5 text-sm font-semibold text-white px-3 py-1.5 rounded-lg transition-all"
-            style={{ backgroundColor: "#4F46E5" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#3730A3")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#4F46E5")}
+            style={{ backgroundColor: "#1e3a2f" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#16291f")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1e3a2f")}
           >
             <UserPlus size={13} />
             Add Candidate

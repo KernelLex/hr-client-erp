@@ -62,7 +62,7 @@ function MessageResult({
   return (
     <button
       onClick={() => { onNavigate(result.room); onClose() }}
-      className="w-full text-left px-4 py-3 hover:bg-indigo-50/60 transition-colors border-b border-gray-50 last:border-0"
+      className="w-full text-left px-4 py-3 hover:bg-forest-50/60 transition-colors border-b border-gray-50 last:border-0"
     >
       {/* Room + time */}
       {!isRoomScope && (
@@ -75,7 +75,7 @@ function MessageResult({
 
       <div className="flex items-start gap-2">
         {/* Sender initial */}
-        <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 text-[11px] font-bold text-indigo-600">
+        <div className="w-7 h-7 rounded-full bg-forest-100 flex items-center justify-center shrink-0 text-[11px] font-bold text-forest-600">
           {(result.sender_name || "?")[0].toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
@@ -111,7 +111,7 @@ function MediaCard({ item, query }: { item: MediaItem; query: string }) {
       target="_blank"
       rel="noopener noreferrer"
       download={!isImage ? item.file_name : undefined}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-indigo-50/60 transition-colors border-b border-gray-50 last:border-0 group"
+      className="flex items-center gap-3 px-4 py-3 hover:bg-forest-50/60 transition-colors border-b border-gray-50 last:border-0 group"
     >
       {isImage ? (
         <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-gray-100 bg-gray-50">
@@ -138,7 +138,7 @@ function MediaCard({ item, query }: { item: MediaItem; query: string }) {
         </div>
       </div>
 
-      <Download size={13} className="text-gray-300 group-hover:text-indigo-500 transition-colors shrink-0" />
+      <Download size={13} className="text-gray-300 group-hover:text-forest-500 transition-colors shrink-0" />
     </a>
   )
 }
@@ -188,7 +188,7 @@ export function SearchPanel({ onClose, onNavigate, activeRoomId, activeRoomName 
       {/* ── Header ── */}
       <div className="px-4 pt-4 pb-3 border-b border-gray-100 shrink-0">
         {/* Search input */}
-        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 focus-within:border-forest-300 focus-within:ring-2 focus-within:ring-forest-100 transition-all">
           <Search size={15} className="text-gray-400 shrink-0" />
           <input
             autoFocus
@@ -217,7 +217,7 @@ export function SearchPanel({ onClose, onNavigate, activeRoomId, activeRoomName 
               onClick={() => setScope("room")}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
                 scope === "room"
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-forest-600 text-white"
                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}
             >
@@ -228,7 +228,7 @@ export function SearchPanel({ onClose, onNavigate, activeRoomId, activeRoomName 
               onClick={() => setScope("global")}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
                 scope === "global"
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-forest-600 text-white"
                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}
             >
@@ -249,7 +249,7 @@ export function SearchPanel({ onClose, onNavigate, activeRoomId, activeRoomName 
               onClick={() => setTab(id)}
               className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium border-b-2 transition-colors ${
                 tab === id
-                  ? "border-indigo-600 text-indigo-600"
+                  ? "border-forest-600 text-forest-600"
                   : "border-transparent text-gray-400 hover:text-gray-600"
               }`}
             >
@@ -278,7 +278,7 @@ export function SearchPanel({ onClose, onNavigate, activeRoomId, activeRoomName 
 
             {debouncedQuery && msgLoading && (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                <Loader2 className="w-5 h-5 animate-spin text-forest-400" />
               </div>
             )}
 
@@ -333,7 +333,7 @@ export function SearchPanel({ onClose, onNavigate, activeRoomId, activeRoomName 
           <>
             {mediaLoading && (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                <Loader2 className="w-5 h-5 animate-spin text-forest-400" />
               </div>
             )}
 

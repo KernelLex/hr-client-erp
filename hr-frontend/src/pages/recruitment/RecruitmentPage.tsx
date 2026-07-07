@@ -68,8 +68,8 @@ function JobCard({
             <span
               className="text-xs font-medium px-2 py-0.5 rounded-full"
               style={{
-                backgroundColor: isClosed ? "#F1F5F9" : "#EEF2FF",
-                color: isClosed ? "#64748B" : "#4F46E5",
+                backgroundColor: isClosed ? "#F1F5F9" : "#eef5f1",
+                color: isClosed ? "#64748B" : "#1e3a2f",
               }}
             >
               {isClosed ? "Closed" : "Open"}
@@ -157,11 +157,11 @@ function JobCard({
       <div className="flex items-center justify-between mt-4">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: "#0F172A" }}>
-            <Users size={12} style={{ color: "#4F46E5" }} />
+            <Users size={12} style={{ color: "#1e3a2f" }} />
             {job.applicant_counts.total ?? 0} candidate{(job.applicant_counts.total ?? 0) !== 1 ? "s" : ""}
           </span>
           {(job.applicant_counts["Application Received"] ?? 0) > 0 && (
-            <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#EEF2FF", color: "#4F46E5" }}>
+            <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#eef5f1", color: "#1e3a2f" }}>
               {job.applicant_counts["Application Received"]} new
             </span>
           )}
@@ -170,9 +170,9 @@ function JobCard({
         <button
           onClick={() => onViewPipeline(job.name)}
           className="flex items-center gap-1 text-xs font-semibold transition-colors"
-          style={{ color: "#4F46E5" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#3730A3")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#4F46E5")}
+          style={{ color: "#1e3a2f" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#16291f")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#1e3a2f")}
         >
           View Pipeline
           <ChevronRight size={13} />
@@ -248,7 +248,7 @@ function PostJobModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
                 backgroundColor: "#F8FAFC",
                 color: "var(--text-primary)",
               }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#A5B4FC"; e.currentTarget.style.backgroundColor = "#EEF2FF" }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#85b89a"; e.currentTarget.style.backgroundColor = "#eef5f1" }}
               onBlur={(e) => { e.currentTarget.style.borderColor = "#E2E8F0"; e.currentTarget.style.backgroundColor = "#F8FAFC" }}
             />
           </div>
@@ -305,7 +305,7 @@ function PostJobModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
               onChange={(e) => set("num_positions", e.target.value)}
               className="w-full rounded-lg px-3 py-2 text-sm outline-none"
               style={{ border: "1px solid #E2E8F0", backgroundColor: "#F8FAFC", color: "var(--text-primary)" }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#A5B4FC"; e.currentTarget.style.backgroundColor = "#EEF2FF" }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#85b89a"; e.currentTarget.style.backgroundColor = "#eef5f1" }}
               onBlur={(e) => { e.currentTarget.style.borderColor = "#E2E8F0"; e.currentTarget.style.backgroundColor = "#F8FAFC" }}
             />
           </div>
@@ -319,7 +319,7 @@ function PostJobModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
               placeholder="Brief role description..."
               className="w-full rounded-lg px-3 py-2 text-sm outline-none resize-none"
               style={{ border: "1px solid #E2E8F0", backgroundColor: "#F8FAFC", color: "var(--text-primary)" }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#A5B4FC"; e.currentTarget.style.backgroundColor = "#EEF2FF" }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#85b89a"; e.currentTarget.style.backgroundColor = "#eef5f1" }}
               onBlur={(e) => { e.currentTarget.style.borderColor = "#E2E8F0"; e.currentTarget.style.backgroundColor = "#F8FAFC" }}
             />
           </div>
@@ -340,7 +340,7 @@ function PostJobModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
               disabled={createMutation.isPending}
               className="flex-1 py-2 rounded-lg text-sm font-semibold text-white transition-all"
               style={{
-                backgroundColor: createMutation.isPending ? "#A5B4FC" : "#4F46E5",
+                backgroundColor: createMutation.isPending ? "#85b89a" : "#1e3a2f",
                 cursor: createMutation.isPending ? "not-allowed" : "pointer",
               }}
             >
@@ -396,21 +396,21 @@ export function RecruitmentPage() {
               onClick={() => setShowAIGenerator(true)}
               className="flex items-center gap-2 text-sm font-medium transition-all px-3 py-2 rounded-lg"
               style={{
-                backgroundColor: "#F5F3FF",
+                backgroundColor: "#fdf8ef",
                 color: "#5B21B6",
                 border: "1px solid #DDD6FE",
               }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#EDE9FE")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#F5F3FF")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#fdf8ef")}
             >
               ✨ AI Job Description
             </button>
             <button
               onClick={() => setShowPostModal(true)}
               className="flex items-center gap-2 text-sm font-semibold text-white transition-all px-4 py-2 rounded-lg"
-              style={{ backgroundColor: "#4F46E5" }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#3730A3"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(79,70,229,0.4)" }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#4F46E5"; e.currentTarget.style.boxShadow = "none" }}
+              style={{ backgroundColor: "#1e3a2f" }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#16291f"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(79,70,229,0.4)" }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#1e3a2f"; e.currentTarget.style.boxShadow = "none" }}
             >
               <Plus size={15} />
               Post New Job

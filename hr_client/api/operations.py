@@ -734,6 +734,72 @@ def get_creditor_list():
 
 
 @frappe.whitelist()
+def get_advance_from_debtors():
+    """Debtor ledgers in credit (closing_balance < 0) — customers who have prepaid us.
+    Aged in months since their last sale voucher, mirroring get_debtor_aging's day-based aging."""
+    _require_admin()
+    rows = frappe.db.sql(
+        "SELECT l.ledger_name, l.closing_balance, "
+        "MAX(v.voucher_date) as last_sale "
+        "FROM `tabVE Tally Ledger` l "
+        "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
+        "AND v.voucher_type IN ('Sales','PERFORMA INVOICE') AND v.is_cancelled = 0 "
+        "WHERE l.is_debtors = 1 AND l.closing_balance < 0 "
+        "GROUP BY l.ledger_name, l.closing_balance "
+        "ORDER BY l.closing_balance ASC LIMIT 50",
+        as_dict=True
+    )
+    from datetime import date
+    today = date.today()
+    result = []
+    for r in rows:
+        months = None
+        if r.last_sale:
+            months = round((today - r.last_sale).days / 30)
+        result.append({
+            "party": r.ledger_name,
+            "balance": round(abs(flt(r.closing_balance)), 2),
+            "balance_fmt": _fmt(abs(flt(r.closing_balance))),
+            "last_sale": str(r.last_sale) if r.last_sale else None,
+            "months": months,
+        })
+    return result
+
+
+@frappe.whitelist()
+def get_advance_to_creditors():
+    """Creditor ledgers in debit (closing_balance > 0) — vendors we have prepaid.
+    Aged in months since our last purchase voucher, mirroring get_creditor_list's day-based aging."""
+    _require_admin()
+    rows = frappe.db.sql(
+        "SELECT l.ledger_name, l.closing_balance, "
+        "MAX(v.voucher_date) as last_purchase "
+        "FROM `tabVE Tally Ledger` l "
+        "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
+        "AND v.voucher_type = 'Purchase' AND v.is_cancelled = 0 "
+        "WHERE l.is_creditors = 1 AND l.closing_balance > 0 "
+        "GROUP BY l.ledger_name, l.closing_balance "
+        "ORDER BY l.closing_balance DESC LIMIT 50",
+        as_dict=True
+    )
+    from datetime import date
+    today = date.today()
+    result = []
+    for r in rows:
+        months = None
+        if r.last_purchase:
+            months = round((today - r.last_purchase).days / 30)
+        result.append({
+            "party": r.ledger_name,
+            "balance": round(abs(flt(r.closing_balance)), 2),
+            "balance_fmt": _fmt(abs(flt(r.closing_balance))),
+            "last_purchase": str(r.last_purchase) if r.last_purchase else None,
+            "months": months,
+        })
+    return result
+
+
+@frappe.whitelist()
 def get_tally_ledgers(group=None, search=None, limit=50):
     """Query VE Tally Ledger table - usable by other parts of the app."""
     _require_admin()
