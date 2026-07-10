@@ -1,0 +1,38 @@
+{
+ "actions": [],
+ "autoname": "VOD-.YYYY.-.####",
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "bank_name",
+  "facility_name",
+  "sanctioned_limit",
+  "col1",
+  "utilised",
+  "available",
+  "interest_rate"
+ ],
+ "fields": [
+  {"fieldname": "bank_name", "fieldtype": "Data", "label": "Bank Name", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "facility_name", "fieldtype": "Data", "label": "Facility Name", "in_list_view": 1},
+  {"fieldname": "sanctioned_limit", "fieldtype": "Currency", "label": "Sanctioned Limit", "in_list_view": 1},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "utilised", "fieldtype": "Currency", "label": "Utilised"},
+  {"fieldname": "available", "fieldtype": "Currency", "label": "Available"},
+  {"fieldname": "interest_rate", "fieldtype": "Float", "label": "Interest Rate (% p.a.)"}
+ ],
+ "links": [],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE OD Account Balance",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

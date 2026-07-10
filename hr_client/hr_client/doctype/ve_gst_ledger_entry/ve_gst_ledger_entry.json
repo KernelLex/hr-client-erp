@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "autoname": "VGL-.YYYY.-.#####",
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tally_guid",
+  "gst_type",
+  "period",
+  "hsn_code",
+  "col1",
+  "igst",
+  "cgst",
+  "sgst",
+  "gstr2b_match_status"
+ ],
+ "fields": [
+  {"fieldname": "tally_guid", "fieldtype": "Data", "label": "Tally GUID", "unique": 1},
+  {"fieldname": "gst_type", "fieldtype": "Select", "label": "Type", "options": "Output\nInput\nNet", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "period", "fieldtype": "Data", "label": "Period (YYYY-MM)", "in_list_view": 1},
+  {"fieldname": "hsn_code", "fieldtype": "Data", "label": "HSN Code", "in_list_view": 1},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "igst", "fieldtype": "Currency", "label": "IGST"},
+  {"fieldname": "cgst", "fieldtype": "Currency", "label": "CGST"},
+  {"fieldname": "sgst", "fieldtype": "Currency", "label": "SGST"},
+  {"fieldname": "gstr2b_match_status", "fieldtype": "Select", "label": "GSTR-2B Match Status", "options": "Matched\nPending\nMismatched\nNot Applicable"}
+ ],
+ "links": [],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE GST Ledger Entry",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "period",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

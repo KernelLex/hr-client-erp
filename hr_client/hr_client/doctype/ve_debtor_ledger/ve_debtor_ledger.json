@@ -1,0 +1,36 @@
+{
+ "actions": [],
+ "autoname": "VDL-.YYYY.-.#####",
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tally_guid",
+  "client_name",
+  "due_amount",
+  "col1",
+  "invoice_date",
+  "status"
+ ],
+ "fields": [
+  {"fieldname": "tally_guid", "fieldtype": "Data", "label": "Tally GUID", "unique": 1},
+  {"fieldname": "client_name", "fieldtype": "Data", "label": "Client Name", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "due_amount", "fieldtype": "Currency", "label": "Due Amount", "in_list_view": 1},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "invoice_date", "fieldtype": "Date", "label": "Invoice Date", "in_list_view": 1},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Outstanding\nPartially Paid\nOverdue\nCleared", "in_list_view": 1}
+ ],
+ "links": [],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Debtor Ledger",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "invoice_date",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

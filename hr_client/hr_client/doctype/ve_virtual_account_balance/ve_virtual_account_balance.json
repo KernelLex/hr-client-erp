@@ -1,0 +1,34 @@
+{
+ "actions": [],
+ "autoname": "VVA-.YYYY.-.####",
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "gateway_name",
+  "available_balance",
+  "col1",
+  "credit_limit",
+  "utilised"
+ ],
+ "fields": [
+  {"fieldname": "gateway_name", "fieldtype": "Select", "label": "Gateway Name", "reqd": 1, "in_list_view": 1, "options": "Razorpay\nPhonePe\nPaytm\nOther"},
+  {"fieldname": "available_balance", "fieldtype": "Currency", "label": "Available Balance", "in_list_view": 1},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "credit_limit", "fieldtype": "Currency", "label": "Credit Limit"},
+  {"fieldname": "utilised", "fieldtype": "Currency", "label": "Utilised"}
+ ],
+ "links": [],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Virtual Account Balance",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

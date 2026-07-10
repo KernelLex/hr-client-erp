@@ -1,0 +1,44 @@
+{
+ "actions": [],
+ "autoname": "VPR-.YYYY.-.#####",
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tally_guid",
+  "bill_no",
+  "bill_date",
+  "period",
+  "col1",
+  "vendor",
+  "category",
+  "amount_excl_gst",
+  "itc_amount",
+  "total"
+ ],
+ "fields": [
+  {"fieldname": "tally_guid", "fieldtype": "Data", "label": "Tally GUID", "unique": 1},
+  {"fieldname": "bill_no", "fieldtype": "Data", "label": "Bill No", "in_list_view": 1},
+  {"fieldname": "bill_date", "fieldtype": "Date", "label": "Date", "in_list_view": 1},
+  {"fieldname": "period", "fieldtype": "Data", "label": "Period (YYYY-MM)"},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "vendor", "fieldtype": "Data", "label": "Vendor", "in_list_view": 1},
+  {"fieldname": "category", "fieldtype": "Data", "label": "Category"},
+  {"fieldname": "amount_excl_gst", "fieldtype": "Currency", "label": "Amount (excl. GST)", "in_list_view": 1},
+  {"fieldname": "itc_amount", "fieldtype": "Currency", "label": "ITC Amount"},
+  {"fieldname": "total", "fieldtype": "Currency", "label": "Total", "in_list_view": 1}
+ ],
+ "links": [],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Purchase Register Entry",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "bill_date",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

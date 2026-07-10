@@ -1,0 +1,50 @@
+{
+ "actions": [],
+ "autoname": "VSM-.YYYY.-.#####",
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_description",
+  "period",
+  "movement_category",
+  "col1",
+  "units_sold",
+  "stock_on_hand",
+  "turnover_days",
+  "sec1",
+  "safety_level",
+  "reorder_level",
+  "suggested_po_qty",
+  "vendor"
+ ],
+ "fields": [
+  {"fieldname": "item_code", "fieldtype": "Data", "label": "Item Code", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "item_description", "fieldtype": "Data", "label": "Item Description", "in_list_view": 1},
+  {"fieldname": "period", "fieldtype": "Data", "label": "Period (YYYY-MM)", "in_list_view": 1},
+  {"fieldname": "movement_category", "fieldtype": "Select", "label": "Movement Category", "options": "Fast\nMid\nSlow\nDead\nLow\nReorder", "in_list_view": 1},
+  {"fieldname": "col1", "fieldtype": "Column Break"},
+  {"fieldname": "units_sold", "fieldtype": "Float", "label": "Units Sold"},
+  {"fieldname": "stock_on_hand", "fieldtype": "Float", "label": "Stock on Hand"},
+  {"fieldname": "turnover_days", "fieldtype": "Float", "label": "Turnover Days"},
+  {"fieldname": "sec1", "fieldtype": "Section Break", "label": "Reorder Info"},
+  {"fieldname": "safety_level", "fieldtype": "Float", "label": "Safety Level"},
+  {"fieldname": "reorder_level", "fieldtype": "Float", "label": "Reorder Level"},
+  {"fieldname": "suggested_po_qty", "fieldtype": "Float", "label": "Suggested PO Qty"},
+  {"fieldname": "vendor", "fieldtype": "Data", "label": "Preferred Vendor"}
+ ],
+ "links": [],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Stock Movement Summary",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "period",
+ "sort_order": "DESC",
+ "track_changes": 0
+}
