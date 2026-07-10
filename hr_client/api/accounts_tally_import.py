@@ -1,17 +1,14 @@
 """
-Tally XML → VE Accounts DocTypes import pipeline.
-Reads Master.xml + Transactions.xml and populates:
-  VE Sales Register Entry, VE Purchase Register Entry, VE GST Ledger Entry,
-  VE Creditor Ledger, VE Creditor Advance, VE Debtor Ledger, VE Debtor Advance,
-  VE Cash Flow Entry, VE Stock Movement Summary
+Tally → VE Accounts DocTypes import pipeline.
+Sources data from already-imported VE Tally Voucher / VE Tally Ledger tables
+(populated by the existing tally_import_job.py pipeline) and re-classifies
+into the Accounts Dashboard DocTypes.
 
-Idempotent: uses tally_guid as unique key — safe to re-run.
-Run via: hr_client.api.accounts_tally_import.run(masters_path, transactions_path)
+Run via: hr_client.api.accounts_tally_import.run()
 Or via API: trigger_tally_import() in accounts_dashboard.py
 """
-import re
-import time
 import json
+import time
 import datetime
 from collections import defaultdict
 
@@ -37,35 +34,6 @@ def get_status():
     return json.loads(raw)
 
 
-def _clean(s):
-    return (s.strip()
-             .replace("&amp;", "&")
-             .replace("&apos;", "'")
-             .replace("&lt;", "<")
-             .replace("&gt;", ">")
-             .replace("&#4;", ""))
-
-
-def _get(tag, text):
-    m = re.search(rf'<{tag}>([^<]*)</{tag}>', text)
-    return _clean(m.group(1)) if m else ""
-
-
-def _tally_date(s):
-    """Convert YYYYMMDD → YYYY-MM-DD. Returns None on bad input."""
-    s = s.strip()
-    if len(s) == 8 and s.isdigit():
-        return f"{s[:4]}-{s[4:6]}-{s[6:]}"
-    return None
-
-
-def _period(date_str):
-    """YYYY-MM-DD → YYYY-MM"""
-    if date_str and len(date_str) >= 7:
-        return date_str[:7]
-    return ""
-
-
 def _upsert(doctype, tally_guid, data):
     """Insert or update a record identified by tally_guid."""
     existing = frappe.db.get_value(doctype, {"tally_guid": tally_guid}, "name")
@@ -79,277 +47,158 @@ def _upsert(doctype, tally_guid, data):
         doc.insert(ignore_permissions=True)
 
 
-def run(masters_path="/home/vera/Master.xml",
-        transactions_path="/home/vera/Transactions.xml"):
-    """Main import — safe to enqueue as a background job."""
+def run(masters_path=None, transactions_path=None):
+    """
+    Populate VE Accounts DocTypes from existing VE Tally Voucher + VE Tally Ledger tables.
+    masters_path / transactions_path kept as args for API compatibility but are unused —
+    data comes from the already-imported Frappe tables.
+    """
     t0 = time.time()
-    _set_status("running", 2, "Loading Master.xml…")
+    _set_status("running", 5, "Reading VE Tally Voucher table…")
+    counts = defaultdict(int)
+    today_d = datetime.date.today()
 
     try:
-        with open(masters_path, encoding="utf-16") as f:
-            masters = f.read()
-        _set_status("running", 10, f"Master loaded ({len(masters)/1e6:.0f} MB). Parsing ledgers…")
+        # ── 1. Sales Register from Sales vouchers ────────────────────────────
+        _set_status("running", 10, "Building Sales Register…")
+        sales_vouchers = frappe.db.sql(
+            """SELECT tally_guid, voucher_number, voucher_date, party_name,
+                      amount, all_ledger_entries, narration
+               FROM `tabVE Tally Voucher`
+               WHERE voucher_type IN ('Sales','PERFORMA INVOICE')
+                 AND is_cancelled=0""",
+            as_dict=True,
+        )
 
-        # ── Parse ledger metadata from masters ───────────────────────────────
-        group_parents = {}
-        for blk in re.finditer(r'<GROUP NAME="([^"]+)".*?</GROUP>', masters, re.DOTALL):
-            gname = _clean(blk.group(1))
-            gp_m  = re.search(r'<PARENT>([^<]*)</PARENT>', blk.group(0))
-            group_parents[gname] = _clean(gp_m.group(1)) if gp_m else ""
+        for v in sales_vouchers:
+            guid = v.tally_guid or ""
+            vdate = str(v.voucher_date)[:10] if v.voucher_date else ""
+            period = vdate[:7] if len(vdate) >= 7 else ""
 
-        def root_group(name):
-            visited, cur, depth = set(), name, 0
-            while cur and cur not in visited and depth < 12:
-                visited.add(cur)
-                cur = group_parents.get(cur, "")
-                depth += 1
-            return cur or name
+            # Parse ledger entries to extract GST vs base amount
+            gst_amt = 0.0
+            try:
+                entries = json.loads(v.all_ledger_entries) if v.all_ledger_entries else []
+            except Exception:
+                entries = []
 
-        ledger_meta = {}
-        for blk in re.finditer(r'<LEDGER NAME="([^"]+)".*?</LEDGER>', masters, re.DOTALL):
-            name = _clean(blk.group(1))
-            btext = blk.group(0)
-            parent = _get("PARENT", btext)
-            pg = parent.lower()
-            ledger_meta[name] = {
-                "parent": parent,
-                "root":   root_group(parent),
-                "is_debtor":   1 if "debtor" in pg or "receivable" in pg else 0,
-                "is_creditor": 1 if "creditor" in pg or "payable" in pg else 0,
-                "is_bank":     1 if parent in ("Bank Accounts", "Bank OD A/c") else 0,
-                "is_cash":     1 if pg in ("cash-in-hand", "cash") else 0,
-                "is_gst":      1 if parent in ("Duties & Taxes", "ITC-GST")
-                                       or (parent == "Current Liabilities" and "gst" in name.lower()) else 0,
-                "is_sales":    1 if "sales" in pg or root_group(parent).lower() in ("income", "revenue") else 0,
-                "is_purchase": 1 if "purchase" in pg or root_group(parent).lower() in ("expense", "expenditure") else 0,
-            }
+            for e in entries:
+                lname = e.get("ledger", "")
+                eamt  = abs(flt(e.get("amount", 0)))
+                if any(x in lname.upper() for x in ("CGST", "SGST", "IGST", "UTGST")):
+                    gst_amt += eamt
 
-        # Stock items for category/vendor lookup
-        stock_vendor = {}
-        for blk in re.finditer(r'<STOCKITEM NAME="([^"]+)".*?</STOCKITEM>', masters, re.DOTALL):
-            name = _clean(blk.group(1))
-            btext = blk.group(0)
-            stock_vendor[name] = _get("PARTYNAME", btext) or _get("VENDOR", btext)
+            total    = abs(flt(v.amount))
+            excl_gst = total - gst_amt
 
-        _set_status("running", 20, "Loading Transactions.xml…")
-        with open(transactions_path, encoding="utf-16") as f:
-            transactions = f.read()
-        _set_status("running", 30, f"Transactions loaded ({len(transactions)/1e6:.0f} MB). Processing vouchers…")
+            _upsert("VE Sales Register Entry", f"SR-{guid}", {
+                "invoice_no":      (v.voucher_number or guid[:20])[:140],
+                "invoice_date":    vdate,
+                "period":          period,
+                "customer":        (v.party_name or "")[:140],
+                "project":         (v.narration or "")[:100],
+                "amount_excl_gst": excl_gst,
+                "gst_amount":      gst_amt,
+                "total":           total,
+            })
+            counts["sales"] += 1
 
-        # ── Counters ─────────────────────────────────────────────────────────
-        counts = defaultdict(int)
-        today_d = datetime.date.today()
+        frappe.db.commit()
+        _set_status("running", 25, f"Sales: {counts['sales']}. Building Purchase Register…")
 
-        # ── Process each VOUCHER ─────────────────────────────────────────────
-        vouchers = list(re.finditer(r'<VOUCHER\b[^>]*>.*?</VOUCHER>', transactions, re.DOTALL))
-        total_v = len(vouchers)
-        _set_status("running", 35, f"Found {total_v:,} vouchers. Importing…")
+        # ── 2. Purchase Register from Purchase vouchers ──────────────────────
+        purchase_vouchers = frappe.db.sql(
+            """SELECT tally_guid, voucher_number, voucher_date, party_name,
+                      amount, all_ledger_entries, narration, debit_ledger
+               FROM `tabVE Tally Voucher`
+               WHERE voucher_type IN ('Purchase','Debit Note')
+                 AND is_cancelled=0""",
+            as_dict=True,
+        )
 
-        for idx, vm in enumerate(vouchers, 1):
-            if idx % 2000 == 0:
-                pct = 35 + int((idx / total_v) * 55)
-                _set_status("running", pct, f"Processing voucher {idx:,}/{total_v:,}…")
-                frappe.db.commit()
+        for v in purchase_vouchers:
+            guid = v.tally_guid or ""
+            vdate = str(v.voucher_date)[:10] if v.voucher_date else ""
+            period = vdate[:7] if len(vdate) >= 7 else ""
 
-            btext = vm.group(0)
-            guid  = _get("GUID", btext)
-            vtype = _get("VOUCHERTYPENAME", btext)
-            vnum  = _get("VOUCHERNUMBER", btext)
-            vdate = _tally_date(_get("DATE", btext))
-            if not vdate:
+            itc_amt = 0.0
+            category = ""
+            try:
+                entries = json.loads(v.all_ledger_entries) if v.all_ledger_entries else []
+            except Exception:
+                entries = []
+
+            for e in entries:
+                lname = e.get("ledger", "")
+                eamt  = abs(flt(e.get("amount", 0)))
+                lname_up = lname.upper()
+                if any(x in lname_up for x in ("CGST", "SGST", "IGST", "ITC", "INPUT TAX")):
+                    itc_amt += eamt
+                elif not category and "PURCHASE" in lname_up:
+                    category = lname[:60]
+
+            total    = abs(flt(v.amount))
+            excl_gst = total - itc_amt
+
+            _upsert("VE Purchase Register Entry", f"PR-{guid}", {
+                "bill_no":         (v.voucher_number or guid[:20])[:140],
+                "bill_date":       vdate,
+                "period":          period,
+                "vendor":          (v.party_name or "")[:140],
+                "category":        category[:60] if category else (v.debit_ledger or "")[:60],
+                "amount_excl_gst": excl_gst,
+                "itc_amount":      itc_amt,
+                "total":           total,
+            })
+            counts["purchase"] += 1
+
+        frappe.db.commit()
+        _set_status("running", 40, f"Purchase: {counts['purchase']}. Building GST Ledger…")
+
+        # ── 3. GST Ledger from all vouchers ──────────────────────────────────
+        all_vouchers = frappe.db.sql(
+            """SELECT tally_guid, voucher_type, voucher_date, all_ledger_entries
+               FROM `tabVE Tally Voucher`
+               WHERE is_cancelled=0 AND all_ledger_entries IS NOT NULL
+                 AND all_ledger_entries NOT IN ('null','[]','')""",
+            as_dict=True,
+        )
+
+        for v in all_vouchers:
+            guid = v.tally_guid or ""
+            vdate = str(v.voucher_date)[:10] if v.voucher_date else ""
+            period = vdate[:7] if len(vdate) >= 7 else ""
+            is_sales = v.voucher_type in ("Sales", "PERFORMA INVOICE")
+
+            try:
+                entries = json.loads(v.all_ledger_entries)
+            except Exception:
                 continue
 
-            party = _get("PARTYLEDGERNAME", btext)
-            narr  = _get("NARRATION", btext)[:200]
-            is_cancelled = _get("ISCANCELLED", btext).lower() == "yes"
-            if is_cancelled:
-                continue
-
-            period = _period(vdate)
-
-            # ── Collect all ledger entries ────────────────────────────────
-            ledger_entries = []
-            for le in re.finditer(r'<ALLLEDGERENTRIES\.LIST>(.*?)</ALLLEDGERENTRIES\.LIST>', btext, re.DOTALL):
-                lt = le.group(1)
-                lname  = _get("LEDGERNAME", lt)
-                is_dr  = _get("ISDEEMEDPOSITIVE", lt).lower() == "yes"
-                amt_m  = re.search(r'<AMOUNT>([^<]*)</AMOUNT>', lt)
-                amt    = flt(amt_m.group(1).strip()) if amt_m else 0.0
-                # GST sub-entries
-                gst_entries = []
-                for ge in re.finditer(r'<CATEGORYALLOCATIONS\.LIST>(.*?)</CATEGORYALLOCATIONS\.LIST>', lt, re.DOTALL):
-                    cat_text = ge.group(1)
-                    for tax_e in re.finditer(r'<TAXOBJECTALLOCATIONS\.LIST>(.*?)</TAXOBJECTALLOCATIONS\.LIST>', cat_text, re.DOTALL):
-                        tx = tax_e.group(1)
-                        tax_type = _get("TAXTYPE", tx)
-                        tax_amt_m = re.search(r'<AMOUNT>([^<]*)</AMOUNT>', tx)
-                        tax_amt = flt(tax_amt_m.group(1)) if tax_amt_m else 0.0
-                        gst_entries.append({"type": tax_type, "amount": abs(tax_amt)})
-                ledger_entries.append({
-                    "name": lname,
-                    "is_dr": is_dr,
-                    "amount": abs(amt),
-                    "gst": gst_entries,
-                })
-
-            # ── Inventory entries ─────────────────────────────────────────
-            inv_entries = []
-            for ie in re.finditer(r'<INVENTORYENTRIES\.LIST>(.*?)</INVENTORYENTRIES\.LIST>', btext, re.DOTALL):
-                it = ie.group(1)
-                iname = _get("STOCKITEMNAME", it)
-                iqty_m = re.search(r'<ACTUALQTY>\s*([\-\d\.]+)', it)
-                iamt_m = re.search(r'<AMOUNT>([^<]*)</AMOUNT>', it)
-                inv_entries.append({
-                    "item": iname,
-                    "qty": flt(iqty_m.group(1)) if iqty_m else 0,
-                    "amount": abs(flt(iamt_m.group(1))) if iamt_m else 0,
-                })
-
-            meta = ledger_meta.get(party, {})
-
-            # ── Sales Invoice → VE Sales Register Entry ───────────────────
-            if vtype in ("Sales", "PERFORMA INVOICE", "Sales Invoice"):
-                # Total from ledger entries: find the party leg (debit side for sales)
-                party_amt = 0
-                gst_amt   = 0
-                for le in ledger_entries:
-                    lm = ledger_meta.get(le["name"], {})
-                    if lm.get("is_gst"):
-                        gst_amt += le["amount"]
-                    elif lm.get("is_debtor") or le["name"] == party:
-                        party_amt += le["amount"]
-
-                excl = party_amt - gst_amt if party_amt else sum(e["amount"] for e in inv_entries)
-                total = party_amt or excl + gst_amt
-
-                _upsert("VE Sales Register Entry", f"SR-{guid}", {
-                    "invoice_no":     vnum or guid[:20],
-                    "invoice_date":   vdate,
-                    "period":         period,
-                    "customer":       party[:140],
-                    "project":        narr[:100],
-                    "amount_excl_gst": excl,
-                    "gst_amount":     gst_amt,
-                    "total":          total,
-                })
-                counts["sales"] += 1
-
-            # ── Purchase Invoice → VE Purchase Register Entry ─────────────
-            elif vtype in ("Purchase", "Purchase Invoice"):
-                gst_amt = 0
-                total   = 0
-                for le in ledger_entries:
-                    lm = ledger_meta.get(le["name"], {})
-                    if lm.get("is_gst"):
-                        gst_amt += le["amount"]
-                    elif lm.get("is_creditor") or le["name"] == party:
-                        total += le["amount"]
-
-                excl = total - gst_amt
-
-                # Infer category from parent group of purchase ledger
-                category = ""
-                for le in ledger_entries:
-                    lm = ledger_meta.get(le["name"], {})
-                    if lm.get("is_purchase") and le["name"] != party:
-                        category = ledger_meta.get(le["name"], {}).get("parent", "")[:60]
-                        break
-
-                _upsert("VE Purchase Register Entry", f"PR-{guid}", {
-                    "bill_no":         vnum or guid[:20],
-                    "bill_date":       vdate,
-                    "period":          period,
-                    "vendor":          party[:140],
-                    "category":        category,
-                    "amount_excl_gst": excl,
-                    "itc_amount":      gst_amt,
-                    "total":           total,
-                })
-                counts["purchase"] += 1
-
-            # ── Receipt with advance → VE Debtor Advance ──────────────────
-            elif vtype == "Receipt":
-                # Check if narration/party is debtor
-                pm = ledger_meta.get(party, {})
-                if pm.get("is_debtor"):
-                    amt = sum(le["amount"] for le in ledger_entries
-                              if ledger_meta.get(le["name"], {}).get("is_bank")
-                              or ledger_meta.get(le["name"], {}).get("is_cash"))
-                    if amt > 0 and "advance" in narr.lower():
-                        _upsert("VE Debtor Advance", f"DA-{guid}", {
-                            "client_name":    party[:140],
-                            "advance_amount": amt,
-                            "advance_date":   vdate,
-                            "project":        narr[:100],
-                        })
-                        counts["debtor_advance"] += 1
-
-            # ── Payment with advance → VE Creditor Advance ────────────────
-            elif vtype == "Payment":
-                pm = ledger_meta.get(party, {})
-                if pm.get("is_creditor"):
-                    amt = sum(le["amount"] for le in ledger_entries
-                              if ledger_meta.get(le["name"], {}).get("is_bank")
-                              or ledger_meta.get(le["name"], {}).get("is_cash"))
-                    if amt > 0 and "advance" in narr.lower():
-                        _upsert("VE Creditor Advance", f"CA-{guid}", {
-                            "vendor_name":    party[:140],
-                            "advance_amount": amt,
-                            "advance_date":   vdate,
-                        })
-                        counts["creditor_advance"] += 1
-
-            # ── Journal → Cash Flow Entry ──────────────────────────────────
-            elif vtype in ("Journal", "Contra"):
-                for le in ledger_entries:
-                    lm = ledger_meta.get(le["name"], {})
-                    root = lm.get("root", "").lower()
-                    if lm.get("is_bank") or lm.get("is_cash"):
-                        continue
-                    if "income" in root or "revenue" in root or "sales" in root:
-                        activity = "Operating"
-                    elif "fixed asset" in root or "investment" in root:
-                        activity = "Investing"
-                    elif "loan" in root or "capital" in root or "equity" in root:
-                        activity = "Financing"
-                    else:
-                        activity = "Operating"
-
-                    inflow  = le["amount"] if le["is_dr"] else 0
-                    outflow = le["amount"] if not le["is_dr"] else 0
-
-                    if le["amount"] > 0:
-                        entry_guid = f"CF-{guid}-{le['name'][:20]}"
-                        _upsert("VE Cash Flow Entry", entry_guid, {
-                            "activity_type": activity,
-                            "period":        period,
-                            "line_item":     le["name"][:140],
-                            "inflow":        inflow,
-                            "outflow":       outflow,
-                        })
-                        counts["cash_flow"] += 1
-
-            # ── GST ledger entries ─────────────────────────────────────────
-            for le in ledger_entries:
-                lm = ledger_meta.get(le["name"], {})
-                if not lm.get("is_gst") or le["amount"] == 0:
+            for idx, e in enumerate(entries):
+                lname = e.get("ledger", "")
+                eamt  = abs(flt(e.get("amount", 0)))
+                if eamt == 0:
                     continue
-                lname_lower = le["name"].lower()
-                if "igst" in lname_lower:
-                    gtype = "Output" if "output" in lname_lower or vtype == "Sales" else "Input"
-                    igst, cgst, sgst = le["amount"], 0, 0
-                elif "cgst" in lname_lower:
-                    gtype = "Output" if vtype == "Sales" else "Input"
-                    igst, cgst, sgst = 0, le["amount"], 0
-                elif "sgst" in lname_lower or "utgst" in lname_lower:
-                    gtype = "Output" if vtype == "Sales" else "Input"
-                    igst, cgst, sgst = 0, 0, le["amount"]
+
+                lname_up = lname.upper()
+                igst = cgst = sgst = 0.0
+
+                if "IGST" in lname_up:
+                    gst_type = "Output" if is_sales else "Input"
+                    igst = eamt
+                elif "CGST" in lname_up:
+                    gst_type = "Output" if is_sales else "Input"
+                    cgst = eamt
+                elif "SGST" in lname_up or "UTGST" in lname_up:
+                    gst_type = "Output" if is_sales else "Input"
+                    sgst = eamt
                 else:
                     continue
 
-                g_guid = f"GL-{guid}-{le['name'][:15]}"
+                g_guid = f"GL-{guid}-{idx}"
                 _upsert("VE GST Ledger Entry", g_guid, {
-                    "gst_type":            gtype,
+                    "gst_type":            gst_type,
                     "period":              period,
                     "hsn_code":            "",
                     "igst":                igst,
@@ -360,113 +209,208 @@ def run(masters_path="/home/vera/Master.xml",
                 counts["gst"] += 1
 
         frappe.db.commit()
-        _set_status("running", 90, "Vouchers done. Building debtor/creditor ledgers from balances…")
+        _set_status("running", 55, f"GST: {counts['gst']}. Building Cash Flow…")
 
-        # ── Build outstanding ledger from closing balances in Masters ─────
-        # Find LEDGER closing balance blocks (in Transactions for balances)
-        # These appear as <LEDGER NAME="..."> inside the transactions feed
-        for blk in re.finditer(r'<LEDGER NAME="([^"]+)".*?</LEDGER>', transactions, re.DOTALL):
-            lname = _clean(blk.group(1))
-            btext = blk.group(0)
-            meta  = ledger_meta.get(lname, {})
+        # ── 4. Cash Flow from Receipt/Payment/Journal/Contra vouchers ────────
+        cf_vouchers = frappe.db.sql(
+            """SELECT tally_guid, voucher_type, voucher_date, party_name,
+                      amount, all_ledger_entries, narration
+               FROM `tabVE Tally Voucher`
+               WHERE voucher_type IN ('Receipt','Payment','Journal','Contra')
+                 AND is_cancelled=0""",
+            as_dict=True,
+        )
 
-            cb_m  = re.search(r'<CLOSINGBALANCE>([^<]*)</CLOSINGBALANCE>', btext)
-            if not cb_m:
-                continue
-            balance = flt(cb_m.group(1).strip())
-            if balance == 0:
-                continue
+        for v in cf_vouchers:
+            guid  = v.tally_guid or ""
+            vdate = str(v.voucher_date)[:10] if v.voucher_date else ""
+            period = vdate[:7] if len(vdate) >= 7 else ""
+            amt   = abs(flt(v.amount))
+            party = v.party_name or v.narration or "Unclassified"
 
-            cb_date_m = re.search(r'<DATE>([^<]*)</DATE>', btext)
-            cb_date   = _tally_date(cb_date_m.group(1)) if cb_date_m else today_d.isoformat()
-
-            if meta.get("is_debtor") and balance > 0:
-                aging = (today_d - datetime.date.fromisoformat(cb_date)).days if cb_date else 0
-                status = "Overdue" if aging > 60 else "Outstanding"
-                _upsert("VE Debtor Ledger", f"DL-{lname[:40]}", {
-                    "client_name":  lname[:140],
-                    "due_amount":   balance,
-                    "invoice_date": cb_date,
-                    "status":       status,
-                })
-                counts["debtor_ledger"] += 1
-
-            elif meta.get("is_creditor") and balance > 0:
-                aging = (today_d - datetime.date.fromisoformat(cb_date)).days if cb_date else 0
-                status = "Overdue" if aging > 60 else "Outstanding"
-                _upsert("VE Creditor Ledger", f"CL-{lname[:40]}", {
-                    "vendor_name":  lname[:140],
-                    "due_amount":   balance,
-                    "invoice_date": cb_date,
-                    "status":       status,
-                })
-                counts["creditor_ledger"] += 1
-
-        # ── Stock Movement Summary from inventory vouchers ─────────────────
-        stock_agg = defaultdict(lambda: {"sold": 0.0, "on_hand": 0.0, "last_period": ""})
-        for blk in re.finditer(r'<STOCKITEM NAME="([^"]+)".*?</STOCKITEM>', transactions, re.DOTALL):
-            sname = _clean(blk.group(1))
-            btext = blk.group(0)
-            qty_m = re.search(r'<CLOSINGBALANCE>\s*([\-\d\.]+)', btext)
-            if qty_m:
-                stock_agg[sname]["on_hand"] = flt(qty_m.group(1))
-
-        # Aggregate sold qty from Sales vouchers inventory entries
-        for vm in vouchers:
-            btext = vm.group(0)
-            vtype = _get("VOUCHERTYPENAME", btext)
-            vdate = _tally_date(_get("DATE", btext))
-            if vtype not in ("Sales", "Delivery Note", "PERFORMA INVOICE") or not vdate:
-                continue
-            period = _period(vdate)
-            for ie in re.finditer(r'<INVENTORYENTRIES\.LIST>(.*?)</INVENTORYENTRIES\.LIST>', btext, re.DOTALL):
-                it = ie.group(1)
-                iname = _get("STOCKITEMNAME", it)
-                iqty_m = re.search(r'<ACTUALQTY>\s*([\-\d\.]+)', it)
-                if iqty_m and iname:
-                    stock_agg[iname]["sold"] += abs(flt(iqty_m.group(1)))
-                    stock_agg[iname]["last_period"] = period
-
-        today_period = today_d.strftime("%Y-%m")
-        for iname, agg in stock_agg.items():
-            if agg["sold"] == 0 and agg["on_hand"] == 0:
-                continue
-            sold     = agg["sold"]
-            on_hand  = agg["on_hand"]
-            period   = agg["last_period"] or today_period
-
-            # Classify movement
-            if sold == 0 and on_hand == 0:
-                cat = "Dead"
-            elif sold == 0:
-                cat = "Low"
-            else:
-                turnover = (on_hand / sold * 30) if sold > 0 else 999
-                if turnover <= 30:
-                    cat = "Fast"
-                elif turnover <= 60:
-                    cat = "Mid"
-                elif turnover <= 90:
-                    cat = "Slow"
+            if v.voucher_type == "Receipt":
+                activity, inflow, outflow = "Operating", amt, 0.0
+                line_item = f"Receipt – {party}"
+            elif v.voucher_type == "Payment":
+                activity, inflow, outflow = "Operating", 0.0, amt
+                line_item = f"Payment – {party}"
+            elif v.voucher_type == "Contra":
+                activity, inflow, outflow = "Operating", amt, 0.0
+                line_item = f"Contra – {party}"
+            else:  # Journal
+                # Classify by debit ledger name
+                dl = (v.all_ledger_entries or "").upper()
+                if "FIXED ASSET" in dl or "CAPITAL" in dl:
+                    activity = "Investing"
+                elif "LOAN" in dl or "EQUITY" in dl:
+                    activity = "Financing"
                 else:
-                    cat = "Dead"
+                    activity = "Operating"
+                inflow  = amt
+                outflow = 0.0
+                line_item = f"Journal – {party}"
 
-            reorder = sold * 1.5 if sold > 0 else 0
-            if on_hand <= reorder:
-                cat = "Reorder"
+            _upsert("VE Cash Flow Entry", f"CF-{guid}", {
+                "activity_type": activity,
+                "period":        period,
+                "line_item":     line_item[:140],
+                "inflow":        inflow,
+                "outflow":       outflow,
+            })
+            counts["cash_flow"] += 1
+
+        frappe.db.commit()
+        _set_status("running", 70, f"Cash Flow: {counts['cash_flow']}. Building Advances…")
+
+        # ── 5. Debtor Advances from Receipt vouchers with "advance" narration ─
+        adv_receipts = frappe.db.sql(
+            """SELECT tally_guid, voucher_date, party_name, amount, narration
+               FROM `tabVE Tally Voucher`
+               WHERE voucher_type='Receipt' AND is_cancelled=0
+                 AND LOWER(narration) LIKE '%advance%'""",
+            as_dict=True,
+        )
+        for v in adv_receipts:
+            guid  = v.tally_guid or ""
+            vdate = str(v.voucher_date)[:10] if v.voucher_date else ""
+            _upsert("VE Debtor Advance", f"DA-{guid}", {
+                "client_name":    (v.party_name or "")[:140],
+                "advance_amount": abs(flt(v.amount)),
+                "advance_date":   vdate,
+                "project":        (v.narration or "")[:100],
+            })
+            counts["debtor_advance"] += 1
+
+        # ── 6. Creditor Advances from Payment vouchers with "advance" narration
+        adv_payments = frappe.db.sql(
+            """SELECT tally_guid, voucher_date, party_name, amount, narration
+               FROM `tabVE Tally Voucher`
+               WHERE voucher_type='Payment' AND is_cancelled=0
+                 AND LOWER(narration) LIKE '%advance%'""",
+            as_dict=True,
+        )
+        for v in adv_payments:
+            guid  = v.tally_guid or ""
+            vdate = str(v.voucher_date)[:10] if v.voucher_date else ""
+            _upsert("VE Creditor Advance", f"CA-{guid}", {
+                "vendor_name":    (v.party_name or "")[:140],
+                "advance_amount": abs(flt(v.amount)),
+                "advance_date":   vdate,
+            })
+            counts["creditor_advance"] += 1
+
+        frappe.db.commit()
+        _set_status("running", 80, "Building Debtor/Creditor Ledgers from VE Tally Ledger…")
+
+        # ── 7. Debtor Ledger from VE Tally Ledger closing balances ───────────
+        debtor_rows = frappe.db.sql(
+            """SELECT ledger_name, closing_balance
+               FROM `tabVE Tally Ledger`
+               WHERE is_debtors=1 AND closing_balance > 0""",
+            as_dict=True,
+        )
+        for r in debtor_rows:
+            lname = r.ledger_name or ""
+            bal   = flt(r.closing_balance)
+            last_sale = frappe.db.sql(
+                """SELECT MAX(voucher_date) as ld FROM `tabVE Tally Voucher`
+                   WHERE voucher_type IN ('Sales','PERFORMA INVOICE') AND party_name=%s""",
+                (lname,), as_dict=True,
+            )
+            inv_date = str(last_sale[0].ld)[:10] if last_sale and last_sale[0].ld else today_d.isoformat()
+            aging = (today_d - datetime.date.fromisoformat(inv_date)).days
+            status = "Overdue" if aging > 60 else "Outstanding"
+            _upsert("VE Debtor Ledger", f"DL-{lname[:40]}", {
+                "client_name":  lname[:140],
+                "due_amount":   bal,
+                "invoice_date": inv_date,
+                "status":       status,
+            })
+            counts["debtor_ledger"] += 1
+
+        # ── 8. Creditor Ledger from VE Tally Ledger closing balances ─────────
+        creditor_rows = frappe.db.sql(
+            """SELECT ledger_name, closing_balance
+               FROM `tabVE Tally Ledger`
+               WHERE is_creditors=1 AND closing_balance > 0""",
+            as_dict=True,
+        )
+        for r in creditor_rows:
+            lname = r.ledger_name or ""
+            bal   = flt(r.closing_balance)
+            last_bill = frappe.db.sql(
+                """SELECT MAX(voucher_date) as ld FROM `tabVE Tally Voucher`
+                   WHERE voucher_type IN ('Purchase','Debit Note') AND party_name=%s""",
+                (lname,), as_dict=True,
+            )
+            bill_date = str(last_bill[0].ld)[:10] if last_bill and last_bill[0].ld else today_d.isoformat()
+            aging = (today_d - datetime.date.fromisoformat(bill_date)).days
+            status = "Overdue" if aging > 60 else "Outstanding"
+            _upsert("VE Creditor Ledger", f"CL-{lname[:40]}", {
+                "vendor_name":  lname[:140],
+                "due_amount":   bal,
+                "invoice_date": bill_date,
+                "status":       status,
+            })
+            counts["creditor_ledger"] += 1
+
+        frappe.db.commit()
+        _set_status("running", 92, "Building Stock Movement from VE Tally Voucher inventory entries…")
+
+        # ── 9. Stock Movement from Sales voucher inventory entries ────────────
+        stock_agg = defaultdict(lambda: {"sold_value": 0.0, "last_period": ""})
+
+        inv_vouchers = frappe.db.sql(
+            """SELECT voucher_date, inventory_entries
+               FROM `tabVE Tally Voucher`
+               WHERE voucher_type IN ('Sales','PERFORMA INVOICE','Delivery Note')
+                 AND is_cancelled=0
+                 AND inventory_entries IS NOT NULL
+                 AND inventory_entries NOT IN ('null','[]','')""",
+            as_dict=True,
+        )
+
+        for v in inv_vouchers:
+            vdate = str(v.voucher_date)[:10] if v.voucher_date else ""
+            period = vdate[:7] if len(vdate) >= 7 else ""
+            try:
+                entries = json.loads(v.inventory_entries)
+            except Exception:
+                continue
+            for e in (entries or []):
+                iname = e.get("item", "")
+                amt   = abs(flt(e.get("amount", 0)))
+                if iname and amt > 0:
+                    stock_agg[iname]["sold_value"] += amt
+                    if period > stock_agg[iname]["last_period"]:
+                        stock_agg[iname]["last_period"] = period
+
+        # Classify by sold_value percentile (top 20% = Fast, etc.)
+        today_period = today_d.strftime("%Y-%m")
+        vals = sorted((a["sold_value"] for a in stock_agg.values() if a["sold_value"] > 0), reverse=True)
+        p80 = vals[int(len(vals) * 0.20)] if vals else 1
+        p50 = vals[int(len(vals) * 0.50)] if vals else 1
+        p20 = vals[int(len(vals) * 0.80)] if vals else 1
+
+        for iname, agg in stock_agg.items():
+            sv = agg["sold_value"]
+            if sv == 0:
+                continue
+            period = agg["last_period"] or today_period
+            cat = "Fast" if sv >= p80 else "Mid" if sv >= p50 else "Slow" if sv >= p20 else "Dead"
 
             _upsert("VE Stock Movement Summary", f"SM-{iname[:50]}", {
-                "item_code":        iname[:140],
-                "item_description": iname[:140],
-                "period":           period,
+                "item_code":         iname[:140],
+                "item_description":  iname[:140],
+                "period":            period,
                 "movement_category": cat,
-                "units_sold":       sold,
-                "stock_on_hand":    on_hand,
-                "turnover_days":    round((on_hand / sold * 30) if sold > 0 else 0, 1),
-                "safety_level":     round(sold * 0.5, 2),
-                "reorder_level":    round(reorder, 2),
-                "suggested_po_qty": round(max(reorder - on_hand, 0), 2),
-                "vendor":           stock_vendor.get(iname, "")[:140],
+                "units_sold":        round(sv, 2),
+                "stock_on_hand":     0.0,
+                "turnover_days":     0.0,
+                "safety_level":      0.0,
+                "reorder_level":     0.0,
+                "suggested_po_qty":  0.0,
+                "vendor":            "",
             })
             counts["stock"] += 1
 

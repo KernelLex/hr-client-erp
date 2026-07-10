@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "tally_guid",
   "item_code",
   "item_description",
   "period",
@@ -20,6 +21,7 @@
   "vendor"
  ],
  "fields": [
+  {"fieldname": "tally_guid", "fieldtype": "Data", "label": "Tally GUID", "unique": 1},
   {"fieldname": "item_code", "fieldtype": "Data", "label": "Item Code", "reqd": 1, "in_list_view": 1},
   {"fieldname": "item_description", "fieldtype": "Data", "label": "Item Description", "in_list_view": 1},
   {"fieldname": "period", "fieldtype": "Data", "label": "Period (YYYY-MM)", "in_list_view": 1},
