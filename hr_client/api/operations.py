@@ -96,13 +96,28 @@ def get_operations_data():
     cash_total = sum(flt(r.closing_balance) for r in cash_rows)
     liquid_assets = max(cash_total, 0) + bank_credit
 
-    # GST: Cr balance (positive) = output GST owed to govt; Dr balance = input ITC claim
+    # GST closing balances — what remains in GST ledger accounts after govt payments
+    # Cr (positive) = output GST still owed to govt; Dr (negative) = unrecovered ITC
     gst_rows = frappe.db.sql(
         "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE is_gst = 1", as_dict=True
     )
     output_gst = sum(flt(r.closing_balance) for r in gst_rows if r.closing_balance > 0)
-    input_gst = sum(abs(flt(r.closing_balance)) for r in gst_rows if r.closing_balance < 0)
-    net_gst = output_gst - input_gst
+    input_gst  = sum(abs(flt(r.closing_balance)) for r in gst_rows if r.closing_balance < 0)
+    net_gst    = output_gst - input_gst
+
+    # Per-voucher GST for the current period (gross collected / claimed on transactions)
+    try:
+        gst_period = frappe.db.sql(
+            """SELECT gst_type, COALESCE(SUM(igst+cgst+sgst),0) as total
+               FROM `tabVE GST Ledger Entry`
+               GROUP BY gst_type""",
+            as_dict=True,
+        )
+        _gst_map = {r.gst_type: flt(r.total) for r in gst_period}
+        period_output_gst = _gst_map.get("Output", 0)
+        period_input_gst  = _gst_map.get("Input", 0)
+    except Exception:
+        period_output_gst = period_input_gst = 0
 
     # TDS: Cr balance (positive) = TDS payable to govt
     tds_rows = frappe.db.sql(
@@ -277,12 +292,18 @@ def get_operations_data():
             "bank_od_fmt": _fmt(bank_od),
             "net_bank": round(bank_total, 2),
             "gst_detail": {
+                # Closing balance = net position after govt payments (what's still owed/claimable)
                 "output_gst": round(abs(output_gst), 2),
                 "input_credit": round(input_gst, 2),
                 "net_liability": round(net_gst, 2),
                 "output_fmt": _fmt(abs(output_gst)),
                 "input_fmt": _fmt(input_gst),
                 "net_fmt": _fmt(net_gst),
+                # Per-voucher = gross GST billed on transactions this period
+                "period_output": round(period_output_gst, 2),
+                "period_input": round(period_input_gst, 2),
+                "period_output_fmt": _fmt(period_output_gst),
+                "period_input_fmt": _fmt(period_input_gst),
             },
         },
         "accounts": {

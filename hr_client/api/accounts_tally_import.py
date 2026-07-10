@@ -303,15 +303,16 @@ def run(masters_path=None, transactions_path=None):
         _set_status("running", 80, "Building Debtor/Creditor Ledgers from VE Tally Ledger…")
 
         # ── 7. Debtor Ledger from VE Tally Ledger closing balances ───────────
+        # Sign convention: closing_balance < 0 = Dr = money owed TO Vera (receivable)
         debtor_rows = frappe.db.sql(
             """SELECT ledger_name, closing_balance
                FROM `tabVE Tally Ledger`
-               WHERE is_debtors=1 AND closing_balance > 0""",
+               WHERE is_debtors=1 AND closing_balance < 0""",
             as_dict=True,
         )
         for r in debtor_rows:
             lname = r.ledger_name or ""
-            bal   = flt(r.closing_balance)
+            bal   = abs(flt(r.closing_balance))  # abs: Dr balance → positive due amount
             last_sale = frappe.db.sql(
                 """SELECT MAX(voucher_date) as ld FROM `tabVE Tally Voucher`
                    WHERE voucher_type IN ('Sales','PERFORMA INVOICE') AND party_name=%s""",
@@ -320,7 +321,9 @@ def run(masters_path=None, transactions_path=None):
             inv_date = str(last_sale[0].ld)[:10] if last_sale and last_sale[0].ld else today_d.isoformat()
             aging = (today_d - datetime.date.fromisoformat(inv_date)).days
             status = "Overdue" if aging > 60 else "Outstanding"
-            _upsert("VE Debtor Ledger", f"DL-{lname[:40]}", {
+            # Use first 60 chars + hash suffix to avoid GUID collisions on long similar names
+            guid_key = f"DL-{lname[:55]}-{abs(hash(lname)) % 9999}"
+            _upsert("VE Debtor Ledger", guid_key, {
                 "client_name":  lname[:140],
                 "due_amount":   bal,
                 "invoice_date": inv_date,
@@ -329,6 +332,7 @@ def run(masters_path=None, transactions_path=None):
             counts["debtor_ledger"] += 1
 
         # ── 8. Creditor Ledger from VE Tally Ledger closing balances ─────────
+        # Sign convention: closing_balance > 0 = Cr = Vera owes vendors (payable)
         creditor_rows = frappe.db.sql(
             """SELECT ledger_name, closing_balance
                FROM `tabVE Tally Ledger`
@@ -346,7 +350,8 @@ def run(masters_path=None, transactions_path=None):
             bill_date = str(last_bill[0].ld)[:10] if last_bill and last_bill[0].ld else today_d.isoformat()
             aging = (today_d - datetime.date.fromisoformat(bill_date)).days
             status = "Overdue" if aging > 60 else "Outstanding"
-            _upsert("VE Creditor Ledger", f"CL-{lname[:40]}", {
+            guid_key = f"CL-{lname[:55]}-{abs(hash(lname)) % 9999}"
+            _upsert("VE Creditor Ledger", guid_key, {
                 "vendor_name":  lname[:140],
                 "due_amount":   bal,
                 "invoice_date": bill_date,

@@ -61,7 +61,11 @@ interface OpsData {
     bank_od: number
     bank_od_fmt: string
     kpis: Kpi[]
-    gst_detail: { output_fmt: string; input_fmt: string; net_fmt: string; net_liability: number }
+    gst_detail: {
+      output_fmt: string; input_fmt: string; net_fmt: string; net_liability: number
+      period_output: number; period_input: number
+      period_output_fmt: string; period_input_fmt: string
+    }
   }
   accounts: { fy_sales: number; fy_purchases: number; fy_sales_fmt: string; fy_purchases_fmt: string }
   inventory: { kpis: Kpi[]; brands: string[] }
@@ -348,13 +352,21 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       <section>
         <SectionHeader>Statutory Compliance</SectionHeader>
         <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}>
-          <StatCard label="Output GST" value={data.finance.gst_detail.output_fmt} sub="Collected on sales" />
-          <StatCard label="Input GST (ITC)" value={data.finance.gst_detail.input_fmt} sub="Credit on purchases" />
           <StatCard
-            label="Net GST Payable"
+            label="Output GST Billed (FY)"
+            value={data.finance.gst_detail.period_output > 0 ? data.finance.gst_detail.period_output_fmt : data.finance.gst_detail.output_fmt}
+            sub={data.finance.gst_detail.period_output > 0 ? "Gross GST collected from customers" : "From GST ledger balance"}
+          />
+          <StatCard
+            label="Input ITC Claimed (FY)"
+            value={data.finance.gst_detail.period_input > 0 ? data.finance.gst_detail.period_input_fmt : data.finance.gst_detail.input_fmt}
+            sub={data.finance.gst_detail.period_input > 0 ? "Gross ITC on purchases" : "From ITC ledger balance"}
+          />
+          <StatCard
+            label="Net GST Payable to Govt"
             value={data.finance.gst_detail.net_fmt}
             variant={data.finance.gst_detail.net_liability > 0 ? "warn" : "success"}
-            sub="Output − Input credit"
+            sub="Current ledger balance — after remittances"
           />
           {data.finance.kpis.find((k) => k.label === "TDS Payable") && (
             <StatCard
