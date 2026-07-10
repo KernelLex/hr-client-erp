@@ -26,7 +26,6 @@ import { MyClaimsDashboard } from "@/pages/expenses/MyClaimsDashboard"
 import { NewClaimForm } from "@/pages/expenses/NewClaimForm"
 import { AdminClaimsView } from "@/pages/expenses/AdminClaimsView"
 import AccountsPage from "@/pages/Accounts"
-import AccountsDashboard from "@/pages/AccountsDashboard"
 import { HolidaysPage } from "@/pages/holidays/HolidaysPage"
 import BusinessDashboard from "@/pages/BusinessDashboard"
 import AIInsights from "@/pages/AIInsights"
@@ -89,7 +88,6 @@ function App() {
                 <Route path="/expenses/admin" element={<AdminClaimsView />} />
                 {/* Accounts module */}
                 <Route path="/accounts" element={<AccountsPage />} />
-                <Route path="/accounts-dashboard" element={<AccountsDashboard />} />
                 <Route path="/business" element={<BusinessDashboard />} />
                 <Route path="/verify" element={<VerificationPage />} />
                 <Route path="/ai-insights" element={<AIInsights key="ai-insights" />} />

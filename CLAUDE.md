@@ -121,6 +121,43 @@ Frappe resolves the module folder by importing `hr_client.hr_client` and uses th
 
 ## What's been built
 
+✅ **Accounts Dashboard — Full Module (2026-07-10)**
+- **Route:** `/accounts-dashboard` → `src/pages/AccountsDashboard/`
+- **Sidebar:** Finance & Governance section, admin-only, "Accounts Dashboard" with BarChart2 icon
+- **12 new DocTypes** (all in `hr_client/hr_client/doctype/`, migrated ✅):
+  - Manual entry: `VE Bank Account Balance`, `VE Virtual Account Balance`, `VE OD Account Balance`
+  - Tally-fed: `VE Sales Register Entry`, `VE Purchase Register Entry`, `VE GST Ledger Entry`
+  - `VE Creditor Ledger`, `VE Creditor Advance`, `VE Debtor Ledger`, `VE Debtor Advance`
+  - `VE Cash Flow Entry`, `VE Stock Movement Summary`
+- **Backend** `hr_client/api/accounts_dashboard.py` — 13 whitelisted endpoints:
+  - `get_available_funds_summary()` — bank/virtual/OD totals + breakdowns
+  - `get_accounts_summary(period)` — sales/purchase totals, YoY%, monthly series
+  - `get_gst_summary(period)` — output/input/net GST, GSTR-3B due date, mismatch count
+  - `get_receivables_payables_summary(period)` — all 4 cards with aging buckets
+  - `get_creditors_report(filters)` / `get_creditors_advance_report(filters)` — paginated, sortable
+  - `get_debtors_report(filters)` / `get_debtors_advance_report(filters)` — same
+  - `get_cash_flow_statement(period)` — Operating/Investing/Financing sections + monthly series
+  - `get_inventory_summary()` — category counts, reorder/negative alerts
+  - `get_stock_movement_report(category, filters)` — item-wise, paginated
+  - `trigger_tally_import()` + `get_import_status()` — admin-only, queues background job
+- **Tally import** `hr_client/api/accounts_tally_import.py`:
+  - Reads `/home/vera/Master.xml` + `/home/vera/Transactions.xml` (UTF-16)
+  - Populates all 9 Tally-fed DocTypes (idempotent via tally_guid unique key)
+  - Classifies stock as Fast/Mid/Slow/Dead/Low/Reorder by turnover
+  - Cash flow mapped: income→Operating, fixed assets→Investing, loans→Financing
+  - Runs as frappe long-queue background job
+- **Frontend** (`src/pages/AccountsDashboard/`):
+  - Period filter: Today / MTD / YTD / Last Year / Custom
+  - 6 sections: Funds → Accounts Summary → GST → Receivables/Payables → Cash Flow → Inventory
+  - Each summary card opens DrillDownModal with searchable/sortable/paginated tables
+  - Aging buckets displayed inline (0–30 / 31–60 / 61–90 / 90+ days)
+  - Monthly trend charts (recharts BarChart + ComposedChart)
+  - CSV export + Print buttons on all drill-down tables
+  - "Import from Tally" button (admin only) with live progress indicator
+- **Data source decision (Part 4):** Fresh Tally XML import pipeline (not existing ve_tally_voucher tables)
+  - DocTypes 1–3 (bank/virtual/OD) are manual entry only
+  - DocTypes 4–12 populated by `accounts_tally_import.run()`
+
 ✅ **Admin User Management Panel (2026-06-14)**
 - `hr_client/api/user_management.py` — 8 endpoints, all wrapped with `@frappe.whitelist()` + `@handle_api_error` + `_require_admin()` (Administrator/Owais only — stricter than HR Manager checks elsewhere):
   - `get_all_users` — list of all non-Guest System Users with roles, last_login, linked employee

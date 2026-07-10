@@ -536,6 +536,13 @@ def run(masters_path: str, transactions_path: str):
         elapsed = round(time.time() - t0, 1)
         _set_status("done", 100, f"Import complete in {elapsed}s — {len(ledger_data):,} ledgers, {len(stock_data):,} SKUs, {len(v_rows):,} vouchers.")
 
+        # Chain into Accounts Dashboard DocTypes (Sales Register, GST Ledger, etc.)
+        try:
+            from hr_client.api import accounts_tally_import
+            accounts_tally_import.run()
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "Accounts Tally Import (chained)")
+
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Tally Import Error")
         _set_status("error", 0, f"Import failed: {str(e)[:300]}")

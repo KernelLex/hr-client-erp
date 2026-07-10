@@ -20,6 +20,35 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts"
 
+// ── Accounts Dashboard extra types ──────────────────────────────────────────
+
+interface VirtualAccount { gateway_name: string; available_balance: number; credit_limit: number; utilised: number }
+interface ODAccount { bank_name: string; facility_name: string; sanctioned_limit: number; utilised: number; available: number; interest_rate: number }
+interface FundsSummary { totals: { bank_cash: number; virtual: number; od_available: number; od_utilised: number }; banks: unknown[]; virtuals: VirtualAccount[]; od_accounts: ODAccount[] }
+interface StockCatRow { movement_category: string; sku_count: number; total_stock: number }
+interface InventorySummaryExtra { by_category: StockCatRow[]; negative_stock_count: number; reorder_alert_count: number; total_sku_count: number }
+interface StockRow { name: string; item_code: string; item_description: string; movement_category: string; units_sold: number; reorder_level: number; suggested_po_qty: number; vendor: string }
+interface StockPage { data: StockRow[]; total: number }
+
+function fmtINR(n: number | null | undefined) {
+  if (n == null || isNaN(n)) return "₹0"
+  const abs = Math.abs(n)
+  const sign = n < 0 ? "-" : ""
+  if (abs >= 1e7) return `${sign}₹${(abs / 1e7).toFixed(2)} Cr`
+  if (abs >= 1e5) return `${sign}₹${(abs / 1e5).toFixed(2)} L`
+  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(1)} K`
+  return `${sign}₹${abs.toLocaleString("en-IN")}`
+}
+
+const CAT_STYLE: Record<string, string> = {
+  Fast: "bg-green-50 text-green-700 border-green-200",
+  Mid:  "bg-blue-50 text-blue-700 border-blue-200",
+  Slow: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  Dead: "bg-gray-50 text-gray-600 border-gray-200",
+  Low:  "bg-orange-50 text-orange-700 border-orange-200",
+  Reorder: "bg-red-50 text-red-700 border-red-200",
+}
+
 // ── Types (mirror hr_client.api.operations response shapes) ────────────────
 
 interface Account { name: string; balance: number; balance_fmt: string }
@@ -84,7 +113,7 @@ function dayBucket(days: number | null): keyof typeof DAY_BUCKET_LABEL {
 }
 const DAY_BUCKET_LABEL = { current: "0–30 days", b30_60: "31–60 days", b61_90: "61–90 days", b90plus: "90+ days", unknown: "Unknown" }
 
-type ModalKind = "bank" | "cash" | "creditors" | "advCreditors" | "debtors" | "advDebtors" | "cashflow" | null
+type ModalKind = "bank" | "cash" | "creditors" | "advCreditors" | "debtors" | "advDebtors" | "cashflow" | "virtual" | "od" | "stocks" | null
 
 interface AccountingOverviewProps {
   onGoToImport: () => void
@@ -101,6 +130,22 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
   const { data: advDebtors } = useOps<AdvanceDebtorRow[]>("adv-debtors", "hr_client.api.operations.get_advance_from_debtors")
   const { data: advCreditors } = useOps<AdvanceCreditorRow[]>("adv-creditors", "hr_client.api.operations.get_advance_to_creditors")
   const { data: availableFY = [] } = useOps<string[]>("available-fy", "hr_client.api.operations.get_available_financial_years")
+
+  // ── Extra: Accounts Dashboard DocTypes ────────────────────────────────────
+  const [stockCat, setStockCat] = useState<string | null>(null)
+  const { data: fundsExtra } = useOps<FundsSummary>("funds-extra", "hr_client.api.accounts_dashboard.get_available_funds_summary")
+  const { data: invExtra } = useOps<InventorySummaryExtra>("inv-extra", "hr_client.api.accounts_dashboard.get_inventory_summary")
+  const { data: stockPage } = useQuery<StockPage>({
+    queryKey: ["stock-page", stockCat],
+    queryFn: async () => {
+      const res = await api.get(apiUrl("hr_client.api.accounts_dashboard.get_stock_movement_report"), {
+        params: { category: stockCat ?? "", page: 1, page_size: 100 },
+      })
+      return res.data.message as StockPage
+    },
+    enabled: !!stockCat,
+    staleTime: 5 * 60_000,
+  })
 
   const currentFY = availableFY[0]
   const prevFY = availableFY[1]
@@ -402,11 +447,64 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
             sub={data.inventory.brands.slice(0, 3).join(" · ") || "—"}
           />
         </div>
-        <p className="text-[11px] mt-2.5" style={{ color: "var(--text-muted)" }}>
-          Stock valuation, fast/slow-moving and re-order analysis need item-level quantity tracking, which isn't
-          in the current Tally export — only the item master (name, HSN, GST%, rate) is available today.
-        </p>
       </section>
+
+      {/* ── Stock Movement Analysis ── */}
+      {invExtra && invExtra.total_sku_count > 0 && (
+        <section>
+          <SectionHeader>Stock Movement Analysis</SectionHeader>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-2">
+            {(["Fast","Mid","Slow","Dead","Low","Reorder"] as const).map(cat => {
+              const entry = invExtra.by_category.find(r => r.movement_category === cat)
+              return (
+                <div
+                  key={cat}
+                  onClick={() => { setStockCat(cat); setModal("stocks") }}
+                  className={`cursor-pointer rounded-xl p-3 border hover:shadow-md transition-shadow ${CAT_STYLE[cat]}`}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide mb-1">{cat}</p>
+                  <p className="text-xl font-bold">{entry?.sku_count ?? 0}</p>
+                  <p className="text-xs opacity-70 mt-0.5">SKUs</p>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex gap-4 text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+            <span>Total tracked: <strong>{invExtra.total_sku_count}</strong> items</span>
+            {invExtra.reorder_alert_count > 0 && (
+              <span className="text-red-600 font-medium">⚠ {invExtra.reorder_alert_count} reorder alerts</span>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── Virtual Accounts & OD ── */}
+      {fundsExtra && (fundsExtra.virtuals.length > 0 || fundsExtra.od_accounts.length > 0) && (
+        <section>
+          <SectionHeader>Payment Gateways &amp; OD Facilities</SectionHeader>
+          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}>
+            {fundsExtra.virtuals.length > 0 && (
+              <StatCard
+                label="Virtual Accounts"
+                value={fmtINR(fundsExtra.totals.virtual)}
+                sub={`${fundsExtra.virtuals.length} gateway${fundsExtra.virtuals.length === 1 ? "" : "s"}`}
+                onClick={() => setModal("virtual")}
+                linkLabel="→ View Gateway Balances"
+              />
+            )}
+            {fundsExtra.od_accounts.length > 0 && (
+              <StatCard
+                label="OD Available"
+                value={fmtINR(fundsExtra.totals.od_available)}
+                sub={`Utilised: ${fmtINR(fundsExtra.totals.od_utilised)}`}
+                variant={fundsExtra.totals.od_utilised > 0 ? "warn" : "default"}
+                onClick={() => setModal("od")}
+                linkLabel="→ View OD Facilities"
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── Modals ── */}
       <DrillDownModal open={modal === "bank"} onOpenChange={(o) => !o && setModal(null)} title="Bank Balance — Account-wise">
@@ -498,6 +596,96 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
         }
       >
         <DataTable columns={cashflowCols} rows={[...(cashflow ?? [])].reverse()} rowKey={(r) => r.key} searchable={false} />
+      </DrillDownModal>
+
+      {/* Stock Movement drill-down */}
+      <DrillDownModal
+        open={modal === "stocks"}
+        onOpenChange={(o) => { if (!o) { setModal(null); setStockCat(null) } }}
+        title={stockCat ? `${stockCat} Moving Items` : "Stock Movement"}
+        summary={stockPage && <SummaryStat label="Items" value={stockPage.total} />}
+      >
+        {!stockPage ? (
+          <div className="flex items-center justify-center py-10"><Loader2 size={20} className="animate-spin text-gray-300" /></div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead><tr className="border-b border-gray-100 bg-gray-50">
+              <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium">Item</th>
+              <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Sales Value</th>
+              <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Reorder Lvl</th>
+              <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium">Vendor</th>
+            </tr></thead>
+            <tbody>
+              {stockPage.data.length === 0 && (
+                <tr><td colSpan={4} className="text-center py-8 text-gray-400">No items in this category yet — run a Tally import first</td></tr>
+              )}
+              {stockPage.data.map((r) => (
+                <tr key={r.name} className="border-b border-gray-50 hover:bg-gray-50">
+                  <td className="px-3 py-2.5">
+                    <div className="font-medium text-xs truncate max-w-[220px]" title={r.item_code}>{r.item_code}</div>
+                  </td>
+                  <td className="px-3 py-2.5 text-right font-semibold text-xs">{fmtINR(r.units_sold)}</td>
+                  <td className="px-3 py-2.5 text-right text-gray-500 text-xs">{r.reorder_level > 0 ? r.reorder_level.toFixed(0) : "—"}</td>
+                  <td className="px-3 py-2.5 text-gray-500 text-xs truncate max-w-[100px]">{r.vendor || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </DrillDownModal>
+
+      {/* Virtual accounts drill-down */}
+      <DrillDownModal open={modal === "virtual"} onOpenChange={(o) => !o && setModal(null)} title="Payment Gateway Balances">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-gray-100 bg-gray-50">
+            <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium">Gateway</th>
+            <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Available</th>
+            <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Credit Limit</th>
+            <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Utilised</th>
+          </tr></thead>
+          <tbody>
+            {!fundsExtra?.virtuals.length && (
+              <tr><td colSpan={4} className="text-center py-6 text-gray-400">No payment gateway accounts entered yet — add via ERPNext desk → VE Virtual Account Balance</td></tr>
+            )}
+            {fundsExtra?.virtuals.map((v, i) => (
+              <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="px-3 py-2.5 font-medium">{v.gateway_name}</td>
+                <td className="px-3 py-2.5 text-right text-green-700 font-semibold">{fmtINR(v.available_balance)}</td>
+                <td className="px-3 py-2.5 text-right text-gray-500">{fmtINR(v.credit_limit)}</td>
+                <td className="px-3 py-2.5 text-right text-orange-600">{fmtINR(v.utilised)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </DrillDownModal>
+
+      {/* OD accounts drill-down */}
+      <DrillDownModal open={modal === "od"} onOpenChange={(o) => !o && setModal(null)} title="Overdraft Facilities">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-gray-100 bg-gray-50">
+            <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium">Bank</th>
+            <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium">Facility</th>
+            <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Limit</th>
+            <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Utilised</th>
+            <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Available</th>
+            <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Rate %</th>
+          </tr></thead>
+          <tbody>
+            {!fundsExtra?.od_accounts.length && (
+              <tr><td colSpan={6} className="text-center py-6 text-gray-400">No OD facilities entered yet — add via ERPNext desk → VE OD Account Balance</td></tr>
+            )}
+            {fundsExtra?.od_accounts.map((od, i) => (
+              <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="px-3 py-2.5 font-medium">{od.bank_name}</td>
+                <td className="px-3 py-2.5 text-gray-600 text-xs">{od.facility_name}</td>
+                <td className="px-3 py-2.5 text-right">{fmtINR(od.sanctioned_limit)}</td>
+                <td className="px-3 py-2.5 text-right text-orange-600">{fmtINR(od.utilised)}</td>
+                <td className="px-3 py-2.5 text-right text-green-700 font-semibold">{fmtINR(od.available)}</td>
+                <td className="px-3 py-2.5 text-right text-gray-500 text-xs">{od.interest_rate?.toFixed(2) ?? "—"}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </DrillDownModal>
     </div>
   )
