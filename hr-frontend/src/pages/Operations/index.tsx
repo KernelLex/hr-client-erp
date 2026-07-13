@@ -174,26 +174,37 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
     return b >= 1e9 ? `${(b/1e9).toFixed(1)} GB` : b >= 1e6 ? `${(b/1e6).toFixed(0)} MB` : `${(b/1e3).toFixed(0)} KB`
   }
 
-  async function upload(file: File) {
-    const fd = new FormData(); fd.append("file", file, file.name)
-    const res = await fetch("/api/method/hr_client.api.operations.upload_tally_file", {
-      method: "POST", credentials: "include",
-      headers: { "X-Frappe-CSRF-Token": getCsrf() }, body: fd,
+  function upload(file: File, onProgress: (n: number) => void): Promise<{ path: string }> {
+    return new Promise((resolve, reject) => {
+      const fd = new FormData(); fd.append("file", file, file.name)
+      const xhr = new XMLHttpRequest()
+      xhr.withCredentials = true
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
+      }
+      xhr.onload = () => {
+        try {
+          const json = JSON.parse(xhr.responseText)
+          if (xhr.status >= 200 && xhr.status < 300 && !json.exc) resolve(json.message)
+          else reject(new Error(json.exc || `Upload failed (${xhr.status})`))
+        } catch { reject(new Error("Invalid server response")) }
+      }
+      xhr.onerror = () => reject(new Error("Network error during upload"))
+      xhr.open("POST", "/api/method/hr_client.api.operations.upload_tally_file")
+      xhr.setRequestHeader("X-Frappe-CSRF-Token", getCsrf())
+      xhr.send(fd)
     })
-    const json = await res.json()
-    if (!res.ok || json.exc) throw new Error(json.exc || "Upload failed")
-    return json.message as { path: string }
   }
 
   async function run() {
     if (!mastersFile || !transFile) return
     setPhase("uploading"); setErr("")
     try {
-      setUploadStep("Masters"); setPct(5); setMsg(`Uploading ${mastersFile.name}…`)
-      const m = await upload(mastersFile); setPct(50)
-      setUploadStep("Transactions"); setMsg(`Uploading ${transFile.name} (${fmtSize(transFile.size)})…`)
-      const t = await upload(transFile); setPct(100)
-      setPhase("importing"); setPct(1); setMsg("Parsing Tally data…")
+      setUploadStep("Masters"); setPct(0); setMsg(`Uploading ${mastersFile.name}…`)
+      const m = await upload(mastersFile, setPct); setPct(100)
+      setUploadStep("Transactions"); setPct(0); setMsg(`Uploading ${transFile.name} (${fmtSize(transFile.size)})…`)
+      const t = await upload(transFile, setPct); setPct(100)
+      setPhase("importing"); setPct(0); setMsg("Queuing import…")
       await apiPost("hr_client.api.operations.run_tally_import", { masters_path: m.path, transactions_path: t.path })
       pollRef.current = setInterval(async () => {
         const s = await apiFetch("hr_client.api.operations.get_import_status") as { status: string; progress: number; message: string }
@@ -236,7 +247,11 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
       </div>
       <div>
         <div className="flex justify-between text-xs text-gray-400 mb-1">
-          <span>{phase === "uploading" ? `Uploading ${uploadStep}` : "Processing"}</span>
+          <span>
+            {phase === "uploading"
+              ? `Uploading ${uploadStep} (${uploadStep === "Masters" ? "1" : "2"}/2)`
+              : "Extracting data"}
+          </span>
           <span>{pct}%</span>
         </div>
         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
