@@ -49,45 +49,7 @@ MODULE_ROLE_MAP = {
 BASE_ROLES = ["Employee"]
 
 _ADMIN_USERS = {"Administrator", "owais@veraenterprises.in"}
-
-# Canonical team — order matters (Owais first)
-TEAM_USERS = [
-    {
-        "email": "owais@veraenterprises.in",
-        "frappe_name": "Administrator",
-        "full_name": "Owais Ahmed Khan",
-        "department": "Admin",
-        "designation": "Full access — manages everything",
-    },
-    {
-        "email": "maazdgr8.mma@gmail.com",
-        "frappe_name": "maazdgr8.mma@gmail.com",
-        "full_name": "Maaz",
-        "department": "Project",
-        "designation": "Project management & tracking",
-    },
-    {
-        "email": "manju.veraaccnts@outlook.com",
-        "frappe_name": "manju.veraaccnts@outlook.com",
-        "full_name": "Manjunath M N",
-        "department": "Accounts",
-        "designation": "Accounts management, GST filing, TDS",
-    },
-    {
-        "email": "lookman.vera@outlook.com",
-        "frappe_name": "lookman.vera@outlook.com",
-        "full_name": "Lookman",
-        "department": "Accounts",
-        "designation": "Accounts executive duties",
-    },
-    {
-        "email": "Bhagyashree.veraenterprises@outlook.com",
-        "frappe_name": "Bhagyashree.veraenterprises@outlook.com",
-        "full_name": "Bhagya Shree",
-        "department": "Logistics",
-        "designation": "Logistics management, stock monitoring, porter executive, HR",
-    },
-]
+_PROTECTED_USER = "owais@veraenterprises.in"
 
 
 def _sync_user_roles(frappe_name: str, permissions: dict, valid_roles: set):
@@ -149,29 +111,72 @@ def _get_stored_permissions(frappe_name: str) -> dict:
     return {m: bool(getattr(doc, m, 1)) for m in ALL_MODULES}
 
 
-# ── New endpoints (v2) ────────────────────────────────────────────────────────
+def _get_linked_employee(user_email: str) -> dict:
+    """Return {full_name, department, designation, company} from linked Employee record."""
+    emp = frappe.db.get_value(
+        "Employee",
+        {"user_id": user_email, "status": "Active"},
+        ["employee_name", "department", "designation", "company"],
+        as_dict=True,
+    )
+    if not emp:
+        emp = frappe.db.get_value(
+            "Employee",
+            {"company_email": user_email},
+            ["employee_name", "department", "designation", "company"],
+            as_dict=True,
+        )
+    return emp or {}
+
+
+# ── v2 endpoints ──────────────────────────────────────────────────────────────
 
 @frappe.whitelist()
 def get_all_users_with_permissions():
     """
-    Returns all Vera Enterprises team members with their module permission flags.
-    Defaults: ALL modules = true. Owais is always full access.
+    Dynamically returns ALL System Users with their module permission flags.
+    Owais is always shown first with full access locked.
     """
     frappe.has_permission("User", ptype="read", throw=True)
 
+    users = frappe.get_all(
+        "User",
+        filters={
+            "user_type": "System User",
+            "enabled": 1,
+            "name": ["not in", ["Guest", "Administrator"]],
+        },
+        fields=["name", "full_name", "enabled"],
+        order_by="full_name asc",
+    )
+
     result = []
-    for member in TEAM_USERS:
-        if not frappe.db.exists("User", member["frappe_name"]):
-            continue
-
-        is_admin = member["email"] in _ADMIN_USERS
-        permissions = _all_true() if is_admin else _get_stored_permissions(member["frappe_name"])
-
+    # Owais always first
+    owais_email = _PROTECTED_USER
+    if frappe.db.exists("User", owais_email):
+        emp = _get_linked_employee(owais_email)
         result.append({
-            "name": member["full_name"],
-            "email": member["email"],
-            "department": member["department"],
-            "designation": member["designation"],
+            "name": "Owais Ahmed Khan",
+            "email": owais_email,
+            "department": emp.get("department", "Management"),
+            "designation": emp.get("designation", "Administrator"),
+            "company": emp.get("company", "Vera Enterprises"),
+            "is_admin": True,
+            "permissions": _all_true(),
+        })
+
+    for u in users:
+        if u["name"] == owais_email:
+            continue
+        is_admin = u["name"] in _ADMIN_USERS
+        emp = _get_linked_employee(u["name"])
+        permissions = _all_true() if is_admin else _get_stored_permissions(u["name"])
+        result.append({
+            "name": u["full_name"],
+            "email": u["name"],
+            "department": emp.get("department") or "",
+            "designation": emp.get("designation") or "",
+            "company": emp.get("company") or "",
             "is_admin": is_admin,
             "permissions": permissions,
         })
@@ -182,41 +187,30 @@ def get_all_users_with_permissions():
 @frappe.whitelist(methods=["POST"])
 def update_user_permissions(email: str, permissions: str):
     """
-    Save module permissions for a user. Admin only.
+    Save module permissions for any user. Admin only.
     permissions: JSON string of { module: bool }
     """
     try:
-        current_user = frappe.session.user
-        # Enforce server-side admin check — frontend guard alone is insufficient
         _require_admin()
 
-        if current_user == "Guest":
-            return {"success": False, "error": "Not authorized — not logged in"}
-
-        # Parse permissions safely
         if isinstance(permissions, str):
             try:
                 permissions = json.loads(permissions)
             except Exception:
                 return {"success": False, "error": "Invalid permissions format — expected JSON string"}
 
-        # Resolve email → frappe_name
-        frappe_name = None
-        for member in TEAM_USERS:
-            if member["email"] == email:
-                frappe_name = member["frappe_name"]
-                break
+        # Owais can never be restricted
+        if email == _PROTECTED_USER:
+            return {"success": False, "error": "Cannot modify permissions for the protected admin account"}
 
-        if not frappe_name:
-            return {"success": False, "error": f"User {email!r} not in team roster"}
-
+        # frappe_name IS the email for all non-Administrator users
+        frappe_name = email
         if not frappe.db.exists("User", frappe_name):
-            return {"success": False, "error": f"User {email!r} not found in ERPNext (frappe_name={frappe_name!r})"}
+            return {"success": False, "error": f"User '{email}' not found"}
 
-        # Get all roles that actually exist in this ERPNext instance
         valid_roles = {r.name for r in frappe.get_all("Role", fields=["name"])}
 
-        # ── 1. Save to User Module Permission DocType (required) ─────────────
+        # ── 1. Save to User Module Permission DocType ─────────────────────────
         if frappe.db.exists("User Module Permission", frappe_name):
             doc = frappe.get_doc("User Module Permission", frappe_name)
         else:
@@ -229,14 +223,13 @@ def update_user_permissions(email: str, permissions: str):
         doc.save(ignore_permissions=True)
         saved_perms = {m: bool(getattr(doc, m)) for m in ALL_MODULES}
 
-        # ── 2. Sync ERPNext roles via direct DB (optional — never blocks save) ─
+        # ── 2. Sync ERPNext roles (non-fatal) ────────────────────────────────
         try:
             _sync_user_roles(frappe_name, saved_perms, valid_roles)
-        except Exception as role_err:
+        except Exception:
             frappe.log_error(frappe.get_traceback(), "Role Sync Failed (non-fatal)")
 
         frappe.db.commit()
-
         return {"success": True, "email": email, "permissions": saved_perms}
 
     except Exception as e:
@@ -249,21 +242,12 @@ def get_my_permissions():
     """
     Returns the calling user's module permissions.
     No admin check — every logged-in user can call this.
-    Admins always get all-true.
+    Admins and guests always get all-true.
     """
     user = frappe.session.user
-
     if user in _ADMIN_USERS or user == "Guest":
-        return {"modules": {m: True for m in ALL_MODULES}}
-
-    # Resolve user → frappe_name (email might differ from frappe user name)
-    frappe_name = user
-    for member in TEAM_USERS:
-        if member["email"] == user or member["frappe_name"] == user:
-            frappe_name = member["frappe_name"]
-            break
-
-    return {"modules": _get_stored_permissions(frappe_name)}
+        return {"modules": _all_true()}
+    return {"modules": _get_stored_permissions(user)}
 
 
 # ── Legacy endpoints (v1 — kept for backwards compat) ────────────────────────
@@ -277,12 +261,10 @@ def get_users_with_roles():
 @frappe.whitelist(methods=["POST"])
 def update_user_roles(user_email: str, modules: str):
     """Legacy v1 endpoint — delegates to update_user_permissions."""
-    import json
     if isinstance(modules, str):
         modules_dict = json.loads(modules)
     else:
         modules_dict = modules
-    # Convert old module key format to new snake_case
     key_map = {
         "EmployeeLifecycle": "employee_lifecycle",
         "Logistics": "logistics",

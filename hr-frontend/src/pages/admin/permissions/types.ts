@@ -44,6 +44,7 @@ export interface UserPermissions {
   email: string
   department: string
   designation: string
+  company: string
   is_admin: boolean
   permissions: Record<PermissionModule, boolean>
 }

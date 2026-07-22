@@ -28,11 +28,10 @@ const ALL_MODULES: PermissionModule[] = [
   "chat",
 ]
 
-const DEPT_STYLES: Record<string, { badge: string; avatar: string }> = {
-  Admin:     { badge: "bg-gold-100 text-gold-700 border-gold-200", avatar: "bg-gold-600" },
-  Project:   { badge: "bg-blue-100 text-blue-700 border-blue-200",       avatar: "bg-blue-600" },
-  Accounts:  { badge: "bg-amber-100 text-amber-700 border-amber-200",    avatar: "bg-amber-500" },
-  Logistics: { badge: "bg-green-100 text-green-700 border-green-200",    avatar: "bg-green-600" },
+const COMPANY_STYLES: Record<string, { badge: string; avatar: string }> = {
+  "Vera Enterprises": { badge: "bg-blue-100 text-blue-700 border-blue-200",   avatar: "bg-blue-600" },
+  "Schones Leben":    { badge: "bg-purple-100 text-purple-700 border-purple-200", avatar: "bg-purple-600" },
+  "Hagan Modular":    { badge: "bg-orange-100 text-orange-700 border-orange-200", avatar: "bg-orange-500" },
 }
 
 function initials(name: string) {
@@ -47,7 +46,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
   const [saved, setSaved] = useState(false)
   const update = useUpdatePermissions()
 
-  const style = DEPT_STYLES[user.department] ?? { badge: "bg-gray-100 text-gray-600 border-gray-200", avatar: "bg-gray-500" }
+  const style = COMPANY_STYLES[user.company] ?? { badge: "bg-gray-100 text-gray-600 border-gray-200", avatar: "bg-gray-500" }
 
   function toggle(mod: PermissionModule) {
     setPerms((p) => ({ ...p, [mod]: !p[mod] }))
@@ -101,7 +100,7 @@ function UserPermissionCard({ user }: { user: UserPermissions }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${style.badge}`}>
-            {user.department}
+            {user.company || user.department}
           </span>
           {!user.is_admin && (
             <span className="text-xs text-gray-400 tabular-nums">
@@ -202,7 +201,7 @@ export function PermissionsPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Role Control</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Vera Enterprises — all users have full access by default</p>
+            <p className="text-xs text-gray-500 mt-0.5">All companies — full access by default, restrict modules per user</p>
           </div>
         </div>
         {data && (
