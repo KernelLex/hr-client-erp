@@ -1,0 +1,74 @@
+{
+ "doctype": "DocType",
+ "name": "VE Policy",
+ "module": "Hr Client",
+ "autoname": "hash",
+ "title_field": "policy_name",
+ "field_order": [
+  "company",
+  "policy_category",
+  "col_break_1",
+  "policy_name",
+  "version",
+  "effective_date",
+  "section_content",
+  "content"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "policy_category",
+   "fieldtype": "Select",
+   "label": "Policy Category",
+   "options": "HR\nFinance\nOperations\nIT\nSafety\nLegal",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "policy_name",
+   "fieldtype": "Data",
+   "label": "Policy Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Data",
+   "label": "Version",
+   "default": "1.0"
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "label": "Effective Date"
+  },
+  {
+   "fieldname": "section_content",
+   "fieldtype": "Section Break",
+   "label": "Policy Content"
+  },
+  {
+   "fieldname": "content",
+   "fieldtype": "Long Text",
+   "label": "Content"
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1, "write": 1, "create": 1},
+  {"role": "HR User", "read": 1},
+  {"role": "Employee", "read": 1}
+ ]
+}

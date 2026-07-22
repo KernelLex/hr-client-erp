@@ -1,0 +1,46 @@
+{
+ "doctype": "DocType",
+ "name": "VE Employee Asset",
+ "module": "Hr Client",
+ "istable": 1,
+ "field_order": [
+  "asset_type",
+  "asset_identifier",
+  "issued_on",
+  "returned_on",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "asset_type",
+   "fieldtype": "Select",
+   "label": "Asset Type",
+   "options": "Sim Card\nLaptop\nSystem\nMobile Device\nAccess Card\nOther",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "asset_identifier",
+   "fieldtype": "Data",
+   "label": "Asset Identifier / Serial No.",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "issued_on",
+   "fieldtype": "Date",
+   "label": "Issued On",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "returned_on",
+   "fieldtype": "Date",
+   "label": "Returned On"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "permissions": []
+}

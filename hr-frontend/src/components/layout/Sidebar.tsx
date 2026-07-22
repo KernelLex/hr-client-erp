@@ -27,6 +27,8 @@ import {
   FileStack,
   LineChart,
   UsersRound,
+  BarChart2,
+  Building2,
 } from "lucide-react"
 import { useUnreadCounts } from "@/pages/chat/useChat"
 import { cn } from "@/lib/utils"
@@ -282,6 +284,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
 
   const isUsersActive = path === "/admin/users"
   const isPermsActive = path === "/admin/permissions"
+  const isOrgHubActive = path === "/org-hub" || path === "/admin/org-hub"
   const isAdminGroupActive = isUsersActive || isPermsActive
 
   // Permissions
@@ -354,7 +357,10 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         <Sep />
         <SectionTitle>Finance &amp; Governance</SectionTitle>
         {isAdmin && (
-          <NavItem to="/accounting" label="Accounting" icon={Landmark} adminBadge onClick={close} />
+          <>
+            <NavItem to="/accounting" label="Accounting" icon={Landmark} adminBadge onClick={close} />
+            <NavItem to="/accounts-dashboard" label="Accounts Dashboard" icon={BarChart2} adminBadge onClick={close} />
+          </>
         )}
 
         <Sep />
@@ -406,11 +412,14 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
           </>
         )}
 
+        {/* Org Hub — visible to all employees */}
+        <SubItem to="/org-hub" label="Org Hub" icon={Building2} isActive={isOrgHubActive} onClick={close} />
+
         {/* Administration group */}
         {isAdmin && (
           <>
             <GroupHeader label="Administration" icon={Shield} open={adminOpen} active={isAdminGroupActive} onToggle={toggleAdmin} />
-            <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: adminOpen ? "160px" : "0px", opacity: adminOpen ? 1 : 0 }}>
+            <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: adminOpen ? "200px" : "0px", opacity: adminOpen ? 1 : 0 }}>
               <div className="pt-0.5 space-y-0.5">
                 <SubItem to="/admin/users" label="User Management" icon={Users} isActive={isUsersActive} adminBadge onClick={close} />
                 <SubItem to="/admin/permissions" label="Permissions" icon={Shield} isActive={isPermsActive} adminBadge onClick={close} />

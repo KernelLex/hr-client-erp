@@ -1,0 +1,79 @@
+{
+ "doctype": "DocType",
+ "name": "VE Department Process",
+ "module": "Hr Client",
+ "autoname": "hash",
+ "title_field": "process_name",
+ "field_order": [
+  "company",
+  "department",
+  "col_break_1",
+  "process_name",
+  "trigger_event",
+  "responsible_roles",
+  "tools_used",
+  "section_steps",
+  "steps"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "process_name",
+   "fieldtype": "Data",
+   "label": "Process Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "trigger_event",
+   "fieldtype": "Data",
+   "label": "Trigger Event"
+  },
+  {
+   "fieldname": "responsible_roles",
+   "fieldtype": "Data",
+   "label": "Responsible Roles"
+  },
+  {
+   "fieldname": "tools_used",
+   "fieldtype": "Data",
+   "label": "Tools / Systems Used"
+  },
+  {
+   "fieldname": "section_steps",
+   "fieldtype": "Section Break",
+   "label": "Process Steps"
+  },
+  {
+   "fieldname": "steps",
+   "fieldtype": "Long Text",
+   "label": "Steps (Flowchart Description)"
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1, "write": 1, "create": 1},
+  {"role": "HR User", "read": 1},
+  {"role": "Employee", "read": 1}
+ ]
+}

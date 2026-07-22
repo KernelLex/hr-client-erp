@@ -1,0 +1,59 @@
+{
+ "doctype": "DocType",
+ "name": "VE Employee Handbook",
+ "module": "Hr Client",
+ "autoname": "hash",
+ "title_field": "section_title",
+ "field_order": [
+  "company",
+  "section_order",
+  "col_break_1",
+  "section_title",
+  "section_content",
+  "content"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_order",
+   "fieldtype": "Int",
+   "label": "Section Order",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_title",
+   "fieldtype": "Data",
+   "label": "Section Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "section_content",
+   "fieldtype": "Section Break",
+   "label": "Content"
+  },
+  {
+   "fieldname": "content",
+   "fieldtype": "Long Text",
+   "label": "Content"
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1, "write": 1, "create": 1},
+  {"role": "HR User", "read": 1},
+  {"role": "Employee", "read": 1}
+ ]
+}

@@ -1,0 +1,76 @@
+{
+ "doctype": "DocType",
+ "name": "VE Forms Checklist",
+ "module": "Hr Client",
+ "autoname": "hash",
+ "title_field": "form_title",
+ "field_order": [
+  "company",
+  "department",
+  "col_break_1",
+  "form_title",
+  "form_type",
+  "instructions",
+  "section_items",
+  "items"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "form_title",
+   "fieldtype": "Data",
+   "label": "Form / Checklist Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "form_type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Form\nChecklist",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "instructions",
+   "fieldtype": "Small Text",
+   "label": "Instructions"
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Items / Fields"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Long Text",
+   "label": "Items"
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1, "write": 1, "create": 1},
+  {"role": "HR User", "read": 1},
+  {"role": "Employee", "read": 1}
+ ]
+}

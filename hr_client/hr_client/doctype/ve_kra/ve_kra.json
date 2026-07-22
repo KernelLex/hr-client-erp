@@ -1,0 +1,103 @@
+{
+ "doctype": "DocType",
+ "name": "VE KRA",
+ "module": "Hr Client",
+ "autoname": "hash",
+ "title_field": "kra_title",
+ "field_order": [
+  "company",
+  "department",
+  "designation",
+  "col_break_1",
+  "frequency",
+  "weightage",
+  "kra_title",
+  "section_desc",
+  "description",
+  "section_measurement",
+  "measurement_criteria",
+  "target"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Designation",
+   "options": "Designation",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "kra_title",
+   "fieldtype": "Data",
+   "label": "KRA Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "frequency",
+   "fieldtype": "Select",
+   "label": "Review Frequency",
+   "options": "Monthly\nQuarterly\nAnnual",
+   "default": "Quarterly"
+  },
+  {
+   "fieldname": "weightage",
+   "fieldtype": "Percent",
+   "label": "Weightage (%)"
+  },
+  {
+   "fieldname": "section_desc",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Long Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_measurement",
+   "fieldtype": "Section Break",
+   "label": "Measurement"
+  },
+  {
+   "fieldname": "measurement_criteria",
+   "fieldtype": "Data",
+   "label": "Measurement Criteria"
+  },
+  {
+   "fieldname": "target",
+   "fieldtype": "Data",
+   "label": "Target"
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1, "write": 1, "create": 1},
+  {"role": "HR User", "read": 1}
+ ]
+}

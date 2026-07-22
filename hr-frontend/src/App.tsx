@@ -40,6 +40,7 @@ import PurchasingPage from "@/pages/Purchasing"
 import SalesRegisterPage from "@/pages/SalesRegister"
 import LogisticsPage from "@/pages/Logistics"
 import ReturnsPage from "@/pages/Returns"
+import { OrgHubPage } from "@/pages/admin/OrgHub/OrgHubPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,9 @@ function App() {
                 <Route path="/sales-register" element={<SalesRegisterPage />} />
                 <Route path="/logistics" element={<LogisticsPage />} />
                 <Route path="/returns" element={<ReturnsPage />} />
+                {/* Org Hub */}
+                <Route path="/org-hub" element={<OrgHubPage />} />
+                <Route path="/admin/org-hub" element={<OrgHubPage />} />
                 {/* Holidays */}
                 <Route path="/holidays" element={<HolidaysPage />} />
                 {/* Catch-all: redirect unknown paths to dashboard */}

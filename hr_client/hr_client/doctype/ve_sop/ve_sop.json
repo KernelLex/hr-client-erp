@@ -1,0 +1,107 @@
+{
+ "doctype": "DocType",
+ "name": "VE SOP",
+ "module": "Hr Client",
+ "autoname": "field:sop_code",
+ "title_field": "sop_title",
+ "field_order": [
+  "company",
+  "department",
+  "col_break_1",
+  "sop_code",
+  "sop_title",
+  "version",
+  "effective_date",
+  "section_purpose",
+  "purpose",
+  "scope",
+  "section_procedure",
+  "responsible_role",
+  "procedure"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sop_code",
+   "fieldtype": "Data",
+   "label": "SOP Code",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sop_title",
+   "fieldtype": "Data",
+   "label": "SOP Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Data",
+   "label": "Version",
+   "default": "1.0"
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "label": "Effective Date"
+  },
+  {
+   "fieldname": "section_purpose",
+   "fieldtype": "Section Break",
+   "label": "Purpose & Scope"
+  },
+  {
+   "fieldname": "purpose",
+   "fieldtype": "Text",
+   "label": "Purpose"
+  },
+  {
+   "fieldname": "scope",
+   "fieldtype": "Text",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "section_procedure",
+   "fieldtype": "Section Break",
+   "label": "Procedure"
+  },
+  {
+   "fieldname": "responsible_role",
+   "fieldtype": "Data",
+   "label": "Responsible Role(s)"
+  },
+  {
+   "fieldname": "procedure",
+   "fieldtype": "Long Text",
+   "label": "Step-by-Step Procedure"
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1, "write": 1, "create": 1},
+  {"role": "HR User", "read": 1},
+  {"role": "Employee", "read": 1}
+ ]
+}
