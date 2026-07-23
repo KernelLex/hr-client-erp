@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import {
   Landmark, LayoutList, Building2, FileText, CreditCard, Receipt,
@@ -70,7 +71,16 @@ function ComingSoon({ label }: { label: string }) {
 
 export default function AccountingPage() {
   const guard = useAdminGuard()
-  const [tab, setTab] = useState<TabId>("coa")
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [tab, setTab] = useState<TabId>(() => {
+    const t = searchParams.get("tab")
+    return (TABS.find(x => x.id === t)?.id ?? "coa") as TabId
+  })
+
+  function changeTab(id: TabId) {
+    setTab(id)
+    setSearchParams({ tab: id }, { replace: true })
+  }
 
   const { data: finSummary } = useQuery<FinSummary>({
     queryKey: ["financial-summary"],
@@ -141,7 +151,7 @@ export default function AccountingPage() {
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setTab(id)}
+              onClick={() => changeTab(id)}
               className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
                 tab === id
                   ? "border-[#1e3a2f] text-[#1e3a2f]"
