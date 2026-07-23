@@ -129,7 +129,7 @@ export default function AccountingPage() {
             <AlertCircle size={14} style={{ color: "var(--color-warning, #ea580c)" }} className="shrink-0" />
             <span style={{ color: "#92400e" }}>
               Tally data is <strong>{gapDays} days</strong> behind (last import: {finSummary!.max_date}).
-              Upload the latest XML via <strong>Import &amp; AI</strong> in the old Accounting view.
+              Upload the latest XML via the <strong>Import &amp; AI</strong> tab in <strong>Accounting</strong>.
             </span>
           </div>
         )}

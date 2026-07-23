@@ -98,10 +98,10 @@ function App() {
                 <Route path="/drive" element={<VeDrivePage />} />
                 {/* Chat */}
                 <Route path="/chat" element={<ChatPage />} />
-                {/* Accounting module — 18-tab page */}
-                <Route path="/accounting" element={<AccountingPage />} />
-                {/* Legacy Tally import/voucher browser — kept accessible */}
-                <Route path="/accounting/tally" element={<OperationsPage />} />
+                {/* Accounting — Tally voucher browser (original) */}
+                <Route path="/accounting" element={<OperationsPage />} />
+                {/* Accounting Module — 18-tab COA / ledger page */}
+                <Route path="/accounting-module" element={<AccountingPage />} />
                 <Route path="/operations" element={<Navigate to="/accounting" replace />} />
                 {/* Tally-derived modules */}
                 <Route path="/inventory" element={<InventoryPage />} />
