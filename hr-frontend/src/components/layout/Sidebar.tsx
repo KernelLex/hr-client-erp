@@ -29,7 +29,6 @@ import {
   UsersRound,
   BarChart2,
   Building2,
-  LayoutList,
 } from "lucide-react"
 import { useUnreadCounts } from "@/pages/chat/useChat"
 import { cn } from "@/lib/utils"
@@ -358,8 +357,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         <SectionTitle>Finance &amp; Governance</SectionTitle>
         {isAdmin && (
           <>
-            <NavItem to="/accounting" label="Accounting" icon={Landmark} adminBadge onClick={close} />
-            <NavItem to="/accounting-module" label="Accounts Module" icon={LayoutList} adminBadge onClick={close} />
+            <NavItem to="/accounting-module" label="Accounting" icon={Landmark} adminBadge onClick={close} />
             <NavItem to="/accounts-dashboard" label="Accounts Dashboard" icon={BarChart2} adminBadge onClick={close} />
           </>
         )}
