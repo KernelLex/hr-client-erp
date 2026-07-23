@@ -418,6 +418,13 @@ function EmployeeView() {
   )
 }
 
+// ── Minimal query shape used in tab rendering ─────────────────────────────────
+
+interface TabQ {
+  data: Doc[] | undefined
+  isLoading: boolean
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function OrgHubPage() {
@@ -435,26 +442,42 @@ export function OrgHubPage() {
   function qKey(t: string) { return ["org-hub", t, co] }
   function invalidate() { qc.invalidateQueries({ queryKey: ["org-hub"] }) }
 
-  const jdQ    = useQuery<Doc[]>({ queryKey: qKey("jd"),       queryFn: () => apiFetch("get_job_descriptions", { company: co }), staleTime: 60000 })
-  const kraQ   = useQuery<Doc[]>({ queryKey: qKey("kra"),      queryFn: () => apiFetch("get_kras",             { company: co }), staleTime: 60000 })
-  const kpiQ   = useQuery<Doc[]>({ queryKey: qKey("kpi"),      queryFn: () => apiFetch("get_kpis",             { company: co }), staleTime: 60000 })
-  const sopQ   = useQuery<Doc[]>({ queryKey: qKey("sop"),      queryFn: () => apiFetch("get_sops",             { company: co }), staleTime: 60000 })
-  const polQ   = useQuery<Doc[]>({ queryKey: qKey("policy"),   queryFn: () => apiFetch("get_policies",         { company: co }), staleTime: 60000 })
-  const hbQ    = useQuery<Doc[]>({ queryKey: qKey("handbook"), queryFn: () => apiFetch("get_handbook",         { company: co }), staleTime: 60000 })
-  const opsQ   = useQuery<Doc[]>({ queryKey: qKey("ops"),      queryFn: () => apiFetch("get_operations_manual",{ company: co }), staleTime: 60000 })
-  const procQ  = useQuery<Doc[]>({ queryKey: qKey("process"),  queryFn: () => apiFetch("get_processes",        { company: co }), staleTime: 60000 })
-  const formsQ = useQuery<Doc[]>({ queryKey: qKey("forms"),    queryFn: () => apiFetch("get_forms_checklists", { company: co }), staleTime: 60000 })
+  // Admin queries — only fire when isAdmin
+  const jdQ    = useQuery<Doc[]>({ queryKey: qKey("jd"),       queryFn: () => apiFetch("get_job_descriptions", { company: co }), staleTime: 60000, enabled: isAdmin })
+  const kraQ   = useQuery<Doc[]>({ queryKey: qKey("kra"),      queryFn: () => apiFetch("get_kras",             { company: co }), staleTime: 60000, enabled: isAdmin })
+  const kpiQ   = useQuery<Doc[]>({ queryKey: qKey("kpi"),      queryFn: () => apiFetch("get_kpis",             { company: co }), staleTime: 60000, enabled: isAdmin })
+  const sopQ   = useQuery<Doc[]>({ queryKey: qKey("sop"),      queryFn: () => apiFetch("get_sops",             { company: co }), staleTime: 60000, enabled: isAdmin })
+  const polQ   = useQuery<Doc[]>({ queryKey: qKey("policy"),   queryFn: () => apiFetch("get_policies",         { company: co }), staleTime: 60000, enabled: isAdmin })
+  const hbQ    = useQuery<Doc[]>({ queryKey: qKey("handbook"), queryFn: () => apiFetch("get_handbook",         { company: co }), staleTime: 60000, enabled: isAdmin })
+  const opsQ   = useQuery<Doc[]>({ queryKey: qKey("ops"),      queryFn: () => apiFetch("get_operations_manual",{ company: co }), staleTime: 60000, enabled: isAdmin })
+  const procQ  = useQuery<Doc[]>({ queryKey: qKey("process"),  queryFn: () => apiFetch("get_processes",        { company: co }), staleTime: 60000, enabled: isAdmin })
+  const formsQ = useQuery<Doc[]>({ queryKey: qKey("forms"),    queryFn: () => apiFetch("get_forms_checklists", { company: co }), staleTime: 60000, enabled: isAdmin })
 
-  const tabData: Record<TabId, { q: typeof jdQ; primaryKey: string; secondaryKey?: string; badgeKey?: string }> = {
-    jd:       { q: jdQ,    primaryKey: "designation",   secondaryKey: "department",    badgeKey: "company" },
-    kra:      { q: kraQ,   primaryKey: "kra_title",     secondaryKey: "designation",   badgeKey: "frequency" },
-    kpi:      { q: kpiQ,   primaryKey: "kpi_name",      secondaryKey: "designation",   badgeKey: "unit" },
-    sop:      { q: sopQ,   primaryKey: "sop_title",     secondaryKey: "department",    badgeKey: "sop_code" },
-    policy:   { q: polQ,   primaryKey: "policy_name",   secondaryKey: "policy_category" },
-    handbook: { q: hbQ,    primaryKey: "section_title", secondaryKey: "section_order" as string },
-    ops:      { q: opsQ,   primaryKey: "section_title", secondaryKey: "department" },
-    process:  { q: procQ,  primaryKey: "process_name",  secondaryKey: "department" },
-    forms:    { q: formsQ, primaryKey: "form_title",    secondaryKey: "form_type" },
+  // Employee query — only fires for non-admins; returns docs filtered to their company/dept/designation
+  const myOrgQ = useQuery<MyOrgDocs>({
+    queryKey: ["my-org-docs"],
+    queryFn: () => apiFetch("get_my_org_docs"),
+    staleTime: 300000,
+    enabled: !isAdmin,
+  })
+
+  const emp = myOrgQ.data?.employee
+
+  // Build per-tab query objects — admin uses individual queries, non-admin slices myOrgQ
+  function empSlice(key: keyof Omit<MyOrgDocs, "employee">): TabQ {
+    return { data: myOrgQ.data?.[key] as Doc[] | undefined, isLoading: myOrgQ.isLoading }
+  }
+
+  const tabData: Record<TabId, { q: TabQ; primaryKey: string; secondaryKey?: string; badgeKey?: string }> = {
+    jd:       { q: isAdmin ? jdQ    : empSlice("job_descriptions"),    primaryKey: "designation",   secondaryKey: "department",      badgeKey: "company" },
+    kra:      { q: isAdmin ? kraQ   : empSlice("kras"),                primaryKey: "kra_title",     secondaryKey: "designation",     badgeKey: "frequency" },
+    kpi:      { q: isAdmin ? kpiQ   : empSlice("kpis"),                primaryKey: "kpi_name",      secondaryKey: "designation",     badgeKey: "unit" },
+    sop:      { q: isAdmin ? sopQ   : empSlice("sops"),                primaryKey: "sop_title",     secondaryKey: "department",      badgeKey: "sop_code" },
+    policy:   { q: isAdmin ? polQ   : empSlice("policies"),            primaryKey: "policy_name",   secondaryKey: "policy_category" },
+    handbook: { q: isAdmin ? hbQ    : empSlice("handbook"),            primaryKey: "section_title", secondaryKey: "section_order" },
+    ops:      { q: isAdmin ? opsQ   : empSlice("operations_manual"),   primaryKey: "section_title", secondaryKey: "department" },
+    process:  { q: isAdmin ? procQ  : empSlice("processes"),           primaryKey: "process_name",  secondaryKey: "department" },
+    forms:    { q: isAdmin ? formsQ : empSlice("forms_checklists"),    primaryKey: "form_title",    secondaryKey: "form_type" },
   }
 
   const currentTab = TABS.find(t => t.id === tab)!
@@ -470,11 +493,16 @@ export function OrgHubPage() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-gray-900">Org Hub</h1>
-            <p className="text-xs text-gray-500">Job descriptions, KRAs, SOPs, policies &amp; processes</p>
+            {isAdmin
+              ? <p className="text-xs text-gray-500">Job descriptions, KRAs, SOPs, policies &amp; processes</p>
+              : <p className="text-xs text-gray-500">
+                  {emp ? `${emp.designation} · ${emp.department} · ${emp.company}` : "Your role documents"}
+                </p>
+            }
           </div>
         </div>
 
-        {/* Admin sees company filter; employee sees their own view */}
+        {/* Admin sees company filter; employees see their own context */}
         {isAdmin && (
           <div className="flex items-center gap-2 flex-wrap">
             {COMPANIES.map(c => (
@@ -491,74 +519,68 @@ export function OrgHubPage() {
         )}
       </div>
 
-      {/* Employee view — non-admin */}
-      {!isAdmin && <EmployeeView />}
+      {/* Tab bar */}
+      <div className="bg-white border-b border-gray-100 px-6 overflow-x-auto">
+        <div className="flex gap-0 min-w-max">
+          {TABS.map(({ id, label, icon: Icon }) => {
+            const cnt = tabData[id].q.data?.length ?? 0
+            return (
+              <button key={id} onClick={() => setTab(id)}
+                className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  tab === id ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-800"
+                }`}>
+                <Icon className="w-3.5 h-3.5" />{label}
+                <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${tab === id ? "bg-indigo-50 text-indigo-600" : "bg-gray-100 text-gray-500"}`}>
+                  {cnt}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-      {/* Admin view */}
-      {isAdmin && (
-        <>
-          {/* Tab bar */}
-          <div className="bg-white border-b border-gray-100 px-6 overflow-x-auto">
-            <div className="flex gap-0 min-w-max">
-              {TABS.map(({ id, label, icon: Icon }) => {
-                const cnt = tabData[id].q.data?.length ?? 0
-                return (
-                  <button key={id} onClick={() => setTab(id)}
-                    className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
-                      tab === id ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-800"
-                    }`}>
-                    <Icon className="w-3.5 h-3.5" />{label}
-                    <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${tab === id ? "bg-indigo-50 text-indigo-600" : "bg-gray-100 text-gray-500"}`}>
-                      {cnt}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 max-w-5xl mx-auto">
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              <SectionHeader
-                icon={currentTab.icon}
-                title={currentTab.label}
-                count={q.data?.length}
-                isAdmin={isAdmin}
-                doctype={currentTab.doctype}
-                onAdd={() => setEditDoc({ doctype: currentTab.doctype })}
-                loading={q.isLoading}
-              />
-              <div className="p-4">
-                {q.isLoading && (
-                  <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-10 bg-gray-50 rounded animate-pulse" />)}</div>
-                )}
-                {!q.isLoading && !q.data?.length && (
-                  <p className="text-xs text-gray-400 text-center py-6 italic">No entries yet — click Add to create the first one.</p>
-                )}
-                {!q.isLoading && q.data && q.data.length > 0 && (
-                  <div className="space-y-2">
-                    {q.data.map(doc => (
-                      <DocRow
-                        key={String(doc.name)}
-                        doc={doc}
-                        doctype={currentTab.doctype}
-                        isAdmin={isAdmin}
-                        primary={String(doc[primaryKey] ?? "")}
-                        secondary={secondaryKey ? String(doc[secondaryKey] ?? "") : undefined}
-                        badge={badgeKey ? String(doc[badgeKey] ?? "") : undefined}
-                        onView={() => setViewDoc(doc)}
-                        onEdit={() => setEditDoc({ doctype: currentTab.doctype, doc })}
-                        onDeleted={invalidate}
-                      />
-                    ))}
-                  </div>
-                )}
+      {/* Content */}
+      <div className="p-6 max-w-5xl mx-auto">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <SectionHeader
+            icon={currentTab.icon}
+            title={currentTab.label}
+            count={q.data?.length}
+            isAdmin={isAdmin}
+            doctype={currentTab.doctype}
+            onAdd={() => setEditDoc({ doctype: currentTab.doctype })}
+            loading={q.isLoading}
+          />
+          <div className="p-4">
+            {q.isLoading && (
+              <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-10 bg-gray-50 rounded animate-pulse" />)}</div>
+            )}
+            {!q.isLoading && !q.data?.length && (
+              <p className="text-xs text-gray-400 text-center py-6 italic">
+                {isAdmin ? "No entries yet — click Add to create the first one." : "No entries found for your role."}
+              </p>
+            )}
+            {!q.isLoading && q.data && q.data.length > 0 && (
+              <div className="space-y-2">
+                {q.data.map(doc => (
+                  <DocRow
+                    key={String(doc.name)}
+                    doc={doc}
+                    doctype={currentTab.doctype}
+                    isAdmin={isAdmin}
+                    primary={String(doc[primaryKey] ?? "")}
+                    secondary={secondaryKey ? String(doc[secondaryKey] ?? "") : undefined}
+                    badge={badgeKey ? String(doc[badgeKey] ?? "") : undefined}
+                    onView={() => setViewDoc(doc)}
+                    onEdit={() => setEditDoc({ doctype: currentTab.doctype, doc })}
+                    onDeleted={invalidate}
+                  />
+                ))}
               </div>
-            </div>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
       {/* View modal */}
       {viewDoc && (
@@ -572,8 +594,8 @@ export function OrgHubPage() {
         </ViewModal>
       )}
 
-      {/* Edit / Create modal */}
-      {editDoc && (
+      {/* Edit / Create modal — admin only */}
+      {editDoc && isAdmin && (
         <EditModal
           doctype={editDoc.doctype}
           initial={editDoc.doc}

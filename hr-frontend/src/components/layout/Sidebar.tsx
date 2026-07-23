@@ -388,6 +388,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
             )}
           </div>
         </div>
+        <NavItem to="/org-hub" label="Org Hub" icon={Building2} onClick={close} />
 
         <Sep />
         <SectionTitle>Platform</SectionTitle>
@@ -411,9 +412,6 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
             </div>
           </>
         )}
-
-        {/* Org Hub — visible to all employees */}
-        <SubItem to="/org-hub" label="Org Hub" icon={Building2} isActive={isOrgHubActive} onClick={close} />
 
         {/* Administration group */}
         {isAdmin && (
