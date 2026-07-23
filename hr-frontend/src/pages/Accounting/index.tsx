@@ -8,7 +8,7 @@ import {
   BarChart3, RefreshCw, AlertCircle, Clock,
 } from "lucide-react"
 import { useAdminGuard } from "@/lib/useAdminGuard"
-import { ChartOfAccountsTab } from "./ChartOfAccountsTab"
+
 
 // ── Types & constants ─────────────────────────────────────────────────────────
 
@@ -171,10 +171,7 @@ export default function AccountingPage() {
           className="bg-white rounded-xl p-6"
           style={{ border: "var(--border-card, 0.5px solid #e0d9cb)", boxShadow: "var(--shadow-card)" }}
         >
-          {tab === "coa" && <ChartOfAccountsTab company={COMPANY} />}
-          {tab !== "coa" && (
-            <ComingSoon label={TABS.find(t => t.id === tab)?.label ?? tab} />
-          )}
+          <ComingSoon label={TABS.find(t => t.id === tab)?.label ?? tab} />
         </div>
       </div>
     </div>
