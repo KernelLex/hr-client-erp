@@ -10,6 +10,12 @@ OWAIS_USERS  = ADMIN_USERS   # same set; alias for clarity in approval flows
 COMPANY_NAME = "Vera Enterprises"
 
 
+def require_login():
+    """Raise PermissionError if the current user is a Guest (not logged in)."""
+    if frappe.session.user == "Guest":
+        frappe.throw("Authentication required", frappe.PermissionError)
+
+
 def require_admin():
     """Raise PermissionError if the current user is not a System Manager / admin."""
     user = frappe.session.user

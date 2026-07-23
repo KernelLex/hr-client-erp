@@ -34,6 +34,7 @@ import AIChat from "@/components/AIChat"
 import { VeDrivePage } from "@/pages/drive/VeDrivePage"
 import { ChatPage } from "@/pages/chat/ChatPage"
 import OperationsPage from "@/pages/Operations"
+import AccountingPage from "@/pages/Accounting"
 import GraphsPage from "@/pages/Graphs"
 import InventoryPage from "@/pages/Inventory"
 import PurchasingPage from "@/pages/Purchasing"
@@ -97,8 +98,10 @@ function App() {
                 <Route path="/drive" element={<VeDrivePage />} />
                 {/* Chat */}
                 <Route path="/chat" element={<ChatPage />} />
-                {/* Accounting Dashboard (formerly Operations) */}
-                <Route path="/accounting" element={<OperationsPage />} />
+                {/* Accounting module — 18-tab page */}
+                <Route path="/accounting" element={<AccountingPage />} />
+                {/* Legacy Tally import/voucher browser — kept accessible */}
+                <Route path="/accounting/tally" element={<OperationsPage />} />
                 <Route path="/operations" element={<Navigate to="/accounting" replace />} />
                 {/* Tally-derived modules */}
                 <Route path="/inventory" element={<InventoryPage />} />
