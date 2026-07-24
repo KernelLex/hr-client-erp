@@ -1,0 +1,35 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:group_name",
+ "creation": "2026-07-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "group_name",
+  "parent_group",
+  "root_group",
+  "is_primary"
+ ],
+ "fields": [
+  {"fieldname": "group_name", "fieldtype": "Data", "in_list_view": 1, "label": "Group Name", "reqd": 1, "unique": 1},
+  {"fieldname": "parent_group", "fieldtype": "Data", "in_list_view": 1, "label": "Parent Group"},
+  {"fieldname": "root_group", "fieldtype": "Data", "in_list_view": 1, "label": "Root Type"},
+  {"fieldname": "is_primary", "fieldtype": "Check", "label": "Is Primary Group (no parent)"}
+ ],
+ "links": [],
+ "modified": "2026-07-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Tally Group",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "HR Manager", "read": 1}
+ ],
+ "sort_field": "group_name",
+ "sort_order": "ASC",
+ "track_changes": 0
+}

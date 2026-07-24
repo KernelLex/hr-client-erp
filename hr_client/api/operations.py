@@ -1221,23 +1221,25 @@ def get_bank_accounts():
     return accounts
 
 
-# ── Bank Statement ────────────────────────────────────────────────────────────
+# ── Ledger / Bank Statement ──────────────────────────────────────────────────
+# Despite the name, this query was never bank-specific — it just finds every
+# voucher where the ledger appears as the (first) debit or credit leg. That
+# makes it a general-purpose ledger statement engine, reused as-is for the
+# General Ledger and Bank & Cash Book tabs via get_ledger_statement() below.
 
-@frappe.whitelist()
-def get_bank_statement(bank_name, from_date=None, to_date=None,
-                       page=1, page_size=50, search=None):
+def _ledger_txn_query(ledger_name, from_date=None, to_date=None,
+                      page=1, page_size=50, search=None):
     """
-    Return paginated transactions for a specific bank account ledger.
+    Return paginated transactions + running totals for any ledger.
     Direction convention (matches Tally double-entry):
-      bank = debit_ledger  → Dr bank → asset increases → INFLOW (credit in passbook, green)
-      bank = credit_ledger → Cr bank → asset decreases → OUTFLOW (debit in passbook, red)
+      ledger = debit_ledger  → Dr → asset/expense increases → INFLOW (green)
+      ledger = credit_ledger → Cr → asset/expense decreases  → OUTFLOW (red)
     """
-    _require_admin()
     page      = cint(page) or 1
     page_size = cint(page_size) or 50
 
     conditions = ["(v.debit_ledger = %s OR v.credit_ledger = %s)", "v.is_cancelled = 0"]
-    values     = [bank_name, bank_name]
+    values     = [ledger_name, ledger_name]
 
     if from_date:
         conditions.append("v.voucher_date >= %s")
@@ -1271,10 +1273,9 @@ def get_bank_statement(bank_name, from_date=None, to_date=None,
     transactions = []
     for r in rows:
         amt        = flt(r.amount)
-        # Tally Payment/Receipt convention:
-        #   credit_ledger = bank → money came IN  (Receipt, transfers IN)  = INFLOW
-        #   debit_ledger  = bank → money went OUT (Payment, transfers OUT) = OUTFLOW
-        is_inflow  = (r.credit_ledger == bank_name)
+        # credit_ledger = this ledger → money came IN  (Receipt, transfers IN)  = INFLOW
+        # debit_ledger  = this ledger → money went OUT (Payment, transfers OUT) = OUTFLOW
+        is_inflow  = (r.credit_ledger == ledger_name)
         counterparty = r.debit_ledger if is_inflow else r.credit_ledger
         transactions.append({
             "date":          str(r.voucher_date),
@@ -1289,36 +1290,54 @@ def get_bank_statement(bank_name, from_date=None, to_date=None,
             "direction":     "credit" if is_inflow else "debit",
         })
 
-    # Ledger info from VE Tally Ledger
     ledger_rows = frappe.db.sql(
         "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE ledger_name = %s",
-        (bank_name,), as_dict=True,
+        (ledger_name,), as_dict=True,
     )
     cb        = flt(ledger_rows[0].closing_balance) if ledger_rows else 0.0
     available = abs(cb) if cb < 0 else 0.0
 
-    # Period totals — inflow = bank as credit_ledger; outflow = bank as debit_ledger
     totals_row = frappe.db.sql(
         f"""SELECT
                COALESCE(SUM(CASE WHEN v.credit_ledger = %s THEN v.amount ELSE 0 END), 0) AS total_inflow,
                COALESCE(SUM(CASE WHEN v.debit_ledger  = %s THEN v.amount ELSE 0 END), 0) AS total_outflow
             FROM `tabVE Tally Voucher` v WHERE {where}""",
-        [bank_name, bank_name] + values,
+        [ledger_name, ledger_name] + values,
         as_dict=True,
     )
     total_inflow  = round(flt(totals_row[0].total_inflow  if totals_row else 0), 2)
     total_outflow = round(flt(totals_row[0].total_outflow if totals_row else 0), 2)
 
     return {
-        "bank_name":     bank_name,
-        "closing_balance": round(cb, 2),
+        "ledger_name":       ledger_name,
+        "closing_balance":   round(cb, 2),
         "available_balance": round(available, 2),
-        "total":         total,
-        "page":          page,
-        "page_size":     page_size,
-        "total_inflow":  total_inflow,
-        "total_outflow": total_outflow,
-        "net":           round(total_inflow - total_outflow, 2),
-        "transactions":  transactions,
+        "total":             total,
+        "page":              page,
+        "page_size":         page_size,
+        "total_inflow":      total_inflow,
+        "total_outflow":     total_outflow,
+        "net":               round(total_inflow - total_outflow, 2),
+        "transactions":      transactions,
     }
+
+
+@frappe.whitelist()
+def get_bank_statement(bank_name, from_date=None, to_date=None,
+                       page=1, page_size=50, search=None):
+    """Kept for the existing AccountingOverview bank-statement viewer — same
+    shape as before (`bank_name` key), delegates to the generic query."""
+    _require_admin()
+    result = _ledger_txn_query(bank_name, from_date, to_date, page, page_size, search)
+    result["bank_name"] = result.pop("ledger_name")
+    return result
+
+
+@frappe.whitelist()
+def get_ledger_statement(ledger_name, from_date=None, to_date=None,
+                         page=1, page_size=50, search=None):
+    """General-purpose ledger statement — powers the General Ledger and
+    Bank & Cash Book tabs. Works for any VE Tally Ledger, not just banks."""
+    _require_admin()
+    return _ledger_txn_query(ledger_name, from_date, to_date, page, page_size, search)
 

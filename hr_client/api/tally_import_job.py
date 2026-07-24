@@ -40,6 +40,42 @@ def _has_ancestor(group: str, target: str, group_parents: dict, max_depth: int =
     return False
 
 
+# Tally's fixed set of primary (parentless) groups, mapped to accounting root type.
+# Every custom group ultimately descends from one of these — used to classify any
+# ledger/group as Asset/Liability/Equity/Income/Expense for the Chart of Accounts
+# and Financial Statements, since Tally itself doesn't export a root-type field.
+PRIMARY_GROUP_ROOT_MAP = {
+    "Branch / Divisions":       "Asset",
+    "Capital Account":          "Equity",
+    "Current Assets":           "Asset",
+    "Current Liabilities":      "Liability",
+    "Direct Expenses":          "Expense",
+    "Direct Incomes":           "Income",
+    "Fixed Assets":             "Asset",
+    "Indirect Expenses":        "Expense",
+    "Indirect Incomes":         "Income",
+    "Investments":              "Asset",
+    "Loans (Liability)":        "Liability",
+    "Misc. Expenses (Asset)":   "Asset",
+    "Purchase Accounts":        "Expense",
+    "Sales Accounts":           "Income",
+    "Suspense A/c":             "Asset",
+}
+
+
+def _root_type_for_group(group: str, group_parents: dict, max_depth: int = 20) -> str:
+    """Walk `group` up to its ultimate primary group and return the mapped root type.
+    Returns '' if the chain doesn't resolve (e.g. a renamed/custom primary group)."""
+    current = group
+    for _ in range(max_depth):
+        if not current:
+            return ""
+        if current in PRIMARY_GROUP_ROOT_MAP:
+            return PRIMARY_GROUP_ROOT_MAP[current]
+        current = group_parents.get(current, "")
+    return ""
+
+
 def get_status():
     raw = frappe.cache().get_value(_STATUS_KEY)
     if not raw:
@@ -63,6 +99,19 @@ def run(masters_path: str, transactions_path: str):
             gparent_m = re.search(r'<PARENT>([^<]*)</PARENT>', block.group(0))
             gparent = gparent_m.group(1).strip().replace("&amp;", "&") if gparent_m else ''
             group_parents[gname] = gparent
+
+        # Snapshot the full Group hierarchy (name/parent/root type) for persistence —
+        # needed so the Chart of Accounts / Financial Statements can rebuild a real
+        # nested tree instead of only having flat ledger rows. group_parents itself
+        # is otherwise discarded at the end of this function.
+        group_data = {
+            gname: {
+                "parent_group": gparent,
+                "root_group":   _root_type_for_group(gname, group_parents),
+                "is_primary":   1 if not gparent else 0,
+            }
+            for gname, gparent in group_parents.items()
+        }
 
         def _clean(s):
             return s.strip().replace("&amp;", "&").replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
@@ -147,6 +196,7 @@ def run(masters_path: str, transactions_path: str):
                 "is_cash":     1 if parent == 'Cash-in-Hand' else 0,
                 "is_gst":      1 if any(kw in raw_name.upper() for kw in ('CGST', 'SGST', 'IGST')) else 0,
                 "is_tds":      1 if 'TDS' in raw_name.upper() else 0,
+                "root_group":  _root_type_for_group(parent, group_parents),
             }
 
         stock_data = []
@@ -470,9 +520,30 @@ def run(masters_path: str, transactions_path: str):
         OWNER = "Administrator"
         BATCH = 500
 
+        frappe.db.sql("DELETE FROM `tabVE Tally Group`")
         frappe.db.sql("DELETE FROM `tabVE Tally Ledger`")
         frappe.db.sql("DELETE FROM `tabVE Tally Stock Item`")
         frappe.db.sql("DELETE FROM `tabVE Tally Voucher`")
+        frappe.db.commit()
+
+        # Groups (full hierarchy — needed to render a real nested Chart of Accounts)
+        group_rows = [
+            (
+                gname[:140], gname[:140],
+                d["parent_group"][:140], d["root_group"][:20], d["is_primary"],
+                NOW, NOW, OWNER, OWNER, 1, 0,
+            )
+            for gname, d in group_data.items()
+        ]
+        for i in range(0, len(group_rows), BATCH):
+            batch = group_rows[i:i+BATCH]
+            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
+            frappe.db.sql(
+                f"INSERT INTO `tabVE Tally Group` "
+                f"(name,group_name,parent_group,root_group,is_primary,"
+                f"creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}",
+                [x for row in batch for x in row]
+            )
         frappe.db.commit()
 
         # Ledgers (with enriched party data)
@@ -482,7 +553,7 @@ def run(masters_path: str, transactions_path: str):
             ledger_rows.append((
                 name[:140], name[:140],
                 d.get('mailing_name', name)[:200],
-                d['parent'][:140], '',
+                d['parent'][:140], d.get('root_group', '')[:20],
                 0.0, closing,
                 d['is_debtor'], d['is_creditor'], d['is_bank'], d['is_cash'], d['is_gst'], d['is_tds'],
                 d.get('gstin', '')[:20],

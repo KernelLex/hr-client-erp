@@ -651,7 +651,12 @@ def get_stock_movement_report(category=None, search=None, sort_by="item_code",
 # ── Import trigger (admin only) ───────────────────────────────────────────────
 
 MASTERS_PATH      = "/home/vera/Master.xml"
-TRANSACTIONS_PATH = "/home/vera/Transactions.xml"
+# Full transaction history (25k+ vouchers), not just the current-FY export —
+# switched from Transactions.xml (1,098 vouchers, current FY only) so General
+# Ledger / voucher tabs / Financial Statements aren't missing prior years.
+# CONFIRM this exact filename exists on the server (`ls /home/vera/`) before
+# triggering an import — case/spacing must match exactly.
+TRANSACTIONS_PATH = "/home/vera/All Transactions.xml"
 
 
 @frappe.whitelist()

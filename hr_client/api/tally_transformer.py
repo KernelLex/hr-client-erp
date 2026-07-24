@@ -6,8 +6,8 @@ Single source of truth for how Tally XML data maps to every dashboard field.
 PIPELINE
 --------
 Stage 1 (0-55%)  : tally_import_job.run()
-                   Master.xml  → tabVE Tally Ledger, tabVE Tally Stock Item
-                   Transactions.xml → tabVE Tally Voucher
+                   Master.xml  → tabVE Tally Ledger, tabVE Tally Group, tabVE Tally Stock Item
+                   All Transactions.xml (full history) → tabVE Tally Voucher
 
 Stage 2 (55-95%) : accounts_tally_import.run()
                    VE Tally tables → Accounts Dashboard DocTypes
@@ -116,7 +116,7 @@ def get_status():
 
 
 def run(masters_path: str = "/home/vera/Master.xml",
-        transactions_path: str = "/home/vera/Transactions.xml"):
+        transactions_path: str = "/home/vera/All Transactions.xml"):
     """
     Full two-stage pipeline. Safe to frappe.enqueue or call directly.
     Both XML files must be UTF-16 encoded Tally exports.

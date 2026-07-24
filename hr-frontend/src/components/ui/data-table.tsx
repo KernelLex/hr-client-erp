@@ -21,6 +21,7 @@ interface DataTableProps<T> {
   searchText?: (row: T) => string
   onExport?: () => void
   onPrint?: () => void
+  onRowClick?: (row: T) => void
   emptyMessage?: string
   defaultSortKey?: string
   defaultSortDir?: "asc" | "desc"
@@ -36,6 +37,7 @@ export function DataTable<T>({
   searchText,
   onExport,
   onPrint,
+  onRowClick,
   emptyMessage = "No records found.",
   defaultSortKey,
   defaultSortDir = "desc",
@@ -150,7 +152,8 @@ export function DataTable<T>({
               sorted.map((row) => (
                 <tr
                   key={rowKey(row)}
-                  className="transition-colors"
+                  className={cn("transition-colors", onRowClick && "cursor-pointer")}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#faf6ed")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >

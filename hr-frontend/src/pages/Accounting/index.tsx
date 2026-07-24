@@ -8,6 +8,16 @@ import {
   BarChart3, RefreshCw, AlertCircle, Clock,
 } from "lucide-react"
 import { useAdminGuard } from "@/lib/useAdminGuard"
+import { ChartOfAccountsTab } from "./ChartOfAccountsTab"
+import { VoucherListTab } from "./VoucherListTab"
+import { RegisterListTab } from "./RegisterListTab"
+import { GeneralLedgerTab } from "./GeneralLedgerTab"
+import { ReceivablePayableTab } from "./ReceivablePayableTab"
+import { CashFlowTab } from "./CashFlowTab"
+import { FinancialStatementsTab } from "./FinancialStatementsTab"
+import { BankReconciliationTab } from "./BankReconciliationTab"
+import { FixedAssetsTab } from "./FixedAssetsTab"
+import { DepreciationTab } from "./DepreciationTab"
 
 
 // ── Types & constants ─────────────────────────────────────────────────────────
@@ -171,9 +181,64 @@ export default function AccountingPage() {
           className="bg-white rounded-xl p-6"
           style={{ border: "var(--border-card, 0.5px solid #e0d9cb)", boxShadow: "var(--shadow-card)" }}
         >
-          <ComingSoon label={TABS.find(t => t.id === tab)?.label ?? tab} />
+          <TabContent tab={tab} />
         </div>
       </div>
     </div>
   )
+}
+
+function TabContent({ tab }: { tab: TabId }) {
+  switch (tab) {
+    case "coa":
+      return <ChartOfAccountsTab />
+    case "cost-centers":
+      return <ComingSoon label="Cost Centers" />
+    case "journal":
+      return <VoucherListTab voucherType="Journal" noun="Journal Entries" />
+    case "payment":
+      return <VoucherListTab voucherType="Payment" noun="Payment Entries" />
+    case "receipts":
+      return <VoucherListTab voucherType="Receipt" noun="Receipts" />
+    case "bank-recon":
+      return <BankReconciliationTab />
+    case "sales-invoices":
+      return (
+        <RegisterListTab
+          endpoint="get_sales_invoices" noun="Sales Invoices"
+          numberField="invoice_no" numberLabel="Invoice #" dateField="invoice_date"
+          partyField="customer" partyLabel="Customer" gstField="gst_amount" gstLabel="GST"
+        />
+      )
+    case "purchase-bills":
+      return (
+        <RegisterListTab
+          endpoint="get_purchase_bills" noun="Purchase Bills"
+          numberField="bill_no" numberLabel="Bill #" dateField="bill_date"
+          partyField="vendor" partyLabel="Vendor" gstField="itc_amount" gstLabel="ITC"
+        />
+      )
+    case "credit-notes":
+      return <VoucherListTab voucherType="Credit Note" noun="Credit Notes" />
+    case "debit-notes":
+      return <VoucherListTab voucherType="Debit Note" noun="Debit Notes" />
+    case "general-ledger":
+      return <GeneralLedgerTab />
+    case "ar":
+      return <ReceivablePayableTab kind="receivable" />
+    case "ap":
+      return <ReceivablePayableTab kind="payable" />
+    case "fixed-assets":
+      return <FixedAssetsTab />
+    case "depreciation":
+      return <DepreciationTab />
+    case "cash-flow":
+      return <CashFlowTab />
+    case "budgeting":
+      return <ComingSoon label="Budgeting" />
+    case "financial-statements":
+      return <FinancialStatementsTab />
+    default:
+      return <ComingSoon label={TABS.find(t => t.id === tab)?.label ?? tab} />
+  }
 }
