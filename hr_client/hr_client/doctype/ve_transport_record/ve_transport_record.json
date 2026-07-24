@@ -1,0 +1,134 @@
+{
+  "actions": [],
+  "autoname": "VE-TR-.YYYY.-.####",
+  "creation": "2026-07-10 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "source",
+    "entry_date",
+    "col1",
+    "period",
+    "sec_cost",
+    "amount",
+    "description",
+    "col2",
+    "labour_day_charges",
+    "labour_transport",
+    "labour_food",
+    "sec_ref",
+    "notes",
+    "reference_doc"
+  ],
+  "fields": [
+    {
+      "fieldname": "source",
+      "fieldtype": "Select",
+      "label": "Source",
+      "options": "Porter\nRapido\nOther\nLabour",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "entry_date",
+      "fieldtype": "Date",
+      "label": "Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "col1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "period",
+      "fieldtype": "Data",
+      "label": "Period (YYYY-MM)",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "sec_cost",
+      "fieldtype": "Section Break",
+      "label": "Cost Details"
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "label": "Total Amount",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Data",
+      "label": "Description"
+    },
+    {
+      "fieldname": "col2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "labour_day_charges",
+      "fieldtype": "Currency",
+      "label": "Day Charges",
+      "depends_on": "eval:doc.source=='Labour'"
+    },
+    {
+      "fieldname": "labour_transport",
+      "fieldtype": "Currency",
+      "label": "Transport (Labour)",
+      "depends_on": "eval:doc.source=='Labour'"
+    },
+    {
+      "fieldname": "labour_food",
+      "fieldtype": "Currency",
+      "label": "Food (Labour)",
+      "depends_on": "eval:doc.source=='Labour'"
+    },
+    {
+      "fieldname": "sec_ref",
+      "fieldtype": "Section Break",
+      "label": "Reference"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notes"
+    },
+    {
+      "fieldname": "reference_doc",
+      "fieldtype": "Data",
+      "label": "Reference / File"
+    }
+  ],
+  "in_create": 0,
+  "is_submittable": 0,
+  "module": "Hr Client",
+  "modified": "2026-07-10 00:00:00.000000",
+  "modified_by": "Administrator",
+  "name": "VE Transport Record",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "HR Manager",
+      "write": 1
+    }
+  ],
+  "sort_field": "entry_date",
+  "sort_order": "DESC",
+  "track_changes": 1
+}

@@ -650,25 +650,50 @@ def get_stock_movement_report(category=None, search=None, sort_by="item_code",
 
 # ── Import trigger (admin only) ───────────────────────────────────────────────
 
+MASTERS_PATH      = "/home/vera/Master.xml"
+TRANSACTIONS_PATH = "/home/vera/Transactions.xml"
+
+
 @frappe.whitelist()
 @handle_api_error
 def trigger_tally_import():
-    """Enqueue the Tally XML import job for accounts DocTypes."""
+    """
+    Full pipeline: XML parse → VE Tally tables → Dashboard DocTypes → cache clear.
+    Enqueued on the long queue; poll get_import_status() for progress.
+    """
     require_admin()
+    import os
+    missing = [p for p in (MASTERS_PATH, TRANSACTIONS_PATH) if not os.path.isfile(p)]
+    if missing:
+        frappe.throw(f"File(s) not found on server: {', '.join(missing)}")
+
     frappe.enqueue(
-        "hr_client.api.accounts_tally_import.run",
-        masters_path="/home/vera/Master.xml",
-        transactions_path="/home/vera/Transactions.xml",
+        "hr_client.api.tally_transformer.run",
+        masters_path=MASTERS_PATH,
+        transactions_path=TRANSACTIONS_PATH,
         queue="long",
-        timeout=3600,
+        timeout=7200,
     )
-    return {"message": "Import job enqueued. Check status via get_import_status."}
+    return {"message": "Import started. Poll get_import_status for live progress."}
 
 
 @frappe.whitelist()
 @handle_api_error
 def get_import_status():
-    """Return current Tally accounts import status."""
+    """Return live status of the running (or last) Tally import pipeline."""
     require_admin()
-    import hr_client.api.accounts_tally_import as imp
-    return imp.get_status()
+    import hr_client.api.tally_transformer as t
+    return t.get_status()
+
+
+@frappe.whitelist()
+@handle_api_error
+def get_reconciliation_report():
+    """
+    Compare source VE Tally Voucher/Ledger data vs derived Dashboard DocTypes.
+    Returns per-section status: ok / warn (≤5% delta) / error (>5% delta or large count gap).
+    Run after every import to catch drift before it reaches the dashboard.
+    """
+    require_admin()
+    from hr_client.api import accounts_tally_import as ati
+    return ati.reconcile()

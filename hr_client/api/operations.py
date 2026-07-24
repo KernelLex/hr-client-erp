@@ -1,7 +1,7 @@
 import frappe
 import json
 import os
-from frappe.utils import flt
+from frappe.utils import flt, cint
 
 
 import datetime
@@ -84,17 +84,21 @@ def get_operations_data():
         ORDER BY closing_balance DESC
     """, as_dict=True)
 
-    # Bank Accounts group: Dr balance (negative) = money in account
-    bank_credit = sum(abs(flt(r.closing_balance)) for r in bank_rows
-                      if r.closing_balance < 0 and r.parent_group == "Bank Accounts")
-    # Bank OD group: Cr balance (positive) = overdraft utilised
-    bank_od = sum(flt(r.closing_balance) for r in bank_rows
-                  if r.closing_balance > 0 and r.parent_group == "Bank OD A/c")
-    bank_total = bank_credit - bank_od
+    # Dr balance (negative) on ANY bank account = funds available in that account.
+    # This covers regular bank accounts AND OD accounts that currently have credit funds.
+    bank_credit = sum(abs(flt(r.closing_balance)) for r in bank_rows if r.closing_balance < 0)
 
-    # Cash: positive closing_balance = cash held (import stores cash as positive Dr)
-    cash_total = sum(flt(r.closing_balance) for r in cash_rows)
-    liquid_assets = max(cash_total, 0) + bank_credit
+    # Cr balance (positive) = OD utilised (amount borrowed from bank, reduces net funds).
+    # Virtual/collection accounts with Cr balance are collected customer money — treat as available.
+    bank_od = sum(flt(r.closing_balance) for r in bank_rows
+                  if r.closing_balance > 0 and "virtual" not in r.ledger_name.lower())
+    bank_virtual = sum(flt(r.closing_balance) for r in bank_rows
+                       if r.closing_balance > 0 and "virtual" in r.ledger_name.lower())
+    bank_total = bank_credit + bank_virtual - bank_od
+
+    # Cash: Dr balance (negative) = physical cash in hand. Take abs to get positive figure.
+    cash_total = sum(abs(flt(r.closing_balance)) for r in cash_rows if r.closing_balance < 0)
+    liquid_assets = cash_total + bank_credit + bank_virtual
 
     # GST closing balances — what remains in GST ledger accounts after govt payments
     # Cr (positive) = output GST still owed to govt; Dr (negative) = unrecovered ITC
@@ -163,7 +167,7 @@ def get_operations_data():
         "SELECT DATE_FORMAT(voucher_date, %s) as month, voucher_type, SUM(amount) as total "
         "FROM `tabVE Tally Voucher` "
         "WHERE is_cancelled = 0 AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) "
-        "AND voucher_type IN ('Sales', 'Purchase', 'Receipt', 'PERFORMA INVOICE') "
+        "AND voucher_type IN ('Sales', 'Purchase', 'Receipt') "
         "GROUP BY month, voucher_type ORDER BY month",
         ('%Y-%m',), as_dict=True
     )
@@ -173,7 +177,7 @@ def get_operations_data():
         m = row.month
         if m not in chart_map:
             chart_map[m] = {"month": _parse_month(m), "sales": 0.0, "purchases": 0.0, "collections": 0.0}
-        if row.voucher_type in ("Sales", "PERFORMA INVOICE"):
+        if row.voucher_type == "Sales":
             chart_map[m]["sales"] += flt(row.total) / 100_000
         elif row.voucher_type == "Purchase":
             chart_map[m]["purchases"] += flt(row.total) / 100_000
@@ -190,13 +194,13 @@ def get_operations_data():
         FROM `tabVE Tally Voucher`
         WHERE is_cancelled = 0
           AND voucher_date >= %s AND voucher_date < %s
-          AND voucher_type IN ('Sales', 'PERFORMA INVOICE', 'Purchase', 'Receipt')
+          AND voucher_type IN ('Sales', 'Purchase', 'Receipt')
         GROUP BY voucher_type
         """,
         (fy_start, fy_end), as_dict=True
     )
 
-    fy_sales = sum(flt(r.total) for r in fy_totals if r.voucher_type in ("Sales", "PERFORMA INVOICE"))
+    fy_sales = sum(flt(r.total) for r in fy_totals if r.voucher_type == "Sales")
     fy_purch = sum(flt(r.total) for r in fy_totals if r.voucher_type == "Purchase")
     fy_coll = sum(flt(r.total) for r in fy_totals if r.voucher_type == "Receipt")
 
@@ -268,8 +272,8 @@ def get_operations_data():
         "as_of": as_of,
         "finance": {
             "kpis": [
-                {"label": "Cash in Hand", "value": _fmt(cash_total if cash_total > 0 else 0), "raw": cash_total},
-                {"label": "Bank Funds", "value": _fmt(bank_credit), "raw": bank_credit},
+                {"label": "Cash in Hand", "value": _fmt(cash_total), "raw": cash_total},
+                {"label": "Bank Funds", "value": _fmt(bank_total), "raw": bank_total},
                 {"label": "Net GST Liability", "value": _fmt(net_gst), "raw": net_gst},
                 {"label": "TDS Payable", "value": _fmt(tds_payable), "raw": tds_payable},
             ],
@@ -466,33 +470,31 @@ def upload_tally_file():
 @frappe.whitelist()
 def run_tally_import(masters_path: str, transactions_path: str):
     """
-    Enqueue the full Tally import as a background job.
-    masters_path and transactions_path are absolute paths on the server.
+    Enqueue the FULL two-stage Tally import pipeline:
+      Stage 1 — parse XML → VE Tally Ledger / Stock Item / Voucher tables
+      Stage 2 — transform stored data → all Accounts Dashboard DocTypes
+    Status polled via get_import_status().
     """
     _require_admin()
 
-    # Restrict paths to the upload directory — prevent traversal to sensitive files
+    # Restrict to upload directory to prevent path traversal
     upload_real = os.path.realpath(_TALLY_UPLOAD_DIR)
     for label, path in (("masters", masters_path), ("transactions", transactions_path)):
         real = os.path.realpath(path)
         if not real.startswith(upload_real):
-            frappe.throw(
-                f"Path for {label} must be inside the upload directory",
-                frappe.PermissionError,
-            )
+            frappe.throw(f"Path for {label} must be inside the upload directory",
+                         frappe.PermissionError)
         if not os.path.exists(real):
             frappe.throw(f"{label.capitalize()} file not found: {path}")
 
-    from hr_client.api import tally_import_job
     import json as _json
-    frappe.cache().set_value("tally_import_status", _json.dumps({
-        "status": "running", "progress": 1, "message": "Import queued…",
-    }), expires_in_sec=3600)
+    from hr_client.api import tally_transformer as _tt
+    _tt._set("running", 1, "Import queued…")   # immediate feedback
 
     frappe.enqueue(
-        "hr_client.api.tally_import_job.run",
+        "hr_client.api.tally_transformer.run",
         queue="long",
-        timeout=1800,
+        timeout=7200,
         masters_path=masters_path,
         transactions_path=transactions_path,
     )
@@ -501,9 +503,9 @@ def run_tally_import(masters_path: str, transactions_path: str):
 
 @frappe.whitelist()
 def get_import_status():
-    """Poll the import progress."""
+    """Poll the live import progress (covers both Stage 1 and Stage 2)."""
     _require_admin()
-    from hr_client.api.tally_import_job import get_status
+    from hr_client.api.tally_transformer import get_status
     return get_status()
 
 
@@ -544,7 +546,7 @@ def get_cashflow_trend():
         "SELECT DATE_FORMAT(voucher_date, %s) as month, voucher_type, SUM(amount) as total "
         "FROM `tabVE Tally Voucher` "
         "WHERE is_cancelled = 0 AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL 13 MONTH) "
-        "AND voucher_type IN ('Sales','PERFORMA INVOICE','Purchase','Receipt','Payment') "
+        "AND voucher_type IN ('Sales','Purchase','Receipt','Payment') "
         "GROUP BY month, voucher_type ORDER BY month",
         ('%Y-%m',), as_dict=True
     )
@@ -553,7 +555,7 @@ def get_cashflow_trend():
         m = r.month
         if m not in months_map:
             months_map[m] = {"month": _parse_month(m), "key": m, "sales": 0.0, "purchases": 0.0, "receipts": 0.0, "payments": 0.0}
-        if r.voucher_type in ("Sales", "PERFORMA INVOICE"):
+        if r.voucher_type == "Sales":
             months_map[m]["sales"] += flt(r.total) / 100_000
         elif r.voucher_type == "Purchase":
             months_map[m]["purchases"] += flt(r.total) / 100_000
@@ -586,7 +588,7 @@ def get_debtor_aging():
         "MAX(v.voucher_date) as last_sale "
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
-        "AND v.voucher_type IN ('Sales','PERFORMA INVOICE') AND v.is_cancelled = 0 "
+        "AND v.voucher_type = 'Sales' AND v.is_cancelled = 0 "
         "WHERE l.is_debtors = 1 AND l.closing_balance < 0 "
         "GROUP BY l.ledger_name, l.closing_balance "
         "ORDER BY l.closing_balance ASC",
@@ -786,7 +788,7 @@ def get_advance_from_debtors():
         "MAX(v.voucher_date) as last_sale "
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
-        "AND v.voucher_type IN ('Sales','PERFORMA INVOICE') AND v.is_cancelled = 0 "
+        "AND v.voucher_type = 'Sales' AND v.is_cancelled = 0 "
         "WHERE l.is_debtors = 1 AND l.closing_balance > 0 "
         "GROUP BY l.ledger_name, l.closing_balance "
         "ORDER BY l.closing_balance DESC LIMIT 50",
@@ -1170,3 +1172,153 @@ def get_ledger_profile(ledger_name):
         "is_debtors":           bool(r.is_debtors),
         "is_creditors":         bool(r.is_creditors),
     }
+
+
+# ── Bank Accounts list ────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_bank_accounts():
+    """Return all bank account ledgers with balance summary."""
+    _require_admin()
+    rows = frappe.db.sql("""
+        SELECT ledger_name, closing_balance, parent_group
+        FROM `tabVE Tally Ledger`
+        WHERE is_bank = 1
+        ORDER BY ledger_name
+    """, as_dict=True)
+
+    accounts = []
+    for r in rows:
+        cb = flt(r.closing_balance)
+        # Dr balance (negative) = funds available; Cr (positive) = OD drawn / collected funds
+        available = abs(cb) if cb < 0 else 0
+        od_or_cr   = cb if cb > 0 else 0
+        # Guess account type from name
+        name_lower = r.ledger_name.lower()
+        if "virtual" in name_lower or "suspense" in name_lower:
+            acc_type = "Virtual"
+        elif "od" in name_lower or "overdraft" in name_lower or "232905" in r.ledger_name:
+            acc_type = "OD"
+        else:
+            acc_type = "Current"
+
+        # Count transactions for this account
+        cnt = frappe.db.sql(
+            "SELECT COUNT(*) as c FROM `tabVE Tally Voucher` "
+            "WHERE is_cancelled=0 AND (debit_ledger=%s OR credit_ledger=%s)",
+            (r.ledger_name, r.ledger_name), as_dict=True
+        )
+
+        accounts.append({
+            "ledger_name": r.ledger_name,
+            "closing_balance": round(cb, 2),
+            "available": round(available, 2),
+            "od_utilised": round(od_or_cr, 2),
+            "account_type": acc_type,
+            "txn_count": cint(cnt[0].c if cnt else 0),
+        })
+
+    return accounts
+
+
+# ── Bank Statement ────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_bank_statement(bank_name, from_date=None, to_date=None,
+                       page=1, page_size=50, search=None):
+    """
+    Return paginated transactions for a specific bank account ledger.
+    Direction convention (matches Tally double-entry):
+      bank = debit_ledger  → Dr bank → asset increases → INFLOW (credit in passbook, green)
+      bank = credit_ledger → Cr bank → asset decreases → OUTFLOW (debit in passbook, red)
+    """
+    _require_admin()
+    page      = cint(page) or 1
+    page_size = cint(page_size) or 50
+
+    conditions = ["(v.debit_ledger = %s OR v.credit_ledger = %s)", "v.is_cancelled = 0"]
+    values     = [bank_name, bank_name]
+
+    if from_date:
+        conditions.append("v.voucher_date >= %s")
+        values.append(from_date)
+    if to_date:
+        conditions.append("v.voucher_date <= %s")
+        values.append(to_date)
+    if search:
+        conditions.append("(v.narration LIKE %s OR v.party_name LIKE %s OR v.voucher_number LIKE %s)")
+        values += [f"%{search}%", f"%{search}%", f"%{search}%"]
+
+    where = " AND ".join(conditions)
+
+    count_row = frappe.db.sql(
+        f"SELECT COUNT(*) AS c FROM `tabVE Tally Voucher` v WHERE {where}",
+        values, as_dict=True,
+    )
+    total = cint(count_row[0].c if count_row else 0)
+
+    rows = frappe.db.sql(
+        f"""SELECT v.voucher_type, v.voucher_number, v.voucher_date, v.amount,
+                   v.party_name, v.narration, v.debit_ledger, v.credit_ledger
+            FROM `tabVE Tally Voucher` v
+            WHERE {where}
+            ORDER BY v.voucher_date DESC, v.name DESC
+            LIMIT %s OFFSET %s""",
+        values + [page_size, (page - 1) * page_size],
+        as_dict=True,
+    )
+
+    transactions = []
+    for r in rows:
+        amt        = flt(r.amount)
+        # Tally Payment/Receipt convention:
+        #   credit_ledger = bank → money came IN  (Receipt, transfers IN)  = INFLOW
+        #   debit_ledger  = bank → money went OUT (Payment, transfers OUT) = OUTFLOW
+        is_inflow  = (r.credit_ledger == bank_name)
+        counterparty = r.debit_ledger if is_inflow else r.credit_ledger
+        transactions.append({
+            "date":          str(r.voucher_date),
+            "voucher_type":  r.voucher_type or "",
+            "voucher_number": r.voucher_number or "",
+            "narration":     (r.narration or "")[:120],
+            "party_name":    r.party_name or "",
+            "counterparty":  counterparty or "",
+            "amount":        round(amt, 2),
+            "credit":        round(amt, 2) if is_inflow  else 0.0,
+            "debit":         0.0 if is_inflow else round(amt, 2),
+            "direction":     "credit" if is_inflow else "debit",
+        })
+
+    # Ledger info from VE Tally Ledger
+    ledger_rows = frappe.db.sql(
+        "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE ledger_name = %s",
+        (bank_name,), as_dict=True,
+    )
+    cb        = flt(ledger_rows[0].closing_balance) if ledger_rows else 0.0
+    available = abs(cb) if cb < 0 else 0.0
+
+    # Period totals — inflow = bank as credit_ledger; outflow = bank as debit_ledger
+    totals_row = frappe.db.sql(
+        f"""SELECT
+               COALESCE(SUM(CASE WHEN v.credit_ledger = %s THEN v.amount ELSE 0 END), 0) AS total_inflow,
+               COALESCE(SUM(CASE WHEN v.debit_ledger  = %s THEN v.amount ELSE 0 END), 0) AS total_outflow
+            FROM `tabVE Tally Voucher` v WHERE {where}""",
+        [bank_name, bank_name] + values,
+        as_dict=True,
+    )
+    total_inflow  = round(flt(totals_row[0].total_inflow  if totals_row else 0), 2)
+    total_outflow = round(flt(totals_row[0].total_outflow if totals_row else 0), 2)
+
+    return {
+        "bank_name":     bank_name,
+        "closing_balance": round(cb, 2),
+        "available_balance": round(available, 2),
+        "total":         total,
+        "page":          page,
+        "page_size":     page_size,
+        "total_inflow":  total_inflow,
+        "total_outflow": total_outflow,
+        "net":           round(total_inflow - total_outflow, 2),
+        "transactions":  transactions,
+    }
+

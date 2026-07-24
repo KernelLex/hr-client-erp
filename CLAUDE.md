@@ -1,5 +1,5 @@
 # ClientERP — Master Context
-_Last updated: 2026-06-06 (session 6)_
+_Last updated: 2026-07-10 (session: accounting dashboard extension)_
 
 ## INSTRUCTIONS FOR CLAUDE (READ FIRST)
 You are working on a custom ERPNext v15 + Frappe HRMS system.
@@ -120,6 +120,83 @@ Frappe resolves the module folder by importing `hr_client.hr_client` and uses th
 ---
 
 ## What's been built
+
+✅ **Accounting Page Shell + Chart of Accounts (2026-07-23)**
+- Route `/accounting` now shows new `AccountingPage` (18-tab horizontal tab bar)
+- Route `/accounting/tally` keeps the old `OperationsPage` for Tally XML import and voucher browser
+- **18 tabs (in order):** Chart of Accounts ✅, Cost Centers, Journal Entries, Payment Entries, Receipts, Bank Reconciliation, Sales Invoices, Purchase Bills, Credit Notes, Debit Notes, General Ledger, Accounts Receivable, Accounts Payable, Fixed Assets, Depreciation, Cash Flow, Budgeting, Financial Statements
+- 17 tabs currently show "Coming soon" placeholder — built in sequence in future prompts
+- **Backend (`hr_client/api/accounting.py`):** 3 whitelisted endpoints using native ERPNext `Account` DocType (no custom DocType):
+  - `get_chart_of_accounts(company)` — full COA tree as nested JSON, GL balances via single aggregate SQL query
+  - `get_account_groups(company)` — group accounts for parent dropdown
+  - `create_account(...)` — inserts new ERPNext Account, guarded by `require_login()`
+- **`require_login()`** added to `utils.py` (Guest check only, separate from `require_admin()`)
+- **Frontend (`src/pages/Accounting/ChartOfAccountsTab.tsx`):**
+  - Collapsible tree with folder/file icons, root-type color badges
+  - Balances formatted as Cr/L/K from GL Entry aggregate
+  - Search filters tree, showing matching nodes + their parent chain
+  - "+ New Account" modal: Name, Parent (group select), Root Type, Account Type, Is Group toggle
+- All guardrails followed: `require_login()`, no email hardcoding, `frappe.db.commit()` after saves, CSRF header on all POST calls
+
+✅ **Tally Import Pipeline Bug Fixes (2026-07-12)**
+Four data-mismatch bugs found and fixed across `tally_import_job.py`, `accounts_tally_import.py`, `tally_transformer.py`. After the next import, all register totals should reconcile within ~1%.
+
+**Bug 1 — Purchase Register ~10× too high (`tally_import_job.py:275`)**
+- `amt = float(amounts[-1])` used the LAST `<AMOUNT>` tag in each ALLLEDGERENTRIES block, which includes nested sub-entries (`TAXOBJECTALLOCATIONS.LIST` etc.) at inflated values.
+- Fix: changed to `amounts[0]` (first = main ledger entry amount). `party_ledger_amount` already correctly used `amounts[0]`; only the running-max and `ledger_balances` were wrong.
+- This also fixes inflated `closing_balance` on VE Tally Ledger for Creditor accounts.
+
+**Bug 2 — GST Input count/value too high (`accounts_tally_import.py` GST section)**
+- GST section processed ALL voucher types and classified every non-Sales voucher's GST entries as "Input", including Receipt, Payment, Journal, Contra. This inflated Input GST by ~30% in value and 2-3× in row count.
+- Fix: added `if vtype not in ("Sales", "Purchase"): continue` before the GST component loop.
+- Note: ERP GST row count will still be higher than Tally's per-invoice register — ERP stores one row per GST COMPONENT (CGST/SGST/IGST separately) while Tally shows one row per invoice. This is by design; values should now match.
+
+**Bug 3 — Debtor/Creditor classification misses sub-groups (`tally_import_job.py`)**
+- `is_debtor` used substring `'Sundry Debtors' in parent` (direct parent only).
+- `is_creditor` used exact match `parent in ('Sundry Creditors', 'Creditor For Expenses')` — EVEN more restrictive.
+- Customers/vendors in sub-groups (e.g., "Regular Customers" → "Sundry Debtors") were not classified, causing ERP to show 98 debtors / 33 creditors vs Tally's 232 / 62.
+- Fix: added `_has_ancestor(group, target, group_parents)` helper; both flags now walk the full group hierarchy from the `group_parents` dict built during master parsing.
+
+**Bug 4 — Double-import and Stock Movement over-count**
+- `tally_import_job.run()` chained `accounts_tally_import.run()` at its end, and `tally_transformer.run()` called it again as Stage 2 → Stage 2 ran TWICE per import cycle. Removed the chain from `tally_import_job.run()`.
+- Stock Movement included PERFORMA INVOICE inventory entries (not actual deliveries), inflating count to ~2× Tally's figure. Fixed: query now only includes `Sales` and `Delivery Note`.
+
+**New endpoint — Reconciliation (`accounts_dashboard.py`)**
+- `get_reconciliation_report()` calls `accounts_tally_import.reconcile()` which compares VE Tally Voucher/Ledger source vs Dashboard DocType derived counts+values for all 7 sections.
+- Returns per-section `{source, derived, val_delta_pct, status: ok/warn/error}`.
+- Auto-runs at end of every `tally_transformer.run()` (Stage 3) and logs errors to Frappe Error Log.
+- Call via: `GET /api/method/hr_client.api.accounts_dashboard.get_reconciliation_report`
+
+---
+
+✅ **Accounting Dashboard Extension — Cards 1-5 (2026-07-10)**
+- **Build order followed:** Card 2 (ageing) → Card 4 (opex, depends on ageing period) → Card 1 (profitability, depends on both) → Card 3 (inventory, independent) → Card 5 (transport/labour, independent)
+- **New DocType: `VE Transport Record`** (`hr_client/hr_client/doctype/ve_transport_record/`)
+  - Fields: source (Select: Porter/Rapido/Other/Labour), entry_date, period (auto), amount, description, labour_day_charges, labour_transport, labour_food, notes, reference_doc
+  - `before_save`: auto-computes period from entry_date; auto-sums labour sub-components into amount if not set
+  - Single DocType for all 4 transport/labour source types (Porter, Rapido, Other, Labour)
+- **New backend: `hr_client/api/profitability.py`** — 8 whitelisted endpoints:
+  - `get_profitability_summary(from_date, to_date)` — SHARED UTILITY (also importable, not just whitelisted); computes net_sales, cogs, gross_profit, opex, net_profit, margins, period-over-period %
+  - `get_card_profitability(period, custom_start, custom_end)` — Card 1: profitability with PoP
+  - `get_card_ageing()` — Card 2: creditors/debtors (0-20/21-45/46-90/90+ days) + advances (0-6m/7-12m/13-24m/24+m)
+  - `get_card_inventory()` — Card 3: stock value, negative stock, active SKUs, group + category breakdowns
+  - `get_card_opex(period, ...)` — Card 4: reuses get_profitability_summary(); expense breakdown by source
+  - `get_card_transport(period, ...)` — Card 5: totals by source (Porter/Rapido/Other/Labour) + recent entries
+  - `create_transport_record(source, entry_date, ...)` — Card 5: manual entry
+  - `upload_transport_csv()` — Card 5: parse CSV/Excel and bulk-create VE Transport Records
+  - `sync_porter_api()` — Card 5: stub (logs "not yet configured"); wire up later without restructuring
+- **Frontend: `AccountingOverview.tsx` extended** with 5 new sections:
+  - Card 1: Profitability (Net Sales / COGS / Gross Profit / Net Profit) with period selector + PoP % badges
+  - Card 2: Enhanced Ageing — invoice sub-table (0-20/21-45/46-90/90+) + advance sub-table (0-6m/7-12m/13-24m/24+m) with drill-down modals
+  - Card 3: Inventory Summary — total stock value, negative stock (red), active SKUs, brands/groups table, movement categories
+  - Card 4: Opex — period expense + YTD Tally ledger balances with category breakdown table
+  - Card 5: Transport & Labour — 4 sub-cards (Porter/Rapido/Other/Labour), manual entry form, CSV/Excel upload, recent entries table
+- **Bank Overdraft Investigation & Fix:**
+  - **Finding:** ₹0 is CORRECT data, NOT a bug. "OD A/c no 232905001344" has Dr balance (-₹22.5L), meaning the OD facility exists but is NOT drawn. No `VE OD Account Balance` entries have been manually added.
+  - **Root cause:** Tally sign convention: Dr balance (negative) on OD account = money available in OD facility (not borrowed yet). Only Cr balance (positive) on bank account = OD drawn.
+  - **Fix applied:** Updated "Bank Overdraft Utilised" card to: (1) show VE OD Account Balance utilised first if manual entries exist; (2) fall back to Tally bank_od; (3) show "No OD drawn — add VE OD Account Balance below for facility tracking" instead of misleading ₹0 when both are zero.
+  - **Data gap noted:** No manual VE OD Account Balance entries. Use ERPNext desk → VE OD Account Balance to register OD facility limits + drawn amounts.
+- **Opex data note:** Tally expense ledger balances are YTD (not period-specific, since VE Tally Voucher only stores header-level amounts). Period-specific Opex = Vera Expense Claims + VE Transport Records only. Both are clearly labelled in Card 4.
 
 ✅ **Accounts Dashboard — Full Module (2026-07-10)**
 - **Route:** `/accounts-dashboard` → `src/pages/AccountsDashboard/`
@@ -486,6 +563,31 @@ Frappe resolves the module folder by importing `hr_client.hr_client` and uses th
 
 ## In progress
 Nothing — all features built and wired to real backend. `VITE_USE_MOCK=false`.
+
+## Profitability / Transport / Ageing API Endpoints (LIVE — 2026-07-10)
+Base: `/api/method/hr_client.api.profitability.<endpoint>`
+Auth: session cookie. All endpoints require Administrator or System Manager role.
+
+| Method | Endpoint | Params | Notes |
+|--------|----------|--------|-------|
+| GET | `get_card_profitability` | `period` (mtd/ytd/last_month/custom), `custom_start`, `custom_end` | Card 1. Also callable as `get_profitability_summary(from_date, to_date)` Python utility |
+| GET | `get_card_ageing` | none | Card 2. Always returns current-day ageing. Buckets: 0-20/21-45/46-90/90+ days; 0-6m/7-12m/13-24m/24+m |
+| GET | `get_card_inventory` | none | Card 3. Joins VE Stock Movement Summary × VE Tally Stock Item for value |
+| GET | `get_card_opex` | `period`, `custom_start`, `custom_end` | Card 4. Reuses get_profitability_summary() |
+| GET | `get_card_transport` | `period`, `custom_start`, `custom_end` | Card 5. Returns by_source totals + recent[] |
+| POST | `create_transport_record` | `source`, `entry_date`, `amount`, `description`, `notes`, `labour_day_charges`, `labour_transport`, `labour_food` | Card 5 manual entry |
+| POST | `upload_transport_csv` | multipart `file` (CSV/XLSX), optional `source` override | Card 5 bulk import |
+| GET | `sync_porter_api` | none | Stub — logs "not yet configured" until Porter API is wired |
+
+**VE Transport Record DocType fields:**
+`source` (Porter/Rapido/Other/Labour), `entry_date`, `period` (auto, YYYY-MM), `amount`, `description`, `labour_day_charges`, `labour_transport`, `labour_food`, `notes`, `reference_doc`
+
+**Profitability data sources:**
+- Net Sales = VE Tally Voucher (voucher_type='Sales') − Credit Notes
+- COGS = VE Tally Voucher (voucher_type='Purchase') − Debit Notes (stock Δ≈0 proxy)
+- Closing Stock = VE Stock Movement Summary.stock_on_hand × VE Tally Stock Item.standard_rate (current snapshot only)
+- Opex (period) = Vera Expense Claims (approved, in period) + VE Transport Records (in period)
+- Opex (YTD) = VE Tally Ledger expense group closing balances (Dr balance = expense incurred)
 
 ✅ **Employee Profile Fix + Admin Employee Detail Page (2026-05-15)**
 - **Root cause of blank profile for Administrator:** `_get_employee_by_email("Administrator")` found nothing because Employee records store `user_id = "owais@veraenterprises.in"`. Fixed by adding `_ADMIN_EMAIL_MAP = {"Administrator": "owais@veraenterprises.in"}` — all email lookups resolve through this map first.
@@ -1411,6 +1513,11 @@ Auto-deploy: server cron job pulls main at 2 AM daily and runs migrate + bench r
 - DO NOT call `reset_auto_verified()` without expecting side effects on the verification stats — it resets all AI-verified records to Unverified, which will lower the verified count shown in stats. Always call it at the START of Auto-Verify flow, before running `auto_verify_all()`.
 - DO NOT use a single global status filter in `get_all_extracted_records` to build the UI stats — always fetch ALL records (no status filter) and compute stats server-side. The stats dict is the authoritative source for the stats strip.
 - DO NOT put `extraction_history` as a fixture field — it is a Long Text that grows over time; fixtures would overwrite it during migrate. Only Custom Field definition (metadata) goes in fixtures; data stays in DB.
+- DO NOT call `get_opex_summary` or `get_card_opex` expecting period-specific Tally expense data — Tally ledger balances are YTD/all-time. Only Vera Expense Claims and VE Transport Records are period-filterable in the opex breakdown.
+- DO NOT interpret a Dr balance (negative `closing_balance`) on an OD account as "no OD facility" — it means the OD facility exists but is NOT drawn. Only Cr balance (positive) = money borrowed from bank (OD drawn).
+- DO NOT add four separate DocTypes for Porter/Rapido/Other/Labour — use single `VE Transport Record` DocType with `source` field to differentiate. This keeps future Porter API integration simple.
+- DO NOT call `self.save()` in `VE Transport Record.before_save()` — already violated this guardrail elsewhere; confirmed safe because before_save is not validate().
+- DO NOT use `get_profitability_summary()` as a whitelisted endpoint directly — it's a Python-level shared utility; the whitelisted wrapper is `get_card_profitability()`.
 - DO NOT return password fields in API responses — never include any password, hash, or secret in any dict returned from a whitelisted endpoint
 - DO NOT use `frappe.db.sql()` with f-string or % string formatting where any part comes from user input — all user-supplied values must use %s parameterized queries; hardcoded internal constants are acceptable
 - DO NOT store credentials in any tracked file — Jibble, Google service account, OpenAI keys, and any future secrets must live exclusively in `site_config.json`; `vera_drive/vera_drive/service_account.json` is gitignored and must stay that way

@@ -28,6 +28,18 @@ def _set_status(status: str, progress: int, message: str):
     }), expires_in_sec=3600)
 
 
+def _has_ancestor(group: str, target: str, group_parents: dict, max_depth: int = 15) -> bool:
+    """Return True if `target` is `group` itself or any ancestor up to max_depth levels."""
+    current = group
+    for _ in range(max_depth):
+        if not current:
+            break
+        if current == target:
+            return True
+        current = group_parents.get(current, "")
+    return False
+
+
 def get_status():
     raw = frappe.cache().get_value(_STATUS_KEY)
     if not raw:
@@ -125,8 +137,12 @@ def run(masters_path: str, transactions_path: str):
                 "pan_number":          pan[:20],
                 "gst_registration_type": grt[:50],
                 "phone":               phone[:30],
-                "is_debtor":   1 if 'Sundry Debtors' in parent else 0,
-                "is_creditor": 1 if parent in ('Sundry Creditors', 'Creditor For Expenses') else 0,
+                # Walk full group hierarchy — catches ledgers in sub-groups of Sundry Debtors/Creditors
+                "is_debtor":   1 if _has_ancestor(parent, 'Sundry Debtors', group_parents) else 0,
+                "is_creditor": 1 if (
+                    _has_ancestor(parent, 'Sundry Creditors', group_parents) or
+                    _has_ancestor(parent, 'Creditor For Expenses', group_parents)
+                ) else 0,
                 "is_bank":     1 if parent in ('Bank Accounts', 'Bank OD A/c') else 0,
                 "is_cash":     1 if parent == 'Cash-in-Hand' else 0,
                 "is_gst":      1 if any(kw in raw_name.upper() for kw in ('CGST', 'SGST', 'IGST')) else 0,
@@ -272,7 +288,10 @@ def run(masters_path: str, transactions_path: str):
                             if not lname_m or not amounts:
                                 continue
                             lname = lname_m.group(1).strip().replace("&amp;", "&")
-                            amt   = float(amounts[-1])
+                            # Use first <AMOUNT> (main entry).  amounts[-1] was used historically
+                            # but picks up nested sub-entry amounts (TAXOBJECTALLOCATIONS etc.)
+                            # that are 10x the actual invoice amount for Purchase creditor entries.
+                            amt   = float(amounts[0])
                             if not is_cancelled and not is_deleted:
                                 ledger_balances[lname] += -amt
                             if amt > 0 and not debit_ledger:
@@ -535,13 +554,9 @@ def run(masters_path: str, transactions_path: str):
 
         elapsed = round(time.time() - t0, 1)
         _set_status("done", 100, f"Import complete in {elapsed}s — {len(ledger_data):,} ledgers, {len(stock_data):,} SKUs, {len(v_rows):,} vouchers.")
-
-        # Chain into Accounts Dashboard DocTypes (Sales Register, GST Ledger, etc.)
-        try:
-            from hr_client.api import accounts_tally_import
-            accounts_tally_import.run()
-        except Exception:
-            frappe.log_error(frappe.get_traceback(), "Accounts Tally Import (chained)")
+        # NOTE: Stage 2 (accounts_tally_import.run) is intentionally NOT chained here.
+        # tally_transformer.run() calls it explicitly as Stage 2, so chaining here caused
+        # accounts_tally_import.run() to execute twice per import cycle.
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Tally Import Error")
