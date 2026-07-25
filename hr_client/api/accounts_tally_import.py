@@ -562,8 +562,12 @@ def reconcile():
         "SELECT COUNT(*) cnt, COALESCE(SUM(amount),0) val FROM `tabVE Tally Voucher` "
         "WHERE voucher_type IN ('Receipt','Payment','Journal','Contra') AND is_cancelled=0"
     )
+    # Compare GROSS movement (inflow+outflow), not net: each voucher maps to one
+    # cash-flow entry with either inflow OR outflow = abs(amount), so gross derived
+    # == source SUM(amount). Comparing net (inflow-outflow) against gross source is
+    # apples-to-oranges and always mismatches once there are any payments.
     drv_cfc, drv_cfv = _q(
-        "SELECT COUNT(*) cnt, COALESCE(SUM(inflow-outflow),0) val FROM `tabVE Cash Flow Entry`"
+        "SELECT COUNT(*) cnt, COALESCE(SUM(inflow+outflow),0) val FROM `tabVE Cash Flow Entry`"
     )
 
     # ── Stock Movement ───────────────────────────────────────────────────────

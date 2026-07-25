@@ -1,6 +1,8 @@
 import frappe
 import json
 import os
+import re
+import shutil
 from frappe.utils import flt, cint
 
 
@@ -569,6 +571,85 @@ def upload_tally_file():
 
     uploaded.save(dest)
     return {"path": dest, "filename": safe_name, "size": os.path.getsize(dest)}
+
+
+# ── Chunked upload (works through the Cloudflare tunnel's ~100MB per-request cap) ──
+# The Masters (~120MB) and full Transactions (~1.5GB) exports exceed the single-
+# request body limit, so the browser slices the file into sub-100MB chunks and
+# uploads each as its own request; the server reassembles them here.
+_CHUNK_ROOT = os.path.join(_TALLY_UPLOAD_DIR, ".chunks")
+
+
+def _safe_upload_id(s):
+    return re.sub(r"[^a-zA-Z0-9_-]", "", str(s or ""))[:64]
+
+
+def _safe_xml_name(filename):
+    safe = re.sub(r"[^\w\s\-.]", "_", str(filename or "").replace("/", "_").replace("\\", "_"))[:200]
+    safe = safe or "tally_upload.xml"
+    if not safe.lower().endswith(".xml"):
+        frappe.throw("Only .xml files are accepted", frappe.ValidationError)
+    return safe
+
+
+@frappe.whitelist()
+def upload_tally_chunk():
+    """Receive one chunk of a chunked Tally upload. Each chunk is a separate
+    request (kept well under the tunnel's 100MB cap). Stored as an ordered part
+    file under a per-upload folder; reassembled by finalize_tally_upload()."""
+    _require_admin()
+    fd = frappe.form_dict
+    upload_id = _safe_upload_id(fd.get("upload_id"))
+    index = cint(fd.get("chunk_index"))
+    if not upload_id:
+        frappe.throw("upload_id required", frappe.ValidationError)
+
+    files = frappe.request.files
+    if not files:
+        frappe.throw("No chunk uploaded", frappe.ValidationError)
+    chunk = files[list(files.keys())[0]]
+
+    chunk_dir = os.path.join(_CHUNK_ROOT, upload_id)
+    os.makedirs(chunk_dir, exist_ok=True)
+    dest = os.path.join(chunk_dir, f"{index:06d}.part")
+    if not os.path.realpath(dest).startswith(os.path.realpath(chunk_dir) + os.sep):
+        frappe.throw("Invalid chunk path", frappe.ValidationError)
+    chunk.save(dest)
+    return {"received": index, "size": os.path.getsize(dest)}
+
+
+@frappe.whitelist()
+def finalize_tally_upload(upload_id, total_chunks, filename):
+    """Reassemble all chunks (in order) into the final XML in the upload folder,
+    then delete the chunk parts. Returns the path for run_tally_import()."""
+    _require_admin()
+    upload_id = _safe_upload_id(upload_id)
+    total = cint(total_chunks)
+    chunk_dir = os.path.join(_CHUNK_ROOT, upload_id)
+    if not upload_id or total < 1 or not os.path.isdir(chunk_dir):
+        frappe.throw("No chunks found for this upload", frappe.ValidationError)
+
+    # Verify every part is present before assembling
+    for i in range(total):
+        part = os.path.join(chunk_dir, f"{i:06d}.part")
+        if not os.path.isfile(part):
+            frappe.throw(f"Missing chunk {i + 1} of {total} — please retry the upload",
+                         frappe.ValidationError)
+
+    safe_name = _safe_xml_name(filename)
+    os.makedirs(_TALLY_UPLOAD_DIR, exist_ok=True)
+    final = os.path.join(_TALLY_UPLOAD_DIR, safe_name)
+    if not os.path.realpath(final).startswith(os.path.realpath(_TALLY_UPLOAD_DIR) + os.sep):
+        frappe.throw("Invalid filename", frappe.ValidationError)
+
+    with open(final, "wb") as out:
+        for i in range(total):
+            part = os.path.join(chunk_dir, f"{i:06d}.part")
+            with open(part, "rb") as pf:
+                shutil.copyfileobj(pf, out, 4 * 1024 * 1024)
+
+    shutil.rmtree(chunk_dir, ignore_errors=True)
+    return {"path": final, "filename": safe_name, "size": os.path.getsize(final)}
 
 
 @frappe.whitelist()

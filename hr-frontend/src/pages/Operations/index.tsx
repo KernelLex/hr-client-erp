@@ -205,27 +205,52 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
     }, 2000)
   }
 
-  function upload(file: File, onProgress: (n: number) => void): Promise<{ path: string }> {
+  // Chunked upload: slice the file into sub-100MB parts so each request clears
+  // the Cloudflare tunnel's per-request body cap, then reassemble server-side.
+  // Works for files of any size (limited only by the user's upload bandwidth).
+  const CHUNK_SIZE = 48 * 1024 * 1024 // 48MB — safely under the 100MB cap
+
+  function uploadChunk(uploadId: string, index: number, total: number, blob: Blob, onProgress: (loaded: number) => void): Promise<void> {
     return new Promise((resolve, reject) => {
-      const fd = new FormData(); fd.append("file", file, file.name)
+      const fd = new FormData()
+      fd.append("upload_id", uploadId)
+      fd.append("chunk_index", String(index))
+      fd.append("total_chunks", String(total))
+      fd.append("chunk", blob, "chunk")
       const xhr = new XMLHttpRequest()
       xhr.withCredentials = true
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
-      }
+      xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded) }
       xhr.onload = () => {
         try {
           const json = JSON.parse(xhr.responseText)
-          if (xhr.status >= 200 && xhr.status < 300 && !json.exc) resolve(json.message)
-          else if (xhr.status === 413) reject(new Error("File too large for browser upload (blocked by the network/proxy). Place the file on the server and use “Import from server files” instead."))
+          if (xhr.status >= 200 && xhr.status < 300 && !json.exc) resolve()
+          else if (xhr.status === 413) reject(new Error("Chunk rejected (413) — the upload size limit is smaller than expected. Contact support."))
           else reject(new Error(json.exc || `Upload failed (${xhr.status})`))
-        } catch { reject(new Error("Invalid server response")) }
+        } catch { reject(new Error("Invalid server response during upload")) }
       }
-      xhr.onerror = () => reject(new Error("Network error during upload. For large files use “Import from server files”."))
-      xhr.open("POST", "/api/method/hr_client.api.operations.upload_tally_file")
+      xhr.onerror = () => reject(new Error("Network error during upload — check your connection and retry"))
+      xhr.open("POST", "/api/method/hr_client.api.operations.upload_tally_chunk")
       xhr.setRequestHeader("X-Frappe-CSRF-Token", getCsrf())
       xhr.send(fd)
     })
+  }
+
+  async function upload(file: File, onProgress: (n: number) => void): Promise<{ path: string }> {
+    const total = Math.max(1, Math.ceil(file.size / CHUNK_SIZE))
+    const uploadId = (crypto.randomUUID?.() ?? `up-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    for (let i = 0; i < total; i++) {
+      const blob = file.slice(i * CHUNK_SIZE, Math.min(file.size, (i + 1) * CHUNK_SIZE))
+      await uploadChunk(uploadId, i, total, blob, (loaded) => {
+        const overall = ((i + (loaded / blob.size)) / total) * 100
+        onProgress(Math.min(99, Math.round(overall)))
+      })
+    }
+    onProgress(99)
+    const res = await apiPost("hr_client.api.operations.finalize_tally_upload", {
+      upload_id: uploadId, total_chunks: total, filename: file.name,
+    }) as { path: string }
+    onProgress(100)
+    return res
   }
 
   // Import from files already on the server — works for any size.
@@ -381,9 +406,9 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 flex items-start gap-2">
+          <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs text-blue-800 flex items-start gap-2">
             <AlertCircle size={13} className="shrink-0 mt-0.5" />
-            <span>Browser upload suits small files only. The full Transactions export (~1.5 GB) and Masters (~120 MB) exceed the public gateway's upload limit — for those, copy the file to the server and use <strong>Import from server files</strong>.</span>
+            <span>Large files are supported — they're uploaded in chunks, so the full Transactions export (~1.5 GB) and Masters (~120 MB) work fine over the internet. A big file can take a while depending on your connection speed; keep this tab open until it finishes.</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
