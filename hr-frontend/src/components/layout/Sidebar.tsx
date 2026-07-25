@@ -357,7 +357,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         <SectionTitle>Finance &amp; Governance</SectionTitle>
         {isAdmin && (
           <>
-            <NavItem to="/accounting" label="Accounting" icon={Landmark} adminBadge onClick={close} />
+            <NavItem to="/accounting-module" label="Accounting" icon={Landmark} adminBadge onClick={close} />
             <NavItem to="/accounts-dashboard" label="Accounts Dashboard" icon={BarChart2} adminBadge onClick={close} />
             <SubItem to="/accounting-module?tab=coa"                  label="Chart of Accounts"      icon={null} isActive={path === "/accounting-module" && search === "?tab=coa"}                   indent onClick={close} />
             <SubItem to="/accounting-module?tab=cost-centers"         label="Cost Centers"            icon={null} isActive={path === "/accounting-module" && search === "?tab=cost-centers"}          indent onClick={close} />
