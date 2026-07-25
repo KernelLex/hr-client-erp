@@ -12,7 +12,7 @@ interface DeptTabsProps {
 
 export function DeptTabs({ tabs, active, onChange }: DeptTabsProps) {
   return (
-    <div className="flex gap-2 px-6 md:px-7 mb-5 flex-wrap">
+    <div className="flex gap-2 px-6 md:px-7 mb-4 flex-wrap">
       {tabs.map((tab) => {
         const isActive = tab.key === active
         return (

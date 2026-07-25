@@ -87,7 +87,7 @@ export default function AccountingPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-app, #f5efe4)" }}>
       {/* Page header */}
-      <div className="bg-white border-b border-gray-100 px-6 py-4">
+      <div className="bg-white border-b border-gray-100 px-6 py-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div
@@ -132,9 +132,9 @@ export default function AccountingPage() {
       </div>
 
       {/* Tab content */}
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="px-6 py-5 max-w-7xl mx-auto">
         <div
-          className="bg-white rounded-xl p-6"
+          className="bg-white rounded-xl p-5"
           style={{ border: "var(--border-card, 0.5px solid #e0d9cb)", boxShadow: "var(--shadow-card)" }}
         >
           <TabContent tab={tab} />

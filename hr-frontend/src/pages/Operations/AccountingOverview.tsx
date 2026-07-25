@@ -398,7 +398,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
   ]
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-5">
       {/* Info banner */}
       <div
         className="flex gap-3 items-start px-4 py-3.5 rounded-xl"
@@ -490,11 +490,11 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                   >
                     <span className="block text-left">
                       {shortName}
-                      <span className={`ml-2 text-xs font-normal ${isActive ? "text-indigo-100" : "text-gray-400"}`}>
+                      <span className={`ml-2 text-xs font-normal ${isActive ? "text-[#d4c8a8]" : "text-gray-400"}`}>
                         {acc.account_type}
                       </span>
                     </span>
-                    <span className={`block text-left text-xs mt-0.5 ${isActive ? "text-indigo-100" : "text-gray-400"}`}>
+                    <span className={`block text-left text-xs mt-0.5 ${isActive ? "text-[#d4c8a8]" : "text-gray-400"}`}>
                       {acc.available > 0
                         ? `Available: ${fmtINR(acc.available)}`
                         : acc.od_utilised > 0
@@ -559,7 +559,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                       placeholder="Search narration, party, voucher #…"
                       value={stmtSearch}
                       onChange={e => { setStmtSearch(e.target.value); setStmtPage(1) }}
-                      className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-300"
+                      className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#c8a45c]"
                     />
                   </div>
                   <input type="date" value={stmtFrom}

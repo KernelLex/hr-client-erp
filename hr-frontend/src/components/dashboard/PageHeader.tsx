@@ -6,12 +6,12 @@ interface PageHeaderProps {
 
 export function PageHeader({ workspaceLabel, title, right }: PageHeaderProps) {
   return (
-    <header className="px-6 md:px-7 pt-5 pb-4 flex justify-between items-start gap-4 flex-wrap">
+    <header className="px-6 md:px-7 pt-4 pb-3 flex justify-between items-center gap-4 flex-wrap">
       <div>
         <div className="text-[10px] font-medium tracking-widest" style={{ color: "var(--text-secondary)" }}>
           {workspaceLabel.toUpperCase()}
         </div>
-        <h1 className="font-heading text-[26px] mt-1" style={{ color: "var(--text-primary)" }}>
+        <h1 className="font-heading text-[21px] mt-0.5 leading-tight" style={{ color: "var(--text-primary)" }}>
           {title}
         </h1>
       </div>
