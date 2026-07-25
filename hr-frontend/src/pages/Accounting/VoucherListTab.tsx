@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Loader2, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { exportCsv } from "@/lib/csv"
 import { operationsGet } from "./api"
 import { VoucherDetailDrawer } from "./VoucherDetailDrawer"
+import { TransactionSummaryBand, MonthDivider, type VoucherSummary } from "./TransactionSummaryBand"
 
 interface VoucherRow {
   name: string
@@ -41,10 +42,26 @@ function fyOptions(): { value: string; label: string }[] {
   return opts
 }
 
+/** Party column: real party when present, else the debit→credit ledger flow so
+ * blank-party journals still say something meaningful. */
+function PartyCell({ r }: { r: VoucherRow }) {
+  if (r.party_name) return <span className="font-medium text-gray-800">{r.party_name}</span>
+  if (r.debit_ledger || r.credit_ledger) {
+    return (
+      <span className="inline-flex items-center gap-1 text-gray-500">
+        <span className="truncate max-w-[130px]">{r.debit_ledger || "—"}</span>
+        <ArrowRight size={11} className="text-gray-300 shrink-0" />
+        <span className="truncate max-w-[130px]">{r.credit_ledger || "—"}</span>
+      </span>
+    )
+  }
+  return <span className="text-gray-300">—</span>
+}
+
 /**
  * Generic voucher-type list — powers Journal Entries, Payment Entries, Receipts,
- * Credit Notes and Debit Notes. Backed entirely by the existing
- * operations.get_voucher_list / get_voucher_detail endpoints (no new backend).
+ * Credit Notes and Debit Notes. Summary band (full-set totals/trend/top parties)
+ * sits above a month-grouped table; no columns removed.
  */
 export function VoucherListTab({ voucherType, noun }: { voucherType: string; noun: string }) {
   const [fy, setFy] = useState("all")
@@ -68,10 +85,22 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
     staleTime: 30_000,
   })
 
+  const { data: summary, isLoading: sumLoading } = useQuery<VoucherSummary>({
+    queryKey: ["voucher-summary", voucherType, fy, search],
+    queryFn: () => operationsGet("get_voucher_summary", { voucher_type: voucherType, fy, search }),
+    staleTime: 30_000,
+  })
+
   function submitSearch(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
     setSearch(searchInput)
+  }
+
+  function pickParty(party: string) {
+    setSearchInput(party)
+    setSearch(party)
+    setPage(1)
   }
 
   function changeFy(v: string) {
@@ -82,20 +111,30 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
   const rows = data?.data ?? []
   const total = data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const dateGrouped = sort === "date_desc" || sort === "date_asc"
 
   const columns: DataTableColumn<VoucherRow>[] = [
-    { key: "voucher_date", header: "Date" },
-    { key: "voucher_number", header: "Voucher #" },
-    { key: "party_name", header: "Party" },
-    { key: "narration", header: "Narration", render: r => r.narration || "—" },
+    { key: "voucher_date", header: "Date", render: r => <span className="text-gray-500 whitespace-nowrap">{r.voucher_date}</span> },
+    { key: "voucher_number", header: "Voucher #", render: r => <span className="font-mono text-xs text-gray-500">{r.voucher_number || "—"}</span> },
+    { key: "party_name", header: "Party / Ledger flow", render: r => <PartyCell r={r} /> },
+    { key: "narration", header: "Narration", render: r => <span className="text-gray-500 truncate block max-w-[260px]" title={r.narration}>{r.narration || "—"}</span> },
     {
       key: "amount", header: "Amount", align: "right",
-      render: r => <span className="font-mono">{fmtINR(r.amount)}</span>,
+      render: r => <span className="font-mono font-semibold text-[#2c2c2a]">{fmtINR(r.amount)}</span>,
     },
   ]
 
   return (
     <div className="space-y-3">
+      {/* Summary band */}
+      <TransactionSummaryBand
+        summary={summary}
+        noun={noun}
+        activeParty={search}
+        onPickParty={pickParty}
+        loading={sumLoading}
+      />
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <select
@@ -141,10 +180,13 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
             rows={rows}
             rowKey={r => r.name}
             searchable={false}
+            stickyHeader
+            groupKey={dateGrouped ? (r => r.voucher_date?.slice(0, 7) ?? "") : undefined}
+            renderGroupHeader={key => <MonthDivider monthKey={key} monthly={summary?.monthly ?? []} noun={noun} />}
             onExport={() => exportCsv(
               noun.replace(/\s+/g, "_"),
-              ["Date", "Voucher #", "Party", "Narration", "Amount"],
-              rows.map(r => [r.voucher_date, r.voucher_number, r.party_name, r.narration, r.amount]),
+              ["Date", "Voucher #", "Party", "Debit Ledger", "Credit Ledger", "Narration", "Amount"],
+              rows.map(r => [r.voucher_date, r.voucher_number, r.party_name, r.debit_ledger, r.credit_ledger, r.narration, r.amount]),
             )}
             onRowClick={r => setSelected(r.name)}
             emptyMessage={`No ${noun.toLowerCase()} found.`}

@@ -4,6 +4,7 @@ import { AlertCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { accountingGet } from "./api"
 import { VoucherDetailDrawer } from "./VoucherDetailDrawer"
+import { MonthDivider } from "./TransactionSummaryBand"
 
 interface DepRow {
   name: string
@@ -69,6 +70,9 @@ export function DepreciationTab() {
             rows={rows}
             rowKey={r => r.name}
             searchable={false}
+            stickyHeader
+            groupKey={r => r.voucher_date?.slice(0, 7) ?? ""}
+            renderGroupHeader={key => <MonthDivider monthKey={key} monthly={[]} noun="entries" />}
             onRowClick={r => setSelected(r.name)}
             emptyMessage="No depreciation-related journal entries found."
           />

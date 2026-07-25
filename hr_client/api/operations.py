@@ -1087,6 +1087,74 @@ def get_voucher_list(voucher_type, fy=None, search=None, page=1, page_size=50, s
 
 
 @frappe.whitelist()
+def get_voucher_summary(voucher_type, fy=None, search=None):
+    """
+    Aggregate stats for a voucher type over the FULL filtered set (not one page):
+    count, total value, date range, per-month series, and top parties by value.
+    Powers the summary band on the Journal/Payment/Receipt/Credit/Debit tabs.
+    Party falls back to credit/debit ledger when party_name is blank (journals).
+    """
+    _require_admin()
+    import html as _html
+
+    where_parts = ["is_cancelled = 0", "voucher_type = %s"]
+    params = [voucher_type]
+
+    if fy and fy != "all":
+        try:
+            parts = fy.split("-")
+            sy, ey = int(parts[0]), int(parts[1])
+            where_parts.append("voucher_date >= %s AND voucher_date < %s")
+            params += [f"{sy}-04-01", f"{ey}-04-01"]
+        except (ValueError, IndexError):
+            pass
+
+    if search and str(search).strip():
+        s = f"%{str(search).strip()}%"
+        where_parts.append("(party_name LIKE %s OR narration LIKE %s OR voucher_number LIKE %s)")
+        params += [s, s, s]
+
+    where = " AND ".join(where_parts)
+    p = tuple(params)
+
+    agg = frappe.db.sql(
+        f"""SELECT COUNT(*) cnt, COALESCE(SUM(amount),0) total,
+                   MIN(voucher_date) min_d, MAX(voucher_date) max_d
+            FROM `tabVE Tally Voucher` WHERE {where}""",
+        p, as_dict=True,
+    )[0]
+
+    monthly = frappe.db.sql(
+        f"""SELECT DATE_FORMAT(voucher_date, '%%Y-%%m') m,
+                   COUNT(*) cnt, COALESCE(SUM(amount),0) total
+            FROM `tabVE Tally Voucher` WHERE {where}
+            GROUP BY m ORDER BY m""",
+        p, as_dict=True,
+    )
+
+    # Party falls back to credit/debit ledger name for blank-party journals.
+    party_expr = "COALESCE(NULLIF(TRIM(party_name),''), NULLIF(TRIM(credit_ledger),''), NULLIF(TRIM(debit_ledger),''), 'Unspecified')"
+    top = frappe.db.sql(
+        f"""SELECT {party_expr} party, COUNT(*) cnt, COALESCE(SUM(amount),0) total
+            FROM `tabVE Tally Voucher` WHERE {where}
+            GROUP BY party ORDER BY total DESC LIMIT 5""",
+        p, as_dict=True,
+    )
+
+    def _clean(x):
+        return _html.unescape(str(x or "").replace("&amp;", "&").replace("&apos;", "'"))
+
+    return {
+        "count":     int(agg.cnt or 0),
+        "total":     round(flt(agg.total), 2),
+        "min_date":  str(agg.min_d) if agg.min_d else "",
+        "max_date":  str(agg.max_d) if agg.max_d else "",
+        "monthly":   [{"month": r.m, "count": int(r.cnt), "total": round(flt(r.total), 2)} for r in monthly],
+        "top_parties": [{"party": _clean(r.party), "count": int(r.cnt), "total": round(flt(r.total), 2)} for r in top],
+    }
+
+
+@frappe.whitelist()
 def get_voucher_detail(name):
     """Return full voucher detail including inventory + all ledger entries + party profile."""
     import json as _json
@@ -1290,6 +1358,20 @@ def _ledger_txn_query(ledger_name, from_date=None, to_date=None,
     total_inflow  = round(flt(totals_row[0].total_inflow  if totals_row else 0), 2)
     total_outflow = round(flt(totals_row[0].total_outflow if totals_row else 0), 2)
 
+    monthly_rows = frappe.db.sql(
+        f"""SELECT DATE_FORMAT(v.voucher_date, '%%Y-%%m') m, COUNT(*) cnt,
+                   COALESCE(SUM(CASE WHEN ale.j_is_dr = 1 THEN ale.j_amount ELSE 0 END), 0) inflow,
+                   COALESCE(SUM(CASE WHEN ale.j_is_dr = 0 THEN ale.j_amount ELSE 0 END), 0) outflow
+            FROM `tabVE Tally Voucher` v {_JSON_JOIN}
+            WHERE {where} GROUP BY m ORDER BY m""",
+        [ledger_name] + vals, as_dict=True,
+    )
+    monthly = [{
+        "month": r.m, "count": int(r.cnt),
+        "inflow": round(flt(r.inflow), 2), "outflow": round(flt(r.outflow), 2),
+        "total": round(flt(r.inflow) - flt(r.outflow), 2),
+    } for r in monthly_rows]
+
     transactions = []
     for r in rows:
         amt       = flt(r.amount)
@@ -1323,6 +1405,7 @@ def _ledger_txn_query(ledger_name, from_date=None, to_date=None,
         "total_inflow":  total_inflow,
         "total_outflow": total_outflow,
         "net":           round(total_inflow - total_outflow, 2),
+        "monthly":       monthly,
         "transactions":  transactions,
     }
 

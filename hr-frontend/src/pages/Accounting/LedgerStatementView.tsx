@@ -4,6 +4,9 @@ import { Search, Loader2, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { exportCsv } from "@/lib/csv"
 import { accountingGet, operationsGet } from "./api"
+import { MonthDivider, fmtMonthKey } from "./TransactionSummaryBand"
+
+interface MonthlyPoint { month: string; count: number; inflow: number; outflow: number; total: number }
 
 interface LedgerOption {
   ledger_name: string
@@ -36,6 +39,7 @@ interface LedgerStatement {
   total_inflow: number
   total_outflow: number
   net: number
+  monthly: MonthlyPoint[]
   transactions: Txn[]
 }
 
@@ -151,6 +155,26 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">Net</p>
               <p className="text-sm font-semibold text-[#2c2c2a]">{fmtINR(stmt?.net ?? 0)}</p>
             </div>
+            {/* Monthly activity sparkline */}
+            {(stmt?.monthly?.length ?? 0) > 0 && (() => {
+              const months = stmt!.monthly
+              const maxAct = Math.max(1, ...months.map(m => m.inflow + m.outflow))
+              return (
+                <div className="flex-1 min-w-[200px]">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Monthly Activity</p>
+                  <div className="flex items-end gap-[2px] h-[30px]">
+                    {months.map(m => (
+                      <div
+                        key={m.month}
+                        title={`${fmtMonthKey(m.month)} · net ${fmtINR(m.total)} · ${m.count} txns`}
+                        className={`flex-1 min-w-[3px] rounded-sm transition-colors ${m.total >= 0 ? "bg-emerald-500/60 hover:bg-emerald-600" : "bg-red-500/60 hover:bg-red-600"}`}
+                        style={{ height: `${Math.max(6, ((m.inflow + m.outflow) / maxAct) * 100)}%` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
             <div className="ml-auto">
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">Transactions</p>
               <p className="text-sm font-semibold text-[#2c2c2a]">{(stmt?.total ?? 0).toLocaleString("en-IN")}</p>
@@ -177,6 +201,9 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
                 rows={stmt?.transactions ?? []}
                 rowKey={r => `${r.voucher_number}-${r.date}-${r.amount}-${r.direction}`}
                 searchable={false}
+                stickyHeader
+                groupKey={r => r.date?.slice(0, 7) ?? ""}
+                renderGroupHeader={key => <MonthDivider monthKey={key} monthly={stmt?.monthly ?? []} noun="txns" />}
                 onExport={() => exportCsv(
                   selected.ledger_name.replace(/\s+/g, "_"),
                   ["Date", "Type", "Voucher #", "Counterparty", "Narration", "Debit", "Credit"],

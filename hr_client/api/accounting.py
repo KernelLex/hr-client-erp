@@ -183,6 +183,77 @@ def get_purchase_bills(fy="all", search=None, page=1, page_size=50, sort="date_d
     )
 
 
+@frappe.whitelist()
+@handle_api_error
+def get_register_summary(kind="sales", fy="all", search=None):
+    """Aggregate stats for the Sales/Purchase register over the FULL filtered set:
+    count, total, excl-GST + GST/ITC breakdown, date range, monthly series, top
+    parties. Powers the summary band on the Sales Invoices / Purchase Bills tabs."""
+    require_admin()
+    import html as _html
+
+    if kind == "purchase":
+        doctype, date_col, party_col, no_col, gst_col = (
+            "VE Purchase Register Entry", "bill_date", "vendor", "bill_no", "itc_amount")
+    else:
+        doctype, date_col, party_col, no_col, gst_col = (
+            "VE Sales Register Entry", "invoice_date", "customer", "invoice_no", "gst_amount")
+
+    where = ["1=1"]
+    values = []
+    if fy and fy != "all":
+        try:
+            start, end = _fy_bounds(fy)
+            where.append(f"{date_col} >= %s AND {date_col} < %s")
+            values += [start, end]
+        except (ValueError, IndexError):
+            pass
+    if search and str(search).strip():
+        s = f"%{str(search).strip()}%"
+        where.append(f"({party_col} LIKE %s OR {no_col} LIKE %s)")
+        values += [s, s]
+    where_sql = " AND ".join(where)
+    p = tuple(values)
+
+    agg = frappe.db.sql(
+        f"""SELECT COUNT(*) cnt, COALESCE(SUM(total),0) total,
+                   COALESCE(SUM(amount_excl_gst),0) excl, COALESCE(SUM({gst_col}),0) gst,
+                   MIN({date_col}) min_d, MAX({date_col}) max_d
+            FROM `tab{doctype}` WHERE {where_sql}""",
+        p, as_dict=True,
+    )[0]
+
+    monthly = frappe.db.sql(
+        f"""SELECT DATE_FORMAT({date_col}, '%%Y-%%m') m,
+                   COUNT(*) cnt, COALESCE(SUM(total),0) total
+            FROM `tab{doctype}` WHERE {where_sql}
+            GROUP BY m ORDER BY m""",
+        p, as_dict=True,
+    )
+
+    top = frappe.db.sql(
+        f"""SELECT {party_col} party, COUNT(*) cnt, COALESCE(SUM(total),0) total
+            FROM `tab{doctype}` WHERE {where_sql}
+            GROUP BY {party_col} ORDER BY total DESC LIMIT 5""",
+        p, as_dict=True,
+    )
+
+    def _clean(x):
+        return _html.unescape(str(x or "").replace("&amp;", "&").replace("&apos;", "'"))
+
+    return {
+        "count":       int(agg.cnt or 0),
+        "total":       round(flt(agg.total), 2),
+        "excl_gst":    round(flt(agg.excl), 2),
+        "gst":         round(flt(agg.gst), 2),
+        "gst_label":   "ITC" if kind == "purchase" else "GST",
+        "min_date":    str(agg.min_d) if agg.min_d else "",
+        "max_date":    str(agg.max_d) if agg.max_d else "",
+        "monthly":     [{"month": r.m, "count": int(r.cnt), "total": round(flt(r.total), 2)} for r in monthly],
+        "top_parties": [{"party": _clean(r.party), "count": int(r.cnt), "total": round(flt(r.total), 2)} for r in top],
+    }
+
+
 # ── Ledger picker (General Ledger / Bank & Cash Book tabs) ──────────────────
 
 @frappe.whitelist()

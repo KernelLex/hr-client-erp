@@ -5,6 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { exportCsv } from "@/lib/csv"
 import { accountingGet } from "./api"
 import { VoucherDetailDrawer } from "./VoucherDetailDrawer"
+import { TransactionSummaryBand, MonthDivider, type RegisterSummary } from "./TransactionSummaryBand"
 
 interface RegisterRow {
   name: string
@@ -47,11 +48,12 @@ interface RegisterListTabProps {
   gstLabel: string
 }
 
-/** Shared list view for Sales Invoices / Purchase Bills — both read from the
- * derived Sales/Purchase Register (accounts_tally_import.py output), which
- * already has a clean excl-GST / GST / total split per invoice. */
+/** Shared list view for Sales Invoices / Purchase Bills — reads the derived
+ * register (clean excl-GST / GST / total split). Summary band shows the full-set
+ * totals, GST breakdown, trend and top parties; table is month-grouped. */
 export function RegisterListTab(props: RegisterListTabProps) {
   const { endpoint, noun, numberField, numberLabel, dateField, partyField, partyLabel, gstField, gstLabel } = props
+  const kind = endpoint === "get_purchase_bills" ? "purchase" : "sales"
   const [fy, setFy] = useState("all")
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
@@ -67,14 +69,27 @@ export function RegisterListTab(props: RegisterListTabProps) {
     staleTime: 30_000,
   })
 
+  const { data: summary, isLoading: sumLoading } = useQuery<RegisterSummary>({
+    queryKey: ["register-summary", kind, fy, search],
+    queryFn: () => accountingGet("get_register_summary", { kind, fy, search }),
+    staleTime: 30_000,
+  })
+
+  function pickParty(party: string) {
+    setSearchInput(party)
+    setSearch(party)
+    setPage(1)
+  }
+
   const rows = data?.data ?? []
   const total = data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const dateGrouped = sort === "date_desc" || sort === "date_asc"
 
   const columns: DataTableColumn<RegisterRow>[] = [
-    { key: dateField, header: "Date" },
-    { key: numberField, header: numberLabel },
-    { key: partyField, header: partyLabel },
+    { key: dateField, header: "Date", render: r => <span className="text-gray-500 whitespace-nowrap">{r[dateField] as string}</span> },
+    { key: numberField, header: numberLabel, render: r => <span className="font-mono text-xs text-gray-500">{(r[numberField] as string) || "—"}</span> },
+    { key: partyField, header: partyLabel, render: r => <span className="font-medium text-gray-800">{(r[partyField] as string) || "—"}</span> },
     {
       key: "amount_excl_gst", header: "Excl. GST", align: "right",
       render: r => <span className="font-mono text-gray-500">{fmtINR(r.amount_excl_gst as number)}</span>,
@@ -85,12 +100,22 @@ export function RegisterListTab(props: RegisterListTabProps) {
     },
     {
       key: "total", header: "Total", align: "right",
-      render: r => <span className="font-mono font-semibold">{fmtINR(r.total as number)}</span>,
+      render: r => <span className="font-mono font-semibold text-[#2c2c2a]">{fmtINR(r.total as number)}</span>,
     },
   ]
 
   return (
     <div className="space-y-3">
+      {/* Summary band with GST breakdown */}
+      <TransactionSummaryBand
+        summary={summary}
+        noun={noun}
+        activeParty={search}
+        onPickParty={pickParty}
+        loading={sumLoading}
+        gst={summary ? { excl: summary.excl_gst, gst: summary.gst, total: summary.total, label: summary.gst_label } : undefined}
+      />
+
       <div className="flex flex-wrap items-center gap-2">
         <select
           value={fy}
@@ -136,6 +161,9 @@ export function RegisterListTab(props: RegisterListTabProps) {
             rows={rows}
             rowKey={r => r.name}
             searchable={false}
+            stickyHeader
+            groupKey={dateGrouped ? (r => String(r[dateField] ?? "").slice(0, 7)) : undefined}
+            renderGroupHeader={key => <MonthDivider monthKey={key} monthly={summary?.monthly ?? []} noun={noun} />}
             onExport={() => exportCsv(
               noun.replace(/\s+/g, "_"),
               ["Date", numberLabel, partyLabel, "Excl. GST", gstLabel, "Total"],
