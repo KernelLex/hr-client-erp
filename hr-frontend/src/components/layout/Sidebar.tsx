@@ -224,6 +224,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const [salesOpen, setSalesOpen] = useState(() => readLS("sidebar_sales_open", true))
   const [docsOpen, setDocsOpen] = useState(() => readLS("sidebar_docs_open", false))
   const [adminOpen, setAdminOpen] = useState(() => readLS("sidebar_admin_open", false))
+  const [accountingOpen, setAccountingOpen] = useState(() => readLS("sidebar_accounting_open", false))
 
   // Auto-expand the group that contains the active route
   useEffect(() => {
@@ -240,6 +241,9 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
     if (p === "/admin/users" || p === "/admin/permissions") {
       setAdminOpen(true)
     }
+    if (p === "/accounting-module") {
+      setAccountingOpen(true)
+    }
   }, [location.pathname])
 
   function makeToggle(setter: React.Dispatch<React.SetStateAction<boolean>>, key: string) {
@@ -253,6 +257,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const toggleSales = makeToggle(setSalesOpen, "sidebar_sales_open")
   const toggleDocs = makeToggle(setDocsOpen, "sidebar_docs_open")
   const toggleAdmin = makeToggle(setAdminOpen, "sidebar_admin_open")
+  const toggleAccounting = makeToggle(setAccountingOpen, "sidebar_accounting_open")
 
   // Close sidebar on mobile when a nav item is clicked
   function close() {
@@ -285,6 +290,8 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const isUsersActive = path === "/admin/users"
   const isPermsActive = path === "/admin/permissions"
   const isAdminGroupActive = isUsersActive || isPermsActive
+
+  const isAccountingGroupActive = path === "/accounting-module"
 
   // Permissions
   const showAttendance = moduleEnabled("attendance")
@@ -357,26 +364,31 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         <SectionTitle>Finance &amp; Governance</SectionTitle>
         {isAdmin && (
           <>
-            <NavItem to="/accounting-module" label="Accounting" icon={Landmark} adminBadge onClick={close} />
+            {/* Accounting group — collapsible */}
+            <GroupHeader label="Accounting" icon={Landmark} open={accountingOpen} active={isAccountingGroupActive} onToggle={toggleAccounting} />
+            <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: accountingOpen ? "680px" : "0px", opacity: accountingOpen ? 1 : 0 }}>
+              <div className="pt-0.5 space-y-0.5">
+                <SubItem to="/accounting-module?tab=coa"                  label="Chart of Accounts"      icon={null} isActive={path === "/accounting-module" && search === "?tab=coa"}                   indent onClick={close} />
+                <SubItem to="/accounting-module?tab=cost-centers"         label="Cost Centers"            icon={null} isActive={path === "/accounting-module" && search === "?tab=cost-centers"}          indent onClick={close} />
+                <SubItem to="/accounting-module?tab=journal"              label="Journal Entries"         icon={null} isActive={path === "/accounting-module" && search === "?tab=journal"}               indent onClick={close} />
+                <SubItem to="/accounting-module?tab=payment"              label="Payment Entries"         icon={null} isActive={path === "/accounting-module" && search === "?tab=payment"}               indent onClick={close} />
+                <SubItem to="/accounting-module?tab=receipts"             label="Receipts"                icon={null} isActive={path === "/accounting-module" && search === "?tab=receipts"}              indent onClick={close} />
+                <SubItem to="/accounting-module?tab=bank-recon"           label="Bank Reconciliation"     icon={null} isActive={path === "/accounting-module" && search === "?tab=bank-recon"}            indent onClick={close} />
+                <SubItem to="/accounting-module?tab=sales-invoices"       label="Sales Invoices"          icon={null} isActive={path === "/accounting-module" && search === "?tab=sales-invoices"}        indent onClick={close} />
+                <SubItem to="/accounting-module?tab=purchase-bills"       label="Purchase Bills"          icon={null} isActive={path === "/accounting-module" && search === "?tab=purchase-bills"}        indent onClick={close} />
+                <SubItem to="/accounting-module?tab=credit-notes"         label="Credit Notes"            icon={null} isActive={path === "/accounting-module" && search === "?tab=credit-notes"}          indent onClick={close} />
+                <SubItem to="/accounting-module?tab=debit-notes"          label="Debit Notes"             icon={null} isActive={path === "/accounting-module" && search === "?tab=debit-notes"}           indent onClick={close} />
+                <SubItem to="/accounting-module?tab=general-ledger"       label="General Ledger"          icon={null} isActive={path === "/accounting-module" && search === "?tab=general-ledger"}        indent onClick={close} />
+                <SubItem to="/accounting-module?tab=ar"                   label="Accounts Receivable"     icon={null} isActive={path === "/accounting-module" && search === "?tab=ar"}                    indent onClick={close} />
+                <SubItem to="/accounting-module?tab=ap"                   label="Accounts Payable"        icon={null} isActive={path === "/accounting-module" && search === "?tab=ap"}                    indent onClick={close} />
+                <SubItem to="/accounting-module?tab=fixed-assets"         label="Fixed Assets"            icon={null} isActive={path === "/accounting-module" && search === "?tab=fixed-assets"}          indent onClick={close} />
+                <SubItem to="/accounting-module?tab=depreciation"         label="Depreciation"            icon={null} isActive={path === "/accounting-module" && search === "?tab=depreciation"}          indent onClick={close} />
+                <SubItem to="/accounting-module?tab=cash-flow"            label="Cash Flow"               icon={null} isActive={path === "/accounting-module" && search === "?tab=cash-flow"}             indent onClick={close} />
+                <SubItem to="/accounting-module?tab=budgeting"            label="Budgeting"               icon={null} isActive={path === "/accounting-module" && search === "?tab=budgeting"}             indent onClick={close} />
+                <SubItem to="/accounting-module?tab=financial-statements" label="Financial Statements"    icon={null} isActive={path === "/accounting-module" && search === "?tab=financial-statements"}  indent onClick={close} />
+              </div>
+            </div>
             <NavItem to="/accounts-dashboard" label="Accounts Dashboard" icon={BarChart2} adminBadge onClick={close} />
-            <SubItem to="/accounting-module?tab=coa"                  label="Chart of Accounts"      icon={null} isActive={path === "/accounting-module" && search === "?tab=coa"}                   indent onClick={close} />
-            <SubItem to="/accounting-module?tab=cost-centers"         label="Cost Centers"            icon={null} isActive={path === "/accounting-module" && search === "?tab=cost-centers"}          indent onClick={close} />
-            <SubItem to="/accounting-module?tab=journal"              label="Journal Entries"         icon={null} isActive={path === "/accounting-module" && search === "?tab=journal"}               indent onClick={close} />
-            <SubItem to="/accounting-module?tab=payment"              label="Payment Entries"         icon={null} isActive={path === "/accounting-module" && search === "?tab=payment"}               indent onClick={close} />
-            <SubItem to="/accounting-module?tab=receipts"             label="Receipts"                icon={null} isActive={path === "/accounting-module" && search === "?tab=receipts"}              indent onClick={close} />
-            <SubItem to="/accounting-module?tab=bank-recon"           label="Bank Reconciliation"     icon={null} isActive={path === "/accounting-module" && search === "?tab=bank-recon"}            indent onClick={close} />
-            <SubItem to="/accounting-module?tab=sales-invoices"       label="Sales Invoices"          icon={null} isActive={path === "/accounting-module" && search === "?tab=sales-invoices"}        indent onClick={close} />
-            <SubItem to="/accounting-module?tab=purchase-bills"       label="Purchase Bills"          icon={null} isActive={path === "/accounting-module" && search === "?tab=purchase-bills"}        indent onClick={close} />
-            <SubItem to="/accounting-module?tab=credit-notes"         label="Credit Notes"            icon={null} isActive={path === "/accounting-module" && search === "?tab=credit-notes"}          indent onClick={close} />
-            <SubItem to="/accounting-module?tab=debit-notes"          label="Debit Notes"             icon={null} isActive={path === "/accounting-module" && search === "?tab=debit-notes"}           indent onClick={close} />
-            <SubItem to="/accounting-module?tab=general-ledger"       label="General Ledger"          icon={null} isActive={path === "/accounting-module" && search === "?tab=general-ledger"}        indent onClick={close} />
-            <SubItem to="/accounting-module?tab=ar"                   label="Accounts Receivable"     icon={null} isActive={path === "/accounting-module" && search === "?tab=ar"}                    indent onClick={close} />
-            <SubItem to="/accounting-module?tab=ap"                   label="Accounts Payable"        icon={null} isActive={path === "/accounting-module" && search === "?tab=ap"}                    indent onClick={close} />
-            <SubItem to="/accounting-module?tab=fixed-assets"         label="Fixed Assets"            icon={null} isActive={path === "/accounting-module" && search === "?tab=fixed-assets"}          indent onClick={close} />
-            <SubItem to="/accounting-module?tab=depreciation"         label="Depreciation"            icon={null} isActive={path === "/accounting-module" && search === "?tab=depreciation"}          indent onClick={close} />
-            <SubItem to="/accounting-module?tab=cash-flow"            label="Cash Flow"               icon={null} isActive={path === "/accounting-module" && search === "?tab=cash-flow"}             indent onClick={close} />
-            <SubItem to="/accounting-module?tab=budgeting"            label="Budgeting"               icon={null} isActive={path === "/accounting-module" && search === "?tab=budgeting"}             indent onClick={close} />
-            <SubItem to="/accounting-module?tab=financial-statements" label="Financial Statements"    icon={null} isActive={path === "/accounting-module" && search === "?tab=financial-statements"}  indent onClick={close} />
           </>
         )}
 

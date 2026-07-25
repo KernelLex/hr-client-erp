@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { ArrowUpDown, Search, Download, Printer } from "lucide-react"
+import { ArrowUpDown, Search, Download, Printer, ChevronDown, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export interface DataTableColumn<T> {
@@ -58,6 +58,16 @@ export function DataTable<T>({
   const [query, setQuery] = useState("")
   const [sortKey, setSortKey] = useState<string | undefined>(defaultSortKey)
   const [sortDir, setSortDir] = useState<"asc" | "desc">(defaultSortDir)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
+  function toggleCollapse(key: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   const filtered = useMemo(() => {
     if (!query || !searchText) return rows
@@ -208,17 +218,31 @@ export function DataTable<T>({
                 if (bucket.length) groups.push({ key: curKey as string, rows: bucket })
 
                 for (const g of groups) {
+                  const isCollapsed = collapsed.has(g.key)
                   out.push(
-                    <tr key={`grp-${g.key}`}>
+                    <tr
+                      key={`grp-${g.key}`}
+                      className="cursor-pointer select-none"
+                      onClick={() => toggleCollapse(g.key)}
+                    >
                       <td colSpan={columns.length} className="px-3 py-1.5"
                         style={{ background: "#faf6ed", borderBottom: "0.5px solid var(--border-card)", borderTop: "0.5px solid var(--border-card)" }}>
-                        {renderGroupHeader ? renderGroupHeader(g.key, g.rows) : (
-                          <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--brand-primary)" }}>{g.key}</span>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          <span className="shrink-0" style={{ color: "var(--brand-primary)" }}>
+                            {isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            {renderGroupHeader ? renderGroupHeader(g.key, g.rows) : (
+                              <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--brand-primary)" }}>{g.key}</span>
+                            )}
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   )
-                  for (const row of g.rows) out.push(renderRow(row))
+                  if (!isCollapsed) {
+                    for (const row of g.rows) out.push(renderRow(row))
+                  }
                 }
                 return out
               })()
