@@ -41,7 +41,7 @@ export default function ReturnsPage() {
           vtype={vtype}
           initialFy="all"
           availableFY={availableFY}
-          onBack={() => navigate("/accounting")}
+          onBack={() => navigate("/accounting")} backLabel="Accounting"
           onOpen={setOpenVoucher}
         />
       </div>

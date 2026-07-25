@@ -6,6 +6,8 @@ import {
   Upload, Download, ArrowLeftRight, FileText,
   ChevronRight, ChevronLeft, Search, X, Loader2, ExternalLink, Printer,
 } from "lucide-react"
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
+import { TransactionSummaryBand, MonthDivider, type VoucherSummary } from "@/pages/Accounting/TransactionSummaryBand"
 
 // ── API helpers ────────────────────────────────────────────────────────────────
 
@@ -515,13 +517,14 @@ export function VoucherDocument({
 // ── Voucher List view (Level 2) ───────────────────────────────────────────────
 
 export function VoucherListView({
-  vtype, initialFy, availableFY, onBack, onOpen,
+  vtype, initialFy, availableFY, onBack, onOpen, backLabel = "All Types",
 }: {
   vtype: string; initialFy: string; availableFY: string[]
-  onBack: () => void; onOpen: (v: VoucherRow) => void
+  onBack: () => void; onOpen: (v: VoucherRow) => void; backLabel?: string
 }) {
   const cfg = VTYPE_CONFIG[vtype] || VTYPE_CONFIG["Other"]
   const Icon = cfg.icon
+  const noun = cfg.label.endsWith("s") ? cfg.label : `${cfg.label}s`
 
   const [localFy,       setLocalFy]       = useState(initialFy)
   const [searchInput,   setSearchInput]   = useState("")
@@ -541,10 +544,28 @@ export function VoucherListView({
     retry: 1,
   })
 
+  const { data: summary } = useQuery<VoucherSummary>({
+    queryKey: ["voucher-summary", vtype, localFy, search],
+    queryFn: () => apiPost("hr_client.api.operations.get_voucher_summary", {
+      voucher_type: vtype, fy: localFy, search,
+    }),
+    staleTime: 60_000,
+  })
+
   function doSearch() { setSearch(searchInput); setPage(1) }
   function clearSearch() { setSearchInput(""); setSearch(""); setPage(1) }
+  function pickParty(p: string) { setSearchInput(p); setSearch(p); setPage(1) }
 
   const totalPages = data?.pages ?? 1
+  const dateGrouped = sort === "date_desc" || sort === "date_asc"
+
+  const columns: DataTableColumn<VoucherRow>[] = [
+    { key: "voucher_date", header: "Date", render: r => <span className="text-gray-500 whitespace-nowrap text-xs font-mono">{fmtShortDate(r.voucher_date)}</span> },
+    { key: "voucher_number", header: "Voucher #", render: r => <span className="font-mono text-xs text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">{r.voucher_number || "—"}</span> },
+    { key: "party_name", header: cfg.partyLabel, render: r => <span className="font-medium text-gray-800">{r.party_name || r.debit_ledger || "—"}</span> },
+    { key: "narration", header: "Narration", className: "hidden lg:table-cell", render: r => <span className="text-gray-400 text-xs truncate block max-w-[240px]" title={r.narration}>{r.narration || "—"}</span> },
+    { key: "amount", header: "Amount", align: "right", render: r => <span className="font-mono font-semibold" style={{ color: cfg.color }}>{r.amount_fmt}</span> },
+  ]
 
   return (
     <div className="space-y-4">
@@ -553,7 +574,7 @@ export function VoucherListView({
         <button onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors shrink-0">
           <ChevronLeft size={15} />
-          <span>All Types</span>
+          <span>{backLabel}</span>
         </button>
         <div className="h-4 w-px bg-gray-200" />
         <div className="flex items-center gap-2.5">
@@ -570,6 +591,14 @@ export function VoucherListView({
         </div>
         {isFetching && <Loader2 size={13} className="text-gray-400 animate-spin ml-auto" />}
       </div>
+
+      {/* Summary band — full-set totals, trend, top parties */}
+      <TransactionSummaryBand
+        summary={summary}
+        noun={noun}
+        activeParty={search}
+        onPickParty={pickParty}
+      />
 
       {/* Filters bar */}
       <div className="flex items-center gap-2 flex-wrap">
@@ -612,90 +641,51 @@ export function VoucherListView({
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-        {isLoading ? (
-          <div className="py-16 flex flex-col items-center gap-3">
-            <Loader2 size={24} className="text-forest-400 animate-spin" />
-            <p className="text-sm text-gray-400">Loading entries…</p>
-          </div>
-        ) : !data || data.data.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center"
-                 style={{ backgroundColor: cfg.bg }}>
-              <Icon size={22} style={{ color: cfg.color }} strokeWidth={1.5} />
-            </div>
-            <p className="text-gray-500 text-sm font-medium">No entries found</p>
-            {search && <p className="text-gray-400 text-xs mt-1">Try adjusting your search or filter</p>}
-          </div>
-        ) : (
-          <>
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-100">
-                <tr className="bg-gray-50/80">
-                  <th className="text-left py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
-                  <th className="text-left py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Voucher #</th>
-                  <th className="text-left py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Party</th>
-                  <th className="text-left py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden lg:table-cell">Narration</th>
-                  <th className="text-right py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {data.data.map((row) => {
-                  const displayParty = row.party_name || row.debit_ledger || "—"
-                  return (
-                    <tr key={row.name} onClick={() => onOpen(row)}
-                      className="hover:bg-slate-50/70 cursor-pointer transition-colors group">
-                      <td className="py-3 px-4 text-gray-400 whitespace-nowrap text-xs font-mono">
-                        {fmtShortDate(row.voucher_date)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-mono text-xs text-gray-700 bg-gray-50 group-hover:bg-white px-1.5 py-0.5 rounded transition-colors">
-                          {row.voucher_number || "—"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <p className="font-medium text-gray-800 truncate max-w-[200px]">{displayParty}</p>
-                      </td>
-                      <td className="py-3 px-4 text-gray-400 text-xs hidden lg:table-cell max-w-[220px]">
-                        <p className="truncate">{row.narration || "—"}</p>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <span className="font-mono font-semibold text-sm" style={{ color: cfg.color }}>
-                          {row.amount_fmt}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+      {isLoading ? (
+        <div className="bg-white rounded-2xl border border-gray-100 py-16 flex flex-col items-center gap-3 shadow-sm">
+          <Loader2 size={24} className="text-forest-400 animate-spin" />
+          <p className="text-sm text-gray-400">Loading entries…</p>
+        </div>
+      ) : (
+        <>
+          <DataTable
+            columns={columns}
+            rows={data?.data ?? []}
+            rowKey={r => r.name}
+            searchable={false}
+            stickyHeader
+            defaultCollapsed
+            groupKey={dateGrouped ? (r => r.voucher_date?.slice(0, 7) ?? "") : undefined}
+            renderGroupHeader={key => <MonthDivider monthKey={key} monthly={summary?.monthly ?? []} noun={noun} />}
+            onRowClick={onOpen}
+            emptyMessage={search ? "No entries found — try adjusting your search or filter." : "No entries found."}
+          />
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-5 py-3 border-t border-gray-50 bg-gray-50/40">
-                <span className="text-xs text-gray-400">
-                  {data.total.toLocaleString()} entries · 50 per page
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs text-gray-400">
+                {(data?.total ?? 0).toLocaleString()} entries · 50 per page
+              </span>
+              <div className="flex items-center gap-1">
+                <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
+                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 disabled:opacity-30
+                             px-2.5 py-1.5 rounded-lg hover:bg-white transition-all disabled:cursor-not-allowed">
+                  <ChevronLeft size={12} /> Prev
+                </button>
+                <span className="text-xs text-gray-500 px-3 py-1.5 font-medium">
+                  {page} / {totalPages}
                 </span>
-                <div className="flex items-center gap-1">
-                  <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 disabled:opacity-30
-                               px-2.5 py-1.5 rounded-lg hover:bg-white transition-all disabled:cursor-not-allowed">
-                    <ChevronLeft size={12} /> Prev
-                  </button>
-                  <span className="text-xs text-gray-500 px-3 py-1.5 font-medium">
-                    {page} / {totalPages}
-                  </span>
-                  <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 disabled:opacity-30
-                               px-2.5 py-1.5 rounded-lg hover:bg-white transition-all disabled:cursor-not-allowed">
-                    Next <ChevronRight size={12} />
-                  </button>
-                </div>
+                <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
+                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 disabled:opacity-30
+                             px-2.5 py-1.5 rounded-lg hover:bg-white transition-all disabled:cursor-not-allowed">
+                  Next <ChevronRight size={12} />
+                </button>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

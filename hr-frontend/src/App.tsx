@@ -100,6 +100,10 @@ function App() {
                 <Route path="/chat" element={<ChatPage />} />
                 {/* Accounting — Tally voucher browser (original) */}
                 <Route path="/accounting" element={<OperationsPage />} />
+                {/* Accounts Dashboard — financial overview + Tally import (was a
+                    standalone page, merged into OperationsPage; route restored so
+                    the sidebar link works instead of falling through to Dashboard) */}
+                <Route path="/accounts-dashboard" element={<OperationsPage />} />
                 {/* Accounting Module — 18-tab COA / ledger page */}
                 <Route path="/accounting-module" element={<AccountingPage />} />
                 <Route path="/operations" element={<Navigate to="/accounting" replace />} />
