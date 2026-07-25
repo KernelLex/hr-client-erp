@@ -202,6 +202,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [modal, setModal] = useState<ModalKind>(null)
+  const [subTab, setSubTab] = useState<string>("overview")
 
   // ── Bank statement state ──────────────────────────────────────────────────
   const [activeBank, setActiveBank]   = useState<string | null>(null)
@@ -359,6 +360,40 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
   const bankCount = data.finance.bank_accounts.length
   const cashCount = data.finance.cash_accounts.length
 
+  // ── Sub-tab grouping (keeps every section — just organises the long page) ──
+  const showOverview   = subTab === "overview"
+  const showBanking    = subTab === "banking"
+  const showSales      = subTab === "sales"
+  const showAR         = subTab === "arap"
+  const showCompliance = subTab === "compliance"
+  const showInventory  = subTab === "inventory"
+
+  const SUB_TABS: { id: string; label: string }[] = [
+    { id: "overview",   label: "Overview" },
+    { id: "banking",    label: "Banking & Funds" },
+    { id: "sales",      label: "Sales & Profit" },
+    { id: "arap",       label: "Receivables / Payables" },
+    { id: "compliance", label: "Compliance" },
+    { id: "inventory",  label: "Inventory" },
+  ]
+
+  // Headline KPIs for the always-visible band (all already computed in `data`)
+  const kpiRaw = (kpis: { label: string; raw: number }[], prefix: string): number => {
+    const k = kpis.find((x) => x.label.startsWith(prefix))
+    return k ? Number(k.raw) || 0 : 0
+  }
+  const finKpis = data.finance.kpis as { label: string; raw: number }[]
+  const accKpis = (data.accounts as unknown as { kpis: { label: string; raw: number }[] }).kpis
+  const kpiCashBank = kpiRaw(finKpis, "Cash in Hand") + kpiRaw(finKpis, "Bank Funds")
+  const bandItems = [
+    { label: "Cash + Bank",   value: fmtINR(kpiCashBank) },
+    { label: "Receivables",   value: fmtINR(kpiRaw(accKpis, "Sundry Debtors")) },
+    { label: "Payables",      value: fmtINR(kpiRaw(accKpis, "Sundry Creditors")) },
+    { label: "Net GST",       value: fmtINR(kpiRaw(finKpis, "Net GST")) },
+    { label: "FY Sales",      value: fmtINR(data.accounts.fy_sales) },
+    { label: "FY Purchases",  value: fmtINR(data.accounts.fy_purchases) },
+  ]
+
   // ── Table column definitions ──────────────────────────────────────────
   const accountCols: DataTableColumn<Account>[] = [
     { key: "name", header: "Ledger", render: (r) => r.name },
@@ -420,8 +455,31 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
         </p>
       </div>
 
+      {/* ── Headline KPI band (always visible) ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+        {bandItems.map((b) => (
+          <div key={b.label} className="rounded-xl px-3 py-2.5" style={{ background: "var(--brand-primary)" }}>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--gold-light)" }}>{b.label}</p>
+            <p className="text-base font-bold text-white font-mono leading-tight mt-0.5">{b.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Sub-tab bar (sticky) ── */}
+      <div className="sticky top-0 z-20 -mx-1 px-1 py-1 bg-[var(--bg-app,#f5efe4)]">
+        <div className="flex gap-1 p-1 rounded-xl overflow-x-auto scrollbar-none" style={{ background: "#fff", border: "var(--border-card)" }}>
+          {SUB_TABS.map(({ id, label }) => (
+            <button key={id} onClick={() => setSubTab(id)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+              style={subTab === id ? { background: "var(--brand-primary)", color: "#fff" } : { color: "var(--text-secondary)" }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Available Funds ── */}
-      <section>
+      <section style={{ display: showBanking ? undefined : "none" }}>
         <SectionHeader>Available Funds</SectionHeader>
         <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}>
           <StatCard
@@ -461,7 +519,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       </section>
 
       {/* ── Bank Account Statements ── */}
-      <section>
+      <section style={{ display: showBanking ? undefined : "none" }}>
         <SectionHeader>Bank Account Statements</SectionHeader>
 
         {/* Account tabs */}
@@ -683,7 +741,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       </section>
 
       {/* ── Accounts Details ── */}
-      <section>
+      <section style={{ display: showSales ? undefined : "none" }}>
         <SectionHeader>Accounts Details</SectionHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <StatCard
@@ -753,7 +811,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       </section>
 
       {/* ── Statutory Compliance ── */}
-      <section>
+      <section style={{ display: showCompliance ? undefined : "none" }}>
         <SectionHeader>Statutory Compliance</SectionHeader>
         <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}>
           <StatCard
@@ -783,7 +841,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       </section>
 
       {/* ── Receivables & Payables ── */}
-      <section>
+      <section style={{ display: showAR ? undefined : "none" }}>
         <SectionHeader>Receivables &amp; Payables</SectionHeader>
         <AgingLegend />
         <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}>
@@ -821,7 +879,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       </section>
 
       {/* ── Cash & Fund Flow ── */}
-      <section>
+      <section style={{ display: showOverview ? undefined : "none" }}>
         <SectionHeader>Cash &amp; Fund Flow</SectionHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <StatCard
@@ -847,7 +905,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       </section>
 
       {/* ── Inventory ── */}
-      <section>
+      <section style={{ display: showInventory ? undefined : "none" }}>
         <SectionHeader>Inventory</SectionHeader>
         <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}>
           <StatCard
@@ -867,7 +925,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
 
       {/* ── Stock Movement Analysis ── */}
       {invExtra && invExtra.total_sku_count > 0 && (
-        <section>
+        <section style={{ display: showInventory ? undefined : "none" }}>
           <SectionHeader>Stock Movement Analysis</SectionHeader>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-2">
             {(["Fast","Mid","Slow","Dead","Low","Reorder"] as const).map(cat => {
@@ -895,7 +953,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       )}
 
       {/* ── CARD 1: Profitability Summary ── */}
-      <section>
+      <section style={{ display: showOverview ? undefined : "none" }}>
         <SectionHeader>Profitability Summary</SectionHeader>
         {/* Period selector */}
         <div className="flex flex-wrap gap-2 mb-3 items-center">
@@ -987,7 +1045,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       </section>
 
       {/* ── CARD 2: Enhanced Ageing Analysis ── */}
-      <section>
+      <section style={{ display: showAR ? undefined : "none" }}>
         <SectionHeader>Ageing Analysis</SectionHeader>
         {ageingCard ? (
           <>
@@ -1064,7 +1122,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
 
       {/* ── CARD 3: Inventory Summary ── */}
       {cardInv && (
-        <section>
+        <section style={{ display: showInventory ? undefined : "none" }}>
           <SectionHeader>Inventory Summary</SectionHeader>
           <div className="grid gap-3 mb-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
             <StatCard label="Total Stock Value" value={fmtINR(cardInv.total_stock_value)} sub={`${cardInv.total_sku_count} SKUs tracked`} />
@@ -1113,7 +1171,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       )}
 
       {/* ── CARD 4: Opex / Admin Expenses ── */}
-      <section>
+      <section style={{ display: showSales ? undefined : "none" }}>
         <SectionHeader>Opex / Admin Expenses</SectionHeader>
         <p className="text-xs text-gray-400 mb-3">
           Period-specific: Vera Expense Claims + Transport Records.
@@ -1157,7 +1215,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       </section>
 
       {/* ── CARD 5: Transport & Labour ── */}
-      <section>
+      <section style={{ display: showSales ? undefined : "none" }}>
         <SectionHeader>Transport &amp; Labour Costs</SectionHeader>
         {transportData && (
           <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
@@ -1357,7 +1415,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
 
       {/* ── Virtual Accounts & OD ── */}
       {fundsExtra && (fundsExtra.virtuals.length > 0 || fundsExtra.od_accounts.length > 0) && (
-        <section>
+        <section style={{ display: showBanking ? undefined : "none" }}>
           <SectionHeader>Payment Gateways &amp; OD Facilities</SectionHeader>
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}>
             {fundsExtra.virtuals.length > 0 && (
