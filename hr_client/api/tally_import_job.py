@@ -451,7 +451,10 @@ def run(masters_path: str, transactions_path: str):
                             amounts  = re.findall(r'<AMOUNT>([^<]+)</AMOUNT>', letext)
                             if isparty and isparty.group(1).strip() == 'Yes' and amounts:
                                 amt = float(amounts[0])
-                                if vtype in ('Sales', 'PERFORMA INVOICE'):
+                                # Sales only — PERFORMA INVOICE is pre-billing and is
+                                # excluded from the Sales KPI everywhere else, so keep
+                                # the monthly sales trend consistent with it.
+                                if vtype == 'Sales':
                                     monthly_sales[month_key] += abs(amt)
                                 elif vtype == 'Purchase':
                                     monthly_purch[month_key] += abs(amt)
@@ -492,13 +495,21 @@ def run(masters_path: str, transactions_path: str):
         _set_status("running", 60, f"Transactions parsed: {len(vouchers)} vouchers. Writing to database…")
 
         # ── Step 3: Compute snapshot aggregates ───────────────────
-        cash_total   = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_cash'))
-        bank_total   = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_bank'))
-        debtor_total = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_debtor') and v > 0)
-        cred_total   = sum(abs(v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_creditor') and v < 0)
-        gst_out      = sum(abs(v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_gst') and v < 0)
-        gst_in       = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_gst') and v > 0)
-        tds_pay      = sum(abs(v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_tds') and v < 0)
+        # Canonical convention (matches VE Tally Ledger.closing_balance and the
+        # live Accounting page): balance < 0 = Dr = asset (cash/bank held, money
+        # owed to us); balance > 0 = Cr = liability (OD drawn, money we owe).
+        # NOTE: these MUST stay in sync with get_operations_data() /
+        # get_tally_financial_summary() or the Dashboard and Accounting page drift.
+        cash_total   = sum(abs(v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_cash') and v < 0)
+        bank_credit  = sum(abs(v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_bank') and v < 0)
+        bank_od      = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_bank') and v > 0 and 'virtual' not in k.lower())
+        bank_virtual = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_bank') and v > 0 and 'virtual' in k.lower())
+        bank_total   = bank_credit + bank_virtual - bank_od
+        debtor_total = sum(abs(v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_debtor') and v < 0)
+        cred_total   = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_creditor') and v > 0)
+        gst_out      = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_gst') and v > 0)
+        gst_in       = sum(abs(v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_gst') and v < 0)
+        tds_pay      = sum(v for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_tds') and v > 0)
 
         # Compute current FY month bounds (format YYYYMM)
         import datetime as _dt
@@ -510,12 +521,14 @@ def run(masters_path: str, transactions_path: str):
         fy_purch  = sum(v for m, v in monthly_purch.items()   if _fy_start <= m <= _fy_end)
         fy_coll   = sum(v for m, v in monthly_receipt.items() if _fy_start <= m <= _fy_end)
 
-        top_debtors   = {k: round(v, 2) for k, v in sorted(
-            ((k, v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_debtor') and v > 0),
-            key=lambda x: -x[1])[:50]}
-        top_creditors = {k: round(abs(v), 2) for k, v in sorted(
-            ((k, v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_creditor') and v < 0),
+        # Debtors carry Dr (v<0); largest receivable = most negative first.
+        top_debtors   = {k: round(abs(v), 2) for k, v in sorted(
+            ((k, v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_debtor') and v < 0),
             key=lambda x: x[1])[:50]}
+        # Creditors carry Cr (v>0); largest payable = most positive first.
+        top_creditors = {k: round(v, 2) for k, v in sorted(
+            ((k, v) for k, v in ledger_balances.items() if ledger_data.get(k, {}).get('is_creditor') and v > 0),
+            key=lambda x: -x[1])[:50]}
 
         snapshot = {
             "cash_in_hand":       round(cash_total, 2),

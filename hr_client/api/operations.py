@@ -723,29 +723,66 @@ def get_import_status():
 @frappe.whitelist()
 def get_tally_financial_summary():
     """
-    Returns a compact financial summary for use in other pages (Dashboard, Business).
-    No heavy computation — reads snapshot + 3 fast DB queries.
+    Compact financial summary for the Dashboard snapshot card.
+
+    Computed LIVE from VE Tally Ledger / VE Tally Voucher using the SAME sign
+    convention as get_operations_data() and the Accounting page — so the Dashboard
+    can never disagree with the Accounting page. (Previously this read a separately
+    computed snapshot file whose aggregates used wrong-sign filters, which made the
+    Dashboard show flipped/inflated cash, debtors and GST.)
+
+    Sign convention: closing_balance < 0 = Dr = asset (money held / owed to us);
+                     closing_balance > 0 = Cr = liability (OD drawn / owed by us).
     """
     _require_admin()
-    snap = _load_snapshot()
-    if not snap:
+    L = "`tabVE Tally Ledger`"
+
+    def sq(sql, params=()):
+        rows = frappe.db.sql(sql, params, as_dict=True)
+        return flt(rows[0].v) if rows else 0.0
+
+    if not frappe.db.sql("SELECT 1 FROM `tabVE Tally Voucher` LIMIT 1"):
         return None
-    as_of_row = frappe.db.sql("SELECT MAX(voucher_date) as d FROM `tabVE Tally Voucher`", as_dict=True)
-    as_of = str(as_of_row[0].d) if as_of_row and as_of_row[0].d else ""
+
+    cash        = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_cash=1 AND closing_balance<0")
+    bank_credit = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_bank=1 AND closing_balance<0")
+    # LIKE pattern passed as a parameter — a literal '%virtual%' collides with
+    # pymysql's %s paramstyle ("not enough arguments for format string").
+    bank_od     = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_bank=1 AND closing_balance>0 AND LOWER(ledger_name) NOT LIKE %s", ("%virtual%",))
+    bank_virtual= sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_bank=1 AND closing_balance>0 AND LOWER(ledger_name) LIKE %s", ("%virtual%",))
+    bank_total  = bank_credit + bank_virtual - bank_od
+    cash_bank   = cash + bank_total
+
+    receivables = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_debtors=1 AND closing_balance<0")
+    payables    = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_creditors=1 AND closing_balance>0")
+
+    output_gst  = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_gst=1 AND closing_balance>0")
+    input_gst   = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_gst=1 AND closing_balance<0")
+    net_gst     = output_gst - input_gst
+
+    fy_start, fy_end, _lbl = _current_fy()
+    V = "`tabVE Tally Voucher`"
+    fy_sales    = sq(f"SELECT COALESCE(SUM(amount),0) v FROM {V} WHERE voucher_type='Sales' AND is_cancelled=0 AND voucher_date>=%s AND voucher_date<%s", (fy_start, fy_end))
+    fy_purch    = sq(f"SELECT COALESCE(SUM(amount),0) v FROM {V} WHERE voucher_type='Purchase' AND is_cancelled=0 AND voucher_date>=%s AND voucher_date<%s", (fy_start, fy_end))
+
+    stock_skus  = frappe.db.count("VE Tally Stock Item")
+    as_of_row   = frappe.db.sql(f"SELECT MAX(voucher_date) as d FROM {V}", as_dict=True)
+    as_of       = str(as_of_row[0].d) if as_of_row and as_of_row[0].d else ""
+
     return {
-        "cash_bank":      _fmt(flt(snap.get("total_cash_bank", 0))),
-        "cash_bank_raw":  flt(snap.get("total_cash_bank", 0)),
-        "receivables":    _fmt(flt(snap.get("sundry_debtors", 0))),
-        "recv_raw":       flt(snap.get("sundry_debtors", 0)),
-        "payables":       _fmt(flt(snap.get("sundry_creditors", 0))),
-        "pay_raw":        flt(snap.get("sundry_creditors", 0)),
-        "fy_sales":       _fmt(flt(snap.get("fy_sales", 0))),
-        "fy_sales_raw":   flt(snap.get("fy_sales", 0)),
-        "fy_purchases":   _fmt(flt(snap.get("fy_purchases", 0))),
-        "fy_purch_raw":   flt(snap.get("fy_purchases", 0)),
-        "net_gst":        _fmt(flt(snap.get("gst_payable", 0)) - flt(snap.get("input_gst_credit", 0))),
-        "stock_skus":     snap.get("stock_item_count", 0),
-        "as_of":          as_of,
+        "cash_bank":     _fmt(cash_bank),
+        "cash_bank_raw": round(cash_bank, 2),
+        "receivables":   _fmt(receivables),
+        "recv_raw":      round(receivables, 2),
+        "payables":      _fmt(payables),
+        "pay_raw":       round(payables, 2),
+        "fy_sales":      _fmt(fy_sales),
+        "fy_sales_raw":  round(fy_sales, 2),
+        "fy_purchases":  _fmt(fy_purch),
+        "fy_purch_raw":  round(fy_purch, 2),
+        "net_gst":       _fmt(net_gst),
+        "stock_skus":    stock_skus,
+        "as_of":         as_of,
     }
 
 
