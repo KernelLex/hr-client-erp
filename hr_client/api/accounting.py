@@ -203,10 +203,13 @@ def search_ledgers(search=None, scope=None, limit=30):
         where.append("root_group='Asset' AND parent_group LIKE %s")
         values.append("%Fixed Assets%")
 
+    # When no search query, sort by balance magnitude so the most active
+    # accounts appear first in the picker dropdown.
+    order = "ledger_name ASC" if (search and str(search).strip()) else "ABS(closing_balance) DESC, ledger_name ASC"
     rows = frappe.db.sql(
         f"""SELECT ledger_name, parent_group, root_group, closing_balance, is_bank, is_cash
             FROM `tabVE Tally Ledger` WHERE {' AND '.join(where)}
-            ORDER BY ledger_name ASC LIMIT %s""",
+            ORDER BY {order} LIMIT %s""",
         values + [cint(limit) or 30], as_dict=True,
     )
     return [dict(r) for r in rows]

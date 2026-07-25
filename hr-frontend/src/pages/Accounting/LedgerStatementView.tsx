@@ -53,9 +53,11 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
   const [page, setPage] = useState(1)
   const [txnSearch, setTxnSearch] = useState("")
 
+  // Always fetch top ledgers (empty query = show all up to limit).
+  // This means the dropdown opens immediately on focus, not only after typing.
   const { data: options = [] } = useQuery<LedgerOption[]>({
     queryKey: ["ledger-search", pickerQuery, scope],
-    queryFn: () => accountingGet("search_ledgers", { search: pickerQuery, scope: scope ?? "", limit: "25" }),
+    queryFn: () => accountingGet("search_ledgers", { search: pickerQuery, scope: scope ?? "", limit: "30" }),
     staleTime: 30_000,
   })
 
@@ -99,7 +101,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
             <X size={13} />
           </button>
         )}
-        {!selected && pickerQuery && options.length > 0 && (
+        {!selected && options.length > 0 && (
           <div className="absolute z-10 mt-1 w-full max-h-72 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
             {options.map(o => (
               <button
@@ -118,14 +120,14 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
         )}
         {!selected && pickerQuery && options.length === 0 && (
           <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-xs text-gray-400">
-            No matching ledgers.
+            No matching ledgers found.
           </div>
         )}
       </div>
 
       {!selected && (
         <p className="py-16 text-center text-sm text-gray-400 italic">
-          Search and select a ledger above to view its statement.
+          Click the search box above and pick a ledger to view its full transaction history.
         </p>
       )}
 

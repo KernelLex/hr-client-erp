@@ -1078,7 +1078,7 @@ def get_voucher_list(voucher_type, fy=None, search=None, page=1, page_size=50, s
         })
 
     return {
-        "rows":      result,
+        "data":      result,
         "total":     total,
         "page":      pg,
         "page_size": pg_size,
@@ -1222,103 +1222,108 @@ def get_bank_accounts():
 
 
 # ── Ledger / Bank Statement ──────────────────────────────────────────────────
-# Despite the name, this query was never bank-specific — it just finds every
-# voucher where the ledger appears as the (first) debit or credit leg. That
-# makes it a general-purpose ledger statement engine, reused as-is for the
-# General Ledger and Bank & Cash Book tabs via get_ledger_statement() below.
+# Uses JSON_TABLE to scan every entry in all_ledger_entries, giving a complete
+# per-entry ledger statement instead of only matching the first Dr/Cr pair
+# stored in debit_ledger/credit_ledger.  Stock Journals and Other vouchers that
+# have no ledger entries (all_ledger_entries IS NULL or '[]') are naturally
+# excluded because there are no rows to join on.
+#
+# Direction convention (bank-statement / depositor view):
+#   is_dr = 1  (Dr in Tally — amt < 0)  → asset increases  → Credit column (green)
+#   is_dr = 0  (Cr in Tally — amt > 0)  → asset decreases  → Debit  column (red)
+
+_JSON_JOIN = """JOIN JSON_TABLE(
+        v.all_ledger_entries, '$[*]' COLUMNS(
+            j_ledger VARCHAR(200) PATH '$.ledger',
+            j_amount DOUBLE       PATH '$.amount',
+            j_is_dr  TINYINT      PATH '$.is_dr'
+        )
+    ) ale ON ale.j_ledger = %s"""
+
+_JSON_BASE = ("v.is_cancelled = 0",
+              "v.all_ledger_entries IS NOT NULL",
+              "v.all_ledger_entries NOT IN ('null','[]','')")
+
 
 def _ledger_txn_query(ledger_name, from_date=None, to_date=None,
                       page=1, page_size=50, search=None):
-    """
-    Return paginated transactions + running totals for any ledger.
-    Direction convention (matches Tally double-entry):
-      ledger = debit_ledger  → Dr → asset/expense increases → INFLOW (green)
-      ledger = credit_ledger → Cr → asset/expense decreases  → OUTFLOW (red)
-    """
     page      = cint(page) or 1
     page_size = cint(page_size) or 50
 
-    conditions = ["(v.debit_ledger = %s OR v.credit_ledger = %s)", "v.is_cancelled = 0"]
-    values     = [ledger_name, ledger_name]
-
+    conds = list(_JSON_BASE)
+    vals  = []
     if from_date:
-        conditions.append("v.voucher_date >= %s")
-        values.append(from_date)
+        conds.append("v.voucher_date >= %s"); vals.append(from_date)
     if to_date:
-        conditions.append("v.voucher_date <= %s")
-        values.append(to_date)
+        conds.append("v.voucher_date <= %s"); vals.append(to_date)
     if search:
-        conditions.append("(v.narration LIKE %s OR v.party_name LIKE %s OR v.voucher_number LIKE %s)")
-        values += [f"%{search}%", f"%{search}%", f"%{search}%"]
-
-    where = " AND ".join(conditions)
+        conds.append("(v.narration LIKE %s OR v.party_name LIKE %s OR v.voucher_number LIKE %s)")
+        vals += [f"%{search}%", f"%{search}%", f"%{search}%"]
+    where = " AND ".join(conds)
 
     count_row = frappe.db.sql(
-        f"SELECT COUNT(*) AS c FROM `tabVE Tally Voucher` v WHERE {where}",
-        values, as_dict=True,
+        f"SELECT COUNT(*) AS c FROM `tabVE Tally Voucher` v {_JSON_JOIN} WHERE {where}",
+        [ledger_name] + vals, as_dict=True,
     )
     total = cint(count_row[0].c if count_row else 0)
 
     rows = frappe.db.sql(
-        f"""SELECT v.voucher_type, v.voucher_number, v.voucher_date, v.amount,
-                   v.party_name, v.narration, v.debit_ledger, v.credit_ledger
-            FROM `tabVE Tally Voucher` v
+        f"""SELECT v.voucher_type, v.voucher_number, v.voucher_date,
+                   v.party_name, v.narration, v.debit_ledger, v.credit_ledger,
+                   ale.j_amount AS amount, ale.j_is_dr AS is_dr
+            FROM `tabVE Tally Voucher` v {_JSON_JOIN}
             WHERE {where}
             ORDER BY v.voucher_date DESC, v.name DESC
             LIMIT %s OFFSET %s""",
-        values + [page_size, (page - 1) * page_size],
+        [ledger_name] + vals + [page_size, (page - 1) * page_size],
         as_dict=True,
     )
 
+    totals_row = frappe.db.sql(
+        f"""SELECT
+               COALESCE(SUM(CASE WHEN ale.j_is_dr = 1 THEN ale.j_amount ELSE 0 END), 0) AS total_inflow,
+               COALESCE(SUM(CASE WHEN ale.j_is_dr = 0 THEN ale.j_amount ELSE 0 END), 0) AS total_outflow
+            FROM `tabVE Tally Voucher` v {_JSON_JOIN}
+            WHERE {where}""",
+        [ledger_name] + vals, as_dict=True,
+    )
+    total_inflow  = round(flt(totals_row[0].total_inflow  if totals_row else 0), 2)
+    total_outflow = round(flt(totals_row[0].total_outflow if totals_row else 0), 2)
+
     transactions = []
     for r in rows:
-        amt        = flt(r.amount)
-        # credit_ledger = this ledger → money came IN  (Receipt, transfers IN)  = INFLOW
-        # debit_ledger  = this ledger → money went OUT (Payment, transfers OUT) = OUTFLOW
-        is_inflow  = (r.credit_ledger == ledger_name)
+        amt       = flt(r.amount)
+        is_inflow = bool(r.is_dr)
         counterparty = r.debit_ledger if is_inflow else r.credit_ledger
         transactions.append({
-            "date":          str(r.voucher_date),
-            "voucher_type":  r.voucher_type or "",
+            "date":           str(r.voucher_date),
+            "voucher_type":   r.voucher_type or "",
             "voucher_number": r.voucher_number or "",
-            "narration":     (r.narration or "")[:120],
-            "party_name":    r.party_name or "",
-            "counterparty":  counterparty or "",
-            "amount":        round(amt, 2),
-            "credit":        round(amt, 2) if is_inflow  else 0.0,
-            "debit":         0.0 if is_inflow else round(amt, 2),
-            "direction":     "credit" if is_inflow else "debit",
+            "narration":      (r.narration or "")[:120],
+            "party_name":     r.party_name or "",
+            "counterparty":   counterparty or "",
+            "amount":         round(amt, 2),
+            "credit":         round(amt, 2) if is_inflow else 0.0,
+            "debit":          0.0 if is_inflow else round(amt, 2),
+            "direction":      "credit" if is_inflow else "debit",
         })
 
     ledger_rows = frappe.db.sql(
         "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE ledger_name = %s",
         (ledger_name,), as_dict=True,
     )
-    cb        = flt(ledger_rows[0].closing_balance) if ledger_rows else 0.0
-    available = abs(cb) if cb < 0 else 0.0
-
-    totals_row = frappe.db.sql(
-        f"""SELECT
-               COALESCE(SUM(CASE WHEN v.credit_ledger = %s THEN v.amount ELSE 0 END), 0) AS total_inflow,
-               COALESCE(SUM(CASE WHEN v.debit_ledger  = %s THEN v.amount ELSE 0 END), 0) AS total_outflow
-            FROM `tabVE Tally Voucher` v WHERE {where}""",
-        [ledger_name, ledger_name] + values,
-        as_dict=True,
-    )
-    total_inflow  = round(flt(totals_row[0].total_inflow  if totals_row else 0), 2)
-    total_outflow = round(flt(totals_row[0].total_outflow if totals_row else 0), 2)
+    cb = flt(ledger_rows[0].closing_balance) if ledger_rows else 0.0
 
     return {
-        "ledger_name":       ledger_name,
-        "closing_balance":   round(cb, 2),
-        "available_balance": round(available, 2),
-        "total":             total,
-        "page":              page,
-        "page_size":         page_size,
-        "total_inflow":      total_inflow,
-        "total_outflow":     total_outflow,
-        "net":               round(total_inflow - total_outflow, 2),
-        "transactions":      transactions,
+        "ledger_name":   ledger_name,
+        "closing_balance": round(cb, 2),
+        "total":         total,
+        "page":          page,
+        "page_size":     page_size,
+        "total_inflow":  total_inflow,
+        "total_outflow": total_outflow,
+        "net":           round(total_inflow - total_outflow, 2),
+        "transactions":  transactions,
     }
 
 
