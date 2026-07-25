@@ -35,6 +35,8 @@ interface DataTableProps<T> {
   renderGroupHeader?: (key: string, rows: T[]) => React.ReactNode
   /** Keep the column header visible while scrolling a long list. */
   stickyHeader?: boolean
+  /** When grouping, start every group collapsed (only headers/subtotals shown). */
+  defaultCollapsed?: boolean
 }
 
 export function DataTable<T>({
@@ -54,14 +56,17 @@ export function DataTable<T>({
   groupKey,
   renderGroupHeader,
   stickyHeader = false,
+  defaultCollapsed = false,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState("")
   const [sortKey, setSortKey] = useState<string | undefined>(defaultSortKey)
   const [sortDir, setSortDir] = useState<"asc" | "desc">(defaultSortDir)
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  // Set of group keys the user has flipped from their default state. Combined
+  // with `defaultCollapsed`, a group is collapsed when defaultCollapsed XOR toggled.
+  const [toggled, setToggled] = useState<Set<string>>(new Set())
 
   function toggleCollapse(key: string) {
-    setCollapsed((prev) => {
+    setToggled((prev) => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
       else next.add(key)
@@ -218,7 +223,7 @@ export function DataTable<T>({
                 if (bucket.length) groups.push({ key: curKey as string, rows: bucket })
 
                 for (const g of groups) {
-                  const isCollapsed = collapsed.has(g.key)
+                  const isCollapsed = defaultCollapsed ? !toggled.has(g.key) : toggled.has(g.key)
                   out.push(
                     <tr
                       key={`grp-${g.key}`}

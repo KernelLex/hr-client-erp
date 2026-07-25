@@ -68,16 +68,44 @@ PRIMARY_GROUP_ROOT_MAP = {
 }
 
 
+# Keyword fallback so brand-new or renamed primary groups still classify into a
+# root type instead of being dropped from Chart of Accounts / P&L / Balance Sheet.
+# Ordered: first keyword that matches the group name wins.
+_ROOT_KEYWORDS = [
+    ("Income",    ("sales", "income", "revenue", "turnover")),
+    ("Expense",   ("purchase", "expense", "expenditure", "cost", "cogs")),
+    ("Asset",     ("asset", "bank", "cash", "debtor", "receivable", "investment", "deposit", "advance", "stock", "inventory", "loans & advances", "loans and advances")),
+    ("Liability", ("liabilit", "creditor", "payable", "loan", "duties", "taxes", "duty", "provision", "borrowing", "overdraft", "od a/c")),
+    ("Equity",    ("capital", "equity", "reserve", "surplus", "retained", "drawings")),
+]
+
+
+def _classify_by_keyword(name: str) -> str:
+    n = (name or "").lower()
+    for root, kws in _ROOT_KEYWORDS:
+        if any(kw in n for kw in kws):
+            return root
+    return ""
+
+
 def _root_type_for_group(group: str, group_parents: dict, max_depth: int = 20) -> str:
     """Walk `group` up to its ultimate primary group and return the mapped root type.
-    Returns '' if the chain doesn't resolve (e.g. a renamed/custom primary group)."""
+    Falls back to keyword classification of the group / its ancestors so a renamed
+    or custom primary group still lands in a sensible root type instead of ''."""
     current = group
+    chain = []
     for _ in range(max_depth):
         if not current:
-            return ""
+            break
+        chain.append(current)
         if current in PRIMARY_GROUP_ROOT_MAP:
             return PRIMARY_GROUP_ROOT_MAP[current]
         current = group_parents.get(current, "")
+    # Nothing in the exact map — try keyword matching from the top-most ancestor down.
+    for name in reversed(chain):
+        root = _classify_by_keyword(name)
+        if root:
+            return root
     return ""
 
 

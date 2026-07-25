@@ -162,6 +162,7 @@ export function RegisterListTab(props: RegisterListTabProps) {
             rowKey={r => r.name}
             searchable={false}
             stickyHeader
+            defaultCollapsed
             groupKey={dateGrouped ? (r => String(r[dateField] ?? "").slice(0, 7)) : undefined}
             renderGroupHeader={key => <MonthDivider monthKey={key} monthly={summary?.monthly ?? []} noun={noun} />}
             onExport={() => exportCsv(

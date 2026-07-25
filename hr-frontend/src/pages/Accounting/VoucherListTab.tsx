@@ -181,6 +181,7 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
             rowKey={r => r.name}
             searchable={false}
             stickyHeader
+            defaultCollapsed
             groupKey={dateGrouped ? (r => r.voucher_date?.slice(0, 7) ?? "") : undefined}
             renderGroupHeader={key => <MonthDivider monthKey={key} monthly={summary?.monthly ?? []} noun={noun} />}
             onExport={() => exportCsv(

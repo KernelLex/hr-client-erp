@@ -429,6 +429,110 @@ def get_operations_data():
 
 _TALLY_UPLOAD_DIR = "/home/vera/tally_uploads"
 _ALLOWED_UPLOAD_EXT = {".xml"}
+# Folders scanned for Tally XML files that are already on the server. This is the
+# robust import path for large exports (the Masters export is ~119 MB and the full
+# Transactions export ~1.5 GB — both exceed the Cloudflare tunnel's request-body
+# cap, so they can't be uploaded through the browser over the public domain).
+_TALLY_SEARCH_DIRS = ["/home/vera/tally_uploads", "/home/vera"]
+
+
+def _fmt_size(b):
+    b = float(b)
+    if b >= 1e9:
+        return f"{b / 1e9:.2f} GB"
+    if b >= 1e6:
+        return f"{b / 1e6:.0f} MB"
+    if b >= 1e3:
+        return f"{b / 1e3:.0f} KB"
+    return f"{int(b)} B"
+
+
+def _detect_role(path, name):
+    """Guess whether an XML is a Masters or Transactions export. Content sniff is
+    authoritative (read only the first 64 KB — the files can be gigabytes);
+    filename is the tiebreaker."""
+    text = ""
+    try:
+        with open(path, "rb") as f:
+            text = f.read(65536).decode("utf-16", errors="ignore")
+    except Exception:
+        text = ""
+    has_voucher = "<VOUCHER" in text
+    has_master = ("<LEDGER NAME" in text) or ("<GROUP NAME" in text) or ("<STOCKITEM" in text)
+    if has_voucher and not has_master:
+        return "transactions"
+    if has_master and not has_voucher:
+        return "masters"
+    lname = (name or "").lower()
+    if "transaction" in lname and "master" not in lname:
+        return "transactions"
+    if "master" in lname:
+        return "masters"
+    if has_voucher:
+        return "transactions"
+    if has_master:
+        return "masters"
+    return "unknown"
+
+
+def _allowed_root(real_path):
+    """True if real_path sits directly inside one of the allowed Tally dirs."""
+    for d in _TALLY_SEARCH_DIRS:
+        if real_path.startswith(os.path.realpath(d) + os.sep):
+            return True
+    return False
+
+
+@frappe.whitelist()
+def list_tally_files():
+    """List Tally XML files already present on the server, with an auto-detected
+    role (masters / transactions) so the UI can pre-select the right pair without
+    the admin needing to know which file is which."""
+    _require_admin()
+    seen = set()
+    files = []
+    for d in _TALLY_SEARCH_DIRS:
+        try:
+            entries = os.listdir(d)
+        except OSError:
+            continue
+        for fn in entries:
+            if not fn.lower().endswith(".xml"):
+                continue
+            full = os.path.realpath(os.path.join(d, fn))
+            if full in seen or not os.path.isfile(full):
+                continue
+            seen.add(full)
+            try:
+                size = os.path.getsize(full)
+                mtime = os.path.getmtime(full)
+            except OSError:
+                continue
+            files.append({
+                "path":        full,
+                "filename":    fn,
+                "size":        size,
+                "size_fmt":    _fmt_size(size),
+                "modified":    datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M"),
+                "modified_ts": mtime,
+                "role":        _detect_role(full, fn),
+            })
+    files.sort(key=lambda f: f["modified_ts"], reverse=True)
+
+    # Suggested pair (user can override in the UI):
+    #  • Masters: newest file tagged 'masters' that isn't a giant combined export
+    #    (a Tally "Transactions with Masters" dump can start with master blocks and
+    #    be mis-tagged — exclude anything over 500 MB from the masters guess).
+    #  • Transactions: the LARGEST 'transactions' file, i.e. the full history rather
+    #    than a small current-FY-only export.
+    masters_candidates = [f for f in files if f["role"] == "masters" and f["size"] < 500_000_000]
+    masters = masters_candidates[0]["path"] if masters_candidates else None
+    trans_candidates = sorted(
+        [f for f in files if f["role"] == "transactions"],
+        key=lambda f: f["size"], reverse=True,
+    )
+    trans = trans_candidates[0]["path"] if trans_candidates else None
+    return {"files": files, "suggested_masters": masters, "suggested_transactions": trans}
 
 
 @frappe.whitelist()
@@ -477,17 +581,15 @@ def run_tally_import(masters_path: str, transactions_path: str):
     """
     _require_admin()
 
-    # Restrict to upload directory to prevent path traversal
-    upload_real = os.path.realpath(_TALLY_UPLOAD_DIR)
+    # Restrict to the allowed Tally directories to prevent path traversal
     for label, path in (("masters", masters_path), ("transactions", transactions_path)):
         real = os.path.realpath(path)
-        if not real.startswith(upload_real):
-            frappe.throw(f"Path for {label} must be inside the upload directory",
+        if not _allowed_root(real):
+            frappe.throw(f"Path for {label} must be inside an allowed Tally folder",
                          frappe.PermissionError)
-        if not os.path.exists(real):
+        if not os.path.isfile(real):
             frappe.throw(f"{label.capitalize()} file not found: {path}")
 
-    import json as _json
     from hr_client.api import tally_transformer as _tt
     _tt._set("running", 1, "Import queued…")   # immediate feedback
 
@@ -502,11 +604,39 @@ def run_tally_import(masters_path: str, transactions_path: str):
 
 
 @frappe.whitelist()
+def run_tally_import_auto():
+    """Convenience trigger: auto-detect the newest Masters + Transactions XML on
+    the server and start the full import. Lets an admin refresh everything with a
+    single click once fresh exports have been dropped on the box."""
+    _require_admin()
+    listing = list_tally_files()
+    masters = listing["suggested_masters"]
+    trans = listing["suggested_transactions"]
+    if not masters or not trans:
+        missing = []
+        if not masters:
+            missing.append("a Masters export")
+        if not trans:
+            missing.append("a Transactions export")
+        frappe.throw(
+            "Could not auto-detect " + " and ".join(missing) +
+            " in the server Tally folders. Upload the files or place them in "
+            "/home/vera/tally_uploads first."
+        )
+    return run_tally_import(masters, trans)
+
+
+@frappe.whitelist()
 def get_import_status():
-    """Poll the live import progress (covers both Stage 1 and Stage 2)."""
+    """Poll the live import progress (covers both Stage 1 and Stage 2).
+    Normalises the transformer's 'completed' state to 'done' so the frontend
+    (which polls for 'done') reliably detects completion."""
     _require_admin()
     from hr_client.api.tally_transformer import get_status
-    return get_status()
+    s = get_status()
+    if s.get("status") == "completed":
+        s = {**s, "status": "done"}
+    return s
 
 
 @frappe.whitelist()

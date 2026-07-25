@@ -156,9 +156,22 @@ function PartyDrawer({ party, onClose }: { party: string; onClose: () => void })
 
 // ── Tally Upload ───────────────────────────────────────────────────────────────
 
+interface ServerFile {
+  path: string; filename: string; size: number; size_fmt: string; modified: string
+  role: "masters" | "transactions" | "unknown"
+}
+interface ServerListing { files: ServerFile[]; suggested_masters: string | null; suggested_transactions: string | null }
+
+function fmtSize(b: number) {
+  return b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : b >= 1e6 ? `${(b / 1e6).toFixed(0)} MB` : `${(b / 1e3).toFixed(0)} KB`
+}
+
 function TallyUpload({ onDone }: { onDone: () => void }) {
+  const [mode, setMode] = useState<"server" | "upload">("server")
   const [mastersFile, setMastersFile] = useState<File | null>(null)
   const [transFile,   setTransFile]   = useState<File | null>(null)
+  const [selMasters,  setSelMasters]  = useState("")
+  const [selTrans,    setSelTrans]    = useState("")
   const [phase, setPhase]             = useState<"idle"|"uploading"|"importing"|"done"|"error">("idle")
   const [uploadStep,  setUploadStep]  = useState("")
   const [pct,   setPct]               = useState(0)
@@ -170,8 +183,26 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
 
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
-  function fmtSize(b: number) {
-    return b >= 1e9 ? `${(b/1e9).toFixed(1)} GB` : b >= 1e6 ? `${(b/1e6).toFixed(0)} MB` : `${(b/1e3).toFixed(0)} KB`
+  const { data: listing, refetch: refetchFiles, isFetching: filesLoading } = useQuery<ServerListing>({
+    queryKey: ["tally-server-files"],
+    queryFn: () => apiFetch("hr_client.api.operations.list_tally_files"),
+    staleTime: 30_000,
+  })
+
+  // Pre-select the auto-detected pair once the listing loads
+  useEffect(() => {
+    if (!listing) return
+    if (!selMasters && listing.suggested_masters) setSelMasters(listing.suggested_masters)
+    if (!selTrans && listing.suggested_transactions) setSelTrans(listing.suggested_transactions)
+  }, [listing]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function startPolling() {
+    pollRef.current = setInterval(async () => {
+      const s = await apiFetch("hr_client.api.operations.get_import_status") as { status: string; progress: number; message: string }
+      setPct(s.progress); setMsg(s.message)
+      if (s.status === "done" || s.status === "completed") { clearInterval(pollRef.current!); setPhase("done"); onDone() }
+      else if (s.status === "error") { clearInterval(pollRef.current!); setPhase("error"); setErr(s.message) }
+    }, 2000)
   }
 
   function upload(file: File, onProgress: (n: number) => void): Promise<{ path: string }> {
@@ -186,17 +217,31 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
         try {
           const json = JSON.parse(xhr.responseText)
           if (xhr.status >= 200 && xhr.status < 300 && !json.exc) resolve(json.message)
+          else if (xhr.status === 413) reject(new Error("File too large for browser upload (blocked by the network/proxy). Place the file on the server and use “Import from server files” instead."))
           else reject(new Error(json.exc || `Upload failed (${xhr.status})`))
         } catch { reject(new Error("Invalid server response")) }
       }
-      xhr.onerror = () => reject(new Error("Network error during upload"))
+      xhr.onerror = () => reject(new Error("Network error during upload. For large files use “Import from server files”."))
       xhr.open("POST", "/api/method/hr_client.api.operations.upload_tally_file")
       xhr.setRequestHeader("X-Frappe-CSRF-Token", getCsrf())
       xhr.send(fd)
     })
   }
 
-  async function run() {
+  // Import from files already on the server — works for any size.
+  async function importFromServer() {
+    if (!selMasters || !selTrans) return
+    setPhase("importing"); setPct(0); setErr(""); setMsg("Queuing import…")
+    try {
+      await apiPost("hr_client.api.operations.run_tally_import", { masters_path: selMasters, transactions_path: selTrans })
+      startPolling()
+    } catch (e: unknown) {
+      setPhase("error"); setErr(e instanceof Error ? e.message : "Failed")
+    }
+  }
+
+  // Upload from computer, then import.
+  async function uploadAndImport() {
     if (!mastersFile || !transFile) return
     setPhase("uploading"); setErr("")
     try {
@@ -206,12 +251,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
       const t = await upload(transFile, setPct); setPct(100)
       setPhase("importing"); setPct(0); setMsg("Queuing import…")
       await apiPost("hr_client.api.operations.run_tally_import", { masters_path: m.path, transactions_path: t.path })
-      pollRef.current = setInterval(async () => {
-        const s = await apiFetch("hr_client.api.operations.get_import_status") as { status: string; progress: number; message: string }
-        setPct(s.progress); setMsg(s.message)
-        if (s.status === "done") { clearInterval(pollRef.current!); setPhase("done"); onDone() }
-        else if (s.status === "error") { clearInterval(pollRef.current!); setPhase("error"); setErr(s.message) }
-      }, 2000)
+      startPolling()
     } catch (e: unknown) {
       setPhase("error"); setErr(e instanceof Error ? e.message : "Failed")
     }
@@ -221,14 +261,15 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
     setPhase("idle"); setMastersFile(null); setTransFile(null)
     setPct(0); setMsg(""); setErr(""); setUploadStep("")
     if (pollRef.current) clearInterval(pollRef.current)
+    refetchFiles()
   }
 
   if (phase === "done") return (
     <div className="flex flex-col items-center gap-3 py-8">
       <CheckCircle2 size={40} className="text-emerald-500" />
-      <p className="font-semibold text-gray-800">Import complete</p>
-      <p className="text-sm text-gray-500 text-center">{msg}</p>
-      <button onClick={reset} className="mt-1 px-4 py-2 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-700">Upload Another</button>
+      <p className="font-semibold text-gray-800">Import complete — all values refreshed</p>
+      <p className="text-sm text-gray-500 text-center max-w-lg">{msg}</p>
+      <button onClick={reset} className="mt-1 px-4 py-2 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-700">Import Again</button>
     </div>
   )
   if (phase === "error") return (
@@ -236,7 +277,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
       <XCircle size={40} className="text-red-500" />
       <p className="font-semibold text-gray-800">Import failed</p>
       <p className="text-sm text-red-500 text-center max-w-md">{err}</p>
-      <button onClick={reset} className="mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm">Retry</button>
+      <button onClick={reset} className="mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm">Back</button>
     </div>
   )
   if (phase !== "idle") return (
@@ -250,7 +291,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
           <span>
             {phase === "uploading"
               ? `Uploading ${uploadStep} (${uploadStep === "Masters" ? "1" : "2"}/2)`
-              : "Extracting data"}
+              : "Extracting & rebuilding all derived data"}
           </span>
           <span>{pct}%</span>
         </div>
@@ -258,36 +299,119 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
           <div className="h-full bg-forest-500 rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
         </div>
       </div>
+      <p className="text-xs text-gray-400">
+        A full import (masters + full transaction history) takes a few minutes. You can leave this page — it runs in the background.
+      </p>
     </div>
   )
 
+  const roleBadge = (role: string) =>
+    role === "masters" ? "bg-blue-100 text-blue-700" : role === "transactions" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
+  const fileLabel = (f: ServerFile) => `${f.filename} · ${f.size_fmt} · ${f.modified}`
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {[
-          { label: "All Masters XML", hint: "All Master_DD.MM.YYYY.xml", file: mastersFile, ref: mastersRef, set: setMastersFile },
-          { label: "Transactions Masters XML", hint: "Transactions Masters_DD.MM.YYYY.xml (~1.5 GB)", file: transFile, ref: transRef, set: setTransFile },
-        ].map(({ label, hint, file, ref, set }) => (
-          <div key={label} onClick={() => ref.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all ${file ? "border-forest-300 bg-forest-50" : "border-gray-200 hover:border-forest-300 hover:bg-slate-50"}`}>
-            <input ref={ref} type="file" accept=".xml" className="hidden" onChange={e => set(e.target.files?.[0] ?? null)} />
-            <div className="flex items-start gap-3">
-              {file ? <CheckCircle2 size={15} className="text-forest-500 mt-0.5 shrink-0" /> : <Upload size={15} className="text-gray-300 mt-0.5 shrink-0" />}
-              <div>
-                <p className="text-sm font-semibold text-gray-800">{label}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{file ? `${file.name} (${fmtSize(file.size)})` : hint}</p>
-              </div>
-            </div>
-          </div>
+      {/* Mode switch */}
+      <div className="flex gap-1 p-1 rounded-lg w-fit bg-gray-100">
+        {([["server", "Import from server files"], ["upload", "Upload from computer"]] as const).map(([id, label]) => (
+          <button key={id} onClick={() => setMode(id)}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${mode === id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}>
+            {label}
+          </button>
         ))}
       </div>
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-400">Gateway of Tally → Data → Export</p>
-        <button disabled={!mastersFile || !transFile} onClick={run}
-          className="px-5 py-2 bg-forest-600 text-white rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-forest-700 transition-colors">
-          Upload & Import
-        </button>
-      </div>
+
+      {mode === "server" ? (
+        <div className="space-y-3">
+          <p className="text-xs text-gray-500">
+            The app auto-detects the Tally exports already on the server and picks the newest Masters + full Transaction
+            history. Confirm the pair below and import — this works no matter how large the files are.
+          </p>
+
+          {filesLoading && !listing ? (
+            <div className="flex items-center gap-2 py-6 text-sm text-gray-400"><Loader2 size={16} className="animate-spin" /> Scanning server for Tally files…</div>
+          ) : !listing || listing.files.length === 0 ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              No Tally XML files found on the server. Place your exports in <code className="font-mono">/home/vera/tally_uploads</code> (or upload small files from your computer), then click Rescan.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Masters file</label>
+                <select value={selMasters} onChange={e => setSelMasters(e.target.value)}
+                  className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-forest-400">
+                  <option value="">Select masters export…</option>
+                  {listing.files.map(f => <option key={f.path} value={f.path}>{fileLabel(f)}{f.role === "masters" ? "  ✓" : ""}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Transactions file</label>
+                <select value={selTrans} onChange={e => setSelTrans(e.target.value)}
+                  className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-forest-400">
+                  <option value="">Select transactions export…</option>
+                  {listing.files.map(f => <option key={f.path} value={f.path}>{fileLabel(f)}{f.role === "transactions" ? "  ✓" : ""}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Detected-files reference list */}
+          {listing && listing.files.length > 0 && (
+            <div className="rounded-lg border border-gray-100 divide-y divide-gray-50">
+              {listing.files.map(f => (
+                <div key={f.path} className="flex items-center gap-2 px-3 py-2 text-xs">
+                  <span className={`px-1.5 py-0.5 rounded font-semibold ${roleBadge(f.role)}`}>{f.role}</span>
+                  <span className="text-gray-700 truncate flex-1">{f.filename}</span>
+                  <span className="text-gray-400 shrink-0">{f.size_fmt}</span>
+                  <span className="text-gray-300 shrink-0 hidden md:inline">{f.modified}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <button onClick={() => refetchFiles()} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800">
+              <RefreshCw size={12} className={filesLoading ? "animate-spin" : ""} /> Rescan server
+            </button>
+            <button disabled={!selMasters || !selTrans} onClick={importFromServer}
+              className="px-5 py-2 bg-forest-600 text-white rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-forest-700 transition-colors">
+              Import &amp; refresh everything
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 flex items-start gap-2">
+            <AlertCircle size={13} className="shrink-0 mt-0.5" />
+            <span>Browser upload suits small files only. The full Transactions export (~1.5 GB) and Masters (~120 MB) exceed the public gateway's upload limit — for those, copy the file to the server and use <strong>Import from server files</strong>.</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[
+              { label: "Masters XML", hint: "All Master_DD.MM.YYYY.xml", file: mastersFile, ref: mastersRef, set: setMastersFile },
+              { label: "Transactions XML", hint: "All Transactions.xml", file: transFile, ref: transRef, set: setTransFile },
+            ].map(({ label, hint, file, ref, set }) => (
+              <div key={label} onClick={() => ref.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all ${file ? "border-forest-300 bg-forest-50" : "border-gray-200 hover:border-forest-300 hover:bg-slate-50"}`}>
+                <input ref={ref} type="file" accept=".xml" className="hidden" onChange={e => set(e.target.files?.[0] ?? null)} />
+                <div className="flex items-start gap-3">
+                  {file ? <CheckCircle2 size={15} className="text-forest-500 mt-0.5 shrink-0" /> : <Upload size={15} className="text-gray-300 mt-0.5 shrink-0" />}
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{label}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{file ? `${file.name} (${fmtSize(file.size)})` : hint}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-400">Gateway of Tally → Data → Export</p>
+            <button disabled={!mastersFile || !transFile} onClick={uploadAndImport}
+              className="px-5 py-2 bg-forest-600 text-white rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-forest-700 transition-colors">
+              Upload &amp; Import
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

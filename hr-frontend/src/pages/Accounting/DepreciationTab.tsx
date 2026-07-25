@@ -71,6 +71,7 @@ export function DepreciationTab() {
             rowKey={r => r.name}
             searchable={false}
             stickyHeader
+            defaultCollapsed
             groupKey={r => r.voucher_date?.slice(0, 7) ?? ""}
             renderGroupHeader={key => <MonthDivider monthKey={key} monthly={[]} noun="entries" />}
             onRowClick={r => setSelected(r.name)}

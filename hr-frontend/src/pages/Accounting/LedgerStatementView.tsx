@@ -202,6 +202,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
                 rowKey={r => `${r.voucher_number}-${r.date}-${r.amount}-${r.direction}`}
                 searchable={false}
                 stickyHeader
+                defaultCollapsed
                 groupKey={r => r.date?.slice(0, 7) ?? ""}
                 renderGroupHeader={key => <MonthDivider monthKey={key} monthly={stmt?.monthly ?? []} noun="txns" />}
                 onExport={() => exportCsv(
