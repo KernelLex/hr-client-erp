@@ -41,7 +41,7 @@ export interface VoucherRow {
 }
 
 interface VoucherPage {
-  rows: VoucherRow[]
+  data: VoucherRow[]
   total: number
   page: number
   page_size: number
@@ -618,7 +618,7 @@ export function VoucherListView({
             <Loader2 size={24} className="text-forest-400 animate-spin" />
             <p className="text-sm text-gray-400">Loading entries…</p>
           </div>
-        ) : !data || data.rows.length === 0 ? (
+        ) : !data || data.data.length === 0 ? (
           <div className="py-16 text-center">
             <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center"
                  style={{ backgroundColor: cfg.bg }}>
@@ -640,7 +640,7 @@ export function VoucherListView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {data.rows.map((row) => {
+                {data.data.map((row) => {
                   const displayParty = row.party_name || row.debit_ledger || "—"
                   return (
                     <tr key={row.name} onClick={() => onOpen(row)}
