@@ -4,11 +4,21 @@ import socket
 import requests
 
 OLLAMA_BASE = "http://localhost:11434"
-DEFAULT_MODEL = "llama3.1"
+DEFAULT_MODEL = "qwen2.5:7b"
+# A smaller, faster model used ONLY for latency-sensitive generation (e.g. the JD
+# generator, which is called synchronously from the browser). On this CPU-only box
+# the 7B takes ~116s for a full JD — past Cloudflare's ~100s free-tier edge timeout,
+# so browser users see a failure even though gunicorn eventually finishes. The 3B
+# does the same job in ~50s, comfortably under the limit. Chat still uses the 7B.
+JD_MODEL = "qwen2.5:3b"
 
 VERA_SYSTEM_PROMPT = (
-    "You are Vera, a concise financial assistant for Vera Enterprises (Indian SME, interior design). "
-    "Use ₹ for money. Indian comma notation. Be brief and business-focused."
+    "You are Vera, the in-house AI assistant for Vera Enterprises (an Indian SME group: "
+    "Vera Enterprises, Schones Leben, Hagan Modular — interior design & modular furniture). "
+    "You know the company's people, roles, org structure, open job openings, policies, SOPs, "
+    "processes (from the Org Hub) and its finances (from Tally). "
+    "Answer ONLY from the company data provided in the context; if the answer is not there, say so "
+    "plainly instead of guessing. Use ₹ with Indian comma notation for money. Be clear and concise."
 )
 
 
@@ -37,10 +47,20 @@ def _pick_model() -> str:
     models = get_available_models()
     if not models:
         return DEFAULT_MODEL
-    for preferred in ["llama3.1", "llama3.1:8b", "llama3", "llama3:8b", "mistral"]:
+    for preferred in ["qwen2.5:7b", "qwen2.5", "llama3.1", "llama3.1:8b", "llama3", "llama3:8b", "mistral"]:
         if preferred in models:
             return preferred
     return models[0]
+
+
+def _pick_jd_model() -> str:
+    """Prefer the fast JD_MODEL when it's installed, else fall back to the normal
+    model pick. Lets us deploy the JD speed fix before the 3B pull finishes without
+    breaking generation in the meantime."""
+    models = get_available_models()
+    if JD_MODEL in models:
+        return JD_MODEL
+    return _pick_model()
 
 
 def _parse_json(raw: str) -> dict | None:

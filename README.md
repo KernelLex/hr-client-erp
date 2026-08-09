@@ -20,7 +20,7 @@ Live at: **https://veraenterprises.in**
 | Data fetching | TanStack Query (React Query) |
 | HTTP client | Axios (with CSRF interceptor) + native fetch for file uploads |
 | Charts | Recharts |
-| Local AI | Ollama (llama3.1 / mistral) — optional, for AI features |
+| Local AI | Ollama (**qwen2.5:7b**) — company assistant, Tally enrichment, and Recruitment JD generation |
 | Tunnelling | Cloudflare Tunnel → nginx → ERPNext |
 | Attendance sync | Jibble API (OAuth2 client credentials) |
 | Document storage | Google Drive (service account sync) |
@@ -37,7 +37,9 @@ hr-client-erp/
 ├── hr_client/              ← Frappe custom app (Python backend)
 │   ├── api/                ← Whitelisted API endpoints
 │   │   ├── utils.py        ← Shared constants (ADMIN_USERS, current_fy(), etc.)
-│   │   ├── ai.py           ← Document AI, extraction, verification
+│   │   ├── ai.py           ← Company AI assistant (chat), document AI, verification
+│   │   ├── company_brain.py ← Retrieval-augmented company context for the AI assistant + JD gen
+│   │   ├── org_hub.py      ← Org Hub knowledge base (9 DocTypes) CRUD + read endpoints
 │   │   ├── chat.py         ← Real-time chat (polling-based)
 │   │   ├── crm.py          ← Lead pipeline with Owais approval flow
 │   │   ├── dashboard.py    ← Dashboard stats
@@ -112,7 +114,8 @@ hr-client-erp/
 | Business dashboard — KPI cards over extracted VE DocTypes | `/business` | Admin only |
 | Financial preset charts (15 presets) + natural language chart generation | `/graphs` | Requires Ollama for NL |
 | AI insights — health score, alerts, executive summary, period compare | `/ai-insights` | Requires Ollama |
-| AI JD generator — generates job descriptions via OpenAI (proxied) | `/recruitment` | Requires OpenAI key in site_config |
+| Company AI assistant — answers questions about people, roles, org structure, open jobs, Org Hub policies/SOPs & finances | in-app `AIChat` widget | Admin-only; local model, retrieval-augmented from live DB |
+| AI JD generator — generates job descriptions from the company's own Org Hub role definitions | `/recruitment` | **Local model (qwen2.5), no external API** |
 
 ### Chat
 | Feature | Notes |
@@ -140,6 +143,8 @@ hr-client-erp/
 | `VE Sales Order`, `VE Stock Record`, `VE Salary Record` | Extracted structured data |
 | `VE Attendance Record`, `VE Receipt` | Extracted structured data |
 | `VE Saved Graph` | Saved chart configs from the Graphs page |
+| `VE Job Description`, `VE KRA`, `VE KPI`, `VE SOP`, `VE Policy` | Org Hub knowledge base (per company/role) |
+| `VE Employee Handbook`, `VE Operations Manual`, `VE Department Process`, `VE Forms Checklist` | Org Hub knowledge base (cont.) |
 | `Vera Chat Room`, `Vera Chat Room Member`, `Vera Chat Message` | Chat system |
 | `Vera Leave Application` | Custom leave (simpler than HRMS default) |
 | `Vera Expense Claim` | Petrol + material expense claims |
@@ -171,13 +176,10 @@ This path is **gitignored and never committed**.
 
 Set the root folder ID and credentials path in `drive_sync/utils.py` and `drive_sync/full_sync.py`.
 
-### 3. OpenAI (AI Job Description Generator — optional)
+### 3. OpenAI — NO LONGER REQUIRED (as of 2026-08-09)
 
-```bash
-bench --site vera.local set-config openai_api_key "sk-..."
-```
-
-The frontend calls a backend proxy (`hr_client.api.recruitment.generate_job_description`) — the key is never sent to the browser. Feature is disabled if the key is not set.
+Job Description generation was moved off OpenAI onto the **local Ollama model** (`qwen2.5:7b`),
+grounded in the company's Org Hub role data. No `openai_api_key` is needed. `hr_client.api.recruitment.generate_job_description` now calls Ollama and returns the same JSON shape.
 
 ### 4. Drive Webhook Token (optional but recommended)
 

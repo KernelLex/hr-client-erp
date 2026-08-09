@@ -1,5 +1,11 @@
 # Vera ERP — Current State
-_Last updated: 2026-06-27 (session 3)_
+_Last updated: 2026-08-09 (session: AI company brain + qwen2.5)_
+
+> ⚠️ **Two current-state corrections since this doc was first written:**
+> 1. **Server IP is `192.168.1.16`** (static), not `192.168.1.32`. Site `vera.local`, bench port 8000.
+> 2. **Tally data is currently PARTIAL** — 1,414 vouchers, latest `2026-03-31` (a partial current-FY
+>    `Transactions.xml` was imported instead of full-history `All Transactions.xml`). Voucher-count
+>    figures below (~23k) reflect the earlier full-history import and are stale until a full re-import.
 
 ## What this is
 
@@ -13,7 +19,7 @@ Users never see the ERPNext desk — they only use the React frontend.
 
 | Item | Value |
 |------|-------|
-| Server | Ubuntu at `192.168.1.32` / `veraenterprises.in` |
+| Server | Ubuntu at `192.168.1.16` (static) / `veraenterprises.in` |
 | Frappe bench | `/home/frappe/frappe-bench/` |
 | Site name | `vera.local` |
 | Frontend (built) | `/var/www/hr-frontend/` |
@@ -21,7 +27,7 @@ Users never see the ERPNext desk — they only use the React frontend.
 | Backend app source | `/home/vera/vera-erp/hr-client-erp/hr_client/` |
 | Backend app (live) | `/home/frappe/frappe-bench/apps/hr_client/` |
 | Tally snapshot | `/home/frappe/frappe-bench/apps/hr_client/hr_client/tally_snapshot.json` |
-| Ollama | Running locally at `http://localhost:11434`, model `llama3.1:latest` |
+| Ollama | Running locally at `http://localhost:11434`, model **`qwen2.5:7b`** (llama3.1 kept as fallback) |
 | Frontend API base | `https://veraenterprises.in` (set in `.env.local`) |
 
 **To deploy backend changes:** `rsync` source → bench app, then `bench --site vera.local migrate && bench --site vera.local clear-cache`, then `supervisorctl restart frappe-bench-web: frappe-bench-workers:`
@@ -35,7 +41,7 @@ Users never see the ERPNext desk — they only use the React frontend.
 - **Backend:** ERPNext v15 + Frappe HRMS + custom `hr_client` Frappe app
 - **Frontend:** React + Vite + TypeScript + Tailwind CSS + shadcn/ui + React Query
 - **Database:** MariaDB (via Frappe ORM)
-- **AI/LLM:** Ollama (local, `llama3.1:latest`) — used for Tally data enrichment
+- **AI/LLM:** Ollama (local, **`qwen2.5:7b`**) — Tally enrichment + the whole-company assistant (see "AI Company Brain" below) + Recruitment JD generation
 - **Attendance:** Jibble API (time tracking)
 - **File storage:** Google Drive (file browsing only — no AI extraction anymore)
 
@@ -195,6 +201,25 @@ Route: `/verify` — admin only. Completely rewritten in 2026-06-27 session.
 
 ---
 
+## AI Company Brain — the whole-company assistant (2026-08-09)
+
+The Vera AI bot (`ai.chat`, admin-only, surfaced by the `AIChat` widget) is no longer finance-only.
+On every question it rebuilds a fresh knowledge digest from the **live DB** via
+`hr_client/api/company_brain.py`, so newly uploaded data is known on the next query — there is no
+fine-tuning/retraining step (Ollama models can't be fine-tuned; this is retrieval-augmented context).
+
+**What the bot knows:** financial snapshot (Tally) · full active-employee roster across all 3 companies
+(designation/department/reporting) · open Job Openings · the entire Org Hub knowledge base (Job
+Descriptions, KRAs, KPIs, SOPs, Policies, Handbook, Ops Manual, Processes, Forms). When a question
+names a specific person, role or document, its full text is retrieved into the answer.
+
+**Recruitment link:** `recruitment.generate_job_description()` now runs on the local model
+(`qwen2.5:7b`) grounded in `build_jd_context()` (existing JD + KRAs + KPIs for that designation) —
+no OpenAI/API key. Same JSON contract, so the New Job Opening JD generator UI is unchanged.
+
+**Model:** `qwen2.5:7b`, `num_ctx=4096`, pinned in RAM (`keep_alive=-1`). Only one model pinned at a
+time on the 15GB CPU-only box; `ollama stop llama3.1` frees the old model's ~5GB.
+
 ## Ollama Enrichment System
 
 **DocType:** `VE Tally Enrichment` — one record per voucher, keyed by `tally_guid` (stable across re-imports).
@@ -290,7 +315,9 @@ All in `hr_client/api/`:
 | `operations.py` | Main financial data — 18 endpoints (Tally vouchers, ledgers, party statements, cashflow, financial summary, voucher list, FY filter, `get_voucher_detail`, `get_ledger_profile`) |
 | `tally_import_job.py` | Tally XML import pipeline (background job) |
 | `tally_enrich.py` | Ollama enrichment pipeline — 8 endpoints |
-| `ai.py` | Ollama health check, AI chat, insights |
+| `ai.py` | Ollama health check, AI chat (whole-company, admin-only), insights |
+| `company_brain.py` | Retrieval-augmented company context: roster + org structure + open jobs + Org Hub + finances, rebuilt live per question. Feeds `ai.chat()` and JD generation |
+| `org_hub.py` | Org Hub knowledge CRUD — 9 DocTypes (JD, KRA, KPI, SOP, Policy, Handbook, Ops Manual, Process, Forms) across 3 companies |
 | `chat.py` | Chatroom CRUD + messaging |
 | `crm.py` | CRM leads, approvals, quotations |
 | `dashboard.py` | Dashboard stats |

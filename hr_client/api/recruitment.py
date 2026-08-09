@@ -596,17 +596,17 @@ def get_departments():
 
 
 @frappe.whitelist(methods=["POST"])
-def generate_job_description(rough_description, job_title, department=""):
+def generate_job_description(rough_description, job_title, department="", company=""):
 	"""
-	Proxy OpenAI call server-side so the API key is never sent to the browser.
-	Key stored in site_config as openai_api_key:
-	  bench --site vera.local set-config openai_api_key "sk-..."
+	Generate a job description on the in-house local model (Ollama), grounded in
+	the company's own Org Hub knowledge — any existing Job Description, KRAs and
+	KPIs already recorded for this role — so the output matches how Vera actually
+	defines the role. Fully self-hosted; no external API or key required.
+
+	Returns {"success": True, "data": {job_summary, responsibilities[],
+	qualifications[], nice_to_have[], what_we_offer[], about_company}}.
 	"""
 	_require_hr_role()
-
-	api_key = frappe.conf.get("openai_api_key")
-	if not api_key:
-		frappe.throw("OpenAI API key not configured. Run: bench set-config openai_api_key 'sk-...'")
 
 	# Validate inputs
 	if not rough_description or not job_title:
@@ -614,35 +614,85 @@ def generate_job_description(rough_description, job_title, department=""):
 	if len(rough_description) > 2000:
 		frappe.throw("Description too long (max 2000 chars)", frappe.ValidationError)
 
-	import requests as _req
-	prompt = f"""Generate a professional job description as JSON for this role:
+	from hr_client.utils.llm import is_ollama_running, _pick_jd_model, OLLAMA_BASE, VERA_SYSTEM_PROMPT
+	from hr_client.api.company_brain import build_jd_context
+
+	if not is_ollama_running():
+		frappe.throw("The local AI model is offline. Start Ollama on the server to generate job descriptions.")
+
+	role_context = build_jd_context(job_title, department, company)
+	context_block = (
+		f"\n\nUse the company's own definition of this role as the source of truth:\n{role_context}"
+		if role_context else
+		"\n\n(No existing Org Hub record for this role — base it on the brief and standard practice.)"
+	)
+
+	prompt = f"""Write a professional job description for this role and return it as JSON only.
+Company group: {company or "Vera Enterprises"}
 Job Title: {job_title}
 Department: {department}
-Brief: {rough_description}
+Brief from hiring manager: {rough_description}{context_block}
 
-Return JSON with keys: job_summary, responsibilities (list), qualifications (list),
-nice_to_have (list), what_we_offer (list), about_company."""
+Return a JSON object with exactly these keys:
+- job_summary: string (2-3 sentence role overview)
+- responsibilities: array of strings
+- qualifications: array of strings
+- nice_to_have: array of strings
+- what_we_offer: array of strings
+- about_company: string"""
 
+	import requests as _req
+	import json as _json
 	try:
+		# Fast 3B model so the whole call finishes well under Cloudflare's ~100s
+		# free-tier edge timeout (the 7B ran ~116s and got killed at the edge).
+		# keep_alive="20m" lets it unload when idle instead of permanently holding
+		# ~2GB alongside the pinned 7B chat model.
+		model = _pick_jd_model()
 		resp = _req.post(
-			"https://api.openai.com/v1/chat/completions",
-			headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+			f"{OLLAMA_BASE}/api/generate",
 			json={
-				"model": "gpt-4o-mini",
-				"response_format": {"type": "json_object"},
-				"temperature": 0.7,
-				"max_tokens": 2000,
-				"messages": [
-					{"role": "system", "content": "You are an expert HR professional. Return only valid JSON."},
-					{"role": "user", "content": prompt},
-				],
+				"model": model,
+				"prompt": prompt,
+				"system": VERA_SYSTEM_PROMPT + " You are acting as an expert HR professional. Return only valid JSON.",
+				"stream": False,
+				"format": "json",
+				"keep_alive": "20m",
+				# Caps chosen so CPU generation finishes well under gunicorn's 120s
+				# worker timeout: a JD is ~300-400 tokens, 700 is a safe ceiling, and
+				# 2048 ctx (role context for one designation is small) keeps prefill fast.
+				"options": {"temperature": 0.5, "num_predict": 700, "num_ctx": 2048},
 			},
-			timeout=60,
+			# Allows a normal ~80s CPU generation (worst case ~140s at 700 tokens)
+			# while staying under gunicorn's raised 300s worker timeout, so a stall
+			# returns a clean "please retry" instead of a killed worker.
+			timeout=180,
 		)
 		resp.raise_for_status()
-		content = resp.json()["choices"][0]["message"]["content"]
-		import json as _json
-		return {"success": True, "data": _json.loads(content)}
+		raw = resp.json().get("response", "").strip()
+		data = _json.loads(raw)
 	except Exception as e:
 		frappe.log_error(str(e)[:500], "generate_job_description")
-		frappe.throw("Failed to generate job description. Check server logs.")
+		frappe.throw("Failed to generate job description. The local model may be busy — please retry.")
+
+	# Normalise to the shape the frontend expects (lists stay lists, strings stay strings).
+	def _as_list(v):
+		if isinstance(v, list):
+			return [str(x).strip() for x in v if str(x).strip()]
+		if v:
+			return [str(v).strip()]
+		return []
+	def _as_str(v):
+		if isinstance(v, list):
+			return " ".join(str(x) for x in v)
+		return str(v or "").strip()
+
+	data = {
+		"job_summary":      _as_str(data.get("job_summary")),
+		"responsibilities": _as_list(data.get("responsibilities")),
+		"qualifications":   _as_list(data.get("qualifications")),
+		"nice_to_have":     _as_list(data.get("nice_to_have")),
+		"what_we_offer":    _as_list(data.get("what_we_offer")),
+		"about_company":    _as_str(data.get("about_company")),
+	}
+	return {"success": True, "data": data}

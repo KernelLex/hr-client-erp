@@ -603,9 +603,12 @@ def chat(message, history_json=None, context_type="general"):
     if history_json:
         history = json.loads(history_json) if isinstance(history_json, str) else history_json
 
-    # Use snapshot context — no live DB queries needed for general chat
-    context = _build_fast_context()
-    system = VERA_SYSTEM_PROMPT + f"\n\nBusiness data:\n{context}\nAnswer concisely in 2-3 sentences."
+    # Rebuild the whole-company knowledge context live from the DB on every
+    # question, with detail relevant to what was asked. New data (Tally imports,
+    # employees, Org Hub docs, job openings) is picked up automatically here.
+    from hr_client.api.company_brain import build_company_context
+    context = build_company_context(message)
+    system = VERA_SYSTEM_PROMPT + f"\n\nCOMPANY DATA:\n{context}"
 
     messages_for_llm = [{"role": "system", "content": system}]
     for h in history[-4:]:   # only last 4 turns to keep context short
@@ -623,9 +626,10 @@ def chat(message, history_json=None, context_type="general"):
                 "messages": messages_for_llm,
                 "stream": False,
                 "keep_alive": -1,
-                "options": {"temperature": 0.4, "num_predict": 250, "num_ctx": 1024},
+                "options": {"temperature": 0.3, "num_predict": 400, "num_ctx": 4096},
             },
-            timeout=120,
+            # Under gunicorn's raised 300s worker timeout so a slow reply fails gracefully.
+            timeout=150,
         )
         if resp.status_code == 200:
             reply = resp.json().get("message", {}).get("content", "")

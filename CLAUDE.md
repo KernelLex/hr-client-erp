@@ -1,5 +1,10 @@
 # ClientERP — Master Context
-_Last updated: 2026-07-10 (session: accounting dashboard extension)_
+_Last updated: 2026-08-09 (session: AI company brain + qwen2.5 model upgrade)_
+
+> **Live infra (authoritative):** server `192.168.1.16` (static), Frappe site **`vera.local`**, bench
+> gunicorn on **port 8000**, frontend dist served by nginx from `/var/www/hr-frontend/`, public domain
+> `veraenterprises.in` via Cloudflare Tunnel. Older references below to `hrms.localhost`/port 8001 are
+> historical — substitute `vera.local` / 8000.
 
 ## INSTRUCTIONS FOR CLAUDE (READ FIRST)
 You are working on a custom ERPNext v15 + Frappe HRMS system.
@@ -71,9 +76,12 @@ _Sprint 2 — Employee Profiles + Lifecycle | Started: 2026-05-14_
 ### Goal
 Employee profile pages live (done). Next: wire Employee Lifecycle to real data, then Forms Integration.
 
-### IMPORTANT: DocType path convention (learned during build)
-DocTypes MUST live in `hr_client/hr_client/hr_client/doctype/<name>/` — NOT `hr_client/hr_client/doctype/`.
-Frappe resolves the module folder by importing `hr_client.hr_client` and uses that as the base path.
+### IMPORTANT: DocType path convention (CORRECTED 2026-08-09)
+DocTypes live in `hr_client/hr_client/doctype/<name>/` (**double**-nested). This is the actual
+convention: 45 of 56 DocTypes (all recent ones — ve_job_description, ve_transport_record,
+vera_chat_room, user_module_permission, etc.) are double-nested. Only 11 legacy DocTypes are
+triple-nested (`hr_client/hr_client/hr_client/doctype/`). The earlier "MUST be triple-nested" rule
+was wrong — use double-nested for anything new, matching the majority.
 
 ### Recruitment Module — FULLY DONE ✅
 - ✅ F-R1–F-R9: All recruitment frontend built and wired to real API
@@ -120,6 +128,29 @@ Frappe resolves the module folder by importing `hr_client.hr_client` and uses th
 ---
 
 ## What's been built
+
+✅ **AI Company Brain — whole-company assistant + local JD generation (2026-08-09)**
+- **Model upgrade:** Ollama model changed from `llama3.1:8b` → **`qwen2.5:7b`** (stronger reasoning,
+  similar ~5GB footprint). Ollama engine unchanged; llama3.1 kept on disk as fallback. Server is
+  CPU-only, 15GB RAM shared with the ERP stack → 8B is the practical ceiling. Only ONE model should be
+  pinned in RAM (`keep_alive=-1`); after switching, `ollama stop llama3.1` frees ~5GB.
+- **New file `hr_client/api/company_brain.py`** — retrieval-augmented context. Ollama can't be
+  fine-tuned, so "learning" = rebuilding a fresh company digest from the live DB on every question. New
+  data (Tally imports, employees, Org Hub docs, Job Openings) is known on the next query, no retraining.
+  - `build_company_context(question)` → financials + full active-employee roster (all 3 companies) +
+    open Job Openings + Org Hub knowledge index + retrieval of full text for any doc/person the
+    question mentions (capped 8 docs / 9000 chars).
+  - `build_jd_context(designation, department, company)` → existing JD + KRAs + KPIs for that role.
+- **`hr_client/api/ai.py` `chat()`** now uses `build_company_context()` (was finance-only
+  `_build_fast_context()`); `num_ctx` 1024→4096, `num_predict` 250→400. Still admin-only.
+- **`hr_client/utils/llm.py`** — `DEFAULT_MODEL="qwen2.5:7b"`, `_pick_model()` prefers qwen2.5 then
+  llama3.1; `VERA_SYSTEM_PROMPT` broadened to whole-company (answer only from provided context).
+- **`hr_client/api/recruitment.py` `generate_job_description()`** REWRITTEN — was OpenAI gpt-4o-mini,
+  now the **local model + Org Hub role knowledge**. No `openai_api_key` needed. Same JSON return shape
+  `{job_summary, responsibilities[], qualifications[], nice_to_have[], what_we_offer[], about_company}`
+  so the New Job Opening JD generator UI is unchanged.
+- **Frontend: no changes** — bot UI (`components/AIChat`, mounted in `App.tsx`) and the JD generator
+  already call these endpoints. Verified live end-to-end on both llama3.1 and qwen2.5.
 
 ✅ **Accounting Page Shell + Chart of Accounts (2026-07-23)**
 - Route `/accounting` now shows new `AccountingPage` (18-tab horizontal tab bar)

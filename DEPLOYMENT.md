@@ -3,6 +3,11 @@
 How to host Vera ERP on a home Ubuntu PC and make it accessible on the internet
 using Cloudflare Tunnel (no port forwarding required).
 
+> **Note (2026-08-09):** This is the generic from-scratch guide. On the **actual live server** the
+> Frappe site is **`vera.local`** (not `hrms.localhost`) and bench runs on **port 8000** (not 8001).
+> Substitute those wherever the examples below say `hrms.localhost` / `8001`. The live nginx site file
+> is `/etc/nginx/sites-available/hr-frontend` and the built frontend is served from `/var/www/hr-frontend/`.
+
 ---
 
 ## Architecture
