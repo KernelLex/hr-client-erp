@@ -442,54 +442,22 @@ def get_debtors_advance_report(search=None, sort_by="advance_date",
 @frappe.whitelist()
 @handle_api_error
 def get_cash_flow_statement(period="ytd", custom_start=None, custom_end=None):
-    frappe.has_permission("VE Cash Flow Entry", ptype="read", throw=True)
+    """Real (direct-method) cash flow — net change in cash & bank for the period,
+    from the canonical source (finance_core, VE Tally Voucher). Replaces the old
+    reading of the accrual-classified VE Cash Flow Entry table, which reported
+    income/expense (~₹34cr) rather than actual cash movement.
+    """
+    frappe.has_permission("VE Tally Voucher", ptype="read", throw=True)
+    from hr_client.api import finance_core
 
     start, end = _period_bounds(period, custom_start, custom_end)
-
-    rows = frappe.db.sql(
-        """SELECT activity_type, line_item,
-                  COALESCE(SUM(inflow),0) as inflow,
-                  COALESCE(SUM(outflow),0) as outflow
-           FROM `tabVE Cash Flow Entry`
-           WHERE period BETWEEN DATE_FORMAT(%s,'%%Y-%%m') AND DATE_FORMAT(%s,'%%Y-%%m')
-           GROUP BY activity_type, line_item
-           ORDER BY activity_type, line_item""",
-        (start, end), as_dict=True,
-    )
-
-    grouped = {}
-    for r in rows:
-        at = r.activity_type
-        if at not in grouped:
-            grouped[at] = {"items": [], "total_inflow": 0, "total_outflow": 0, "net": 0}
-        grouped[at]["items"].append({
-            "line_item": r.line_item,
-            "inflow": flt(r.inflow),
-            "outflow": flt(r.outflow),
-            "net": flt(r.inflow) - flt(r.outflow),
-        })
-        grouped[at]["total_inflow"] += flt(r.inflow)
-        grouped[at]["total_outflow"] += flt(r.outflow)
-        grouped[at]["net"] += flt(r.inflow) - flt(r.outflow)
-
-    monthly = frappe.db.sql(
-        """SELECT period,
-                  COALESCE(SUM(inflow),0) as inflow,
-                  COALESCE(SUM(outflow),0) as outflow
-           FROM `tabVE Cash Flow Entry`
-           WHERE period BETWEEN DATE_FORMAT(%s,'%%Y-%%m') AND DATE_FORMAT(%s,'%%Y-%%m')
-           GROUP BY period ORDER BY period""",
-        (start, end), as_dict=True,
-    )
-
-    grand_inflow = sum(v["total_inflow"] for v in grouped.values())
-    grand_outflow = sum(v["total_outflow"] for v in grouped.values())
-
+    cf = finance_core.cash_flow_statement(start=start, end=end)
     return {
         "period": {"start": start, "end": end},
-        "sections": grouped,
-        "grand_total": {"inflow": grand_inflow, "outflow": grand_outflow, "net": grand_inflow - grand_outflow},
-        "monthly_series": [{"period": r.period, "inflow": flt(r.inflow), "outflow": flt(r.outflow)} for r in monthly],
+        "sections": cf["sections"],
+        "grand_total": cf["grand_total"],
+        "monthly_series": cf["monthly_series"],
+        "source": cf["source"],
     }
 
 

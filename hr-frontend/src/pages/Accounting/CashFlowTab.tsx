@@ -78,6 +78,10 @@ export function CashFlowTab() {
         <p className="py-12 text-center text-sm text-red-500">Failed to load cash flow statement.</p>
       ) : data && (
         <>
+          <p className="text-xs text-gray-400">
+            Actual movement of cash &amp; bank (direct method) — net = money in − money
+            out for the period. Excludes the OD facility (shown under Financing).
+          </p>
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-gray-100 px-4 py-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total Inflow</p>

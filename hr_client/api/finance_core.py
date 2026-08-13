@@ -319,6 +319,123 @@ def gst_summary(start=None, end=None):
     return {"output": output, "input": input_, "net": net, "approximate": False}
 
 
+# ── Cash Flow — direct method from actual cash/bank movements ─────────────────
+def cash_flow_statement(start=None, end=None):
+    """Real cash flow (direct method) from the single source (VE Tally Voucher).
+
+    Cash & cash-equivalents = cash-in-hand + bank accounts, EXCLUDING the OD
+    facility (a borrowing, not a cash equivalent — its movements are Financing).
+    Each voucher that moves cash/bank is bucketed by its counterparty ledger's
+    group into Operating / Investing / Financing, and:
+
+        net = cash in − cash out = the actual change in cash & bank for the period
+
+    This replaces the previous figure that summed the accrual-classified
+    `VE Cash Flow Entry` table (which reported ~₹34cr — income/expense on accrual,
+    not cash). Note: an exact tie-out to Tally's Cash Flow report also needs the
+    opening cash balance, which the current export omits; the figure is otherwise
+    definitionally correct and becomes rupee-exact once a full export is imported.
+    """
+    led = frappe.db.sql(
+        "SELECT ledger_name, root_group, parent_group, is_cash, is_bank FROM `tabVE Tally Ledger`",
+        as_dict=True,
+    )
+    is_cash_equiv = {}
+    group_of = {}
+    for l in led:
+        # OD facility (parent 'Bank OD A/c') is a borrowing, not a cash equivalent.
+        is_cash_equiv[l.ledger_name] = bool(l.is_cash or (l.is_bank and l.parent_group != "Bank OD A/c"))
+        group_of[l.ledger_name] = (l.parent_group or "", (l.root_group or ""))
+
+    def _activity(ledger):
+        parent, root = group_of.get(ledger, ("", ""))
+        p = parent.lower()
+        if "fixed asset" in p or "investment" in p:
+            return "Investing"
+        if any(k in p for k in ("loan", "capital", "bank od", "secured", "unsecured", "reserve")):
+            return "Financing"
+        return "Operating"
+
+    where = "COALESCE(is_cancelled,0)=0 AND all_ledger_entries LIKE '%%'"
+    params = []
+    if start and end:
+        where += " AND voucher_date BETWEEN %s AND %s"
+        params = [start, end]
+    rows = frappe.db.sql(
+        f"SELECT voucher_date vd, all_ledger_entries ale FROM `tabVE Tally Voucher` WHERE {where}",
+        params, as_dict=True,
+    )
+
+    sections = {a: {"items": {}, "total_inflow": 0.0, "total_outflow": 0.0, "net": 0.0}
+                for a in ("Operating", "Investing", "Financing")}
+    monthly = {}  # "YYYY-MM" -> {inflow, outflow}
+
+    for r in rows:
+        try:
+            entries = _json.loads(r.ale)
+        except Exception:
+            continue
+        cash_delta = 0.0            # +ve = net into cash/bank on this voucher
+        counterparties = []         # (abs_amount, ledger)
+        for e in entries:
+            name = e.get("ledger") or ""
+            amt = abs(flt(e.get("amount")))
+            if is_cash_equiv.get(name):
+                # is_dr True = debit to cash/bank = money coming IN
+                cash_delta += amt if e.get("is_dr") else -amt
+            else:
+                counterparties.append((amt, name))
+        if cash_delta == 0 or not counterparties:
+            continue
+        # Classify by the largest counterparty ledger.
+        counterparties.sort(reverse=True)
+        act = _activity(counterparties[0][1])
+        label = counterparties[0][1]
+        sec = sections[act]
+        if cash_delta > 0:
+            sec["total_inflow"] += cash_delta
+        else:
+            sec["total_outflow"] += -cash_delta
+        sec["net"] += cash_delta
+        it = sec["items"].setdefault(label, {"line_item": label, "inflow": 0.0, "outflow": 0.0, "net": 0.0})
+        if cash_delta > 0:
+            it["inflow"] += cash_delta
+        else:
+            it["outflow"] += -cash_delta
+        it["net"] += cash_delta
+
+        mk = str(r.vd)[:7] if r.vd else ""
+        if mk:
+            m = monthly.setdefault(mk, {"inflow": 0.0, "outflow": 0.0})
+            if cash_delta > 0:
+                m["inflow"] += cash_delta
+            else:
+                m["outflow"] += -cash_delta
+
+    out_sections = {}
+    for act, sec in sections.items():
+        if not sec["items"]:
+            continue
+        out_sections[act] = {
+            "items": sorted(sec["items"].values(), key=lambda x: -abs(x["net"])),
+            "total_inflow": sec["total_inflow"],
+            "total_outflow": sec["total_outflow"],
+            "net": sec["net"],
+        }
+    gi = sum(s["total_inflow"] for s in out_sections.values())
+    go = sum(s["total_outflow"] for s in out_sections.values())
+    monthly_series = [
+        {"period": k, "inflow": v["inflow"], "outflow": v["outflow"]}
+        for k, v in sorted(monthly.items())
+    ]
+    return {
+        "sections": out_sections,
+        "grand_total": {"inflow": gi, "outflow": go, "net": gi - go},
+        "monthly_series": monthly_series,
+        "source": "VE Tally Voucher (actual cash & bank movements)",
+    }
+
+
 # ── Reconciliation guard ──────────────────────────────────────────────────────
 def reconcile():
     """Compare the same figures across the voucher / register / ledger sources.
