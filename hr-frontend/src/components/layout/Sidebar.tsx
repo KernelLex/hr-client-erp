@@ -225,11 +225,12 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const [docsOpen, setDocsOpen] = useState(() => readLS("sidebar_docs_open", false))
   const [adminOpen, setAdminOpen] = useState(() => readLS("sidebar_admin_open", false))
   const [accountingOpen, setAccountingOpen] = useState(() => readLS("sidebar_accounting_open", false))
+  const [todoOpen, setTodoOpen] = useState(() => readLS("sidebar_todo_open", true))
 
   // Auto-expand the group that contains the active route
   useEffect(() => {
     const p = location.pathname
-    if (p.startsWith("/admin/attendance") || p === "/leave" || p.startsWith("/expenses") || p.startsWith("/admin/employees") || p === "/holidays" || p === "/recruitment" || p.startsWith("/recruitment/")) {
+    if (p.startsWith("/admin/attendance") || p === "/leave" || p.startsWith("/expenses") || p.startsWith("/admin/employees") || p === "/holidays" || p === "/recruitment" || p.startsWith("/recruitment/") || p.startsWith("/hrms/")) {
       setHrOpen(true)
     }
     if (p === "/crm" || p.startsWith("/crm/") || p === "/sales-register") {
@@ -243,6 +244,9 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
     }
     if (p === "/accounting-module") {
       setAccountingOpen(true)
+    }
+    if (p.startsWith("/todo/")) {
+      setTodoOpen(true)
     }
   }, [location.pathname])
 
@@ -258,6 +262,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const toggleDocs = makeToggle(setDocsOpen, "sidebar_docs_open")
   const toggleAdmin = makeToggle(setAdminOpen, "sidebar_admin_open")
   const toggleAccounting = makeToggle(setAccountingOpen, "sidebar_accounting_open")
+  const toggleTodo = makeToggle(setTodoOpen, "sidebar_todo_open")
 
   // Close sidebar on mobile when a nav item is clicked
   function close() {
@@ -274,7 +279,31 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const isExpensesActive = path.startsWith("/expenses")
   const isTeamActive = path.startsWith("/admin/employees")
   const isRecruitmentActive = path.startsWith("/recruitment")
-  const isHrGroupActive = isAttendanceActive || isHolidaysActive || isLeaveActive || isExpensesActive || isTeamActive || isRecruitmentActive
+  const isEmpMasterActive = path === "/hrms/employees"
+  const isDepartmentsActive = path === "/hrms/departments"
+  const isDesignationsActive = path === "/hrms/designations"
+  const isShiftsActive = path === "/hrms/shifts"
+  const isShiftAssignActive = path === "/hrms/shift-assignments"
+  const isTrainingActive = path === "/hrms/training"
+  const isTrainingSessActive = path === "/hrms/training-sessions"
+  const isExitActive = path === "/hrms/exit"
+  const isPayrollActive = path === "/hrms/payroll"
+  const isSalaryAssignActive = path === "/hrms/salary-assignments"
+  const isPayrollRunsActive = path === "/hrms/payroll-runs"
+  const isSalarySlipsActive = path === "/hrms/salary-slips"
+  const isOnboardingActive = path === "/hrms/onboarding"
+  const isApprCyclesActive = path === "/hrms/appraisal-cycles"
+  const isApprsActive = path === "/hrms/appraisals"
+  const isHrGroupActive = isAttendanceActive || isHolidaysActive || isLeaveActive || isExpensesActive || isTeamActive || isRecruitmentActive || isEmpMasterActive || isDepartmentsActive || isDesignationsActive || isShiftsActive || isShiftAssignActive || isTrainingActive || isTrainingSessActive || isExitActive || isPayrollActive || isSalaryAssignActive || isPayrollRunsActive || isSalarySlipsActive || isOnboardingActive || isApprCyclesActive || isApprsActive
+
+  const isPersonalTasksActive = path === "/todo/personal"
+  const isTeamTasksActive = path === "/todo/team"
+  const isApprovalsActive = path === "/todo/approvals"
+  const isRemindersActive = path === "/todo/reminders"
+  const isCalendarActive = path === "/todo/calendar"
+  const isMeetingsActive = path === "/todo/meetings"
+  const isNotesActive = path === "/todo/notes"
+  const isTodoGroupActive = path.startsWith("/todo/")
 
   const isPipelineActive = path === "/crm" || path.startsWith("/crm/")
   const isSalesRegisterActive = path === "/sales-register"
@@ -397,8 +426,11 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
 
         {/* HRMS group */}
         <GroupHeader label="HRMS" icon={UsersRound} open={hrOpen} active={isHrGroupActive} onToggle={toggleHR} />
-        <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: hrOpen ? "400px" : "0px", opacity: hrOpen ? 1 : 0 }}>
+        <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: hrOpen ? "1000px" : "0px", opacity: hrOpen ? 1 : 0 }}>
           <div className="pt-0.5 space-y-0.5">
+            {isAdmin && (
+              <SubItem to="/hrms/employees" label="Employee Master" icon={UsersRound} isActive={isEmpMasterActive} adminBadge onClick={close} />
+            )}
             {showAttendance && (
               <>
                 <SubItem to="/admin/attendance" label="Attendance" icon={Clock} isActive={isAttendanceActive} onClick={close} />
@@ -415,8 +447,47 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
             {isAdmin && (
               <SubItem to="/admin/employees" label="Team" icon={Users} isActive={isTeamActive} adminBadge onClick={close} />
             )}
+            {isAdmin && (
+              <>
+                <SubItem to="/hrms/shifts" label="Shifts" icon={Clock} isActive={isShiftsActive} adminBadge onClick={close} />
+                <SubItem to="/hrms/shift-assignments" label="Shift Roster" icon={null} isActive={isShiftAssignActive} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/payroll" label="Payroll" icon={Landmark} isActive={isPayrollActive} adminBadge onClick={close} />
+                <SubItem to="/hrms/salary-assignments" label="Salary Assignments" icon={null} isActive={isSalaryAssignActive} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/payroll-runs" label="Payroll Runs" icon={null} isActive={isPayrollRunsActive} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/salary-slips" label="Salary Slips" icon={null} isActive={isSalarySlipsActive} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/onboarding" label="Onboarding" icon={UserCircle} isActive={isOnboardingActive} adminBadge onClick={close} />
+                <SubItem to="/hrms/training" label="Training" icon={BookOpen} isActive={isTrainingActive} adminBadge onClick={close} />
+                <SubItem to="/hrms/training-sessions" label="Training Sessions" icon={null} isActive={isTrainingSessActive} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/appraisals" label="Appraisals" icon={TrendingUp} isActive={isApprsActive} adminBadge onClick={close} />
+                <SubItem to="/hrms/appraisal-cycles" label="Appraisal Cycles" icon={null} isActive={isApprCyclesActive} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/exit" label="Exit Management" icon={Undo2} isActive={isExitActive} adminBadge onClick={close} />
+                <SubItem to="/hrms/departments" label="Departments" icon={Building2} isActive={isDepartmentsActive} adminBadge onClick={close} />
+                <SubItem to="/hrms/designations" label="Designations" icon={null} isActive={isDesignationsActive} indent adminBadge onClick={close} />
+              </>
+            )}
           </div>
         </div>
+
+        {/* To-Do System group */}
+        <GroupHeader label="To-Do System" icon={CheckSquare} open={todoOpen} active={isTodoGroupActive} onToggle={toggleTodo} />
+        <div className="overflow-hidden transition-all duration-200" style={{ maxHeight: todoOpen ? "360px" : "0px", opacity: todoOpen ? 1 : 0 }}>
+          <div className="pt-0.5 space-y-0.5">
+            <SubItem to="/todo/personal" label="Personal Tasks" icon={CheckSquare} isActive={isPersonalTasksActive} onClick={close} />
+            {isAdmin && (
+              <SubItem to="/todo/team" label="Team Tasks" icon={Users} isActive={isTeamTasksActive} adminBadge onClick={close} />
+            )}
+            {isAdmin && (
+              <SubItem to="/todo/approvals" label="Workflow Approvals" icon={CheckSquare} isActive={isApprovalsActive} adminBadge onClick={close} />
+            )}
+            <SubItem to="/todo/reminders" label="Reminders" icon={Clock} isActive={isRemindersActive} onClick={close} />
+            <SubItem to="/todo/calendar" label="Calendar" icon={CalendarDays} isActive={isCalendarActive} onClick={close} />
+            <SubItem to="/todo/meetings" label="Meetings" icon={Users} isActive={isMeetingsActive} onClick={close} />
+            {isAdmin && (
+              <SubItem to="/todo/notes" label="Notes" icon={BookOpen} isActive={isNotesActive} adminBadge onClick={close} />
+            )}
+          </div>
+        </div>
+
         <NavItem to="/org-hub" label="Org Hub" icon={Building2} onClick={close} />
 
         <Sep />

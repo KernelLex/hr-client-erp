@@ -42,6 +42,18 @@ import SalesRegisterPage from "@/pages/SalesRegister"
 import LogisticsPage from "@/pages/Logistics"
 import ReturnsPage from "@/pages/Returns"
 import { OrgHubPage } from "@/pages/admin/OrgHub/OrgHubPage"
+import { DepartmentsPage, DesignationsPage } from "@/pages/peoplework/screens/HrmsMasters"
+import { EmployeeMasterPage } from "@/pages/peoplework/screens/EmployeeMaster"
+import { PersonalTasksPage, TeamTasksPage } from "@/pages/peoplework/screens/Tasks"
+import { NotesPage } from "@/pages/peoplework/screens/Notes"
+import { ShiftTypesPage, ShiftAssignmentsPage } from "@/pages/peoplework/screens/Shifts"
+import { CalendarPage, MeetingsPage, RemindersPage } from "@/pages/peoplework/screens/Calendar"
+import { WorkflowApprovalsPage } from "@/pages/peoplework/screens/Approvals"
+import { TrainingProgramsPage, TrainingSessionsPage } from "@/pages/peoplework/screens/Training"
+import { ExitManagementPage } from "@/pages/peoplework/screens/ExitManagement"
+import { SalaryStructuresPage, SalaryAssignmentsPage, PayrollRunsPage, SalarySlipsPage } from "@/pages/peoplework/screens/Payroll"
+import { OnboardingPage } from "@/pages/peoplework/screens/Onboarding"
+import { AppraisalCyclesPage, AppraisalsPage } from "@/pages/peoplework/screens/Appraisal"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,6 +130,29 @@ function App() {
                 <Route path="/admin/org-hub" element={<OrgHubPage />} />
                 {/* Holidays */}
                 <Route path="/holidays" element={<HolidaysPage />} />
+                {/* People & Work — HRMS + To-Do workspace */}
+                <Route path="/hrms/employees" element={<EmployeeMasterPage />} />
+                <Route path="/hrms/departments" element={<DepartmentsPage />} />
+                <Route path="/hrms/designations" element={<DesignationsPage />} />
+                <Route path="/hrms/shifts" element={<ShiftTypesPage />} />
+                <Route path="/hrms/shift-assignments" element={<ShiftAssignmentsPage />} />
+                <Route path="/hrms/training" element={<TrainingProgramsPage />} />
+                <Route path="/hrms/training-sessions" element={<TrainingSessionsPage />} />
+                <Route path="/hrms/onboarding" element={<OnboardingPage />} />
+                <Route path="/hrms/exit" element={<ExitManagementPage />} />
+                <Route path="/hrms/appraisal-cycles" element={<AppraisalCyclesPage />} />
+                <Route path="/hrms/appraisals" element={<AppraisalsPage />} />
+                <Route path="/hrms/payroll" element={<SalaryStructuresPage />} />
+                <Route path="/hrms/salary-assignments" element={<SalaryAssignmentsPage />} />
+                <Route path="/hrms/payroll-runs" element={<PayrollRunsPage />} />
+                <Route path="/hrms/salary-slips" element={<SalarySlipsPage />} />
+                <Route path="/todo/personal" element={<PersonalTasksPage />} />
+                <Route path="/todo/team" element={<TeamTasksPage />} />
+                <Route path="/todo/approvals" element={<WorkflowApprovalsPage />} />
+                <Route path="/todo/reminders" element={<RemindersPage />} />
+                <Route path="/todo/calendar" element={<CalendarPage />} />
+                <Route path="/todo/meetings" element={<MeetingsPage />} />
+                <Route path="/todo/notes" element={<NotesPage />} />
                 {/* Catch-all: redirect unknown paths to dashboard */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>

@@ -117,16 +117,15 @@ def _fy_bounds(fy):
     return f"{sy}-04-01", f"{ey}-04-01"
 
 
-def _register_list(doctype, date_col, party_col, no_col, extra_cols, fy, search, page, page_size, sort, sort_map):
+def _register_list(doctype, date_col, party_col, no_col, extra_cols, fy, search, page, page_size, sort, sort_map,
+                   year=None, month=None):
+    from hr_client.api import finance_core
     where = ["1=1"]
     values = []
-    if fy and fy != "all":
-        try:
-            start, end = _fy_bounds(fy)
-            where.append(f"{date_col} >= %s AND {date_col} < %s")
-            values += [start, end]
-        except (ValueError, IndexError):
-            pass
+    start, end = finance_core.period_bounds(year=year, month=month, fy=fy)
+    if start and end:
+        where.append(f"{date_col} >= %s AND {date_col} < %s")
+        values += [start, end]
     if search and str(search).strip():
         s = f"%{str(search).strip()}%"
         where.append(f"({party_col} LIKE %s OR {no_col} LIKE %s)")
@@ -151,7 +150,7 @@ def _register_list(doctype, date_col, party_col, no_col, extra_cols, fy, search,
 
 @frappe.whitelist()
 @handle_api_error
-def get_sales_invoices(fy="all", search=None, page=1, page_size=50, sort="date_desc"):
+def get_sales_invoices(fy="all", year=None, month=None, search=None, page=1, page_size=50, sort="date_desc"):
     require_admin()
     sort_map = {
         "date_desc":   "invoice_date DESC, name DESC",
@@ -162,13 +161,13 @@ def get_sales_invoices(fy="all", search=None, page=1, page_size=50, sort="date_d
     return _register_list(
         "VE Sales Register Entry", "invoice_date", "customer", "invoice_no",
         ["amount_excl_gst", "gst_amount", "total"],
-        fy, search, page, page_size, sort, sort_map,
+        fy, search, page, page_size, sort, sort_map, year=year, month=month,
     )
 
 
 @frappe.whitelist()
 @handle_api_error
-def get_purchase_bills(fy="all", search=None, page=1, page_size=50, sort="date_desc"):
+def get_purchase_bills(fy="all", year=None, month=None, search=None, page=1, page_size=50, sort="date_desc"):
     require_admin()
     sort_map = {
         "date_desc":   "bill_date DESC, name DESC",
@@ -179,18 +178,19 @@ def get_purchase_bills(fy="all", search=None, page=1, page_size=50, sort="date_d
     return _register_list(
         "VE Purchase Register Entry", "bill_date", "vendor", "bill_no",
         ["amount_excl_gst", "itc_amount", "total"],
-        fy, search, page, page_size, sort, sort_map,
+        fy, search, page, page_size, sort, sort_map, year=year, month=month,
     )
 
 
 @frappe.whitelist()
 @handle_api_error
-def get_register_summary(kind="sales", fy="all", search=None):
+def get_register_summary(kind="sales", fy="all", year=None, month=None, search=None):
     """Aggregate stats for the Sales/Purchase register over the FULL filtered set:
     count, total, excl-GST + GST/ITC breakdown, date range, monthly series, top
     parties. Powers the summary band on the Sales Invoices / Purchase Bills tabs."""
     require_admin()
     import html as _html
+    from hr_client.api import finance_core
 
     if kind == "purchase":
         doctype, date_col, party_col, no_col, gst_col = (
@@ -201,13 +201,10 @@ def get_register_summary(kind="sales", fy="all", search=None):
 
     where = ["1=1"]
     values = []
-    if fy and fy != "all":
-        try:
-            start, end = _fy_bounds(fy)
-            where.append(f"{date_col} >= %s AND {date_col} < %s")
-            values += [start, end]
-        except (ValueError, IndexError):
-            pass
+    start, end = finance_core.period_bounds(year=year, month=month, fy=fy)
+    if start and end:
+        where.append(f"{date_col} >= %s AND {date_col} < %s")
+        values += [start, end]
     if search and str(search).strip():
         s = f"%{str(search).strip()}%"
         where.append(f"({party_col} LIKE %s OR {no_col} LIKE %s)")

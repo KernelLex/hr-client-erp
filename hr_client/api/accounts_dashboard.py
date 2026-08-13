@@ -33,6 +33,10 @@ def _period_bounds(period: str, custom_start: str = None, custom_end: str = None
         fy_start_year = (t.year if t.month >= 4 else t.year - 1) - 1
         return f"{fy_start_year}-04-01", f"{fy_start_year + 1}-03-31"
 
+    if period == "all":
+        # Cumulative — from before any Tally data to today.
+        return "2000-04-01", t.isoformat()
+
     if period == "custom":
         return (custom_start or t.replace(day=1).isoformat()), (custom_end or t.isoformat())
 
@@ -58,42 +62,16 @@ def _prev_period_bounds(period: str, custom_start: str = None, custom_end: str =
 @frappe.whitelist()
 @handle_api_error
 def get_available_funds_summary():
-    """Bank / Cash / Virtual / OD totals + per-account breakdown."""
-    frappe.has_permission("VE Bank Account Balance", ptype="read", throw=True)
+    """Bank / Cash / Virtual / OD totals + per-account breakdown.
 
-    banks = frappe.get_all(
-        "VE Bank Account Balance",
-        fields=["bank_name", "account_no", "account_type", "balance", "last_synced"],
-        order_by="balance desc",
-    )
-    virtuals = frappe.get_all(
-        "VE Virtual Account Balance",
-        fields=["gateway_name", "available_balance", "credit_limit", "utilised"],
-        order_by="available_balance desc",
-    )
-    ods = frappe.get_all(
-        "VE OD Account Balance",
-        fields=["bank_name", "facility_name", "sanctioned_limit", "utilised", "available", "interest_rate"],
-        order_by="available desc",
-    )
+    Sourced from the canonical finance layer (VE Tally Ledger), which matches the
+    client's Tally to the rupee. Previously read empty manual DocTypes and showed
+    ₹0 for every account.
+    """
+    frappe.has_permission("VE Tally Ledger", ptype="read", throw=True)
+    from hr_client.api import finance_core
 
-    bank_total = sum(flt(r.balance) for r in banks)
-    virtual_total = sum(flt(r.available_balance) for r in virtuals)
-    od_available = sum(flt(r.available) for r in ods)
-    od_utilised = sum(flt(r.utilised) for r in ods)
-
-    return {
-        "totals": {
-            "bank_cash": bank_total,
-            "virtual": virtual_total,
-            "od_available": od_available,
-            "od_utilised": od_utilised,
-            "grand_total": bank_total + virtual_total + od_available,
-        },
-        "banks": [dict(r) for r in banks],
-        "virtuals": [dict(r) for r in virtuals],
-        "od_accounts": [dict(r) for r in ods],
-    }
+    return finance_core.funds_summary()
 
 
 # ── 2. Accounts Summary ───────────────────────────────────────────────────────
@@ -101,74 +79,51 @@ def get_available_funds_summary():
 @frappe.whitelist()
 @handle_api_error
 def get_accounts_summary(period="ytd", custom_start=None, custom_end=None):
-    frappe.has_permission("VE Sales Register Entry", ptype="read", throw=True)
+    """Sales / Purchase summary — canonical source (VE Tally Voucher via
+    finance_core), so the figures match Funds / GST / every other page exactly.
+
+    Previously read the derived VE Sales/Purchase Register tables, which had
+    dropped ~74 sales rows and disagreed on counts with the voucher source.
+    """
+    frappe.has_permission("VE Tally Voucher", ptype="read", throw=True)
+    from hr_client.api import finance_core
 
     start, end = _period_bounds(period, custom_start, custom_end)
     prev_start, prev_end = _prev_period_bounds(period, custom_start, custom_end)
 
-    def _sales(s, e):
-        rows = frappe.db.sql(
-            """SELECT COUNT(*) as cnt,
-                      COALESCE(SUM(amount_excl_gst),0) as excl_gst,
-                      COALESCE(SUM(gst_amount),0) as gst,
-                      COALESCE(SUM(total),0) as total
-               FROM `tabVE Sales Register Entry`
-               WHERE invoice_date BETWEEN %s AND %s""",
-            (s, e), as_dict=True,
-        )
-        return rows[0] if rows else {}
+    cur = finance_core.accounts_summary(start, end)
+    prev_sales = finance_core.txn_summary("sales", prev_start, prev_end)
+    prev_purch = finance_core.txn_summary("purchase", prev_start, prev_end)
 
-    def _purchase(s, e):
-        rows = frappe.db.sql(
-            """SELECT COUNT(*) as cnt,
-                      COALESCE(SUM(amount_excl_gst),0) as excl_gst,
-                      COALESCE(SUM(itc_amount),0) as itc,
-                      COALESCE(SUM(total),0) as total
-               FROM `tabVE Purchase Register Entry`
-               WHERE bill_date BETWEEN %s AND %s""",
-            (s, e), as_dict=True,
-        )
-        return rows[0] if rows else {}
-
-    def _monthly_series(doctype, date_col, amount_col, s, e):
-        rows = frappe.db.sql(
-            f"""SELECT DATE_FORMAT({date_col}, '%%Y-%%m') as month,
-                       COALESCE(SUM({amount_col}),0) as amount
-                FROM `tab{doctype}`
-                WHERE {date_col} BETWEEN %s AND %s
-                GROUP BY month ORDER BY month""",
-            (s, e), as_dict=True,
-        )
-        return [{"month": r.month, "amount": flt(r.amount)} for r in rows]
-
-    cur_sales = _sales(start, end)
-    prev_sales = _sales(prev_start, prev_end)
-    cur_purch = _purchase(start, end)
-    prev_purch = _purchase(prev_start, prev_end)
-
-    def _yoy(cur, prev):
-        if not prev or flt(prev) == 0:
+    def _yoy(cur_v, prev_v):
+        if not prev_v or flt(prev_v) == 0:
             return None
-        return round((flt(cur) - flt(prev)) / flt(prev) * 100, 1)
+        return round((flt(cur_v) - flt(prev_v)) / flt(prev_v) * 100, 1)
 
+    s, p = cur["sales"], cur["purchase"]
     return {
         "period": {"start": start, "end": end},
         "sales": {
-            "total": flt(cur_sales.get("total")),
-            "excl_gst": flt(cur_sales.get("excl_gst")),
-            "gst": flt(cur_sales.get("gst")),
-            "invoice_count": cint(cur_sales.get("cnt")),
-            "yoy_pct": _yoy(cur_sales.get("total"), prev_sales.get("total")),
+            "total": s["total"],
+            "excl_gst": s["excl_gst"],
+            "gst": s["gst"],
+            "invoice_count": s["invoice_count"],
+            "returns": s["returns"],
+            "net_total": s["net_total"],
+            "yoy_pct": _yoy(s["total"], prev_sales["value"]),
         },
         "purchase": {
-            "total": flt(cur_purch.get("total")),
-            "excl_gst": flt(cur_purch.get("excl_gst")),
-            "itc": flt(cur_purch.get("itc")),
-            "bill_count": cint(cur_purch.get("cnt")),
-            "yoy_pct": _yoy(cur_purch.get("total"), prev_purch.get("total")),
+            "total": p["total"],
+            "excl_gst": p["excl_gst"],
+            "itc": p["gst"],
+            "bill_count": p["bill_count"],
+            "returns": p["returns"],
+            "net_total": p["net_total"],
+            "yoy_pct": _yoy(p["total"], prev_purch["value"]),
         },
-        "monthly_sales": _monthly_series("VE Sales Register Entry", "invoice_date", "total", start, end),
-        "monthly_purchase": _monthly_series("VE Purchase Register Entry", "bill_date", "total", start, end),
+        "monthly_sales": cur["monthly_sales"],
+        "monthly_purchase": cur["monthly_purchase"],
+        "source": "VE Tally Voucher",
     }
 
 
@@ -177,61 +132,33 @@ def get_accounts_summary(period="ytd", custom_start=None, custom_end=None):
 @frappe.whitelist()
 @handle_api_error
 def get_gst_summary(period="ytd", custom_start=None, custom_end=None):
+    """GST output/input/net for the period.
+
+    Sourced from the canonical finance layer, which reads each voucher's own tax
+    lines (Output = tax on Sales, Input = tax on Purchases) so Credit/Debit notes
+    and GST-payment journals never contaminate the figure. The old aggregation
+    over VE GST Ledger Entry mis-signed returns and produced negative net IGST.
+    """
     frappe.has_permission("VE GST Ledger Entry", ptype="read", throw=True)
+    from hr_client.api import finance_core
 
-    # GST is period-based (YYYY-MM), so derive months in range
     start, end = _period_bounds(period, custom_start, custom_end)
-
-    rows = frappe.db.sql(
-        """SELECT gst_type,
-                  COALESCE(SUM(igst),0) as igst,
-                  COALESCE(SUM(cgst),0) as cgst,
-                  COALESCE(SUM(sgst),0) as sgst,
-                  COALESCE(SUM(igst+cgst+sgst),0) as total_gst
-           FROM `tabVE GST Ledger Entry`
-           WHERE period BETWEEN DATE_FORMAT(%s,'%%Y-%%m') AND DATE_FORMAT(%s,'%%Y-%%m')
-           GROUP BY gst_type""",
-        (start, end), as_dict=True,
-    )
-
-    summary = {r.gst_type: r for r in rows}
-    output = summary.get("Output", {})
-    inp = summary.get("Input", {})
-
-    net_igst = flt(output.get("igst")) - flt(inp.get("igst"))
-    net_cgst = flt(output.get("cgst")) - flt(inp.get("cgst"))
-    net_sgst = flt(output.get("sgst")) - flt(inp.get("sgst"))
+    g = finance_core.gst_summary(start=start, end=end)
 
     # Next due date: 20th of next month for monthly filers
     today_d = datetime.date.today()
     if today_d.day <= 20:
         due = today_d.replace(day=20)
+    elif today_d.month == 12:
+        due = today_d.replace(year=today_d.year + 1, month=1, day=20)
     else:
-        if today_d.month == 12:
-            due = today_d.replace(year=today_d.year + 1, month=1, day=20)
-        else:
-            due = today_d.replace(month=today_d.month + 1, day=20)
+        due = today_d.replace(month=today_d.month + 1, day=20)
 
     return {
         "period": {"start": start, "end": end},
-        "output": {
-            "igst": flt(output.get("igst")),
-            "cgst": flt(output.get("cgst")),
-            "sgst": flt(output.get("sgst")),
-            "total": flt(output.get("total_gst")),
-        },
-        "input": {
-            "igst": flt(inp.get("igst")),
-            "cgst": flt(inp.get("cgst")),
-            "sgst": flt(inp.get("sgst")),
-            "total": flt(inp.get("total_gst")),
-        },
-        "net": {
-            "igst": net_igst,
-            "cgst": net_cgst,
-            "sgst": net_sgst,
-            "total": net_igst + net_cgst + net_sgst,
-        },
+        "output": g["output"],
+        "input": g["input"],
+        "net": g["net"],
         "next_due_date": due.isoformat(),
         "gstr2b_mismatches": frappe.db.count("VE GST Ledger Entry", {"gstr2b_match_status": "Mismatched"}),
     }

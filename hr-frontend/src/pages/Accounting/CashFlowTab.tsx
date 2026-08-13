@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Loader2, ChevronDown, ChevronRight } from "lucide-react"
-import { PeriodFilter, periodParams, type PeriodValue } from "@/components/dashboard"
+import { usePeriod, periodDashParams } from "./PeriodFilter"
 import { dashboardGet } from "./api"
 
 interface CFItem { line_item: string; inflow: number; outflow: number; net: number }
@@ -14,11 +14,9 @@ interface CashFlowResult {
 }
 
 function fmtINR(n: number): string {
-  const abs = Math.abs(n ?? 0)
-  const sign = n < 0 ? "−" : ""
-  if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(2)}Cr`
-  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(2)}L`
-  return `${sign}₹${abs.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
+  // Pinpoint value — exact rupees + paise, Indian grouping. No Cr/L rounding.
+  const sign = (n ?? 0) < 0 ? "−" : ""
+  return `${sign}₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 const SECTION_ORDER = ["Operating", "Investing", "Financing"]
@@ -59,11 +57,11 @@ function SectionCard({ title, section }: { title: string; section: CFSection }) 
 }
 
 export function CashFlowTab() {
-  const [period, setPeriod] = useState<PeriodValue>({ period: "ytd" })
+  const { year, month } = usePeriod()
 
   const { data, isLoading, isError } = useQuery<CashFlowResult>({
-    queryKey: ["cash-flow-statement", period],
-    queryFn: () => dashboardGet("get_cash_flow_statement", periodParams(period)),
+    queryKey: ["cash-flow-statement", year, month],
+    queryFn: () => dashboardGet("get_cash_flow_statement", periodDashParams({ year, month })),
     staleTime: 30_000,
   })
 
@@ -71,8 +69,7 @@ export function CashFlowTab() {
 
   return (
     <div className="space-y-4">
-      <PeriodFilter value={period} onChange={setPeriod} />
-
+      {/* Period comes from the shared Year → Month filter in the page header. */}
       {isLoading ? (
         <div className="flex justify-center py-16">
           <Loader2 size={22} className="text-[#1e3a2f] animate-spin" />

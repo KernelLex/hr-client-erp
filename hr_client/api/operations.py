@@ -649,7 +649,35 @@ def finalize_tally_upload(upload_id, total_chunks, filename):
                 shutil.copyfileobj(pf, out, 4 * 1024 * 1024)
 
     shutil.rmtree(chunk_dir, ignore_errors=True)
-    return {"path": final, "filename": safe_name, "size": os.path.getsize(final)}
+
+    result = {"path": final, "filename": safe_name, "size": os.path.getsize(final)}
+
+    # Self-healing extraction: the moment a Master + Transactions pair is present
+    # on the server, kick off the full import automatically (unless one is already
+    # running). This guarantees "upload → figures update" even if the browser's
+    # explicit import call never fires (tab closed, network drop). run_tally_import
+    # is idempotent, so the frontend's own call afterwards is a harmless no-op.
+    #
+    # Only fire when the file just finalized is the TRANSACTIONS export. The
+    # standard flow uploads Master first then Transactions, so triggering on the
+    # Transactions file guarantees a consistent, freshly-uploaded pair (triggering
+    # on the Master could pair a new Master with a stale Transactions file).
+    try:
+        if _detect_role(final, safe_name) == "transactions":
+            listing = list_tally_files()
+            masters = listing.get("suggested_masters")
+            trans = listing.get("suggested_transactions") or final
+            if masters and trans:
+                started = run_tally_import(masters, trans)
+                result["auto_import"] = bool(started.get("queued"))
+                result["masters_path"] = masters
+                result["transactions_path"] = trans
+    except Exception:
+        # Never let auto-trigger failure break the upload response — the admin can
+        # still start the import manually from the UI.
+        frappe.log_error(frappe.get_traceback(), "finalize_tally_upload auto-import")
+
+    return result
 
 
 @frappe.whitelist()
@@ -672,6 +700,16 @@ def run_tally_import(masters_path: str, transactions_path: str):
             frappe.throw(f"{label.capitalize()} file not found: {path}")
 
     from hr_client.api import tally_transformer as _tt
+
+    # Idempotency guard — never enqueue a second import while one is genuinely
+    # running (get_status auto-expires a stalled/dead job to 'error', so a hung
+    # worker won't block forever). Lets the UI's explicit call and the upload
+    # auto-trigger coexist without double-running the pipeline.
+    cur = _tt.get_status()
+    if cur.get("status") == "running":
+        return {"queued": False, "already_running": True,
+                "message": "An import is already running.", "status": cur}
+
     _tt._set("running", 1, "Import queued…")   # immediate feedback
 
     frappe.enqueue(
@@ -1234,6 +1272,15 @@ def get_financial_summary(fy=None):
 
 
 @frappe.whitelist()
+def get_period_options():
+    """Cascading Year → Month options (single source: VE Tally Voucher). One shared
+    definition for every Accounting tab so periods aren't re-derived per page."""
+    _require_admin()
+    from hr_client.api import finance_core
+    return finance_core.period_options()
+
+
+@frappe.whitelist()
 def get_available_financial_years():
     """Returns all FY strings that have tally data, newest first."""
     _require_admin()
@@ -1252,25 +1299,24 @@ def get_available_financial_years():
 
 
 @frappe.whitelist()
-def get_voucher_list(voucher_type, fy=None, search=None, page=1, page_size=50, sort="date_desc"):
+def get_voucher_list(voucher_type, fy=None, year=None, month=None, search=None, page=1, page_size=50, sort="date_desc"):
     """
     Paginated list of Tally vouchers for the Ledger browser.
     Returns all display fields; party_name and narration HTML-decoded.
+    Period filter: hierarchical year/month (via finance_core.period_bounds) with
+    the legacy fy string as fallback — one shared definition across all tabs.
     """
     _require_admin()
     import html as _html
+    from hr_client.api import finance_core
 
     where_parts = ["is_cancelled = 0", "voucher_type = %s"]
     params = [voucher_type]
 
-    if fy and fy != "all":
-        try:
-            parts = fy.split("-")
-            sy, ey = int(parts[0]), int(parts[1])
-            where_parts.append("voucher_date >= %s AND voucher_date < %s")
-            params += [f"{sy}-04-01", f"{ey}-04-01"]
-        except (ValueError, IndexError):
-            pass
+    start, end = finance_core.period_bounds(year=year, month=month, fy=fy)
+    if start and end:
+        where_parts.append("voucher_date >= %s AND voucher_date < %s")
+        params += [start, end]
 
     if search and str(search).strip():
         s = f"%{str(search).strip()}%"
@@ -1335,7 +1381,7 @@ def get_voucher_list(voucher_type, fy=None, search=None, page=1, page_size=50, s
 
 
 @frappe.whitelist()
-def get_voucher_summary(voucher_type, fy=None, search=None):
+def get_voucher_summary(voucher_type, fy=None, year=None, month=None, search=None):
     """
     Aggregate stats for a voucher type over the FULL filtered set (not one page):
     count, total value, date range, per-month series, and top parties by value.
@@ -1344,18 +1390,15 @@ def get_voucher_summary(voucher_type, fy=None, search=None):
     """
     _require_admin()
     import html as _html
+    from hr_client.api import finance_core
 
     where_parts = ["is_cancelled = 0", "voucher_type = %s"]
     params = [voucher_type]
 
-    if fy and fy != "all":
-        try:
-            parts = fy.split("-")
-            sy, ey = int(parts[0]), int(parts[1])
-            where_parts.append("voucher_date >= %s AND voucher_date < %s")
-            params += [f"{sy}-04-01", f"{ey}-04-01"]
-        except (ValueError, IndexError):
-            pass
+    start, end = finance_core.period_bounds(year=year, month=month, fy=fy)
+    if start and end:
+        where_parts.append("voucher_date >= %s AND voucher_date < %s")
+        params += [start, end]
 
     if search and str(search).strip():
         s = f"%{str(search).strip()}%"

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Loader2, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
@@ -6,6 +6,7 @@ import { exportCsv } from "@/lib/csv"
 import { operationsGet } from "./api"
 import { VoucherDetailDrawer } from "./VoucherDetailDrawer"
 import { TransactionSummaryBand, MonthDivider, type VoucherSummary } from "./TransactionSummaryBand"
+import { usePeriod, periodParams } from "./PeriodFilter"
 
 interface VoucherRow {
   name: string
@@ -32,16 +33,6 @@ function fmtINR(n: number): string {
   return `₹${Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function fyOptions(): { value: string; label: string }[] {
-  const now = new Date()
-  const curStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1 // Indian FY starts April
-  const opts = [{ value: "all", label: "All Years" }]
-  for (let y = curStart + 1; y >= curStart - 6; y--) {
-    opts.push({ value: `${y}-${y + 1}`, label: `FY ${y}–${String(y + 1).slice(2)}` })
-  }
-  return opts
-}
-
 /** Party column: real party when present, else the debit→credit ledger flow so
  * blank-party journals still say something meaningful. */
 function PartyCell({ r }: { r: VoucherRow }) {
@@ -64,19 +55,24 @@ function PartyCell({ r }: { r: VoucherRow }) {
  * sits above a month-grouped table; no columns removed.
  */
 export function VoucherListTab({ voucherType, noun }: { voucherType: string; noun: string }) {
-  const [fy, setFy] = useState("all")
+  const { year, month } = usePeriod()
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
   const [sort, setSort] = useState("date_desc")
   const [selected, setSelected] = useState<string | null>(null)
 
+  // Reset to page 1 whenever the shared period changes.
+  useEffect(() => { setPage(1) }, [year, month])
+
+  const period = periodParams({ year, month })
+
   const { data, isLoading, isError } = useQuery<VoucherListResult>({
-    queryKey: ["voucher-list", voucherType, fy, search, page, sort],
+    queryKey: ["voucher-list", voucherType, year, month, search, page, sort],
     queryFn: () =>
       operationsGet("get_voucher_list", {
         voucher_type: voucherType,
-        fy,
+        ...period,
         search,
         page: String(page),
         page_size: String(PAGE_SIZE),
@@ -86,8 +82,8 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
   })
 
   const { data: summary, isLoading: sumLoading } = useQuery<VoucherSummary>({
-    queryKey: ["voucher-summary", voucherType, fy, search],
-    queryFn: () => operationsGet("get_voucher_summary", { voucher_type: voucherType, fy, search }),
+    queryKey: ["voucher-summary", voucherType, year, month, search],
+    queryFn: () => operationsGet("get_voucher_summary", { voucher_type: voucherType, ...period, search }),
     staleTime: 30_000,
   })
 
@@ -100,11 +96,6 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
   function pickParty(party: string) {
     setSearchInput(party)
     setSearch(party)
-    setPage(1)
-  }
-
-  function changeFy(v: string) {
-    setFy(v)
     setPage(1)
   }
 
@@ -135,17 +126,9 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
         loading={sumLoading}
       />
 
-      {/* Toolbar */}
+      {/* Toolbar — period is controlled by the shared Year → Month filter in the
+          page header, so no per-tab year dropdown here. */}
       <div className="flex flex-wrap items-center gap-2">
-        <select
-          value={fy}
-          onChange={e => changeFy(e.target.value)}
-          className="text-xs border border-gray-200 rounded-lg px-2.5 py-2 bg-white text-gray-700"
-        >
-          {fyOptions().map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
         <form onSubmit={submitSearch} className="flex-1 min-w-[200px] flex items-center gap-1.5">
           <input
             value={searchInput}

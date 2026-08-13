@@ -37,7 +37,8 @@ interface AdvanceResult { data: AdvanceRow[]; total: number; page: number; page_
 const PAGE_SIZE = 50
 
 function fmtINR(n: number): string {
-  return `₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+  // Pinpoint value — exact rupees + paise, Indian grouping.
+  return `₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 const AGING_LABELS: Record<string, string> = { "0_30": "0–30 days", "31_60": "31–60 days", "61_90": "61–90 days", "90_plus": "90+ days" }

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
@@ -6,6 +6,7 @@ import { exportCsv } from "@/lib/csv"
 import { accountingGet } from "./api"
 import { VoucherDetailDrawer } from "./VoucherDetailDrawer"
 import { TransactionSummaryBand, MonthDivider, type RegisterSummary } from "./TransactionSummaryBand"
+import { usePeriod, periodParams } from "./PeriodFilter"
 
 interface RegisterRow {
   name: string
@@ -26,16 +27,6 @@ function fmtINR(n: number): string {
   return `₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function fyOptions(): { value: string; label: string }[] {
-  const now = new Date()
-  const curStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
-  const opts = [{ value: "all", label: "All Years" }]
-  for (let y = curStart + 1; y >= curStart - 6; y--) {
-    opts.push({ value: `${y}-${y + 1}`, label: `FY ${y}–${String(y + 1).slice(2)}` })
-  }
-  return opts
-}
-
 interface RegisterListTabProps {
   endpoint: "get_sales_invoices" | "get_purchase_bills"
   noun: string
@@ -54,24 +45,28 @@ interface RegisterListTabProps {
 export function RegisterListTab(props: RegisterListTabProps) {
   const { endpoint, noun, numberField, numberLabel, dateField, partyField, partyLabel, gstField, gstLabel } = props
   const kind = endpoint === "get_purchase_bills" ? "purchase" : "sales"
-  const [fy, setFy] = useState("all")
+  const { year, month } = usePeriod()
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
   const [sort, setSort] = useState("date_desc")
   const [selectedGuid, setSelectedGuid] = useState<string | null>(null)
 
+  useEffect(() => { setPage(1) }, [year, month])
+
+  const period = periodParams({ year, month })
+
   const { data, isLoading, isError } = useQuery<RegisterListResult>({
-    queryKey: ["register-list", endpoint, fy, search, page, sort],
+    queryKey: ["register-list", endpoint, year, month, search, page, sort],
     queryFn: () => accountingGet(endpoint, {
-      fy, search, page: String(page), page_size: String(PAGE_SIZE), sort,
+      ...period, search, page: String(page), page_size: String(PAGE_SIZE), sort,
     }),
     staleTime: 30_000,
   })
 
   const { data: summary, isLoading: sumLoading } = useQuery<RegisterSummary>({
-    queryKey: ["register-summary", kind, fy, search],
-    queryFn: () => accountingGet("get_register_summary", { kind, fy, search }),
+    queryKey: ["register-summary", kind, year, month, search],
+    queryFn: () => accountingGet("get_register_summary", { kind, ...period, search }),
     staleTime: 30_000,
   })
 
@@ -116,14 +111,8 @@ export function RegisterListTab(props: RegisterListTabProps) {
         gst={summary ? { excl: summary.excl_gst, gst: summary.gst, total: summary.total, label: summary.gst_label } : undefined}
       />
 
+      {/* Period is controlled by the shared Year → Month filter in the page header. */}
       <div className="flex flex-wrap items-center gap-2">
-        <select
-          value={fy}
-          onChange={e => { setFy(e.target.value); setPage(1) }}
-          className="text-xs border border-gray-200 rounded-lg px-2.5 py-2 bg-white text-gray-700"
-        >
-          {fyOptions().map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
         <form
           onSubmit={e => { e.preventDefault(); setPage(1); setSearch(searchInput) }}
           className="flex-1 min-w-[200px]"

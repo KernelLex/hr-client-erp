@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Loader2, ChevronDown, ChevronRight, AlertCircle } from "lucide-react"
-import { PeriodFilter, type PeriodValue } from "@/components/dashboard"
+import { usePeriod, periodDateRange } from "./PeriodFilter"
 import { accountingGet } from "./api"
 
 interface LedgerAmount { ledger: string; amount: number }
@@ -23,27 +23,9 @@ interface BalanceSheetResult {
 }
 
 function fmtINR(n: number): string {
-  const abs = Math.abs(n ?? 0)
-  const sign = n < 0 ? "−" : ""
-  if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(2)}Cr`
-  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(2)}L`
-  return `${sign}₹${abs.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
-}
-
-function periodToDates(v: PeriodValue): { from: string; to: string } {
-  const now = new Date()
-  const iso = (d: Date) => d.toISOString().slice(0, 10)
-  if (v.period === "today") { const s = iso(now); return { from: s, to: s } }
-  if (v.period === "mtd") return { from: iso(new Date(now.getFullYear(), now.getMonth(), 1)), to: iso(now) }
-  if (v.period === "ytd") {
-    const fy = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
-    return { from: `${fy}-04-01`, to: iso(now) }
-  }
-  if (v.period === "last_year") {
-    const fy = (now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1) - 1
-    return { from: `${fy}-04-01`, to: `${fy + 1}-03-31` }
-  }
-  return { from: v.custom_start || iso(new Date(now.getFullYear(), now.getMonth(), 1)), to: v.custom_end || iso(now) }
+  // Pinpoint value — exact rupees + paise, Indian grouping. No Cr/L rounding.
+  const sign = (n ?? 0) < 0 ? "−" : ""
+  return `${sign}₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 function GroupBreakdown({ groups, positiveColor = "text-[#2c2c2a]" }: { groups: GroupAmount[]; positiveColor?: string }) {
@@ -83,8 +65,8 @@ function GroupBreakdown({ groups, positiveColor = "text-[#2c2c2a]" }: { groups: 
 }
 
 function ProfitAndLoss() {
-  const [period, setPeriod] = useState<PeriodValue>({ period: "ytd" })
-  const { from, to } = periodToDates(period)
+  const { year, month } = usePeriod()
+  const { from, to } = periodDateRange({ year, month })
 
   const { data, isLoading, isError } = useQuery<PnLResult>({
     queryKey: ["profit-and-loss", from, to],
@@ -94,7 +76,7 @@ function ProfitAndLoss() {
 
   return (
     <div className="space-y-4">
-      <PeriodFilter value={period} onChange={setPeriod} />
+      {/* Period comes from the shared Year → Month filter in the page header. */}
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#1e3a2f] animate-spin" /></div>
       ) : isError ? (

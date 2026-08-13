@@ -60,7 +60,25 @@ async function callOpenAI(
   )
   const json = await response.json()
   if (!json.message?.success) throw new Error(json.message?.error || "Failed")
-  return json.message.data as GeminiJDRaw
+  // Backend returns {job_summary, responsibilities, qualifications, nice_to_have,
+  // what_we_offer, about_company}. Normalise into the shape the UI + PDF expect,
+  // guaranteeing every array exists so downstream .map() calls never throw.
+  const d = json.message.data ?? {}
+  const arr = (v: unknown): string[] =>
+    Array.isArray(v) ? v.map(String) : v ? [String(v)] : []
+  return {
+    job_title: jobTitle,
+    department,
+    location: "",
+    employment_type: "",
+    about_company: String(d.about_company ?? ""),
+    role_overview: String(d.job_summary ?? d.role_overview ?? ""),
+    responsibilities: arr(d.responsibilities),
+    required_qualifications: arr(d.qualifications ?? d.required_qualifications),
+    nice_to_have: arr(d.nice_to_have),
+    what_we_offer: arr(d.what_we_offer),
+    how_to_apply: String(d.how_to_apply ?? ""),
+  }
 }
 
 // ─── PDF generation ───────────────────────────────────────────────────────────
@@ -466,6 +484,10 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
   }
 
   const handleGenerate = useCallback(async () => {
+    if (!form.job_title) {
+      toast.error("Please select a designation first.", { duration: 5000 })
+      return
+    }
     if (!roleDescription.trim()) return
     setStep("loading")
     try {
@@ -474,9 +496,9 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
       setSections(rawToSections(result))
       setForm((f) => ({
         ...f,
-        job_title: result.job_title || f.job_title,
-        designation: result.job_title || f.designation,
-        department: result.department || f.department,
+        job_title: f.job_title || result.job_title,
+        designation: f.designation || result.job_title,
+        department: f.department || result.department,
         employment_type: result.employment_type || f.employment_type,
         location: result.location || f.location,
       }))
@@ -578,6 +600,34 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
         {step === "input" && (
           <div className="space-y-4 py-2">
             <div>
+              <label className="text-sm font-medium text-gray-800 mb-1.5 block">
+                Designation <span className="text-red-500">*</span>
+              </label>
+              <select
+                className="w-full text-sm border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white"
+                value={form.designation}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, designation: e.target.value, job_title: e.target.value }))
+                }
+              >
+                <option value="">Select the role…</option>
+                {designations.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-800 mb-1.5 block">
+                Department <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <select
+                className="w-full text-sm border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white"
+                value={form.department}
+                onChange={(e) => setFormField("department", e.target.value)}
+              >
+                <option value="">Select department…</option>
+                {departments.map((d) => <option key={d.name} value={d.name}>{d.label}</option>)}
+              </select>
+            </div>
+            <div>
               <label className="text-sm font-medium text-gray-800 mb-2 block">
                 Describe the role in your own words
               </label>
@@ -598,7 +648,7 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
 
             <button
               onClick={handleGenerate}
-              disabled={!roleDescription.trim()}
+              disabled={!roleDescription.trim() || !form.job_title}
               className={cn(
                 "w-full py-3 rounded-xl font-semibold text-white text-sm transition-all duration-200 flex items-center justify-center gap-2",
                 "bg-gradient-to-r from-gold-600 to-forest-700 hover:from-gold-500 hover:to-forest-600",

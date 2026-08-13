@@ -108,11 +108,29 @@ def _set(status: str, progress: int, message: str, error: str = ""):
     }), expires_in_sec=7200)
 
 
+# If a 'running' import goes this long with no progress update, the background
+# worker almost certainly died (OOM / restart / kill) without raising a catchable
+# exception — surface it as a retryable error instead of hanging on "running"
+# forever. The whole pipeline is ~5 min; the slowest silent sub-step (GST-ledger
+# build) is ~3 min, so 15 min is a safe stall threshold.
+_STALE_SECS = 900
+
+
 def get_status():
     raw = frappe.cache().get_value(_STATUS_KEY)
     if not raw:
         return {"status": "idle", "progress": 0, "message": "No import has run yet", "error": ""}
-    return json.loads(raw)
+    s = json.loads(raw)
+    if s.get("status") == "running":
+        age = time.time() - float(s.get("ts") or 0)
+        if age > _STALE_SECS:
+            msg = (
+                f"Import stalled — no progress for {int(age // 60)} min. The background "
+                f"worker likely stopped. Please run the import again."
+            )
+            _set("error", s.get("progress", 0), msg, error=msg)
+            return {**s, "status": "error", "message": msg, "error": msg}
+    return s
 
 
 def run(masters_path: str = "/home/vera/Master.xml",
@@ -186,6 +204,20 @@ def run(masters_path: str = "/home/vera/Master.xml",
         recon = _ati_recon.reconcile()
     except Exception:
         frappe.log_error(frappe.get_traceback(), "tally_transformer — reconcile")
+
+    # Canonical cross-source guard: compares voucher/register/ledger totals and
+    # logs any >1% drift so a new Tally upload can never silently reintroduce the
+    # dashboard discrepancies fixed on 2026-08-11.
+    try:
+        from hr_client.api import finance_core
+        cross = finance_core.reconcile()
+        if cross.get("issues"):
+            frappe.log_error(
+                frappe.as_json(cross["report"]),
+                "finance_core.reconcile — post-import source drift",
+            )
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "tally_transformer — finance_core.reconcile")
 
     # ── Stage 4: Clear cache ──────────────────────────────────────────────────
     _set("running", 98, "Clearing cache…")

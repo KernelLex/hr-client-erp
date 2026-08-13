@@ -12,6 +12,14 @@ import { FinancialStatementsTab } from "./FinancialStatementsTab"
 import { BankReconciliationTab } from "./BankReconciliationTab"
 import { FixedAssetsTab } from "./FixedAssetsTab"
 import { DepreciationTab } from "./DepreciationTab"
+import { PeriodProvider, PeriodFilter } from "./PeriodFilter"
+
+// Tabs whose data is period-scoped — the shared Year → Month filter applies to
+// these. Other tabs (Chart of Accounts, balances) are point-in-time, no filter.
+const PERIOD_TABS = new Set([
+  "journal", "payment", "receipts", "credit-notes", "debit-notes",
+  "sales-invoices", "purchase-bills", "cash-flow", "financial-statements",
+])
 
 const COMPANY = "Vera Enterprises"
 
@@ -84,63 +92,75 @@ export default function AccountingPage() {
     ? Math.floor((Date.now() - new Date(finSummary.max_date).getTime()) / 86_400_000)
     : 0
 
+  const showPeriod = PERIOD_TABS.has(tab)
+
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-app, #f5efe4)" }}>
-      {/* Page header */}
-      <div className="bg-white border-b border-gray-100 px-6 py-3">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shadow shrink-0"
-              style={{ background: "#1e3a2f" }}
-            >
-              <Landmark className="w-5 h-5 text-[#c8a45c]" />
+    <PeriodProvider>
+      <div className="min-h-screen" style={{ background: "var(--bg-app, #f5efe4)" }}>
+        {/* Page header */}
+        <div className="bg-white border-b border-gray-100 px-6 py-3">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shadow shrink-0"
+                style={{ background: "#1e3a2f" }}
+              >
+                <Landmark className="w-5 h-5 text-[#c8a45c]" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold" style={{ color: "var(--text-primary, #2c2c2a)" }}>
+                  {tabLabel}
+                </h1>
+                <p className="text-xs" style={{ color: "var(--text-secondary, #6a6a5c)" }}>
+                  {COMPANY} · Finance &amp; Governance
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg font-bold" style={{ color: "var(--text-primary, #2c2c2a)" }}>
-                {tabLabel}
-              </h1>
-              <p className="text-xs" style={{ color: "var(--text-secondary, #6a6a5c)" }}>
-                {COMPANY} · Finance &amp; Governance
-              </p>
-            </div>
+
+            {finSummary?.max_date && (
+              <div
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border"
+                style={{ borderColor: "#e0d9cb", color: "var(--text-secondary, #6a6a5c)" }}
+              >
+                <RefreshCw size={11} />
+                Tally data through {finSummary.max_date}
+              </div>
+            )}
           </div>
 
-          {finSummary?.max_date && (
+          {/* Shared Year → Month filter — one definition for every period-scoped
+              tab, so the same months are never re-picked page by page. */}
+          {showPeriod && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <PeriodFilter />
+            </div>
+          )}
+
+          {gapDays > 20 && (
             <div
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border"
-              style={{ borderColor: "#e0d9cb", color: "var(--text-secondary, #6a6a5c)" }}
+              className="mt-3 flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm"
+              style={{ background: "var(--color-warning-bg, #fff7ed)", border: "0.5px solid #fde68a" }}
             >
-              <RefreshCw size={11} />
-              Tally data through {finSummary.max_date}
+              <AlertCircle size={14} style={{ color: "var(--color-warning, #ea580c)" }} className="shrink-0" />
+              <span style={{ color: "#92400e" }}>
+                Tally data is <strong>{gapDays} days</strong> behind (last import: {finSummary!.max_date}).
+                Re-import the latest XML to refresh.
+              </span>
             </div>
           )}
         </div>
 
-        {gapDays > 20 && (
+        {/* Tab content */}
+        <div className="px-6 py-5 max-w-7xl mx-auto">
           <div
-            className="mt-3 flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm"
-            style={{ background: "var(--color-warning-bg, #fff7ed)", border: "0.5px solid #fde68a" }}
+            className="bg-white rounded-xl p-5"
+            style={{ border: "var(--border-card, 0.5px solid #e0d9cb)", boxShadow: "var(--shadow-card)" }}
           >
-            <AlertCircle size={14} style={{ color: "var(--color-warning, #ea580c)" }} className="shrink-0" />
-            <span style={{ color: "#92400e" }}>
-              Tally data is <strong>{gapDays} days</strong> behind (last import: {finSummary!.max_date}).
-              Re-import the latest XML to refresh.
-            </span>
+            <TabContent tab={tab} />
           </div>
-        )}
-      </div>
-
-      {/* Tab content */}
-      <div className="px-6 py-5 max-w-7xl mx-auto">
-        <div
-          className="bg-white rounded-xl p-5"
-          style={{ border: "var(--border-card, 0.5px solid #e0d9cb)", boxShadow: "var(--shadow-card)" }}
-        >
-          <TabContent tab={tab} />
         </div>
       </div>
-    </div>
+    </PeriodProvider>
   )
 }
 
