@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Search, Loader2, ChevronLeft, ChevronRight, X } from "lucide-react"
+import { Search, Loader2, X } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { exportCsv } from "@/lib/csv"
 import { accountingGet, operationsGet } from "./api"
@@ -43,7 +43,8 @@ interface LedgerStatement {
   transactions: Txn[]
 }
 
-const PAGE_SIZE = 50
+// Pull the whole statement in one request; the table collapses it by month.
+const PAGE_SIZE = 100000
 
 function fmtINR(n: number): string {
   return `₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -54,7 +55,6 @@ function fmtINR(n: number): string {
 export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash" | "fixed_assets"; placeholder?: string }) {
   const [pickerQuery, setPickerQuery] = useState("")
   const [selected, setSelected] = useState<LedgerOption | null>(null)
-  const [page, setPage] = useState(1)
   const [txnSearch, setTxnSearch] = useState("")
 
   // Always fetch top ledgers (empty query = show all up to limit).
@@ -66,9 +66,9 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
   })
 
   const { data: stmt, isLoading, isError } = useQuery<LedgerStatement>({
-    queryKey: ["ledger-statement", selected?.ledger_name, page, txnSearch],
+    queryKey: ["ledger-statement", selected?.ledger_name, txnSearch],
     queryFn: () => operationsGet("get_ledger_statement", {
-      ledger_name: selected!.ledger_name, page: String(page), page_size: String(PAGE_SIZE), search: txnSearch,
+      ledger_name: selected!.ledger_name, page: "1", page_size: String(PAGE_SIZE), search: txnSearch,
     }),
     enabled: !!selected,
     staleTime: 15_000,
@@ -84,8 +84,6 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
     { key: "credit", header: "Credit", align: "right", render: r => r.credit ? <span className="font-mono text-emerald-700">{fmtINR(r.credit)}</span> : <span className="text-gray-300">—</span> },
   ]
 
-  const totalPages = Math.max(1, Math.ceil((stmt?.total ?? 0) / PAGE_SIZE))
-
   return (
     <div className="space-y-4">
       {/* Ledger picker */}
@@ -93,7 +91,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         <input
           value={selected ? selected.ledger_name : pickerQuery}
-          onChange={e => { setSelected(null); setPickerQuery(e.target.value); setPage(1) }}
+          onChange={e => { setSelected(null); setPickerQuery(e.target.value) }}
           placeholder={placeholder ?? "Search for a ledger…"}
           className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#c8a45c] bg-white"
         />
@@ -110,7 +108,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
             {options.map(o => (
               <button
                 key={o.ledger_name}
-                onClick={() => { setSelected(o); setPickerQuery(""); setPage(1) }}
+                onClick={() => { setSelected(o); setPickerQuery("") }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-[#f5efe4] flex items-center justify-between gap-2"
               >
                 <span>
@@ -183,7 +181,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
 
           <input
             value={txnSearch}
-            onChange={e => { setTxnSearch(e.target.value); setPage(1) }}
+            onChange={e => setTxnSearch(e.target.value)}
             placeholder="Search narration, party, voucher #…"
             className="w-full max-w-xs text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#c8a45c]"
           />
@@ -212,19 +210,6 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
                 )}
                 emptyMessage="No transactions found for this ledger."
               />
-              {(stmt?.total ?? 0) > PAGE_SIZE && (
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs text-gray-400">Page {page} of {totalPages}</span>
-                  <div className="flex items-center gap-1.5">
-                    <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className="p-1.5 rounded-md border border-gray-200 text-gray-500 disabled:opacity-30 hover:border-gray-400">
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} className="p-1.5 rounded-md border border-gray-200 text-gray-500 disabled:opacity-30 hover:border-gray-400">
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </>

@@ -19,12 +19,9 @@ export interface RegisterSummary extends VoucherSummary {
 }
 
 function fmtCompact(n: number): string {
-  const abs = Math.abs(n ?? 0)
-  const sign = n < 0 ? "−" : ""
-  if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(2)}Cr`
-  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(2)}L`
-  if (abs >= 1_000) return `${sign}₹${(abs / 1_000).toFixed(1)}K`
-  return `${sign}₹${abs.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
+  // Pinpoint value — exact rupees + paise, Indian grouping. No Cr/L/K rounding.
+  const sign = (n ?? 0) < 0 ? "−" : ""
+  return `${sign}₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]

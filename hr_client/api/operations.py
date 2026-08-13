@@ -1341,9 +1341,11 @@ def get_voucher_list(voucher_type, fy=None, year=None, month=None, search=None, 
     }
     order = sort_map.get(sort or "date_desc", "voucher_date DESC, name DESC")
 
-    # Pagination
+    # Pagination — cap raised so the UI can pull a whole year (or all years) in
+    # one request and present every month as a collapsible group on a single page
+    # (no page-splitting that repeats a month across pages).
     pg      = max(1, int(flt(page)))
-    pg_size = max(10, min(100, int(flt(page_size))))
+    pg_size = max(10, min(100000, int(flt(page_size))))
     offset  = (pg - 1) * pg_size
 
     rows = frappe.db.sql(

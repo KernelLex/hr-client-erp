@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { AlertCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { AlertCircle, Loader2 } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { accountingGet } from "./api"
 import { VoucherDetailDrawer } from "./VoucherDetailDrawer"
@@ -18,7 +18,8 @@ interface DepRow {
 }
 interface DepResult { data: DepRow[]; total: number; page: number; page_size: number }
 
-const PAGE_SIZE = 50
+// Pull the whole set in one request; the table collapses it by month.
+const PAGE_SIZE = 100000
 
 function fmtINR(n: number): string {
   return `₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -27,18 +28,16 @@ function fmtINR(n: number): string {
 /** Best-effort: journal entries whose debit/credit ledger mentions "depreciation" —
  * not a computed depreciation schedule (no per-asset useful-life data exists). */
 export function DepreciationTab() {
-  const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<string | null>(null)
 
   const { data, isLoading, isError } = useQuery<DepResult>({
-    queryKey: ["depreciation-entries", page],
-    queryFn: () => accountingGet("get_depreciation_entries", { page: String(page), page_size: String(PAGE_SIZE) }),
+    queryKey: ["depreciation-entries"],
+    queryFn: () => accountingGet("get_depreciation_entries", { page: "1", page_size: String(PAGE_SIZE) }),
     staleTime: 30_000,
   })
 
   const rows = data?.data ?? []
   const total = data?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const columns: DataTableColumn<DepRow>[] = [
     { key: "voucher_date", header: "Date" },
@@ -77,19 +76,6 @@ export function DepreciationTab() {
             onRowClick={r => setSelected(r.name)}
             emptyMessage="No depreciation-related journal entries found."
           />
-          {total > PAGE_SIZE && (
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-gray-400">Page {page} of {totalPages}</span>
-              <div className="flex items-center gap-1.5">
-                <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className="p-1.5 rounded-md border border-gray-200 text-gray-500 disabled:opacity-30 hover:border-gray-400">
-                  <ChevronLeft size={14} />
-                </button>
-                <button disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} className="p-1.5 rounded-md border border-gray-200 text-gray-500 disabled:opacity-30 hover:border-gray-400">
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
 

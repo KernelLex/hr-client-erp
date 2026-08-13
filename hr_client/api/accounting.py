@@ -133,7 +133,9 @@ def _register_list(doctype, date_col, party_col, no_col, extra_cols, fy, search,
     where_sql = " AND ".join(where)
 
     page = cint(page) or 1
-    page_size = max(10, min(200, cint(page_size) or 50))
+    # Cap raised so the UI can pull a whole year (or all years) in one request and
+    # show every month as a collapsible group on a single page.
+    page_size = max(10, min(100000, cint(page_size) or 50))
     order = sort_map.get(sort or "date_desc", sort_map["date_desc"])
 
     total_row = frappe.db.sql(f"SELECT COUNT(*) AS c FROM `tab{doctype}` WHERE {where_sql}", values, as_dict=True)
@@ -407,7 +409,7 @@ def get_balance_sheet():
 
 @frappe.whitelist()
 @handle_api_error
-def get_depreciation_entries(fy="all", page=1, page_size=50):
+def get_depreciation_entries(fy="all", page=1, page_size=100000):
     require_admin()
     where = [
         "is_cancelled = 0", "voucher_type = 'Journal'",
@@ -425,7 +427,7 @@ def get_depreciation_entries(fy="all", page=1, page_size=50):
 
     where_sql = " AND ".join(where)
     page = cint(page) or 1
-    page_size = max(10, min(200, cint(page_size) or 50))
+    page_size = max(10, min(100000, cint(page_size) or 50))
 
     total_row = frappe.db.sql(f"SELECT COUNT(*) AS c FROM `tabVE Tally Voucher` WHERE {where_sql}", values, as_dict=True)
     total = cint(total_row[0].c) if total_row else 0

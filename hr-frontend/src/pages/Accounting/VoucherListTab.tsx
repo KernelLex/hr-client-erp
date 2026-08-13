@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Loader2, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
+import { Loader2, ArrowRight } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { exportCsv } from "@/lib/csv"
 import { operationsGet } from "./api"
@@ -27,7 +27,8 @@ interface VoucherListResult {
   page_size: number
 }
 
-const PAGE_SIZE = 50
+// Pull the entire filtered set in one request; the table collapses it by month.
+const PAGE_SIZE = 100000
 
 function fmtINR(n: number): string {
   return `₹${Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -58,23 +59,22 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
   const { year, month } = usePeriod()
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
-  const [page, setPage] = useState(1)
   const [sort, setSort] = useState("date_desc")
   const [selected, setSelected] = useState<string | null>(null)
 
-  // Reset to page 1 whenever the shared period changes.
-  useEffect(() => { setPage(1) }, [year, month])
-
   const period = periodParams({ year, month })
 
+  // Load the whole filtered set in one request — the table groups it into
+  // collapsible month sections, so a chosen year shows every month on one page
+  // with no pagination (and no month split across pages).
   const { data, isLoading, isError } = useQuery<VoucherListResult>({
-    queryKey: ["voucher-list", voucherType, year, month, search, page, sort],
+    queryKey: ["voucher-list", voucherType, year, month, search, sort],
     queryFn: () =>
       operationsGet("get_voucher_list", {
         voucher_type: voucherType,
         ...period,
         search,
-        page: String(page),
+        page: "1",
         page_size: String(PAGE_SIZE),
         sort,
       }),
@@ -89,19 +89,16 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault()
-    setPage(1)
     setSearch(searchInput)
   }
 
   function pickParty(party: string) {
     setSearchInput(party)
     setSearch(party)
-    setPage(1)
   }
 
   const rows = data?.data ?? []
   const total = data?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const dateGrouped = sort === "date_desc" || sort === "date_asc"
 
   const columns: DataTableColumn<VoucherRow>[] = [
@@ -139,7 +136,7 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
         </form>
         <select
           value={sort}
-          onChange={e => { setSort(e.target.value); setPage(1) }}
+          onChange={e => setSort(e.target.value)}
           className="text-xs border border-gray-200 rounded-lg px-2.5 py-2 bg-white text-gray-700"
         >
           <option value="date_desc">Newest first</option>
@@ -175,31 +172,6 @@ export function VoucherListTab({ voucherType, noun }: { voucherType: string; nou
             onRowClick={r => setSelected(r.name)}
             emptyMessage={`No ${noun.toLowerCase()} found.`}
           />
-
-          {/* Pagination */}
-          {total > PAGE_SIZE && (
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-gray-400">
-                Page {page} of {totalPages}
-              </span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  disabled={page <= 1}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  className="p-1.5 rounded-md border border-gray-200 text-gray-500 disabled:opacity-30 hover:border-gray-400"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button
-                  disabled={page >= totalPages}
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  className="p-1.5 rounded-md border border-gray-200 text-gray-500 disabled:opacity-30 hover:border-gray-400"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
 

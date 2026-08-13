@@ -29,12 +29,9 @@ const ROOT_TYPE_COLORS: Record<string, string> = {
 }
 
 function fmtBalance(balance: number): string {
-  const abs = Math.abs(balance)
+  // Pinpoint value — exact rupees + paise, Indian grouping. No Cr/L/K rounding.
   const sign = balance < 0 ? "−" : ""
-  if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(2)}Cr`
-  if (abs >= 100_000)    return `${sign}₹${(abs / 100_000).toFixed(2)}L`
-  if (abs >= 1_000)      return `${sign}₹${(abs / 1_000).toFixed(1)}K`
-  return `${sign}₹${abs.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+  return `${sign}₹${Math.abs(balance).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 function flattenTree(accounts: Account[]): Account[] {

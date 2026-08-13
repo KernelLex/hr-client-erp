@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { exportCsv } from "@/lib/csv"
 import { accountingGet } from "./api"
@@ -21,7 +21,8 @@ interface RegisterListResult {
   page_size: number
 }
 
-const PAGE_SIZE = 50
+// Pull the entire filtered set in one request; the table collapses it by month.
+const PAGE_SIZE = 100000
 
 function fmtINR(n: number): string {
   return `₹${Math.abs(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -48,18 +49,16 @@ export function RegisterListTab(props: RegisterListTabProps) {
   const { year, month } = usePeriod()
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
-  const [page, setPage] = useState(1)
   const [sort, setSort] = useState("date_desc")
   const [selectedGuid, setSelectedGuid] = useState<string | null>(null)
 
-  useEffect(() => { setPage(1) }, [year, month])
-
   const period = periodParams({ year, month })
 
+  // Whole filtered set in one request — table groups it into collapsible months.
   const { data, isLoading, isError } = useQuery<RegisterListResult>({
-    queryKey: ["register-list", endpoint, year, month, search, page, sort],
+    queryKey: ["register-list", endpoint, year, month, search, sort],
     queryFn: () => accountingGet(endpoint, {
-      ...period, search, page: String(page), page_size: String(PAGE_SIZE), sort,
+      ...period, search, page: "1", page_size: String(PAGE_SIZE), sort,
     }),
     staleTime: 30_000,
   })
@@ -73,12 +72,10 @@ export function RegisterListTab(props: RegisterListTabProps) {
   function pickParty(party: string) {
     setSearchInput(party)
     setSearch(party)
-    setPage(1)
   }
 
   const rows = data?.data ?? []
   const total = data?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const dateGrouped = sort === "date_desc" || sort === "date_asc"
 
   const columns: DataTableColumn<RegisterRow>[] = [
@@ -114,7 +111,7 @@ export function RegisterListTab(props: RegisterListTabProps) {
       {/* Period is controlled by the shared Year → Month filter in the page header. */}
       <div className="flex flex-wrap items-center gap-2">
         <form
-          onSubmit={e => { e.preventDefault(); setPage(1); setSearch(searchInput) }}
+          onSubmit={e => { e.preventDefault(); setSearch(searchInput) }}
           className="flex-1 min-w-[200px]"
         >
           <input
@@ -126,7 +123,7 @@ export function RegisterListTab(props: RegisterListTabProps) {
         </form>
         <select
           value={sort}
-          onChange={e => { setSort(e.target.value); setPage(1) }}
+          onChange={e => setSort(e.target.value)}
           className="text-xs border border-gray-200 rounded-lg px-2.5 py-2 bg-white text-gray-700"
         >
           <option value="date_desc">Newest first</option>
@@ -162,28 +159,6 @@ export function RegisterListTab(props: RegisterListTabProps) {
             onRowClick={r => setSelectedGuid(r.tally_guid)}
             emptyMessage={`No ${noun.toLowerCase()} found.`}
           />
-
-          {total > PAGE_SIZE && (
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-gray-400">Page {page} of {totalPages}</span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  disabled={page <= 1}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  className="p-1.5 rounded-md border border-gray-200 text-gray-500 disabled:opacity-30 hover:border-gray-400"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button
-                  disabled={page >= totalPages}
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  className="p-1.5 rounded-md border border-gray-200 text-gray-500 disabled:opacity-30 hover:border-gray-400"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
 
