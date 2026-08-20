@@ -390,19 +390,24 @@ def run(masters_path=None, transactions_path=None):
         frappe.db.commit()
         _set_status("running", 92, "Building Stock Movement from VE Tally Voucher inventory entries…")
 
-        # ── 9. Stock Movement from Sales voucher inventory entries ────────────
-        stock_agg = defaultdict(lambda: {"sold_value": 0.0, "last_period": ""})
+        # ── 9. Stock Movement from voucher inventory entries ──────────────────
+        # sold_value drives Fast/Mid/Slow/Dead classification (sales side only);
+        # sold_qty/purch_qty roll opening stock forward into a current on-hand, since
+        # Tally gives no closing-stock snapshot.
+        stock_agg = defaultdict(lambda: {"sold_value": 0.0, "sold_qty": 0.0, "purch_qty": 0.0, "last_period": ""})
 
         inv_vouchers = frappe.db.sql(
-            """SELECT voucher_date, inventory_entries
+            """SELECT voucher_type, voucher_date, inventory_entries
                FROM `tabVE Tally Voucher`
-               WHERE voucher_type IN ('Sales','Delivery Note')
+               WHERE voucher_type IN ('Sales','Delivery Note','Purchase','Credit Note','Debit Note')
                  AND is_cancelled=0
                  AND inventory_entries IS NOT NULL
                  AND inventory_entries NOT IN ('null','[]','')""",
             as_dict=True,
         )
 
+        _OUT = {"Sales", "Delivery Note"}       # goods leave stock
+        _IN  = {"Purchase", "Credit Note"}      # goods enter stock (Credit Note = sales return)
         for v in inv_vouchers:
             vdate = str(v.voucher_date)[:10] if v.voucher_date else ""
             period = vdate[:7] if len(vdate) >= 7 else ""
@@ -412,11 +417,24 @@ def run(masters_path=None, transactions_path=None):
                 continue
             for e in (entries or []):
                 iname = e.get("name", e.get("item", ""))   # tally_import_job stores as "name"
-                amt   = abs(flt(e.get("amount", 0)))
-                if iname and amt > 0:
-                    stock_agg[iname]["sold_value"] += amt
-                    if period > stock_agg[iname]["last_period"]:
-                        stock_agg[iname]["last_period"] = period
+                if not iname:
+                    continue
+                amt = abs(flt(e.get("amount", 0)))
+                qty = abs(flt(e.get("qty", 0)))
+                if v.voucher_type in _OUT:
+                    stock_agg[iname]["sold_qty"] += qty
+                    if amt > 0:
+                        stock_agg[iname]["sold_value"] += amt
+                        if period > stock_agg[iname]["last_period"]:
+                            stock_agg[iname]["last_period"] = period
+                elif v.voucher_type in _IN:
+                    stock_agg[iname]["purch_qty"] += qty
+                elif v.voucher_type == "Debit Note":       # purchase return — goods leave
+                    stock_agg[iname]["purch_qty"] -= qty
+
+        # Opening quantities from the stock master (seed for on-hand).
+        opening_qty_map = {r[0]: flt(r[1]) for r in frappe.db.sql(
+            "SELECT item_name, opening_qty FROM `tabVE Tally Stock Item`")}
 
         # Classify by sold_value percentile (top 20% = Fast, etc.)
         today_period = today_d.strftime("%Y-%m")
@@ -425,9 +443,13 @@ def run(masters_path=None, transactions_path=None):
         p50 = vals[int(len(vals) * 0.50)] if vals else 1
         p20 = vals[int(len(vals) * 0.80)] if vals else 1
 
-        for iname, agg in stock_agg.items():
+        # Build a row for every item that has either sales activity or a live on-hand.
+        all_items = set(stock_agg) | set(opening_qty_map)
+        for iname in all_items:
+            agg = stock_agg.get(iname, {"sold_value": 0.0, "sold_qty": 0.0, "purch_qty": 0.0, "last_period": ""})
             sv = agg["sold_value"]
-            if sv == 0:
+            on_hand = round(opening_qty_map.get(iname, 0.0) + agg["purch_qty"] - agg["sold_qty"], 3)
+            if sv == 0 and on_hand == 0:
                 continue
             period = agg["last_period"] or today_period
             cat = "Fast" if sv >= p80 else "Mid" if sv >= p50 else "Slow" if sv >= p20 else "Dead"
@@ -438,7 +460,7 @@ def run(masters_path=None, transactions_path=None):
                 "period":            period,
                 "movement_category": cat,
                 "units_sold":        round(sv, 2),
-                "stock_on_hand":     0.0,
+                "stock_on_hand":     on_hand,
                 "turnover_days":     0.0,
                 "safety_level":      0.0,
                 "reorder_level":     0.0,

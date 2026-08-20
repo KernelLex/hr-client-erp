@@ -361,32 +361,60 @@ def get_profit_and_loss(from_date=None, to_date=None):
 @frappe.whitelist()
 @handle_api_error
 def get_balance_sheet():
-    """Current-snapshot Balance Sheet from VE Tally Ledger.closing_balance —
-    Tally only gives us live closing balances, not historical point-in-time
-    ones, so this always reflects the most recent import, not `as_of` a
-    chosen date."""
+    """Financial-position snapshot from VE Tally Ledger closing balances.
+
+    The Tally export carries no point-in-time closing balances (only current)
+    and the derived closing_balance sign is inconsistent across the long tail
+    of accounts — a blind root-group flip produced a NEGATIVE asset total.
+    Instead we classify each ledger by its actual balance direction: a debit
+    balance (<0) is an asset, a credit balance (>0) is a liability. Flagged
+    accounts (cash/bank/debtors/creditors/GST/TDS) are always balance-sheet
+    items and are routed to the correct side even when their sign flips
+    (e.g. a debtor in credit becomes a customer advance).
+    """
     require_admin()
 
-    ledgers = frappe.db.get_all(
-        "VE Tally Ledger",
-        fields=["ledger_name", "parent_group", "root_group", "closing_balance"],
+    rows = frappe.db.sql(
+        """SELECT ledger_name, parent_group, root_group, closing_balance,
+                  is_debtors, is_creditors, is_bank, is_cash, is_gst, is_tds
+           FROM `tabVE Tally Ledger` WHERE closing_balance <> 0""",
+        as_dict=True,
     )
 
-    trees = {"Asset": defaultdict(lambda: defaultdict(float)),
-             "Liability": defaultdict(lambda: defaultdict(float)),
-             "Equity": defaultdict(lambda: defaultdict(float))}
+    asset_tree  = defaultdict(lambda: defaultdict(float))
+    liab_tree   = defaultdict(lambda: defaultdict(float))
+    equity_tree = defaultdict(lambda: defaultdict(float))
 
-    for l in ledgers:
-        if l.root_group not in trees:
-            continue
-        bal = _display_balance(l.closing_balance, l.root_group)
-        if bal == 0:
-            continue
-        trees[l.root_group][l.parent_group or "Other"][l.ledger_name] += bal
+    for r in rows:
+        bal = flt(r.closing_balance)
+        dr = -bal if bal < 0 else 0.0   # debit magnitude
+        cr = bal if bal > 0 else 0.0    # credit magnitude
+        name = r.ledger_name
+        grp = r.parent_group or "Other"
 
-    assets = _group_and_serialize(trees["Asset"])
-    liabilities = _group_and_serialize(trees["Liability"])
-    equity = _group_and_serialize(trees["Equity"])
+        if r.is_cash:
+            (asset_tree["Cash in Hand"] if dr else liab_tree["Cash (overdrawn)"])[name] += (dr or cr)
+        elif r.is_bank:
+            (asset_tree["Bank Accounts"] if dr else liab_tree["Bank OD / Overdraft"])[name] += (dr or cr)
+        elif r.is_debtors:
+            (asset_tree["Sundry Debtors (Receivable)"] if dr else liab_tree["Advances from Customers"])[name] += (dr or cr)
+        elif r.is_creditors:
+            (liab_tree["Sundry Creditors (Payable)"] if cr else asset_tree["Advances to Suppliers"])[name] += (cr or dr)
+        elif r.is_gst:
+            (asset_tree["Input GST / ITC"] if dr else liab_tree["Output GST Payable"])[name] += (dr or cr)
+        elif r.is_tds:
+            (liab_tree["TDS Payable"] if cr else asset_tree["TDS Receivable"])[name] += (cr or dr)
+        elif r.root_group == "Equity":
+            equity_tree[grp][name] += (cr - dr)
+        elif r.root_group == "Asset":
+            (asset_tree[grp] if dr else liab_tree[grp])[name] += (dr or cr)
+        elif r.root_group == "Liability":
+            (liab_tree[grp] if cr else asset_tree[grp])[name] += (cr or dr)
+        # Income / Expense roots are P&L accounts — excluded from the balance sheet.
+
+    assets = _group_and_serialize(asset_tree)
+    liabilities = _group_and_serialize(liab_tree)
+    equity = _group_and_serialize(equity_tree)
     total_assets = sum(g["amount"] for g in assets)
     total_liabilities = sum(g["amount"] for g in liabilities)
     total_equity = sum(g["amount"] for g in equity)
@@ -396,9 +424,11 @@ def get_balance_sheet():
         "assets": {"total": round(total_assets, 2), "groups": assets},
         "liabilities": {"total": round(total_liabilities, 2), "groups": liabilities},
         "equity": {"total": round(total_equity, 2), "groups": equity},
-        # Non-zero mainly reflects current-year P&L / retained earnings not yet
+        # Residual mainly reflects current-period P&L / retained earnings not yet
         # posted to an Equity ledger in Tally — not necessarily a data error.
         "balance_check": round(total_assets - (total_liabilities + total_equity), 2),
+        "note": "Snapshot from Tally closing balances. Debit balances are shown as "
+                "assets, credit balances as liabilities; P&L accounts are excluded.",
     }
 
 

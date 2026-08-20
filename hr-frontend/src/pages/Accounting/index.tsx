@@ -10,7 +10,6 @@ import { ReceivablePayableTab } from "./ReceivablePayableTab"
 import { CashFlowTab } from "./CashFlowTab"
 import { FinancialStatementsTab } from "./FinancialStatementsTab"
 import { BankReconciliationTab } from "./BankReconciliationTab"
-import { FixedAssetsTab } from "./FixedAssetsTab"
 import { DepreciationTab } from "./DepreciationTab"
 import { PeriodProvider, PeriodFilter } from "./PeriodFilter"
 
@@ -25,11 +24,10 @@ const COMPANY = "Vera Enterprises"
 
 const TAB_LABELS: Record<string, string> = {
   "coa":                  "Chart of Accounts",
-  "cost-centers":         "Cost Centers",
   "journal":              "Journal Entries",
   "payment":              "Payment Entries",
   "receipts":             "Receipts",
-  "bank-recon":           "Bank Reconciliation",
+  "bank-recon":           "Bank Book",
   "sales-invoices":       "Sales Invoices",
   "purchase-bills":       "Purchase Bills",
   "credit-notes":         "Credit Notes",
@@ -37,10 +35,8 @@ const TAB_LABELS: Record<string, string> = {
   "general-ledger":       "General Ledger",
   "ar":                   "Accounts Receivable",
   "ap":                   "Accounts Payable",
-  "fixed-assets":         "Fixed Assets",
-  "depreciation":         "Depreciation",
+  "depreciation":         "Depreciation (Journal)",
   "cash-flow":            "Cash Flow",
-  "budgeting":            "Budgeting",
   "financial-statements": "Financial Statements",
 }
 
@@ -168,8 +164,6 @@ function TabContent({ tab }: { tab: string }) {
   switch (tab) {
     case "coa":
       return <ChartOfAccountsTab />
-    case "cost-centers":
-      return <ComingSoon label="Cost Centers" />
     case "journal":
       return <VoucherListTab voucherType="Journal" noun="Journal Entries" />
     case "payment":
@@ -204,14 +198,10 @@ function TabContent({ tab }: { tab: string }) {
       return <ReceivablePayableTab kind="receivable" />
     case "ap":
       return <ReceivablePayableTab kind="payable" />
-    case "fixed-assets":
-      return <FixedAssetsTab />
     case "depreciation":
       return <DepreciationTab />
     case "cash-flow":
       return <CashFlowTab />
-    case "budgeting":
-      return <ComingSoon label="Budgeting" />
     case "financial-statements":
       return <FinancialStatementsTab />
     default:

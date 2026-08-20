@@ -291,6 +291,29 @@ def run(masters_path: str, transactions_path: str):
                     if rm and rm.group(1).strip():
                         try: std_rate = abs(float(rm.group(1).split('/')[0].strip())); break
                         except ValueError: pass
+            # These Tally exports carry neither STANDARDPRICE nor STANDARDCOST — the
+            # only per-item rate present is <OPENINGRATE> ("4284.00/Set"). Without this
+            # fallback every stock item lands at standard_rate=0, so all inventory
+            # valuation (stock value, closing_stock → COGS/gross-profit) reads ₹0.
+            if not std_rate:
+                orm = re.search(r'<OPENINGRATE>([^<]+)</OPENINGRATE>', btext)
+                if orm and orm.group(1).strip():
+                    try: std_rate = abs(float(orm.group(1).split('/')[0].strip()))
+                    except ValueError: pass
+
+            # Opening stock qty ("<OPENINGBALANCE> 22.00 Set") and value ("<OPENINGVALUE>-1064.13").
+            # Tally gives no closing-stock snapshot, so on-hand is seeded from opening and
+            # rolled forward by voucher movement in accounts_tally_import.
+            opening_qty = 0.0
+            ob_m = re.search(r'<OPENINGBALANCE>([^<]+)</OPENINGBALANCE>', btext)
+            if ob_m and ob_m.group(1).strip():
+                try: opening_qty = float(ob_m.group(1).strip().split()[0])
+                except (ValueError, IndexError): pass
+            opening_value = 0.0
+            ov_m = re.search(r'<OPENINGVALUE>([^<]+)</OPENINGVALUE>', btext)
+            if ov_m and ov_m.group(1).strip():
+                try: opening_value = float(ov_m.group(1).strip().split('/')[0].strip())
+                except ValueError: pass
 
             stock_data.append({
                 "item_name":    name[:140],
@@ -299,12 +322,18 @@ def run(masters_path: str, transactions_path: str):
                 "gst_rate":    rate_pct,
                 "unit":        (_clean(unit_m.group(1)) if unit_m else '')[:20],
                 "standard_rate": std_rate,
+                "opening_qty":   opening_qty,
+                "opening_value": opening_value,
             })
 
         _set_status("running", 20, f"Masters loaded: {len(ledger_data)} ledgers, {len(stock_data)} SKUs. Parsing transactions…")
 
         # ── Step 2: Parse Transactions ────────────────────────────
         ledger_balances = defaultdict(float)
+        # This Tally master export carries no stock rate/opening value, so the only
+        # available per-item rate is the RATE on transaction lines. Keep the latest
+        # one per item (by voucher date) to value on-hand stock.
+        item_rate = {}   # item_name[:140] -> (date_str, rate)
         monthly_sales   = defaultdict(float)
         monthly_purch   = defaultdict(float)
         monthly_receipt = defaultdict(float)
@@ -431,6 +460,39 @@ def run(masters_path: str, transactions_path: str):
                             "qty": qty_val,
                             "qty_unit": qty_unit,
                         })
+                        # Remember the most-recent transaction rate per item for valuation.
+                        if rate_val > 0:
+                            _rk = iname_m.group(1).strip().replace("&amp;", "&")[:140]
+                            _prev = item_rate.get(_rk)
+                            if _prev is None or date_str >= _prev[0]:
+                                item_rate[_rk] = (date_str, rate_val)
+                        # The sales/COGS revenue ledger for an invoice line lives INSIDE the
+                        # inventory line's <ACCOUNTINGALLOCATIONS.LIST> (e.g. "Sales @ 18%"),
+                        # not in the voucher-level ledger entries. Capturing it here is what
+                        # lets the P&L see revenue/COGS (income was ~₹0 vs ₹55cr of sales).
+                        for aa in re.finditer(r'<ACCOUNTINGALLOCATIONS\.LIST>(.*?)</ACCOUNTINGALLOCATIONS\.LIST>', itext, re.DOTALL):
+                            aatext = aa.group(1)
+                            aln_m = re.search(r'<LEDGERNAME>([^<]+)</LEDGERNAME>', aatext)
+                            aamts = re.findall(r'<AMOUNT>([^<]+)</AMOUNT>', aatext)
+                            adp_m = re.search(r'<ISDEEMEDPOSITIVE>([^<]+)</ISDEEMEDPOSITIVE>', aatext)
+                            if not aln_m or not aamts:
+                                continue
+                            aln = aln_m.group(1).strip().replace("&amp;", "&")
+                            try:
+                                aval = abs(float(aamts[0].split('/')[0].strip()))
+                            except ValueError:
+                                continue
+                            # ISDEEMEDPOSITIVE=Yes ⇒ Debit, No ⇒ Credit (authoritative in AA blocks).
+                            a_is_dr = bool(adp_m and adp_m.group(1).strip() == 'Yes')
+                            if not is_cancelled and not is_deleted:
+                                # Same convention as voucher ledger entries: Dr ⇒ +val, Cr ⇒ -val.
+                                ledger_balances[aln] += (aval if a_is_dr else -aval)
+                            all_ledger_list.append({
+                                "ledger":   aln[:140],
+                                "amount":   round(aval, 2),
+                                "is_dr":    a_is_dr,
+                                "is_party": False,
+                            })
 
                     # Use party-ledger amount when available — it matches Tally's own AR/AP figures
                     # and eliminates the systematic discrepancy caused by using max-ledger-line amount
@@ -626,13 +688,15 @@ def run(masters_path: str, transactions_path: str):
 
         # Stock items (with fixed HSN + GST rate)
         stock_rows = [(d['item_name'], d['item_name'], d['stock_group'], d['hsn_code'],
-                       d.get('gst_rate', 0.0), d['unit'], d['standard_rate'],
+                       d.get('gst_rate', 0.0), d['unit'],
+                       d['standard_rate'] or item_rate.get(d['item_name'], ('', 0.0))[1],
+                       d.get('opening_qty', 0.0), d.get('opening_value', 0.0),
                        NOW, NOW, OWNER, OWNER, 1, 0)
                       for d in stock_data]
         for i in range(0, len(stock_rows), BATCH):
             batch = stock_rows[i:i+BATCH]
-            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
-            frappe.db.sql(f"INSERT INTO `tabVE Tally Stock Item` (name,item_name,stock_group,hsn_code,gst_rate,unit,standard_rate,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
+            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
+            frappe.db.sql(f"INSERT INTO `tabVE Tally Stock Item` (name,item_name,stock_group,hsn_code,gst_rate,unit,standard_rate,opening_qty,opening_value,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
         frappe.db.commit()
 
         _set_status("running", 80, f"Ledgers + stock items saved. Inserting {len(vouchers)} vouchers…")

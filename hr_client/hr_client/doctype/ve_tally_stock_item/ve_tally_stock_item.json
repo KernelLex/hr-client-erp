@@ -13,16 +13,59 @@
   "hsn_code",
   "gst_rate",
   "unit",
-  "standard_rate"
+  "standard_rate",
+  "opening_qty",
+  "opening_value"
  ],
  "fields": [
-  {"fieldname": "item_name", "fieldtype": "Data", "in_list_view": 1, "label": "Item Name", "reqd": 1, "unique": 1},
-  {"fieldname": "stock_group", "fieldtype": "Data", "in_list_view": 1, "label": "Stock Group"},
-  {"fieldname": "col1", "fieldtype": "Column Break"},
-  {"fieldname": "hsn_code", "fieldtype": "Data", "label": "HSN Code"},
-  {"fieldname": "gst_rate", "fieldtype": "Float", "label": "GST Rate (%)"},
-  {"fieldname": "unit", "fieldtype": "Data", "label": "Unit"},
-  {"fieldname": "standard_rate", "fieldtype": "Currency", "label": "Standard Rate"}
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "stock_group",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Stock Group"
+  },
+  {
+   "fieldname": "col1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hsn_code",
+   "fieldtype": "Data",
+   "label": "HSN Code"
+  },
+  {
+   "fieldname": "gst_rate",
+   "fieldtype": "Float",
+   "label": "GST Rate (%)"
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Data",
+   "label": "Unit"
+  },
+  {
+   "fieldname": "standard_rate",
+   "fieldtype": "Currency",
+   "label": "Standard Rate"
+  },
+  {
+   "fieldname": "opening_qty",
+   "fieldtype": "Float",
+   "label": "Opening Qty"
+  },
+  {
+   "fieldname": "opening_value",
+   "fieldtype": "Currency",
+   "label": "Opening Value"
+  }
  ],
  "links": [],
  "modified": "2026-06-24 00:00:00.000000",
@@ -32,8 +75,17 @@
  "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
-  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
-  {"role": "HR Manager", "read": 1}
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "HR Manager",
+   "read": 1
+  }
  ],
  "sort_field": "item_name",
  "sort_order": "ASC",
