@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -6,60 +7,82 @@ import { AuthProvider } from "@/context/AuthContext"
 import { PermissionsProvider } from "@/context/PermissionsContext"
 import { ProtectedRoute, PublicOnlyRoute } from "@/components/auth/ProtectedRoute"
 import { Layout } from "@/components/layout/Layout"
+// Critical path — kept eager so the login → dashboard flow needs no extra fetch.
 import { Login } from "@/pages/Login"
 import { Dashboard } from "@/pages/Dashboard"
-import { RecruitmentPage } from "@/pages/recruitment/RecruitmentPage"
-import { PipelinePage } from "@/pages/recruitment/PipelinePage"
-import { EmployeesPage } from "@/pages/employees/EmployeesPage"
-import { EmployeeDetailPage } from "@/pages/employees/EmployeeDetailPage"
-import { PermissionsPage } from "@/pages/admin/permissions/PermissionsPage"
-import { UserManagement } from "@/pages/admin/UserManagement"
-import { EmployeeProfilePage } from "@/pages/profile/EmployeeProfilePage"
-import { AdminEmployeesPage } from "@/pages/admin/employees/AdminEmployeesPage"
-import { AdminEmployeeDetailPage } from "@/pages/admin/employees/AdminEmployeeDetailPage"
-import { AttendancePage } from "@/pages/admin/attendance/AttendancePage"
-import { LeavePage } from "@/pages/leave/LeavePage"
-import { PipelineBoard } from "@/pages/crm/PipelineBoard"
-import { NewLeadForm } from "@/pages/crm/NewLeadForm"
-import { LeadDetail } from "@/pages/crm/LeadDetail"
-import { MyClaimsDashboard } from "@/pages/expenses/MyClaimsDashboard"
-import { NewClaimForm } from "@/pages/expenses/NewClaimForm"
-import { AdminClaimsView } from "@/pages/expenses/AdminClaimsView"
-import AccountsPage from "@/pages/Accounts"
-import { HolidaysPage } from "@/pages/holidays/HolidaysPage"
-import BusinessDashboard from "@/pages/BusinessDashboard"
-import AIInsights from "@/pages/AIInsights"
-import VerificationPage from "@/pages/Verification"
-import AIChat from "@/components/AIChat"
-import { VeDrivePage } from "@/pages/drive/VeDrivePage"
-import { ChatPage } from "@/pages/chat/ChatPage"
-import OperationsPage from "@/pages/Operations"
-import AccountingPage from "@/pages/Accounting"
-import GraphsPage from "@/pages/Graphs"
-import InventoryPage from "@/pages/Inventory"
-import PurchasingPage from "@/pages/Purchasing"
-import SalesRegisterPage from "@/pages/SalesRegister"
-import LogisticsPage from "@/pages/Logistics"
-import ReturnsPage from "@/pages/Returns"
-import { OrgHubPage } from "@/pages/admin/OrgHub/OrgHubPage"
-import { DepartmentsPage, DesignationsPage } from "@/pages/peoplework/screens/HrmsMasters"
-import { EmployeeMasterPage } from "@/pages/peoplework/screens/EmployeeMaster"
-import { PersonalTasksPage, TeamTasksPage } from "@/pages/peoplework/screens/Tasks"
-import { NotesPage } from "@/pages/peoplework/screens/Notes"
-import { ShiftTypesPage, ShiftAssignmentsPage } from "@/pages/peoplework/screens/Shifts"
-import { CalendarPage, MeetingsPage, RemindersPage } from "@/pages/peoplework/screens/Calendar"
-import { WorkflowApprovalsPage } from "@/pages/peoplework/screens/Approvals"
-import { TrainingProgramsPage, TrainingSessionsPage } from "@/pages/peoplework/screens/Training"
-import { ExitManagementPage } from "@/pages/peoplework/screens/ExitManagement"
-import { SalaryStructuresPage, SalaryAssignmentsPage, PayrollRunsPage, SalarySlipsPage } from "@/pages/peoplework/screens/Payroll"
-import { OnboardingPage } from "@/pages/peoplework/screens/Onboarding"
-import { AppraisalCyclesPage, AppraisalsPage } from "@/pages/peoplework/screens/Appraisal"
+
+// Everything else is code-split: each page loads on demand, so the initial
+// bundle stays small. Named exports are mapped to a default for React.lazy.
+const AIChat = lazy(() => import("@/components/AIChat"))
+const RecruitmentPage = lazy(() => import("@/pages/recruitment/RecruitmentPage").then(m => ({ default: m.RecruitmentPage })))
+const PipelinePage = lazy(() => import("@/pages/recruitment/PipelinePage").then(m => ({ default: m.PipelinePage })))
+const EmployeesPage = lazy(() => import("@/pages/employees/EmployeesPage").then(m => ({ default: m.EmployeesPage })))
+const EmployeeDetailPage = lazy(() => import("@/pages/employees/EmployeeDetailPage").then(m => ({ default: m.EmployeeDetailPage })))
+const PermissionsPage = lazy(() => import("@/pages/admin/permissions/PermissionsPage").then(m => ({ default: m.PermissionsPage })))
+const UserManagement = lazy(() => import("@/pages/admin/UserManagement").then(m => ({ default: m.UserManagement })))
+const EmployeeProfilePage = lazy(() => import("@/pages/profile/EmployeeProfilePage").then(m => ({ default: m.EmployeeProfilePage })))
+const AdminEmployeesPage = lazy(() => import("@/pages/admin/employees/AdminEmployeesPage").then(m => ({ default: m.AdminEmployeesPage })))
+const AdminEmployeeDetailPage = lazy(() => import("@/pages/admin/employees/AdminEmployeeDetailPage").then(m => ({ default: m.AdminEmployeeDetailPage })))
+const AttendancePage = lazy(() => import("@/pages/admin/attendance/AttendancePage").then(m => ({ default: m.AttendancePage })))
+const LeavePage = lazy(() => import("@/pages/leave/LeavePage").then(m => ({ default: m.LeavePage })))
+const PipelineBoard = lazy(() => import("@/pages/crm/PipelineBoard").then(m => ({ default: m.PipelineBoard })))
+const NewLeadForm = lazy(() => import("@/pages/crm/NewLeadForm").then(m => ({ default: m.NewLeadForm })))
+const LeadDetail = lazy(() => import("@/pages/crm/LeadDetail").then(m => ({ default: m.LeadDetail })))
+const MyClaimsDashboard = lazy(() => import("@/pages/expenses/MyClaimsDashboard").then(m => ({ default: m.MyClaimsDashboard })))
+const NewClaimForm = lazy(() => import("@/pages/expenses/NewClaimForm").then(m => ({ default: m.NewClaimForm })))
+const AdminClaimsView = lazy(() => import("@/pages/expenses/AdminClaimsView").then(m => ({ default: m.AdminClaimsView })))
+const AccountsPage = lazy(() => import("@/pages/Accounts"))
+const HolidaysPage = lazy(() => import("@/pages/holidays/HolidaysPage").then(m => ({ default: m.HolidaysPage })))
+const BusinessDashboard = lazy(() => import("@/pages/BusinessDashboard"))
+const AIInsights = lazy(() => import("@/pages/AIInsights"))
+const VerificationPage = lazy(() => import("@/pages/Verification"))
+const VeDrivePage = lazy(() => import("@/pages/drive/VeDrivePage").then(m => ({ default: m.VeDrivePage })))
+const ChatPage = lazy(() => import("@/pages/chat/ChatPage").then(m => ({ default: m.ChatPage })))
+const OperationsPage = lazy(() => import("@/pages/Operations"))
+const AccountingPage = lazy(() => import("@/pages/Accounting"))
+const GraphsPage = lazy(() => import("@/pages/Graphs"))
+const InventoryPage = lazy(() => import("@/pages/Inventory"))
+const PurchasingPage = lazy(() => import("@/pages/Purchasing"))
+const SalesRegisterPage = lazy(() => import("@/pages/SalesRegister"))
+const LogisticsPage = lazy(() => import("@/pages/Logistics"))
+const ReturnsPage = lazy(() => import("@/pages/Returns"))
+const OrgHubPage = lazy(() => import("@/pages/admin/OrgHub/OrgHubPage").then(m => ({ default: m.OrgHubPage })))
+const DepartmentsPage = lazy(() => import("@/pages/peoplework/screens/HrmsMasters").then(m => ({ default: m.DepartmentsPage })))
+const DesignationsPage = lazy(() => import("@/pages/peoplework/screens/HrmsMasters").then(m => ({ default: m.DesignationsPage })))
+const EmployeeMasterPage = lazy(() => import("@/pages/peoplework/screens/EmployeeMaster").then(m => ({ default: m.EmployeeMasterPage })))
+const PersonalTasksPage = lazy(() => import("@/pages/peoplework/screens/Tasks").then(m => ({ default: m.PersonalTasksPage })))
+const TeamTasksPage = lazy(() => import("@/pages/peoplework/screens/Tasks").then(m => ({ default: m.TeamTasksPage })))
+const NotesPage = lazy(() => import("@/pages/peoplework/screens/Notes").then(m => ({ default: m.NotesPage })))
+const ShiftTypesPage = lazy(() => import("@/pages/peoplework/screens/Shifts").then(m => ({ default: m.ShiftTypesPage })))
+const ShiftAssignmentsPage = lazy(() => import("@/pages/peoplework/screens/Shifts").then(m => ({ default: m.ShiftAssignmentsPage })))
+const CalendarPage = lazy(() => import("@/pages/peoplework/screens/Calendar").then(m => ({ default: m.CalendarPage })))
+const MeetingsPage = lazy(() => import("@/pages/peoplework/screens/Calendar").then(m => ({ default: m.MeetingsPage })))
+const RemindersPage = lazy(() => import("@/pages/peoplework/screens/Calendar").then(m => ({ default: m.RemindersPage })))
+const WorkflowApprovalsPage = lazy(() => import("@/pages/peoplework/screens/Approvals").then(m => ({ default: m.WorkflowApprovalsPage })))
+const TrainingProgramsPage = lazy(() => import("@/pages/peoplework/screens/Training").then(m => ({ default: m.TrainingProgramsPage })))
+const TrainingSessionsPage = lazy(() => import("@/pages/peoplework/screens/Training").then(m => ({ default: m.TrainingSessionsPage })))
+const ExitManagementPage = lazy(() => import("@/pages/peoplework/screens/ExitManagement").then(m => ({ default: m.ExitManagementPage })))
+const SalaryStructuresPage = lazy(() => import("@/pages/peoplework/screens/Payroll").then(m => ({ default: m.SalaryStructuresPage })))
+const SalaryAssignmentsPage = lazy(() => import("@/pages/peoplework/screens/Payroll").then(m => ({ default: m.SalaryAssignmentsPage })))
+const PayrollRunsPage = lazy(() => import("@/pages/peoplework/screens/Payroll").then(m => ({ default: m.PayrollRunsPage })))
+const SalarySlipsPage = lazy(() => import("@/pages/peoplework/screens/Payroll").then(m => ({ default: m.SalarySlipsPage })))
+const OnboardingPage = lazy(() => import("@/pages/peoplework/screens/Onboarding").then(m => ({ default: m.OnboardingPage })))
+const AppraisalCyclesPage = lazy(() => import("@/pages/peoplework/screens/Appraisal").then(m => ({ default: m.AppraisalCyclesPage })))
+const AppraisalsPage = lazy(() => import("@/pages/peoplework/screens/Appraisal").then(m => ({ default: m.AppraisalsPage })))
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 1000 * 30, retry: 1 },
   },
 })
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-screen" style={{ background: "var(--bg-app)" }}>
+      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--brand-primary)", borderTopColor: "transparent" }} />
+    </div>
+  )
+}
 
 function App() {
   return (
@@ -68,6 +91,7 @@ function App() {
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <PermissionsProvider>
+          <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public — redirects to / if already logged in */}
             <Route element={<PublicOnlyRoute />}>
@@ -76,7 +100,7 @@ function App() {
 
             {/* Protected — redirects to /login if not authenticated */}
             <Route element={<ProtectedRoute />}>
-              <Route element={<><Layout /><AIChat /></>}>
+              <Route element={<><Layout /><Suspense fallback={null}><AIChat /></Suspense></>}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/recruitment" element={<RecruitmentPage />} />
                 <Route path="/recruitment/pipeline/:jobOpening" element={<PipelinePage />} />
@@ -112,9 +136,6 @@ function App() {
                 <Route path="/chat" element={<ChatPage />} />
                 {/* Accounting — Tally voucher browser (original) */}
                 <Route path="/accounting" element={<OperationsPage />} />
-                {/* Accounts Dashboard — financial overview + Tally import (was a
-                    standalone page, merged into OperationsPage; route restored so
-                    the sidebar link works instead of falling through to Dashboard) */}
                 <Route path="/accounts-dashboard" element={<OperationsPage />} />
                 {/* Accounting Module — 18-tab COA / ledger page */}
                 <Route path="/accounting-module" element={<AccountingPage />} />
@@ -158,6 +179,7 @@ function App() {
               </Route>
             </Route>
           </Routes>
+          </Suspense>
           </PermissionsProvider>
         </AuthProvider>
       </BrowserRouter>

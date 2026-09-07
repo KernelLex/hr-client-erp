@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom"
 import { Sidebar } from "./Sidebar"
 import { TopBar } from "./TopBar"
+import { CommandPalette } from "./CommandPalette"
 import { useState, useEffect } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { checkAIStatus, getBusinessSnapshot, getDashboardInsights } from "@/api/ai"
@@ -23,7 +24,21 @@ function useBackgroundAIWarmup() {
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   useBackgroundAIWarmup()
+
+  // Global Ctrl/Cmd+K to open search on every page; Esc closes.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault()
+        setPaletteOpen(true)
+      }
+      if (e.key === "Escape") setPaletteOpen(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "var(--bg-app)" }}>
@@ -36,11 +51,12 @@ export function Layout() {
       )}
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <TopBar onToggleSidebar={() => setSidebarOpen((v) => !v)} />
+        <TopBar onToggleSidebar={() => setSidebarOpen((v) => !v)} onOpenSearch={() => setPaletteOpen(true)} />
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   )
 }

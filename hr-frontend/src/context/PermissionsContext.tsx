@@ -16,7 +16,7 @@ const PermissionsContext = createContext<PermissionsContextValue>({
 })
 
 export function PermissionsProvider({ children }: { children: ReactNode }) {
-  const { user, isLoggedIn } = useAuth()
+  const { user, isLoggedIn, isImpersonating, viewAs } = useAuth()
   const isAdmin = !!(user && ADMIN_USERS.has(user.name))
 
   const { data, isLoading } = useQuery({
@@ -25,11 +25,18 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
       const res = await api.get(apiUrl("hr_client.api.permissions.get_my_permissions"))
       return res.data.message as { modules: Record<string, boolean> }
     },
-    enabled: isLoggedIn && !isAdmin,
+    // While previewing another user we already have their permissions from the
+    // switcher, so no fetch is needed.
+    enabled: isLoggedIn && !isAdmin && !isImpersonating,
     staleTime: 1000 * 60 * 5,
   })
 
   function moduleEnabled(module: string): boolean {
+    // Previewing "as" another user — use their real flags.
+    if (isImpersonating && viewAs) {
+      if (viewAs.is_admin) return true
+      return viewAs.permissions[module] !== false
+    }
     if (isAdmin) return true
     if (isLoading || !data) return true  // optimistic while loading
     return data.modules[module] !== false
