@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
+import { TwoFactorGate } from "./TwoFactorGate"
 
 function Spinner() {
   return (
@@ -14,7 +15,11 @@ export function ProtectedRoute() {
 
   if (isLoading) return <Spinner />
   if (!isLoggedIn) return <Navigate to="/login" replace />
-  return <Outlet />
+  return (
+    <TwoFactorGate>
+      <Outlet />
+    </TwoFactorGate>
+  )
 }
 
 export function PublicOnlyRoute() {

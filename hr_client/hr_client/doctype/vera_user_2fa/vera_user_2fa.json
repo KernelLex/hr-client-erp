@@ -1,0 +1,83 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:user",
+ "creation": "2026-08-23 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "enabled",
+  "secret",
+  "backup_codes",
+  "confirmed_on",
+  "last_verified_on",
+  "verified_sid"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "2FA Enabled"
+  },
+  {
+   "fieldname": "secret",
+   "fieldtype": "Password",
+   "label": "TOTP Secret"
+  },
+  {
+   "fieldname": "backup_codes",
+   "fieldtype": "Long Text",
+   "label": "Backup Codes (hashed JSON)"
+  },
+  {
+   "fieldname": "confirmed_on",
+   "fieldtype": "Datetime",
+   "label": "Confirmed On"
+  },
+  {
+   "fieldname": "last_verified_on",
+   "fieldtype": "Datetime",
+   "label": "Last Verified On"
+  },
+  {
+   "fieldname": "verified_sid",
+   "fieldtype": "Data",
+   "label": "Verified Session ID",
+   "hidden": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-08-23 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera User 2FA",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -249,7 +249,8 @@ scheduler_events = {
 
 # Request Events
 # ----------------
-# before_request = ["hr_client.utils.before_request"]
+# Custom TOTP 2FA gate — dormant until site-config `enforce_2fa` is set.
+before_request = ["hr_client.api.twofa.enforce"]
 # after_request = ["hr_client.utils.after_request"]
 
 # Job Events
