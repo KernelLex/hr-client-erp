@@ -238,6 +238,62 @@ def reject_leave(leave_id, admin_remarks):
     return {"success": True, "leave_id": leave_id}
 
 
+@frappe.whitelist(methods=["POST"])
+def admin_apply_leave(employee, leave_type, from_date, to_date, reason, status="Approved"):
+    """Admin files a leave on behalf of any employee (or themselves).
+
+    `employee` is the Employee docname (e.g. HR-EMP-00001). Unlike the
+    self-service apply_leave, this bypasses the 5-per-month cap and lets the
+    admin set the outcome directly (defaults to Approved so it flows to the
+    Accounts opex + summary immediately).
+    """
+    _require_admin()
+
+    # Validate against the DocType's actual Select options (source of truth),
+    # which is broader than the legacy _ALLOWED_LEAVE_TYPES self-service set.
+    allowed = set(
+        (frappe.get_meta("Vera Leave Application").get_field("leave_type").options or "").split("\n")
+    )
+    if leave_type not in allowed:
+        return {"success": False, "error": f"Invalid leave type: '{leave_type}'"}
+
+    emp = frappe.db.get_value(
+        "Employee", employee, ["name", "employee_name"], as_dict=True
+    )
+    if not emp:
+        return {"success": False, "error": f"Employee '{employee}' not found"}
+
+    total_days = _calc_total_days(from_date, to_date)
+    if total_days <= 0:
+        return {"success": False, "error": "Invalid date range — to_date must be on or after from_date"}
+
+    if status not in ("Pending", "Approved"):
+        status = "Approved"
+
+    try:
+        doc = frappe.new_doc("Vera Leave Application")
+        doc.employee = emp.name
+        doc.employee_name = emp.employee_name
+        doc.leave_type = leave_type
+        doc.from_date = from_date
+        doc.to_date = to_date
+        doc.total_days = total_days
+        doc.reason = reason
+        doc.status = status
+        doc.applied_on = now()
+        if status == "Approved":
+            doc.approved_by = frappe.session.user
+            doc.approved_on = now()
+            doc.admin_remarks = "Added by admin"
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Admin Leave Apply Failed")
+        return {"success": False, "error": str(e)}
+
+    return {"success": True, "data": doc.as_dict()}
+
+
 @frappe.whitelist()
 def get_leave_documents(leave_id):
     """Return files attached to a leave record. Accessible by owner or admin."""

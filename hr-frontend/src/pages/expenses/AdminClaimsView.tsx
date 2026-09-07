@@ -1,13 +1,15 @@
 import { OWAIS_USERS } from "@/lib/constants"
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useNavigate, Navigate } from "react-router-dom"
-import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, ExternalLink } from "lucide-react"
+import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, ExternalLink, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
-import { useAllClaims, useApproveClaim, useRejectClaim, useMonthlyExpenseSummary } from "./useExpenses"
+import { getAllEmployees } from "@/api/employee"
+import { useAllClaims, useApproveClaim, useRejectClaim, useMonthlyExpenseSummary, useAdminSubmitClaim } from "./useExpenses"
 import type { ExpenseClaim, ClaimStatus } from "./types"
 import { MONTHS } from "./types"
 
@@ -235,6 +237,144 @@ function AllClaimsTable({ claims }: { claims: ExpenseClaim[] }) {
   )
 }
 
+function AdminAddClaimModal({ onClose }: { onClose: () => void }) {
+  const submit = useAdminSubmitClaim()
+  const { data: employees } = useQuery({ queryKey: ["all_employees"], queryFn: getAllEmployees })
+
+  const today = new Date().toISOString().slice(0, 10)
+  const [employee, setEmployee] = useState("")
+  const [claimType, setClaimType] = useState<"Material" | "Petrol">("Material")
+  const [claimDate, setClaimDate] = useState(today)
+  const [purpose, setPurpose] = useState("")
+  const [status, setStatus] = useState<"Approved" | "Pending">("Approved")
+  // Material
+  const [amount, setAmount] = useState("")
+  const [materialDescription, setMaterialDescription] = useState("")
+  const [vendorName, setVendorName] = useState("")
+  // Petrol
+  const [kmDriven, setKmDriven] = useState("")
+  const [vehicleNumber, setVehicleNumber] = useState("")
+  const [routeFrom, setRouteFrom] = useState("")
+  const [routeTo, setRouteTo] = useState("")
+
+  const canSubmit =
+    !!employee && !!claimDate && !!purpose.trim() &&
+    (claimType === "Material" ? Number(amount) > 0 : Number(kmDriven) > 0)
+
+  async function handleSubmit() {
+    if (!canSubmit) return
+    const payload: Record<string, unknown> = {
+      employee, claim_type: claimType, claim_date: claimDate, purpose, status,
+    }
+    if (claimType === "Material") {
+      payload.amount = Number(amount)
+      payload.material_description = materialDescription
+      payload.vendor_name = vendorName
+    } else {
+      payload.km_driven = Number(kmDriven)
+      payload.vehicle_number = vehicleNumber
+      payload.route_from = routeFrom
+      payload.route_to = routeTo
+    }
+    await submit.mutateAsync(payload)
+    onClose()
+  }
+
+  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Add Claim for Employee</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><XCircle size={20} /></button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2">
+            <Label className="text-xs">Employee *</Label>
+            <select className={inputCls} value={employee} onChange={(e) => setEmployee(e.target.value)}>
+              <option value="">Select employee…</option>
+              {(employees ?? []).map((emp) => (
+                <option key={emp.name} value={emp.name}>{emp.employee_name} — {emp.designation}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <Label className="text-xs">Claim Type *</Label>
+            <select className={inputCls} value={claimType} onChange={(e) => setClaimType(e.target.value as "Material" | "Petrol")}>
+              <option value="Material">📦 Material</option>
+              <option value="Petrol">⛽ Petrol</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">Claim Date *</Label>
+            <input type="date" className={inputCls} value={claimDate} onChange={(e) => setClaimDate(e.target.value)} />
+          </div>
+
+          {claimType === "Material" ? (
+            <>
+              <div>
+                <Label className="text-xs">Amount (₹) *</Label>
+                <input type="number" min="0" className={inputCls} value={amount} onChange={(e) => setAmount(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Vendor Name</Label>
+                <input className={inputCls} value={vendorName} onChange={(e) => setVendorName(e.target.value)} />
+              </div>
+              <div className="col-span-2">
+                <Label className="text-xs">Material Description</Label>
+                <input className={inputCls} value={materialDescription} onChange={(e) => setMaterialDescription(e.target.value)} />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <Label className="text-xs">Kilometers *</Label>
+                <input type="number" min="0" className={inputCls} value={kmDriven} onChange={(e) => setKmDriven(e.target.value)} />
+                <p className="text-[11px] text-gray-400 mt-1">₹4.00 / km{Number(kmDriven) > 0 ? ` = ₹${(Number(kmDriven) * 4).toFixed(2)}` : ""}</p>
+              </div>
+              <div>
+                <Label className="text-xs">Vehicle Number</Label>
+                <input className={inputCls} value={vehicleNumber} onChange={(e) => setVehicleNumber(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Route From</Label>
+                <input className={inputCls} value={routeFrom} onChange={(e) => setRouteFrom(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Route To</Label>
+                <input className={inputCls} value={routeTo} onChange={(e) => setRouteTo(e.target.value)} />
+              </div>
+            </>
+          )}
+
+          <div className="col-span-2">
+            <Label className="text-xs">Purpose *</Label>
+            <input className={inputCls} value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Reason for the claim" />
+          </div>
+
+          <div className="col-span-2">
+            <Label className="text-xs">Status</Label>
+            <select className={inputCls} value={status} onChange={(e) => setStatus(e.target.value as "Approved" | "Pending")}>
+              <option value="Approved">Approved (shows in Accounts opex immediately)</option>
+              <option value="Pending">Pending (needs approval)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <Button className="flex-1 bg-gold-600 hover:bg-gold-700 gap-1" onClick={handleSubmit} disabled={!canSubmit || submit.isPending}>
+            {submit.isPending ? "Adding…" : "Add Claim"}
+          </Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function AdminClaimsView() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -243,6 +383,7 @@ export function AdminClaimsView() {
   const now = new Date()
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [showAddClaim, setShowAddClaim] = useState(false)
 
   const { data, isLoading } = useAllClaims()
   const { data: summaryData } = useMonthlyExpenseSummary(selectedMonth, selectedYear, !!isOwais)
@@ -261,7 +402,12 @@ export function AdminClaimsView() {
           <ArrowLeft size={14} /> My Claims
         </button>
         <h1 className="text-xl font-semibold text-gray-900">Expense Claims — Admin View</h1>
+        <Button size="sm" className="ml-auto bg-gold-600 hover:bg-gold-700 gap-1" onClick={() => setShowAddClaim(true)}>
+          <Plus size={14} /> Add Claim for Employee
+        </Button>
       </div>
+
+      {showAddClaim && <AdminAddClaimModal onClose={() => setShowAddClaim(false)} />}
 
       {/* Pending banner */}
       {pendingClaims.length > 0 && (

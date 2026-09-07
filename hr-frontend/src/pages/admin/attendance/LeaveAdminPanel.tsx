@@ -1,12 +1,17 @@
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { CheckCircle2, XCircle, Download } from "lucide-react"
+import { CheckCircle2, XCircle, Download, Plus } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { getAllEmployees } from "@/api/employee"
 import {
   useAllLeaves, useApproveLeave, useRejectLeave, useLeaveSummary, useEmployeeLeaveHistory,
+  useAdminApplyLeave,
 } from "@/pages/leave/useLeave"
 import type { LeaveApplication } from "@/pages/leave/types"
+import { LEAVE_TYPES } from "@/pages/leave/types"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -554,12 +559,106 @@ function SummaryTab() {
   )
 }
 
+// ── Add Leave for Employee (admin) ──────────────────────────────────────────────
+
+function AdminAddLeaveModal({ onClose }: { onClose: () => void }) {
+  const apply = useAdminApplyLeave()
+  const { data: employees } = useQuery({ queryKey: ["all_employees"], queryFn: getAllEmployees })
+
+  const today = new Date().toISOString().slice(0, 10)
+  const [employee, setEmployee] = useState("")
+  const [leaveType, setLeaveType] = useState<string>(LEAVE_TYPES[0])
+  const [fromDate, setFromDate] = useState(today)
+  const [toDate, setToDate] = useState(today)
+  const [reason, setReason] = useState("")
+  const [status, setStatus] = useState<"Approved" | "Pending">("Approved")
+
+  const canSubmit = !!employee && !!fromDate && !!toDate && toDate >= fromDate && !!reason.trim()
+
+  async function handleSubmit() {
+    if (!canSubmit) return
+    const res = await apply.mutateAsync({
+      employee, leave_type: leaveType, from_date: fromDate, to_date: toDate, reason, status,
+    })
+    if (res.success) {
+      toast.success("Leave added for employee")
+      onClose()
+    } else {
+      toast.error(res.error ?? "Failed to add leave")
+    }
+  }
+
+  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Add Leave for Employee</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-lg font-medium">✕</button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2">
+            <Label className="text-xs">Employee *</Label>
+            <select className={inputCls} value={employee} onChange={(e) => setEmployee(e.target.value)}>
+              <option value="">Select employee…</option>
+              {(employees ?? []).map((emp) => (
+                <option key={emp.name} value={emp.name}>{emp.employee_name} — {emp.designation}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-span-2">
+            <Label className="text-xs">Leave Type *</Label>
+            <select className={inputCls} value={leaveType} onChange={(e) => setLeaveType(e.target.value)}>
+              {LEAVE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <Label className="text-xs">From *</Label>
+            <input type="date" className={inputCls} value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">To *</Label>
+            <input type="date" className={inputCls} value={toDate} onChange={(e) => setToDate(e.target.value)} />
+          </div>
+
+          <div className="col-span-2">
+            <Label className="text-xs">Reason *</Label>
+            <textarea className={`${inputCls} min-h-[60px] resize-y`} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason for leave" />
+          </div>
+
+          <div className="col-span-2">
+            <Label className="text-xs">Status</Label>
+            <select className={inputCls} value={status} onChange={(e) => setStatus(e.target.value as "Approved" | "Pending")}>
+              <option value="Approved">Approved</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-gray-400">Total days are computed automatically (Sundays excluded).</p>
+
+        <div className="flex gap-2 pt-1">
+          <Button className="flex-1 bg-blue-600 hover:bg-blue-700 gap-1" onClick={handleSubmit} disabled={!canSubmit || apply.isPending}>
+            {apply.isPending ? "Adding…" : "Add Leave"}
+          </Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Panel ────────────────────────────────────────────────────────────────
 
 type LeaveTab = "pending" | "all" | "by-employee" | "summary"
 
 export function LeaveAdminPanel() {
   const [activeTab, setActiveTab] = useState<LeaveTab>("pending")
+  const [showAddLeave, setShowAddLeave] = useState(false)
   const { data: pendingData } = useAllLeaves("Pending")
   const pendingCount = pendingData?.success ? pendingData.data.length : 0
 
@@ -572,7 +671,10 @@ export function LeaveAdminPanel() {
 
   return (
     <div className="space-y-5">
-      {/* Tab bar */}
+      {showAddLeave && <AdminAddLeaveModal onClose={() => setShowAddLeave(false)} />}
+
+      {/* Tab bar + add button */}
+      <div className="flex items-center gap-3 flex-wrap">
       <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
         {TABS.map(({ key, label, badge }) => (
           <button
@@ -592,6 +694,11 @@ export function LeaveAdminPanel() {
             )}
           </button>
         ))}
+      </div>
+
+      <Button size="sm" className="ml-auto bg-blue-600 hover:bg-blue-700 gap-1" onClick={() => setShowAddLeave(true)}>
+        <Plus size={14} /> Add Leave for Employee
+      </Button>
       </div>
 
       {/* Tab content */}

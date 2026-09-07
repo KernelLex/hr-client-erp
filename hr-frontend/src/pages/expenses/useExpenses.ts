@@ -52,6 +52,20 @@ export function useSubmitClaim() {
   })
 }
 
+export function useAdminSubmitClaim() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Record<string, unknown>) => post<{ claim: ExpenseClaim }>("admin_submit_claim", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all_expense_claims"] })
+      qc.invalidateQueries({ queryKey: ["my_expense_claims"] })
+      qc.invalidateQueries({ queryKey: ["expense_monthly_summary"] })
+      toast.success("Claim added for employee")
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+}
+
 export function useApproveClaim() {
   const qc = useQueryClient()
   return useMutation({

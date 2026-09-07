@@ -74,6 +74,31 @@ export function useAllLeaves(status = "All", employeeEmail?: string) {
   })
 }
 
+export function useAdminApplyLeave() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: {
+      employee: string
+      leave_type: string
+      from_date: string
+      to_date: string
+      reason: string
+      status?: string
+    }) =>
+      api
+        .post(leaveUrl("admin_apply_leave"), payload)
+        .then((r) => r.data.message as { success: boolean; data?: LeaveApplication; error?: string }),
+    onSuccess: (res) => {
+      if (res.success) {
+        qc.invalidateQueries({ queryKey: ["all_leaves"] })
+        qc.invalidateQueries({ queryKey: ["leave_summary"] })
+        qc.invalidateQueries({ queryKey: ["employee_leave_history"] })
+        qc.invalidateQueries({ queryKey: ["my_leaves"] })
+      }
+    },
+  })
+}
+
 export function useEmployeeLeaveHistory(employeeEmail: string) {
   return useQuery<{ success: boolean; employee: Record<string, string>; data: LeaveApplication[] }>({
     queryKey: ["employee_leave_history", employeeEmail],

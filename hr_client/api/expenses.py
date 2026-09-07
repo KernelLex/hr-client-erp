@@ -1,7 +1,7 @@
 import frappe
 from frappe.utils import now_datetime, getdate, today
 
-OWAIS_USERS = {"owais@veraenterprises.in", "Administrator"}
+OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 PETROL_RATE_PER_KM = 4.0
 
 
@@ -253,6 +253,97 @@ def submit_claim(
     doc.insert(ignore_permissions=True)
 
     # Generate PDF for petrol claims
+    if claim_type == "Petrol":
+        pdf_url = _generate_petrol_pdf(doc)
+        if pdf_url:
+            doc.pdf_path = pdf_url
+            doc.save(ignore_permissions=True)
+
+    frappe.db.commit()
+
+    return {"success": True, "claim": _claim_to_dict(doc)}
+
+
+@frappe.whitelist(methods=["POST"])
+def admin_submit_claim(
+    employee,
+    claim_type,
+    claim_date,
+    purpose,
+    amount=None,
+    km_driven=None,
+    vehicle_number=None,
+    route_from=None,
+    route_to=None,
+    fuel_receipt=None,
+    material_description=None,
+    vendor_name=None,
+    material_receipt=None,
+    status="Approved",
+):
+    """Admin files an expense (Material/Petrol) claim on behalf of any employee
+    (or themselves). `employee` is the Employee docname (e.g. HR-EMP-00001).
+    Defaults to Approved so the claim shows up in the Accounts opex breakdown
+    and the monthly summary right away.
+    """
+    if not _is_owais():
+        return {"success": False, "error": "Not authorized"}
+
+    emp_doc = frappe.db.get_value(
+        "Employee",
+        employee,
+        ["name", "employee_name", "company_email", "personal_email"],
+        as_dict=True,
+    )
+    if not emp_doc:
+        return {"success": False, "error": f"Employee '{employee}' not found"}
+
+    from frappe.utils import getdate as _getdate
+    dt = _getdate(claim_date)
+    month_year = dt.strftime("%b %Y")
+
+    doc = frappe.new_doc("Vera Expense Claim")
+    doc.claim_title = f"{emp_doc.employee_name} - {claim_type} - {month_year}"
+    doc.employee = emp_doc.name
+    doc.employee_name = emp_doc.employee_name
+    doc.employee_email = emp_doc.company_email or emp_doc.personal_email or ""
+    doc.claim_type = claim_type
+    doc.claim_date = claim_date
+    doc.purpose = purpose
+    doc.submitted_on = now_datetime()
+
+    if claim_type == "Petrol":
+        km = float(km_driven) if km_driven else 0.0
+        if km <= 0:
+            return {"success": False, "error": "Kilometers traveled must be greater than 0"}
+        doc.km_driven = km
+        doc.amount = round(km * PETROL_RATE_PER_KM, 2)
+        doc.vehicle_number = vehicle_number or ""
+        doc.route_from = route_from or ""
+        doc.route_to = route_to or ""
+        doc.fuel_receipt = fuel_receipt or ""
+    elif claim_type == "Material":
+        if amount is None:
+            return {"success": False, "error": "Amount is required for Material claims"}
+        doc.amount = float(amount)
+        if doc.amount <= 0:
+            return {"success": False, "error": "Amount must be greater than 0"}
+        doc.material_description = material_description or ""
+        doc.vendor_name = vendor_name or ""
+        doc.material_receipt = material_receipt or ""
+    else:
+        return {"success": False, "error": f"Unknown claim type: {claim_type}"}
+
+    if status not in ("Pending", "Approved"):
+        status = "Approved"
+    doc.status = status
+    if status == "Approved":
+        doc.reviewed_by = frappe.session.user
+        doc.reviewed_on = now_datetime()
+        doc.admin_notes = "Added by admin"
+
+    doc.insert(ignore_permissions=True)
+
     if claim_type == "Petrol":
         pdf_url = _generate_petrol_pdf(doc)
         if pdf_url:
