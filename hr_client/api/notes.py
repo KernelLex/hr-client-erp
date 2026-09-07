@@ -1,7 +1,7 @@
 import frappe
 from frappe.utils import now_datetime
 
-_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in"}
+_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
 
 
 def _require_admin():

@@ -10,7 +10,7 @@ from hr_client.utils.llm import ask_llm_json, is_ollama_running
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator"}
+_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 
 
 def _require_admin():

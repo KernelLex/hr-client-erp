@@ -12,7 +12,7 @@ TOKEN_TTL = 3500
 PEOPLE_TTL = 300
 TODAY_TS_TTL = 300     # 5 min for today's entries
 PAST_TS_TTL = 3600     # 1 hr for past days
-ADMIN_USERS = {"owais@veraenterprises.in", "Administrator"}
+ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 IST = timezone(timedelta(hours=5, minutes=30))
 LATE_THRESHOLD_MINUTES = 9 * 60 + 30  # 09:30 AM IST
 OVERTIME_THRESHOLD_HOURS = 9

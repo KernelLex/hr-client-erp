@@ -528,7 +528,7 @@ def get_applicant_sources():
 	return {"sources": sources}
 
 
-OWAIS_USERS = {"owais@veraenterprises.in", "Administrator"}
+OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 
 
 def _require_owais():

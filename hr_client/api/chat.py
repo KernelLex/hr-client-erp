@@ -3,7 +3,7 @@ import json
 from frappe.utils import now_datetime
 from hr_client.api.utils import handle_api_error
 
-_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in"}
+_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
 _ONLINE_TTL = 300  # 5 minutes
 
 

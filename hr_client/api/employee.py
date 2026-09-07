@@ -2,7 +2,7 @@ import frappe
 import json
 from hr_client.api.utils import handle_api_error
 
-ADMIN_USERS = {"Administrator", "owais@veraenterprises.in"}
+ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
 
 # Frappe user name → actual email used on Employee records
 _ADMIN_EMAIL_MAP = {"Administrator": "owais@veraenterprises.in"}

@@ -132,7 +132,7 @@ def _fmt(amount):
     return f"₹ {v:.0f}"
 
 
-_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator"}
+_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 
 
 def _require_admin():

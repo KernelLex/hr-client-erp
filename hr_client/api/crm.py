@@ -3,7 +3,7 @@ import json
 from frappe.utils import now_datetime
 from datetime import date, timedelta
 
-OWAIS_USERS = {"owais@veraenterprises.in", "Administrator"}
+OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 STAGE_ORDER = ["Lead", "Discussion", "Quotation", "Order", "Delivery", "Success"]
 
 

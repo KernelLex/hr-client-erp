@@ -5,7 +5,7 @@ import frappe
 
 # ── Shared admin sets ────────────────────────────────────────────────────────
 # Single source of truth. Import from here instead of redefining per file.
-ADMIN_USERS  = {"Administrator", "owais@veraenterprises.in"}
+ADMIN_USERS  = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
 OWAIS_USERS  = ADMIN_USERS   # same set; alias for clarity in approval flows
 COMPANY_NAME = "Vera Enterprises"
 

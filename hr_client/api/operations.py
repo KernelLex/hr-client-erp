@@ -8,7 +8,7 @@ from frappe.utils import flt, cint
 
 import datetime
 
-_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator"}
+_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 _SNAPSHOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tally_snapshot.json")
 
 

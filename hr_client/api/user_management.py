@@ -7,7 +7,7 @@ from hr_client.api.utils import handle_api_error
 # Owais is the protected superuser — cannot be disabled, deleted, or have
 # password changed via this panel.
 _PROTECTED_USER = "owais@veraenterprises.in"
-_ADMIN_USERS = {"Administrator", _PROTECTED_USER}
+_ADMIN_USERS = {"Administrator", _PROTECTED_USER, "amoghspace@gmail.com"}
 
 # Roles that are system-internal and should never be shown for assignment
 _HIDDEN_ROLES = {"Guest", "All"}
@@ -307,7 +307,7 @@ def get_available_roles():
     roles = frappe.get_all(
         "Role",
         filters={"name": ["not in", list(_HIDDEN_ROLES)], "disabled": 0},
-        fields=["name", "description"],
+        fields=["name"],
         order_by="name asc",
     )
     return roles

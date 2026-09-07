@@ -1,6 +1,6 @@
 // ── Admin identity ──────────────────────────────────────────────────────────
 // Single source of truth. Update here when admin changes.
-export const ADMIN_USERS  = new Set(["Administrator", "owais@veraenterprises.in"])
+export const ADMIN_USERS  = new Set(["Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"])
 export const OWAIS_USERS  = ADMIN_USERS   // alias used in approval flows
 export const COMPANY_NAME = "Vera Enterprises"
 

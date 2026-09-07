@@ -5,7 +5,7 @@ Includes get_* endpoints for admin and employee views, plus CRUD for admin.
 import frappe
 from hr_client.api.utils import handle_api_error
 
-_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in"}
+_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
 
 _ALLOWED_DOCTYPES = {
     "VE Job Description", "VE KRA", "VE KPI", "VE SOP", "VE Policy",
