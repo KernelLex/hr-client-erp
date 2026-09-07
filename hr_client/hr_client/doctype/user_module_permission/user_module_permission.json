@@ -17,7 +17,8 @@
   "leave",
   "expense",
   "crm",
-  "chat"
+  "chat",
+  "permissions_json"
  ],
  "fields": [
   {
@@ -94,6 +95,12 @@
    "fieldname": "chat",
    "fieldtype": "Check",
    "label": "Chat"
+  },
+  {
+   "fieldname": "permissions_json",
+   "fieldtype": "Long Text",
+   "label": "Permissions JSON (denied keys)",
+   "description": "Sparse JSON map of {permission_key: false} for explicitly denied nav keys. Absent key = allowed."
   }
  ],
  "links": [],

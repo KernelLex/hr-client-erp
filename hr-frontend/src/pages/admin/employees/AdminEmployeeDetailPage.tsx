@@ -21,16 +21,8 @@ import {
 } from "@/api/employee"
 import { useEmployeeLeaveHistory, useApproveLeave, useRejectLeave } from "@/pages/leave/useLeave"
 import { useUsersWithPermissions, useUpdatePermissions } from "@/pages/admin/permissions/usePermissions"
-import {
-  PERMISSION_MODULE_LABELS, MODULE_ICONS,
-  type PermissionModule,
-} from "@/pages/admin/permissions/types"
+import type { PermissionMap, RegistryGroup } from "@/pages/admin/permissions/types"
 
-
-const ALL_MODULES: PermissionModule[] = [
-  "recruitment", "employee_lifecycle", "accounts", "projects",
-  "logistics", "hr", "attendance", "expense",
-]
 
 const BLOOD_GROUPS = ["", "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]
 
@@ -321,19 +313,19 @@ function LeaveHistoryTab({ email }: { email: string }) {
 function PermissionsTab({ email }: { email: string }) {
   const { data, isLoading } = useUsersWithPermissions()
   const updateMutation = useUpdatePermissions()
-  const [localPerms, setLocalPerms] = useState<Record<PermissionModule, boolean> | null>(null)
+  const [localPerms, setLocalPerms] = useState<PermissionMap | null>(null)
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(false)
 
   const userData = data?.users.find((u) => u.email === email)
+  const registry: RegistryGroup[] = data?.registry ?? []
 
-  const perms: Record<PermissionModule, boolean> = localPerms
-    ?? (userData ? { ...userData.permissions } : Object.fromEntries(ALL_MODULES.map((m) => [m, true])) as Record<PermissionModule, boolean>)
+  const perms: PermissionMap = localPerms ?? (userData ? { ...userData.permissions } : {})
 
-  function toggle(mod: PermissionModule) {
+  function toggleKey(key: string, value: boolean) {
     setLocalPerms((prev) => {
-      const base = prev ?? (userData ? { ...userData.permissions } : Object.fromEntries(ALL_MODULES.map((m) => [m, true])) as Record<PermissionModule, boolean>)
-      return { ...base, [mod]: !base[mod] }
+      const base = prev ?? (userData ? { ...userData.permissions } : {})
+      return { ...base, [key]: value }
     })
     setDirty(true)
     setSaved(false)
@@ -368,21 +360,30 @@ function PermissionsTab({ email }: { email: string }) {
 
   return (
     <div className="pt-4 space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {ALL_MODULES.map((mod) => (
-          <button
-            key={mod}
-            type="button"
-            className="flex items-center gap-2 p-3 rounded-xl border border-gray-100 bg-white hover:bg-gray-50 text-left"
-            onClick={() => toggle(mod)}
-          >
-            <span className="text-lg leading-none">{MODULE_ICONS[mod]}</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-800 truncate">{PERMISSION_MODULE_LABELS[mod]}</p>
+      <div className="space-y-2">
+        {registry.map((g) => {
+          const groupOn = perms[g.key] !== false
+          return (
+            <div key={g.key} className="rounded-xl border border-gray-100 bg-white">
+              <div className="flex items-center gap-2 px-3 py-2.5">
+                <span className="text-base leading-none">{g.icon ?? "▸"}</span>
+                <span className={`text-sm font-medium flex-1 truncate ${groupOn ? "text-gray-800" : "text-gray-400"}`}>{g.label}</span>
+                <Switch checked={groupOn} onCheckedChange={(v) => toggleKey(g.key, v)} />
+              </div>
+              {g.items.length > 0 && groupOn && (
+                <div className="px-3 pb-2.5 space-y-1 border-t border-gray-50 pt-2">
+                  {g.items.map((it) => (
+                    <div key={it.key} className="flex items-center gap-2 pl-6 pr-1 py-0.5">
+                      <span className="text-xs text-gray-600 flex-1 truncate">{it.label}</span>
+                      {it.admin && <span className="text-[9px] font-semibold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">admin</span>}
+                      <Switch checked={perms[it.key] !== false} onCheckedChange={(v) => toggleKey(it.key, v)} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <Switch checked={perms[mod]} onCheckedChange={() => toggle(mod)} />
-          </button>
-        ))}
+          )
+        })}
       </div>
       <div className="flex justify-end">
         <Button

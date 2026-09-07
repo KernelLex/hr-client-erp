@@ -198,7 +198,7 @@ function readLS(key: string, defaultVal: boolean): boolean {
 
 export function Sidebar({ open = true, onClose }: SidebarProps) {
   const { user, logout } = useAuth()
-  const { moduleEnabled } = usePermissions()
+  const { can } = usePermissions()
   const location = useLocation()
   const { data: unreadData } = useUnreadCounts()
   const totalUnread = unreadData?.total_unread ?? 0
@@ -301,13 +301,18 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const isPermsActive = path === "/admin/permissions"
   const isAdminGroupActive = isUsersActive || isPermsActive
 
-  // Permissions
-  const showAttendance = moduleEnabled("attendance")
-  const showLeave = moduleEnabled("leave")
-  const showRecruitment = moduleEnabled("recruitment")
-  const showAccounts = moduleEnabled("accounts")
-  const showCRM = moduleEnabled("crm")
-  const showChat = moduleEnabled("chat")
+  // Permissions — registry-driven (can() also checks the parent group key)
+  const showAttendance = can("attendance")
+  const showLeave = can("leave")
+  const showRecruitment = can("recruitment")
+  const showExpense = can("expense")
+  const showHolidays = can("hrms.holidays")
+  const showHrms = can("hrms")
+  const showAccounts = can("accounts")
+  const showCRM = can("crm")
+  const showChat = can("chat")
+  const showOrgHub = can("org_hub")
+  const showTodo = can("todo")
 
   const sidebarBody = (
     <div
@@ -385,17 +390,14 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         {/* ── PEOPLE & WORK ── */}
         <SectionTitle>People &amp; Work</SectionTitle>
 
+        {showHrms && (<>
         <GroupHeader label="HRMS" glyph="☺" open={hrOpen} active={isHrGroupActive} onToggle={toggleHR} />
         <GroupBody open={hrOpen} maxHeight={1000}>
           {isAdmin && <SubItem to="/hrms/employees" label="Employee Master" isActive={isEmpMasterActive} adminBadge onClick={close} />}
-          {showAttendance && (
-            <>
-              <SubItem to="/admin/attendance" label="Attendance" isActive={isAttendanceActive} onClick={close} />
-              <SubItem to="/holidays" label="Holidays" isActive={isHolidaysActive} indent onClick={close} />
-            </>
-          )}
+          {showAttendance && <SubItem to="/admin/attendance" label="Attendance" isActive={isAttendanceActive} onClick={close} />}
+          {showHolidays && <SubItem to="/holidays" label="Holidays" isActive={isHolidaysActive} indent onClick={close} />}
           {showLeave && <SubItem to="/leave" label="Leave" isActive={isLeaveActive} onClick={close} />}
-          <SubItem to="/expenses" label="Expenses" isActive={isExpensesActive} onClick={close} />
+          {showExpense && <SubItem to="/expenses" label="Expenses" isActive={isExpensesActive} onClick={close} />}
           {showRecruitment && <SubItem to="/recruitment" label="Recruitment" isActive={isRecruitmentActive} onClick={close} />}
           {isAdmin && <SubItem to="/admin/employees" label="Team" isActive={isTeamActive} adminBadge onClick={close} />}
           {isAdmin && (
@@ -417,19 +419,22 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
             </>
           )}
         </GroupBody>
+        </>)}
 
+        {showTodo && (<>
         <GroupHeader label="To-Do System" glyph="✓" open={todoOpen} active={isTodoGroupActive} onToggle={toggleTodo} />
         <GroupBody open={todoOpen} maxHeight={360}>
-          <SubItem to="/todo/personal" label="Personal Tasks" isActive={isPersonalTasksActive} onClick={close} />
+          {can("todo.personal") && <SubItem to="/todo/personal" label="Personal Tasks" isActive={isPersonalTasksActive} onClick={close} />}
           {isAdmin && <SubItem to="/todo/team" label="Team Tasks" isActive={isTeamTasksActive} adminBadge onClick={close} />}
           {isAdmin && <SubItem to="/todo/approvals" label="Workflow Approvals" isActive={isApprovalsActive} adminBadge onClick={close} />}
-          <SubItem to="/todo/reminders" label="Reminders" isActive={isRemindersActive} onClick={close} />
-          <SubItem to="/todo/calendar" label="Calendar" isActive={isCalendarActive} onClick={close} />
-          <SubItem to="/todo/meetings" label="Meetings" isActive={isMeetingsActive} onClick={close} />
+          {can("todo.reminders") && <SubItem to="/todo/reminders" label="Reminders" isActive={isRemindersActive} onClick={close} />}
+          {can("todo.calendar") && <SubItem to="/todo/calendar" label="Calendar" isActive={isCalendarActive} onClick={close} />}
+          {can("todo.meetings") && <SubItem to="/todo/meetings" label="Meetings" isActive={isMeetingsActive} onClick={close} />}
           {isAdmin && <SubItem to="/todo/notes" label="Notes" isActive={isNotesActive} adminBadge onClick={close} />}
         </GroupBody>
+        </>)}
 
-        <NavItem to="/org-hub" label="Org Hub" glyph="◐" onClick={close} />
+        {showOrgHub && <NavItem to="/org-hub" label="Org Hub" glyph="◐" onClick={close} />}
 
         {/* ── PLATFORM ── */}
         <SectionTitle>Platform</SectionTitle>
@@ -438,8 +443,8 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
           <>
             <GroupHeader label="Document Management" glyph="▤" open={docsOpen} active={isDocsGroupActive} onToggle={toggleDocs} />
             <GroupBody open={docsOpen} maxHeight={400}>
-              <SubItem to="/drive" label="Drive Documents" isActive={isAccountsDocActive} onClick={close} />
-              <SubItem to="/accounts?tab=upload" label="Upload Status" isActive={isAccountsUploadActive} onClick={close} />
+              {can("accounts.drive") && <SubItem to="/drive" label="Drive Documents" isActive={isAccountsDocActive} onClick={close} />}
+              {can("accounts.upload") && <SubItem to="/accounts?tab=upload" label="Upload Status" isActive={isAccountsUploadActive} onClick={close} />}
               {isAdmin && (
                 <>
                   <SubItem to="/verify" label="Verify Data" isActive={isVerifyActive} adminBadge onClick={close} />

@@ -1,43 +1,23 @@
-export type PermissionModule =
-  | "recruitment"
-  | "employee_lifecycle"
-  | "accounts"
-  | "projects"
-  | "logistics"
-  | "hr"
-  | "attendance"
-  | "leave"
-  | "expense"
-  | "crm"
-  | "chat"
+// Registry-driven permission model. The backend
+// (hr_client.api.permissions.PERMISSION_REGISTRY) is the single source of truth
+// for what modules/subsections exist; the frontend just renders whatever it
+// returns, so new modules appear automatically.
 
-export const PERMISSION_MODULE_LABELS: Record<PermissionModule, string> = {
-  recruitment: "Recruitment",
-  employee_lifecycle: "Employee Lifecycle",
-  accounts: "Accounts",
-  projects: "Projects",
-  logistics: "Logistics / Stock",
-  hr: "HR",
-  attendance: "Attendance",
-  leave: "Leave",
-  expense: "Expense",
-  crm: "CRM",
-  chat: "Chat",
+export interface RegistryItem {
+  key: string
+  label: string
+  admin?: boolean
 }
 
-export const MODULE_ICONS: Record<PermissionModule, string> = {
-  recruitment: "👥",
-  employee_lifecycle: "🔄",
-  accounts: "📊",
-  projects: "📋",
-  logistics: "📦",
-  hr: "🏢",
-  attendance: "🕐",
-  leave: "🏖️",
-  expense: "💳",
-  crm: "📈",
-  chat: "💬",
+export interface RegistryGroup {
+  key: string
+  label: string
+  icon?: string
+  admin?: boolean
+  items: RegistryItem[]
 }
+
+export type PermissionMap = Record<string, boolean>
 
 export interface UserPermissions {
   name: string
@@ -46,15 +26,16 @@ export interface UserPermissions {
   designation: string
   company: string
   is_admin: boolean
-  permissions: Record<PermissionModule, boolean>
+  permissions: PermissionMap
 }
 
 export interface GetUsersPermissionsResponse {
   users: UserPermissions[]
-  modules: PermissionModule[]
+  registry: RegistryGroup[]
+  keys: string[]
 }
 
 export interface UpdatePermissionsPayload {
   email: string
-  permissions: Record<PermissionModule, boolean>
+  permissions: PermissionMap
 }
