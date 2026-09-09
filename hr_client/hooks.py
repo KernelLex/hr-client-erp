@@ -46,6 +46,23 @@ doc_events = {
 	},
 }
 
+# Phase 2 §2.2 — Tally-mirrored records are read-only in the ERP. Block any
+# interactive ORM create/update/delete on them; the sync service is exempt
+# (it sets frappe.flags.in_tally_sync, and its core mirror writes use raw SQL
+# which never triggers these hooks anyway).
+_TALLY_READONLY_DOCTYPES = [
+	"VE Tally Ledger", "VE Tally Voucher", "VE Tally Group", "VE Tally Stock Item",
+	"VE Sales Register Entry", "VE Purchase Register Entry", "VE GST Ledger Entry",
+	"VE Creditor Ledger", "VE Creditor Advance", "VE Debtor Ledger",
+	"VE Debtor Advance", "VE Cash Flow Entry", "VE Stock Movement Summary",
+	"VE Receipt",
+]
+for _dt in _TALLY_READONLY_DOCTYPES:
+	doc_events[_dt] = {
+		"before_validate": "hr_client.api.data_source.guard_tally_write",
+		"on_trash": "hr_client.api.data_source.guard_tally_write",
+	}
+
 # Drive Sync — scheduled tasks
 scheduler_events = {
 	"daily": [

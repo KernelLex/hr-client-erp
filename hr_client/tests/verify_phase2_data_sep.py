@@ -120,6 +120,36 @@ def run():
             guard_ok = True
         _check("on_trash blocks hard delete of an entry", guard_ok)
 
+        # 6. doc_events read-only guard on a real Tally DocType
+        print("6. Tally read-only doc_events guard")
+        blocked_insert = False
+        try:
+            ghost = frappe.new_doc("VE Cash Flow Entry")
+            ghost.insert(ignore_permissions=True)  # should be blocked by before_validate
+        except frappe.PermissionError:
+            blocked_insert = True
+        except Exception as e:
+            # Any other error means the guard did NOT fire first — fail loudly.
+            print(f"    (unexpected: {type(e).__name__}: {e})")
+        _check("doc_events guard blocks ORM insert of a Tally DocType", blocked_insert)
+
+        synced_ok = True
+        try:
+            frappe.flags.in_tally_sync = True
+            probe = frappe.new_doc("VE Cash Flow Entry")
+            probe.flags.ignore_mandatory = True
+            probe.insert(ignore_permissions=True)  # sync-exempt: guard must pass
+            frappe.delete_doc("VE Cash Flow Entry", probe.name, force=True)
+        except frappe.PermissionError:
+            synced_ok = False
+        except Exception:
+            # Mandatory/other validation errors are fine here — the point is the
+            # guard did NOT raise PermissionError when the sync flag is set.
+            pass
+        finally:
+            frappe.flags.in_tally_sync = False
+        _check("doc_events guard lets the sync service through (flag set)", synced_ok)
+
     finally:
         # Cleanup — force-delete the test docs
         frappe.flags.allow_erp_entry_delete = True

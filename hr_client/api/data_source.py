@@ -110,6 +110,16 @@ def assert_writable(doctype: str):
         )
 
 
+def guard_tally_write(doc, method=None):
+    """doc_events hook (before_save / on_trash) registered on every Tally
+    DocType in hooks.py. Blocks any ORM create/update/delete on a Tally-mirrored
+    record unless the Tally sync flag is set. The sync service uses raw SQL for
+    the core mirror and sets frappe.flags.in_tally_sync for its ORM writes, so
+    legitimate syncs pass; interactive user/desk writes are rejected.
+    """
+    assert_writable(doc.doctype)
+
+
 # ── Tri-split subtotals for mixed reports (spec §2.2, rule 3) ────────────────
 
 def subtotals(rows, amount_field="amount", doctype_field="doctype"):
