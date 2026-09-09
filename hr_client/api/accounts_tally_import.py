@@ -53,6 +53,7 @@ def run(masters_path=None, transactions_path=None):
     masters_path / transactions_path kept as args for API compatibility but are unused —
     data comes from the already-imported Frappe tables.
     """
+    frappe.flags.in_tally_sync = True  # exempts the sync from ERP read-only guards (Phase 2 §2.2)
     t0 = time.time()
     _set_status("running", 5, "Reading VE Tally Voucher table…")
     counts = defaultdict(int)

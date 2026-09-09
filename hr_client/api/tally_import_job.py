@@ -118,6 +118,7 @@ def get_status():
 
 def run(masters_path: str, transactions_path: str):
     """Main import function. Call via frappe.enqueue or directly."""
+    frappe.flags.in_tally_sync = True  # exempts the sync from ERP read-only guards (Phase 2 §2.2)
     t0 = time.time()
     _set_status("running", 2, "Loading All Masters XML…")
 

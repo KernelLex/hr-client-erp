@@ -48,6 +48,7 @@ PERMISSION_REGISTRY = [
         {"key": "accounting.depreciation", "label": "Depreciation"},
         {"key": "accounting.cash_flow", "label": "Cash Flow"},
         {"key": "accounting.financial_statements", "label": "Financial Statements"},
+        {"key": "accounting.erp_entries", "label": "ERP Entries"},
     ]},
     {"key": "accounts_dashboard", "label": "Accounts Dashboard", "icon": "◎", "admin": True, "items": []},
     {"key": "hrms", "label": "HRMS", "icon": "☺", "items": [
@@ -93,6 +94,7 @@ PERMISSION_REGISTRY = [
     {"key": "administration", "label": "Administration", "icon": "◈", "admin": True, "items": [
         {"key": "administration.users", "label": "User Management"},
         {"key": "administration.permissions", "label": "Permissions"},
+        {"key": "administration.data_entry_requests", "label": "Data Entry Requests"},
     ]},
 ]
 

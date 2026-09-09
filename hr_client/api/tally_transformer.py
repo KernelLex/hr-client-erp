@@ -140,6 +140,7 @@ def run(masters_path: str = "/home/vera/Master.xml",
     Both XML files must be UTF-16 encoded Tally exports.
     """
     import os
+    frappe.flags.in_tally_sync = True  # exempts the sync from ERP read-only guards (Phase 2 §2.2)
     t0 = time.time()
 
     # ── Pre-flight ────────────────────────────────────────────────────────────
