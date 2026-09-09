@@ -310,3 +310,138 @@ def _assert_requester(doc):
     """Only the requester (or an admin) may act on a request as its owner."""
     if doc.requested_by != frappe.session.user and not _is_admin():
         frappe.throw("You can only act on your own requests.", frappe.PermissionError)
+
+
+def _inr(amount) -> str:
+    """Format a number as an Indian-grouped rupee string, e.g. ₹1,23,456.00."""
+    n = frappe.utils.flt(amount)
+    whole, frac = f"{abs(n):.2f}".split(".")
+    if len(whole) > 3:
+        head, tail = whole[:-3], whole[-3:]
+        import re as _re
+        head = _re.sub(r"(\d)(?=(\d\d)+$)", r"\1,", head)
+        whole = f"{head},{tail}"
+    sign = "-" if n < 0 else ""
+    return f"{sign}₹{whole}.{frac}"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ARCHETYPE PAGE ENVELOPES — for the SystemPage renderer (ModulePayload shape)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@frappe.whitelist()
+@handle_api_error
+def get_entries_page():
+    """ERP-native entries as a ModulePayload for the SystemPage list view.
+    Read-only for everyone; the New/Request button is role-gated on the client."""
+    require_login()
+    entries = frappe.get_all(
+        "Vera ERP Entry",
+        fields=[
+            "name", "entry_type", "entry_date", "party", "amount", "status",
+            "source", "description", "created_by_user", "created_via_request",
+        ],
+        order_by="entry_date desc, creation desc",
+    )
+    active = [e for e in entries if e.status == "Active"]
+    active_total = sum(frappe.utils.flt(e.amount) for e in active)
+
+    rows = []
+    for e in entries:
+        rows.append({
+            "name": e.name,
+            "entry_type": e.entry_type,
+            "entry_date": e.entry_date,
+            "party": e.party or "—",
+            "amount": _inr(e.amount),
+            "status": e.status,
+            "source": e.source or "ERP",
+            "description": e.description or "",
+        })
+
+    return {
+        "kpis": [
+            {"label": "Entries", "value": str(len(entries))},
+            {"label": "Active", "value": str(len(active)), "tone": "good"},
+            {"label": "Voided", "value": str(len(entries) - len(active)), "tone": "warn"},
+            {"label": "Active Value", "value": _inr(active_total)},
+        ],
+        "columns": [
+            {"key": "entry_type", "header": "Type"},
+            {"key": "entry_date", "header": "Date", "kind": "date"},
+            {"key": "party", "header": "Party"},
+            {"key": "amount", "header": "Amount", "align": "right", "kind": "amount"},
+            {"key": "source", "header": "Source", "kind": "status"},
+            {"key": "status", "header": "Status", "kind": "status"},
+        ],
+        "rows": rows,
+        "note": "ERP-native entries (Class B). These live outside the Tally "
+                "books. Entries are voided, never deleted.",
+    }
+
+
+@frappe.whitelist()
+@handle_api_error
+def get_requests_page():
+    """Data-entry requests as a ModulePayload. Admins see the full queue
+    (pending first); everyone else sees only their own requests."""
+    require_login()
+    admin = _is_admin()
+    filters = {} if admin else {"requested_by": frappe.session.user}
+    requests = frappe.get_all(
+        "Vera Data Entry Request",
+        filters=filters,
+        fields=[
+            "name", "entry_type", "entry_date", "party", "amount", "description",
+            "request_status", "requested_by_name", "submitted_on",
+            "rejection_reason", "admin_notes", "created_entry",
+        ],
+        order_by="submitted_on asc, creation desc",
+    )
+
+    def _pending(r):
+        return r.request_status in ("Submitted", "Under Review")
+
+    # Pending first for the admin queue.
+    if admin:
+        requests.sort(key=lambda r: (0 if _pending(r) else 1))
+
+    pending = sum(1 for r in requests if _pending(r))
+    rows = []
+    for r in requests:
+        rows.append({
+            "name": r.name,
+            "entry_type": r.entry_type,
+            "entry_date": r.entry_date,
+            "party": r.party or "—",
+            "amount": _inr(r.amount),
+            "requested_by": r.requested_by_name or "—",
+            "request_status": r.request_status,
+            "submitted_on": r.submitted_on,
+            "description": r.description or "",
+            "rejection_reason": r.rejection_reason or "",
+            "admin_notes": r.admin_notes or "",
+            "created_entry": r.created_entry or "",
+        })
+
+    columns = [
+        {"key": "entry_type", "header": "Type"},
+        {"key": "entry_date", "header": "Date", "kind": "date"},
+        {"key": "party", "header": "Party"},
+        {"key": "amount", "header": "Amount", "align": "right", "kind": "amount"},
+    ]
+    if admin:
+        columns.append({"key": "requested_by", "header": "Requested By"})
+    columns.append({"key": "request_status", "header": "Status", "kind": "status"})
+
+    return {
+        "is_admin": admin,
+        "kpis": [
+            {"label": "Pending", "value": str(pending), "tone": "warn" if pending else "good"},
+            {"label": "Total", "value": str(len(requests))},
+        ],
+        "columns": columns,
+        "rows": rows,
+        "note": "Requests to create ERP-native entries. Admins approve, reject "
+                "or return them; approval creates the linked entry.",
+    }

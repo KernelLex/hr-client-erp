@@ -40,6 +40,8 @@ const VeDrivePage = lazy(() => import("@/pages/drive/VeDrivePage").then(m => ({ 
 const ChatPage = lazy(() => import("@/pages/chat/ChatPage").then(m => ({ default: m.ChatPage })))
 const OperationsPage = lazy(() => import("@/pages/Operations"))
 const AccountingPage = lazy(() => import("@/pages/Accounting"))
+const ErpEntriesPage = lazy(() => import("@/pages/erp_entries/ErpEntriesPage").then(m => ({ default: m.ErpEntriesPage })))
+const DataEntryRequestsPage = lazy(() => import("@/pages/erp_entries/DataEntryRequestsPage").then(m => ({ default: m.DataEntryRequestsPage })))
 const GraphsPage = lazy(() => import("@/pages/Graphs"))
 const InventoryPage = lazy(() => import("@/pages/Inventory"))
 const PurchasingPage = lazy(() => import("@/pages/Purchasing"))
@@ -134,6 +136,9 @@ function App() {
                 <Route path="/drive" element={<VeDrivePage />} />
                 {/* Chat */}
                 <Route path="/chat" element={<ChatPage />} />
+                {/* ERP Entries + data-entry request queue (Phase 2 §2) */}
+                <Route path="/erp-entries" element={<ErpEntriesPage />} />
+                <Route path="/data-entry-requests" element={<DataEntryRequestsPage />} />
                 {/* Accounting — Tally voucher browser (original) */}
                 <Route path="/accounting" element={<OperationsPage />} />
                 <Route path="/accounts-dashboard" element={<OperationsPage />} />

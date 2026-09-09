@@ -84,3 +84,6 @@ export const todoPost = apiPostFactory("todo")
 
 export const calendarGet = apiGetFactory("calendar")
 export const calendarPost = apiPostFactory("calendar")
+
+export const erpEntriesGet = apiGetFactory("erp_entries")
+export const erpEntriesPost = apiPostFactory("erp_entries")
