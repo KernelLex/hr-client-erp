@@ -1,0 +1,42 @@
+{
+ "autoname": "VCF-.YYYY.-.####",
+ "creation": "2026-09-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "subject",
+  "linked_type",
+  "linked_name",
+  "due_date",
+  "assigned_to",
+  "status",
+  "outcome",
+  "next_action",
+  "source"
+ ],
+ "fields": [
+  {"fieldname": "subject", "fieldtype": "Data", "label": "Subject", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "linked_type", "fieldtype": "Select", "label": "Against", "options": "Lead\nEnquiry\nOpportunity", "in_list_view": 1},
+  {"fieldname": "linked_name", "fieldtype": "Data", "label": "Record"},
+  {"fieldname": "due_date", "fieldtype": "Date", "label": "Due Date", "in_list_view": 1},
+  {"fieldname": "assigned_to", "fieldtype": "Link", "label": "Owner", "options": "User"},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Open\nDone", "default": "Open", "in_list_view": 1},
+  {"fieldname": "outcome", "fieldtype": "Text", "label": "Outcome"},
+  {"fieldname": "next_action", "fieldtype": "Text", "label": "Next Action"},
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source", "default": "ERP", "read_only": 1}
+ ],
+ "modified": "2026-09-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera CRM Followup",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 1, "delete": 0, "read": 1, "role": "Employee", "write": 1}
+ ],
+ "sort_field": "due_date",
+ "sort_order": "ASC",
+ "track_changes": 1
+}

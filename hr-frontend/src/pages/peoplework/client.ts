@@ -90,3 +90,6 @@ export const erpEntriesPost = apiPostFactory("erp_entries")
 
 export const crmPipelineGet = apiGetFactory("crm_pipeline")
 export const crmPipelinePost = apiPostFactory("crm_pipeline")
+
+export const crmDirGet = apiGetFactory("crm_directory")
+export const crmDirPost = apiPostFactory("crm_directory")

@@ -1,0 +1,42 @@
+{
+ "autoname": "VCC-.YYYY.-.####",
+ "creation": "2026-09-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "contact_name",
+  "customer",
+  "role",
+  "phone",
+  "email",
+  "whatsapp",
+  "preferred_channel",
+  "notes",
+  "source"
+ ],
+ "fields": [
+  {"fieldname": "contact_name", "fieldtype": "Data", "label": "Contact Name", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "customer", "fieldtype": "Data", "label": "Customer", "in_list_view": 1},
+  {"fieldname": "role", "fieldtype": "Data", "label": "Role"},
+  {"fieldname": "phone", "fieldtype": "Data", "label": "Phone", "in_list_view": 1},
+  {"fieldname": "email", "fieldtype": "Data", "label": "Email"},
+  {"fieldname": "whatsapp", "fieldtype": "Data", "label": "WhatsApp"},
+  {"fieldname": "preferred_channel", "fieldtype": "Select", "label": "Preferred Channel", "options": "\nPhone\nEmail\nWhatsApp", "in_list_view": 1},
+  {"fieldname": "notes", "fieldtype": "Text", "label": "Notes"},
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source", "default": "ERP", "read_only": 1}
+ ],
+ "modified": "2026-09-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera CRM Contact",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 1, "delete": 0, "read": 1, "role": "Employee", "write": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

@@ -251,7 +251,8 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const path = location.pathname
   const search = location.search
 
-  const isPipelineActive = path === "/crm" || (path.startsWith("/crm/") && path !== "/crm/enquiries" && path !== "/crm/opportunities")
+  const CRM_SUBROUTES = ["/crm/enquiries", "/crm/opportunities", "/crm/contacts", "/crm/team", "/crm/followups"]
+  const isPipelineActive = path === "/crm" || (path.startsWith("/crm/") && !CRM_SUBROUTES.includes(path))
   const isSalesRegisterActive = path === "/sales-register"
   const isSalesGroupActive = isPipelineActive || isSalesRegisterActive
 
@@ -351,10 +352,13 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         {showCRM && (
           <>
             <GroupHeader label="Sales (CRM)" glyph="◈" open={salesOpen} active={isSalesGroupActive} onToggle={toggleSales} />
-            <GroupBody open={salesOpen} maxHeight={220}>
+            <GroupBody open={salesOpen} maxHeight={360}>
               <SubItem to="/crm" label="Pipeline" isActive={isPipelineActive} onClick={close} />
               <SubItem to="/crm/enquiries" label="Enquiries" isActive={path === "/crm/enquiries"} onClick={close} />
               <SubItem to="/crm/opportunities" label="Opportunities" isActive={path === "/crm/opportunities"} onClick={close} />
+              <SubItem to="/crm/contacts" label="Customer Contacts" isActive={path === "/crm/contacts"} onClick={close} />
+              <SubItem to="/crm/followups" label="Follow-ups" isActive={path === "/crm/followups"} onClick={close} />
+              <SubItem to="/crm/team" label="Sales Team" isActive={path === "/crm/team"} onClick={close} />
               {isAdmin && <SubItem to="/sales-register" label="Sales Register" isActive={isSalesRegisterActive} adminBadge onClick={close} />}
             </GroupBody>
           </>

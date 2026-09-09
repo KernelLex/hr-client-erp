@@ -44,6 +44,9 @@ const ErpEntriesPage = lazy(() => import("@/pages/erp_entries/ErpEntriesPage").t
 const DataEntryRequestsPage = lazy(() => import("@/pages/erp_entries/DataEntryRequestsPage").then(m => ({ default: m.DataEntryRequestsPage })))
 const EnquiriesPage = lazy(() => import("@/pages/crm/EnquiriesPage").then(m => ({ default: m.EnquiriesPage })))
 const OpportunitiesPage = lazy(() => import("@/pages/crm/OpportunitiesPage").then(m => ({ default: m.OpportunitiesPage })))
+const ContactsPage = lazy(() => import("@/pages/crm/ContactsPage").then(m => ({ default: m.ContactsPage })))
+const SalesTeamPage = lazy(() => import("@/pages/crm/SalesTeamPage").then(m => ({ default: m.SalesTeamPage })))
+const FollowupsPage = lazy(() => import("@/pages/crm/FollowupsPage").then(m => ({ default: m.FollowupsPage })))
 const GraphsPage = lazy(() => import("@/pages/Graphs"))
 const InventoryPage = lazy(() => import("@/pages/Inventory"))
 const PurchasingPage = lazy(() => import("@/pages/Purchasing"))
@@ -125,6 +128,9 @@ function App() {
                 <Route path="/crm/new" element={<NewLeadForm />} />
                 <Route path="/crm/enquiries" element={<EnquiriesPage />} />
                 <Route path="/crm/opportunities" element={<OpportunitiesPage />} />
+                <Route path="/crm/contacts" element={<ContactsPage />} />
+                <Route path="/crm/team" element={<SalesTeamPage />} />
+                <Route path="/crm/followups" element={<FollowupsPage />} />
                 <Route path="/crm/:id" element={<LeadDetail />} />
                 {/* Expense routes */}
                 <Route path="/expenses" element={<MyClaimsDashboard />} />
