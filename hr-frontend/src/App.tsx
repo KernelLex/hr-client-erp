@@ -42,6 +42,8 @@ const OperationsPage = lazy(() => import("@/pages/Operations"))
 const AccountingPage = lazy(() => import("@/pages/Accounting"))
 const ErpEntriesPage = lazy(() => import("@/pages/erp_entries/ErpEntriesPage").then(m => ({ default: m.ErpEntriesPage })))
 const DataEntryRequestsPage = lazy(() => import("@/pages/erp_entries/DataEntryRequestsPage").then(m => ({ default: m.DataEntryRequestsPage })))
+const EnquiriesPage = lazy(() => import("@/pages/crm/EnquiriesPage").then(m => ({ default: m.EnquiriesPage })))
+const OpportunitiesPage = lazy(() => import("@/pages/crm/OpportunitiesPage").then(m => ({ default: m.OpportunitiesPage })))
 const GraphsPage = lazy(() => import("@/pages/Graphs"))
 const InventoryPage = lazy(() => import("@/pages/Inventory"))
 const PurchasingPage = lazy(() => import("@/pages/Purchasing"))
@@ -121,6 +123,8 @@ function App() {
                 {/* CRM routes */}
                 <Route path="/crm" element={<PipelineBoard />} />
                 <Route path="/crm/new" element={<NewLeadForm />} />
+                <Route path="/crm/enquiries" element={<EnquiriesPage />} />
+                <Route path="/crm/opportunities" element={<OpportunitiesPage />} />
                 <Route path="/crm/:id" element={<LeadDetail />} />
                 {/* Expense routes */}
                 <Route path="/expenses" element={<MyClaimsDashboard />} />

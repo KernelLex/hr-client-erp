@@ -87,3 +87,6 @@ export const calendarPost = apiPostFactory("calendar")
 
 export const erpEntriesGet = apiGetFactory("erp_entries")
 export const erpEntriesPost = apiPostFactory("erp_entries")
+
+export const crmPipelineGet = apiGetFactory("crm_pipeline")
+export const crmPipelinePost = apiPostFactory("crm_pipeline")

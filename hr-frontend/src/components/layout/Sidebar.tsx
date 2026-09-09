@@ -251,7 +251,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const path = location.pathname
   const search = location.search
 
-  const isPipelineActive = path === "/crm" || path.startsWith("/crm/")
+  const isPipelineActive = path === "/crm" || (path.startsWith("/crm/") && path !== "/crm/enquiries" && path !== "/crm/opportunities")
   const isSalesRegisterActive = path === "/sales-register"
   const isSalesGroupActive = isPipelineActive || isSalesRegisterActive
 
@@ -351,8 +351,10 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         {showCRM && (
           <>
             <GroupHeader label="Sales (CRM)" glyph="◈" open={salesOpen} active={isSalesGroupActive} onToggle={toggleSales} />
-            <GroupBody open={salesOpen} maxHeight={120}>
+            <GroupBody open={salesOpen} maxHeight={220}>
               <SubItem to="/crm" label="Pipeline" isActive={isPipelineActive} onClick={close} />
+              <SubItem to="/crm/enquiries" label="Enquiries" isActive={path === "/crm/enquiries"} onClick={close} />
+              <SubItem to="/crm/opportunities" label="Opportunities" isActive={path === "/crm/opportunities"} onClick={close} />
               {isAdmin && <SubItem to="/sales-register" label="Sales Register" isActive={isSalesRegisterActive} adminBadge onClick={close} />}
             </GroupBody>
           </>
