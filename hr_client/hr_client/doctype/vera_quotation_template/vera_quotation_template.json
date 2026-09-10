@@ -1,0 +1,36 @@
+{
+ "autoname": "field:code",
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "code",
+  "template_name",
+  "applies_to",
+  "dynamic_fields",
+  "status",
+  "source"
+ ],
+ "fields": [
+  {"fieldname": "code", "fieldtype": "Data", "label": "Code", "reqd": 1, "unique": 1, "in_list_view": 1},
+  {"fieldname": "template_name", "fieldtype": "Data", "label": "Template", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "applies_to", "fieldtype": "Data", "label": "Applies To", "in_list_view": 1},
+  {"fieldname": "dynamic_fields", "fieldtype": "Small Text", "label": "Dynamic Fields", "description": "Comma-separated dimension fields this template exposes (e.g. width, height, depth)."},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nInactive", "default": "Active", "in_list_view": 1},
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source", "default": "ERP", "read_only": 1}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Quotation Template",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 1, "delete": 0, "read": 1, "role": "Employee", "write": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

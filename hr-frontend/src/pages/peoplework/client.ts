@@ -93,3 +93,6 @@ export const crmPipelinePost = apiPostFactory("crm_pipeline")
 
 export const crmDirGet = apiGetFactory("crm_directory")
 export const crmDirPost = apiPostFactory("crm_directory")
+
+export const quotationMastersGet = apiGetFactory("quotation_masters")
+export const quotationMastersPost = apiPostFactory("quotation_masters")

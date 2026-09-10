@@ -1,0 +1,40 @@
+{
+ "autoname": "field:code",
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "code",
+  "hardware_item",
+  "category",
+  "brand",
+  "series",
+  "uom",
+  "status",
+  "source"
+ ],
+ "fields": [
+  {"fieldname": "code", "fieldtype": "Data", "label": "Code", "reqd": 1, "unique": 1, "in_list_view": 1},
+  {"fieldname": "hardware_item", "fieldtype": "Data", "label": "Hardware Item", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "category", "fieldtype": "Data", "label": "Category", "in_list_view": 1},
+  {"fieldname": "brand", "fieldtype": "Data", "label": "Brand", "in_list_view": 1},
+  {"fieldname": "series", "fieldtype": "Data", "label": "Series"},
+  {"fieldname": "uom", "fieldtype": "Data", "label": "UOM"},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nInactive", "default": "Active", "in_list_view": 1},
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source", "default": "ERP", "read_only": 1}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Quotation Hardware",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 1, "delete": 0, "read": 1, "role": "Employee", "write": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

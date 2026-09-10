@@ -47,6 +47,12 @@ const OpportunitiesPage = lazy(() => import("@/pages/crm/OpportunitiesPage").the
 const ContactsPage = lazy(() => import("@/pages/crm/ContactsPage").then(m => ({ default: m.ContactsPage })))
 const SalesTeamPage = lazy(() => import("@/pages/crm/SalesTeamPage").then(m => ({ default: m.SalesTeamPage })))
 const FollowupsPage = lazy(() => import("@/pages/crm/FollowupsPage").then(m => ({ default: m.FollowupsPage })))
+const QuotationUnitsPage = lazy(() => import("@/pages/quotation/UnitsPage").then(m => ({ default: m.UnitsPage })))
+const QuotationMaterialsPage = lazy(() => import("@/pages/quotation/MaterialsPage").then(m => ({ default: m.MaterialsPage })))
+const QuotationFinishesPage = lazy(() => import("@/pages/quotation/FinishesPage").then(m => ({ default: m.FinishesPage })))
+const QuotationHardwarePage = lazy(() => import("@/pages/quotation/HardwarePage").then(m => ({ default: m.HardwarePage })))
+const QuotationPricingPage = lazy(() => import("@/pages/quotation/PricingMethodsPage").then(m => ({ default: m.PricingMethodsPage })))
+const QuotationTemplatesPage = lazy(() => import("@/pages/quotation/TemplatesPage").then(m => ({ default: m.TemplatesPage })))
 const GraphsPage = lazy(() => import("@/pages/Graphs"))
 const InventoryPage = lazy(() => import("@/pages/Inventory"))
 const PurchasingPage = lazy(() => import("@/pages/Purchasing"))
@@ -132,6 +138,13 @@ function App() {
                 <Route path="/crm/team" element={<SalesTeamPage />} />
                 <Route path="/crm/followups" element={<FollowupsPage />} />
                 <Route path="/crm/:id" element={<LeadDetail />} />
+                {/* Quotation Studio — Masters (§4.7) */}
+                <Route path="/quotation/units" element={<QuotationUnitsPage />} />
+                <Route path="/quotation/materials" element={<QuotationMaterialsPage />} />
+                <Route path="/quotation/finishes" element={<QuotationFinishesPage />} />
+                <Route path="/quotation/hardware" element={<QuotationHardwarePage />} />
+                <Route path="/quotation/pricing" element={<QuotationPricingPage />} />
+                <Route path="/quotation/templates" element={<QuotationTemplatesPage />} />
                 {/* Expense routes */}
                 <Route path="/expenses" element={<MyClaimsDashboard />} />
                 <Route path="/expenses/new" element={<NewClaimForm />} />

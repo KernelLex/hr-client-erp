@@ -207,6 +207,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
 
   // Dropdown open state — persisted in localStorage
   const [salesOpen, setSalesOpen] = useState(() => readLS("sidebar_sales_open", true))
+  const [quotationOpen, setQuotationOpen] = useState(() => readLS("sidebar_quotation_open", false))
   const [accountingOpen, setAccountingOpen] = useState(() => readLS("sidebar_accounting_open", false))
   const [hrOpen, setHrOpen] = useState(() => readLS("sidebar_hr_open", true))
   const [todoOpen, setTodoOpen] = useState(() => readLS("sidebar_todo_open", true))
@@ -217,6 +218,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   useEffect(() => {
     const p = location.pathname
     if (p === "/crm" || p.startsWith("/crm/") || p === "/sales-register") setSalesOpen(true)
+    if (p.startsWith("/quotation/")) setQuotationOpen(true)
     if (p === "/accounting-module") setAccountingOpen(true)
     if (
       p.startsWith("/admin/attendance") || p === "/leave" || p.startsWith("/expenses") ||
@@ -236,6 +238,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
     })
   }
   const toggleSales = makeToggle(setSalesOpen, "sidebar_sales_open")
+  const toggleQuotation = makeToggle(setQuotationOpen, "sidebar_quotation_open")
   const toggleAccounting = makeToggle(setAccountingOpen, "sidebar_accounting_open")
   const toggleHR = makeToggle(setHrOpen, "sidebar_hr_open")
   const toggleTodo = makeToggle(setTodoOpen, "sidebar_todo_open")
@@ -255,6 +258,8 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const isPipelineActive = path === "/crm" || (path.startsWith("/crm/") && !CRM_SUBROUTES.includes(path))
   const isSalesRegisterActive = path === "/sales-register"
   const isSalesGroupActive = isPipelineActive || isSalesRegisterActive
+
+  const isQuotationGroupActive = path.startsWith("/quotation/")
 
   const acct = (tab: string) => path === "/accounting-module" && search === `?tab=${tab}`
   const isAccountingGroupActive = path === "/accounting-module"
@@ -311,6 +316,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const showHrms = can("hrms")
   const showAccounts = can("accounts")
   const showCRM = can("crm")
+  const showQuotation = can("quotation")
   const showChat = can("chat")
   const showOrgHub = can("org_hub")
   const showTodo = can("todo")
@@ -360,6 +366,21 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <SubItem to="/crm/followups" label="Follow-ups" isActive={path === "/crm/followups"} onClick={close} />
               <SubItem to="/crm/team" label="Sales Team" isActive={path === "/crm/team"} onClick={close} />
               {isAdmin && <SubItem to="/sales-register" label="Sales Register" isActive={isSalesRegisterActive} adminBadge onClick={close} />}
+            </GroupBody>
+          </>
+        )}
+
+        {/* Quotation Studio — masters that drive the six-stage chain (Phase 2 §4). */}
+        {showQuotation && (
+          <>
+            <GroupHeader label="Quotation Studio" glyph="◆" open={quotationOpen} active={isQuotationGroupActive} onToggle={toggleQuotation} />
+            <GroupBody open={quotationOpen} maxHeight={300}>
+              <SubItem to="/quotation/units" label="Units" isActive={path === "/quotation/units"} onClick={close} />
+              <SubItem to="/quotation/materials" label="Materials" isActive={path === "/quotation/materials"} onClick={close} />
+              <SubItem to="/quotation/finishes" label="Finishes" isActive={path === "/quotation/finishes"} onClick={close} />
+              <SubItem to="/quotation/hardware" label="Hardware" isActive={path === "/quotation/hardware"} onClick={close} />
+              <SubItem to="/quotation/pricing" label="Pricing Methods" isActive={path === "/quotation/pricing"} onClick={close} />
+              <SubItem to="/quotation/templates" label="Templates" isActive={path === "/quotation/templates"} onClick={close} />
             </GroupBody>
           </>
         )}

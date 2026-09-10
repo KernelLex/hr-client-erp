@@ -28,6 +28,14 @@ PERMISSION_REGISTRY = [
         {"key": "crm.pipeline", "label": "Pipeline"},
         {"key": "crm.sales_register", "label": "Sales Register", "admin": True},
     ]},
+    {"key": "quotation", "label": "Quotation Studio", "icon": "◆", "items": [
+        {"key": "quotation.units", "label": "Units"},
+        {"key": "quotation.materials", "label": "Materials"},
+        {"key": "quotation.finishes", "label": "Finishes"},
+        {"key": "quotation.hardware", "label": "Hardware"},
+        {"key": "quotation.pricing", "label": "Pricing Methods"},
+        {"key": "quotation.templates", "label": "Templates"},
+    ]},
     {"key": "inventory", "label": "Inventory", "icon": "▤", "admin": True, "items": []},
     {"key": "purchasing", "label": "Purchasing", "icon": "◪", "admin": True, "items": []},
     {"key": "logistics", "label": "Logistics", "icon": "◇", "admin": True, "items": []},
@@ -126,6 +134,7 @@ MODULE_ROLE_MAP = {
     "leave": ["HR Manager", "HR User", "Leave Approver"],
     "expense": ["Expense Approver"],
     "crm": [],
+    "quotation": [],
     "chat": [],
 }
 
