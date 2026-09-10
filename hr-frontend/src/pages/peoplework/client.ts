@@ -102,3 +102,6 @@ export const measurementPost = apiPostFactory("measurement")
 
 export const boqGet = apiGetFactory("boq")
 export const boqPost = apiPostFactory("boq")
+
+export const costSheetGet = apiGetFactory("cost_sheet")
+export const costSheetPost = apiPostFactory("cost_sheet")

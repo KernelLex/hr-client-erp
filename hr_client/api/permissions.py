@@ -31,6 +31,7 @@ PERMISSION_REGISTRY = [
     {"key": "quotation", "label": "Quotation Studio", "icon": "◆", "items": [
         {"key": "quotation.measurements", "label": "Measurement Sheets"},
         {"key": "quotation.boqs", "label": "BOQ / Configuration"},
+        {"key": "quotation.cost_sheets", "label": "Cost Sheets"},
         {"key": "quotation.units", "label": "Units"},
         {"key": "quotation.materials", "label": "Materials"},
         {"key": "quotation.finishes", "label": "Finishes"},

@@ -1,0 +1,31 @@
+{
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "area",
+  "unit_name",
+  "item_code",
+  "calc_qty",
+  "cost_rate",
+  "cost_amount"
+ ],
+ "fields": [
+  {"fieldname": "area", "fieldtype": "Data", "label": "Area", "in_list_view": 1, "columns": 2},
+  {"fieldname": "unit_name", "fieldtype": "Data", "label": "Unit", "in_list_view": 1, "columns": 3},
+  {"fieldname": "item_code", "fieldtype": "Data", "label": "Item Code", "in_list_view": 1, "columns": 2},
+  {"fieldname": "calc_qty", "fieldtype": "Float", "label": "Calc Qty", "precision": "3", "in_list_view": 1, "columns": 1},
+  {"fieldname": "cost_rate", "fieldtype": "Currency", "label": "Cost Rate", "in_list_view": 1, "columns": 2},
+  {"fieldname": "cost_amount", "fieldtype": "Currency", "label": "Cost Amount", "in_list_view": 1, "columns": 2}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Cost Sheet Line",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
