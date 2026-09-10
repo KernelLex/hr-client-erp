@@ -1,0 +1,33 @@
+{
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "obstruction_type",
+  "wall",
+  "width",
+  "height",
+  "distance_from_left",
+  "distance_from_floor",
+  "handling_note"
+ ],
+ "fields": [
+  {"fieldname": "obstruction_type", "fieldtype": "Select", "label": "Type", "options": "Column\nWindow\nBeam\nSwitchboard\nDuct", "in_list_view": 1, "columns": 2},
+  {"fieldname": "wall", "fieldtype": "Data", "label": "Wall", "in_list_view": 1, "columns": 1},
+  {"fieldname": "width", "fieldtype": "Float", "label": "Width (mm)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "height", "fieldtype": "Float", "label": "Height (mm)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "distance_from_left", "fieldtype": "Float", "label": "Dist. from Left (mm)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "distance_from_floor", "fieldtype": "Float", "label": "Dist. from Floor (mm)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "handling_note", "fieldtype": "Small Text", "label": "Handling Note", "in_list_view": 1, "columns": 3}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Measurement Obstruction",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

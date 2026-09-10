@@ -1,0 +1,31 @@
+{
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "service_type",
+  "sub_description",
+  "wall",
+  "x_coord",
+  "y_coord",
+  "readiness_status"
+ ],
+ "fields": [
+  {"fieldname": "service_type", "fieldtype": "Select", "label": "Type", "options": "Plumbing\nElectrical\nData\nGas", "in_list_view": 1, "columns": 2},
+  {"fieldname": "sub_description", "fieldtype": "Data", "label": "Sub-description", "in_list_view": 1, "columns": 2},
+  {"fieldname": "wall", "fieldtype": "Data", "label": "Wall", "in_list_view": 1, "columns": 1},
+  {"fieldname": "x_coord", "fieldtype": "Float", "label": "X (mm)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "y_coord", "fieldtype": "Float", "label": "Y (mm)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "readiness_status", "fieldtype": "Select", "label": "Readiness", "options": "Pending\nReady\nNot Applicable", "default": "Pending", "in_list_view": 1, "columns": 2}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Measurement Service",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

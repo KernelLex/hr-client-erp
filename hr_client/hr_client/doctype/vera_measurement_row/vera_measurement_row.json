@@ -1,0 +1,43 @@
+{
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "area",
+  "reference_code",
+  "product",
+  "template",
+  "description",
+  "width",
+  "height",
+  "depth",
+  "quantity",
+  "uom",
+  "site_condition",
+  "note"
+ ],
+ "fields": [
+  {"fieldname": "area", "fieldtype": "Data", "label": "Area", "in_list_view": 1, "columns": 1},
+  {"fieldname": "reference_code", "fieldtype": "Data", "label": "Ref Code", "in_list_view": 1, "columns": 1},
+  {"fieldname": "product", "fieldtype": "Data", "label": "Product", "in_list_view": 1, "columns": 2},
+  {"fieldname": "template", "fieldtype": "Data", "label": "Template"},
+  {"fieldname": "description", "fieldtype": "Small Text", "label": "Description", "in_list_view": 1, "columns": 2},
+  {"fieldname": "width", "fieldtype": "Float", "label": "Width (mm)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "height", "fieldtype": "Float", "label": "Height (mm)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "depth", "fieldtype": "Float", "label": "Depth (mm)"},
+  {"fieldname": "quantity", "fieldtype": "Float", "label": "Qty", "default": "1", "in_list_view": 1, "columns": 1},
+  {"fieldname": "uom", "fieldtype": "Data", "label": "UOM"},
+  {"fieldname": "site_condition", "fieldtype": "Data", "label": "Site Condition"},
+  {"fieldname": "note", "fieldtype": "Small Text", "label": "Note"}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Measurement Row",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

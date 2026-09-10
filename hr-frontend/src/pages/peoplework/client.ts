@@ -96,3 +96,6 @@ export const crmDirPost = apiPostFactory("crm_directory")
 
 export const quotationMastersGet = apiGetFactory("quotation_masters")
 export const quotationMastersPost = apiPostFactory("quotation_masters")
+
+export const measurementGet = apiGetFactory("measurement")
+export const measurementPost = apiPostFactory("measurement")
