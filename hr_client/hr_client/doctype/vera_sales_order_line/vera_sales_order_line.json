@@ -1,0 +1,33 @@
+{
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "line_type",
+  "section",
+  "specification",
+  "quantity",
+  "uom",
+  "rate",
+  "gross_amount"
+ ],
+ "fields": [
+  {"fieldname": "line_type", "fieldtype": "Data", "label": "Type", "in_list_view": 1, "columns": 2},
+  {"fieldname": "section", "fieldtype": "Data", "label": "Section", "in_list_view": 1, "columns": 1},
+  {"fieldname": "specification", "fieldtype": "Small Text", "label": "Specification", "in_list_view": 1, "columns": 4},
+  {"fieldname": "quantity", "fieldtype": "Float", "label": "Qty", "in_list_view": 1, "columns": 1},
+  {"fieldname": "uom", "fieldtype": "Data", "label": "UOM"},
+  {"fieldname": "rate", "fieldtype": "Currency", "label": "Rate", "in_list_view": 1, "columns": 1},
+  {"fieldname": "gross_amount", "fieldtype": "Currency", "label": "Gross Amount", "in_list_view": 1, "columns": 1}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Sales Order Line",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

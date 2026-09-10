@@ -1,0 +1,39 @@
+{
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "line_type",
+  "section",
+  "specification",
+  "measurement",
+  "source_boq_line",
+  "stock_or_lead",
+  "quantity",
+  "uom",
+  "rate",
+  "gross_amount"
+ ],
+ "fields": [
+  {"fieldname": "line_type", "fieldtype": "Select", "label": "Type", "options": "Project / Modular\nTrading\nServices", "default": "Project / Modular", "in_list_view": 1, "columns": 2},
+  {"fieldname": "section", "fieldtype": "Data", "label": "Section / Area", "in_list_view": 1, "columns": 1},
+  {"fieldname": "specification", "fieldtype": "Small Text", "label": "Specification", "in_list_view": 1, "columns": 3},
+  {"fieldname": "measurement", "fieldtype": "Data", "label": "Measurement"},
+  {"fieldname": "source_boq_line", "fieldtype": "Data", "label": "Source BOQ Line", "read_only": 1},
+  {"fieldname": "stock_or_lead", "fieldtype": "Data", "label": "Stock / Lead"},
+  {"fieldname": "quantity", "fieldtype": "Float", "label": "Qty", "default": "1", "in_list_view": 1, "columns": 1},
+  {"fieldname": "uom", "fieldtype": "Data", "label": "UOM"},
+  {"fieldname": "rate", "fieldtype": "Currency", "label": "Rate", "in_list_view": 1, "columns": 1},
+  {"fieldname": "gross_amount", "fieldtype": "Currency", "label": "Gross Amount", "read_only": 1, "in_list_view": 1, "columns": 1}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Sales Quotation Line",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

@@ -105,3 +105,12 @@ export const boqPost = apiPostFactory("boq")
 
 export const costSheetGet = apiGetFactory("cost_sheet")
 export const costSheetPost = apiPostFactory("cost_sheet")
+
+export const quotationGet = apiGetFactory("quotation")
+export const quotationPost = apiPostFactory("quotation")
+
+export const termsGet = apiGetFactory("terms")
+export const termsPost = apiPostFactory("terms")
+
+export const salesOrderGet = apiGetFactory("sales_order")
+export const salesOrderPost = apiPostFactory("sales_order")

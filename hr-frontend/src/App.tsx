@@ -59,6 +59,13 @@ const QuotationFinishesPage = lazy(() => import("@/pages/quotation/FinishesPage"
 const QuotationHardwarePage = lazy(() => import("@/pages/quotation/HardwarePage").then(m => ({ default: m.HardwarePage })))
 const QuotationPricingPage = lazy(() => import("@/pages/quotation/PricingMethodsPage").then(m => ({ default: m.PricingMethodsPage })))
 const QuotationTemplatesPage = lazy(() => import("@/pages/quotation/TemplatesPage").then(m => ({ default: m.TemplatesPage })))
+const QuotationsPage = lazy(() => import("@/pages/quotation/QuotationPage").then(m => ({ default: m.QuotationPage })))
+const QuotationEditor = lazy(() => import("@/pages/quotation/QuotationEditor").then(m => ({ default: m.QuotationEditor })))
+const QuotationPrintPage = lazy(() => import("@/pages/quotation/QuotationPrintPage").then(m => ({ default: m.QuotationPrintPage })))
+const SalesOrdersPage = lazy(() => import("@/pages/quotation/SalesOrdersPage").then(m => ({ default: m.SalesOrdersPage })))
+const SalesOrderEditor = lazy(() => import("@/pages/quotation/SalesOrderEditor").then(m => ({ default: m.SalesOrderEditor })))
+const TermsClausesPage = lazy(() => import("@/pages/quotation/TermsClausesPage").then(m => ({ default: m.TermsClausesPage })))
+const TermsTemplatesPage = lazy(() => import("@/pages/quotation/TermsTemplatesPage").then(m => ({ default: m.TermsTemplatesPage })))
 const GraphsPage = lazy(() => import("@/pages/Graphs"))
 const InventoryPage = lazy(() => import("@/pages/Inventory"))
 const PurchasingPage = lazy(() => import("@/pages/Purchasing"))
@@ -160,6 +167,16 @@ function App() {
                 <Route path="/quotation/hardware" element={<QuotationHardwarePage />} />
                 <Route path="/quotation/pricing" element={<QuotationPricingPage />} />
                 <Route path="/quotation/templates" element={<QuotationTemplatesPage />} />
+                {/* Quotation Studio — Customer Quotation + Approvals (§4.5/§4.6) */}
+                <Route path="/quotation/quotations" element={<QuotationsPage />} />
+                <Route path="/quotation/quotations/:name" element={<QuotationEditor />} />
+                <Route path="/quotation/quotations/:name/print/:fmt" element={<QuotationPrintPage />} />
+                {/* Quotation Studio — Sales Orders (§4.11) */}
+                <Route path="/quotation/sales-orders" element={<SalesOrdersPage />} />
+                <Route path="/quotation/sales-orders/:name" element={<SalesOrderEditor />} />
+                {/* Quotation Studio — Terms library (§4.10) */}
+                <Route path="/quotation/terms-clauses" element={<TermsClausesPage />} />
+                <Route path="/quotation/terms-templates" element={<TermsTemplatesPage />} />
                 {/* Expense routes */}
                 <Route path="/expenses" element={<MyClaimsDashboard />} />
                 <Route path="/expenses/new" element={<NewClaimForm />} />

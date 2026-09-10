@@ -1,0 +1,27 @@
+{
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "clause",
+  "title",
+  "mandatory",
+  "customer_text"
+ ],
+ "fields": [
+  {"fieldname": "clause", "fieldtype": "Link", "label": "Clause", "options": "Vera Terms Clause", "in_list_view": 1, "columns": 2},
+  {"fieldname": "title", "fieldtype": "Data", "label": "Title", "in_list_view": 1, "columns": 3},
+  {"fieldname": "mandatory", "fieldtype": "Check", "label": "Mandatory", "in_list_view": 1, "columns": 1},
+  {"fieldname": "customer_text", "fieldtype": "Text", "label": "Customer-facing Text"}
+ ],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Terms Template Clause",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
