@@ -12,6 +12,8 @@ export interface GridCol {
   type?: "text" | "number" | "select"
   options?: string[]
   width?: number
+  /** Server-computed column — always rendered as read-only text. */
+  readOnly?: boolean
 }
 
 export type GridRow = Record<string, string | number | null>
@@ -124,8 +126,8 @@ export function RegisterGrid({
               <tr key={i} style={{ borderTop: "0.5px solid var(--border, #e0d9cb)" }}>
                 {columns.map((c) => (
                   <td key={c.key} className="px-1.5 py-1">
-                    {!editable ? (
-                      <span style={{ color: "var(--text-primary)" }}>{String(r[c.key] ?? "") || "—"}</span>
+                    {!editable || c.readOnly ? (
+                      <span style={{ color: c.readOnly ? "var(--text-muted)" : "var(--text-primary)" }}>{String(r[c.key] ?? "") || "—"}</span>
                     ) : c.type === "select" ? (
                       <select
                         value={String(r[c.key] ?? "")}

@@ -99,3 +99,6 @@ export const quotationMastersPost = apiPostFactory("quotation_masters")
 
 export const measurementGet = apiGetFactory("measurement")
 export const measurementPost = apiPostFactory("measurement")
+
+export const boqGet = apiGetFactory("boq")
+export const boqPost = apiPostFactory("boq")

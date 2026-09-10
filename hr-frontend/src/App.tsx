@@ -49,6 +49,8 @@ const SalesTeamPage = lazy(() => import("@/pages/crm/SalesTeamPage").then(m => (
 const FollowupsPage = lazy(() => import("@/pages/crm/FollowupsPage").then(m => ({ default: m.FollowupsPage })))
 const MeasurementsPage = lazy(() => import("@/pages/quotation/MeasurementsPage").then(m => ({ default: m.MeasurementsPage })))
 const MeasurementEditor = lazy(() => import("@/pages/quotation/MeasurementEditor").then(m => ({ default: m.MeasurementEditor })))
+const BoqPage = lazy(() => import("@/pages/quotation/BoqPage").then(m => ({ default: m.BoqPage })))
+const BoqEditor = lazy(() => import("@/pages/quotation/BoqEditor").then(m => ({ default: m.BoqEditor })))
 const QuotationUnitsPage = lazy(() => import("@/pages/quotation/UnitsPage").then(m => ({ default: m.UnitsPage })))
 const QuotationMaterialsPage = lazy(() => import("@/pages/quotation/MaterialsPage").then(m => ({ default: m.MaterialsPage })))
 const QuotationFinishesPage = lazy(() => import("@/pages/quotation/FinishesPage").then(m => ({ default: m.FinishesPage })))
@@ -143,6 +145,9 @@ function App() {
                 {/* Quotation Studio — Measurement Sheets (§4.2) */}
                 <Route path="/quotation/measurements" element={<MeasurementsPage />} />
                 <Route path="/quotation/measurements/:name" element={<MeasurementEditor />} />
+                {/* Quotation Studio — BOQ / Configuration (§4.3) */}
+                <Route path="/quotation/boqs" element={<BoqPage />} />
+                <Route path="/quotation/boqs/:name" element={<BoqEditor />} />
                 {/* Quotation Studio — Masters (§4.7) */}
                 <Route path="/quotation/units" element={<QuotationUnitsPage />} />
                 <Route path="/quotation/materials" element={<QuotationMaterialsPage />} />
