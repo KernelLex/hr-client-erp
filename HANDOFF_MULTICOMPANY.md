@@ -8,8 +8,10 @@ _A fresh Claude can resume the multi-company build from this single file. Last u
 
 **Phases 0,1,2,3,4,5,6 = DONE + deployed + verified LIVE. Phase 6A safety controls + auto-detect
 DONE+verified. Phase 7 backend core DONE+verified. Phase 8 group console DONE (backend+frontend)
-+verified.** CI scoping guard GREEN (393 endpoints, 0 offenders, 53 tracked PENDING debt). NOTHING
-committed to git (owner tests live first, then says commit).
++verified.** CI scoping guard GREEN (393 endpoints, 0 offenders, 53 tracked PENDING debt).
+**2026-09-17: the whole multi-company build is now COMMITTED to git** — `develop` commit `d5b30ea`
+("feat: multi-company platform (VE/SL/HM) — Phases 0-8", 71 files). The per-company Tally Import UI
+page (item 1 below) was added right after and is NOT yet committed.
 
 ⚠️ DO NOT blind-scope the 53 PENDING native-HR endpoints: some doctypes (Shift Type, Training Program,
 Appraisal Template) are GLOBAL masters with NO `company` field — scoping them adds `AND company=…` on
@@ -31,9 +33,14 @@ cards in each accent, click→setCompany). Verified endpoint returns per-company
 **What's LEFT for a fresh session (in priority order):**
 1. **Owner inputs (blocking data load):** SL/HM Masters+Transactions Tally XML — will be uploaded via
    the UI at the very end. When they upload, the auto-detect flow captures each company's real Tally
-   name (owner confirms on screen). Then run the import per §6A. NOTE: the per-company Tally UPLOAD UI
-   page still needs building (wire the existing chunked-upload endpoints + detect/confirm into a
-   per-company page under the active company's accent). Backend fully ready.
+   name (owner confirms on screen). Then run the import per §6A. ✅ DONE (2026-09-17): the per-company
+   Tally UPLOAD UI page is now built — `src/pages/TallyUpload/index.tsx`, route `/tally-upload`,
+   sidebar "Tally Import" under Accounting (admin). 3-step wizard (choose files → verify company →
+   import) tinted to the active company's accent; wires the existing chunked-upload endpoints +
+   `detect_tally_file_company` + `confirm_tally_company_name` (owner-only confirm) + `run_tally_import`
+   + `get_import_status` polling. Blocks import unless the file's `<SVCURRENTCOMPANY>` matches the
+   active company. `__ALL__` group scope shows a "pick a company first" guard. Frontend `tsc` clean.
+   NOT yet browser-verified live (no SL/HM data to import against yet).
 2. **Phase 7 finish:** owner seeds ~6 `Intercompany Ledger Map` rows (via intercompany.add_ledger_map);
    wire quotation supplying_company→internal PO on SO confirm; call `intercompany.tag_intercompany()`
    post-import (needs data).
@@ -43,7 +50,8 @@ cards in each accent, click→setCompany). Verified endpoint returns per-company
    `bench --site vera.local execute hr_client.tests.verify_company_scoping.run` to see the live list.
 5. **6A transport optimisations** (gzip/resumable chunks, Tally Upload Session DocType, lxml iterparse
    for the 1.6GB file, nginx proxy_request_buffering off) — not safety, but needed for big SL/HM loads.
-6. Verify VE dashboards visually in the browser; when owner is happy → **git commit** (still not done).
+6. Verify VE dashboards visually in the browser. **Core build already committed** (`d5b30ea` on
+   `develop`); still to commit: the new Tally Import UI page. Push to origin when owner says so.
 
 Full per-phase detail is in §5–§7 below. Deploy/verify mechanics in §6/§10.
 

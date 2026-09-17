@@ -432,6 +432,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <SubItem to="/accounting-module?tab=financial-statements" label="Financial Statements"   isActive={acct("financial-statements")} onClick={close} />
             </GroupBody>
             <NavItem to="/accounts-dashboard" label="Accounts Dashboard" glyph="◎" adminBadge onClick={close} />
+            <NavItem to="/tally-upload" label="Tally Import" glyph="⇪" adminBadge onClick={close} />
           </>
         )}
 

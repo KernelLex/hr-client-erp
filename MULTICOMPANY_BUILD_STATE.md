@@ -4,8 +4,26 @@
 > resume guide (goal, kernel contracts, remaining module order, acceptance, ops facts, condensed
 > Phase 3–8 spec). This file is the running progress log / detail annex.
 
-_Last updated: 2026-09-15. Build in progress on LIVE site `vera.local`. NOT committed to git
-(owner tests live first, then commit). Deploy = rsync source → bench, migrate, restart._
+_Last updated: 2026-09-17. Build on LIVE site `vera.local`. **Core multi-company build now COMMITTED**
+to `develop` (`d5b30ea`, 71 files). Deploy = rsync source → bench, migrate, restart._
+
+### 2026-09-17 — Per-company Tally Import UI page (built, not yet committed)
+- New `hr-frontend/src/pages/TallyUpload/index.tsx` (default export `TallyUploadPage`); route
+  `/tally-upload` in `App.tsx`; sidebar "Tally Import" NavItem under Accounting (admin block) in
+  `Sidebar.tsx`.
+- 3-step wizard, re-tinted to the active company's accent via `useCompany().accentOf(activeCompany)`:
+  1. **Choose files** — reuses the Operations page chunked-upload mechanics (48MB chunks →
+     `upload_tally_chunk` → `finalize_tally_upload`), or pick a pair already on the server via
+     `list_tally_files`.
+  2. **Verify company** — `detect_tally_file_company(path)` on the Transactions file shows the file's
+     `<SVCURRENTCOMPANY>` vs the active company. Match → green, safe. No saved name + group owner →
+     "Confirm '<detected>' is <company>'s Tally name" button → `confirm_tally_company_name` (owner
+     only) then re-detect. Mismatch or unreadable → red, import button stays disabled.
+  3. **Import** — `run_tally_import(masters_path, transactions_path)` + poll `get_import_status`
+     (done/error), then `queryClient.invalidateQueries()` so figures refresh.
+- `__ALL__` (group console) scope shows a "pick a company first" guard with per-company buttons.
+- Backend was already fully ready; this page is purely a frontend wiring of existing endpoints.
+- Frontend `npx tsc --noEmit` clean. Not browser-verified live yet (no SL/HM data to import against).
 
 ## Companies (live DB names — NOTE: no umlaut)
 - `Vera Enterprises` (VE, abbr V) — has all financial data. `ve_login_enabled=1`, accent `#C6A15B` (gold).

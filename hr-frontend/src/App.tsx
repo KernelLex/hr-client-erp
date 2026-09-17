@@ -40,6 +40,7 @@ const VerificationPage = lazy(() => import("@/pages/Verification"))
 const VeDrivePage = lazy(() => import("@/pages/drive/VeDrivePage").then(m => ({ default: m.VeDrivePage })))
 const ChatPage = lazy(() => import("@/pages/chat/ChatPage").then(m => ({ default: m.ChatPage })))
 const OperationsPage = lazy(() => import("@/pages/Operations"))
+const TallyUploadPage = lazy(() => import("@/pages/TallyUpload"))
 const AccountingPage = lazy(() => import("@/pages/Accounting"))
 const ErpEntriesPage = lazy(() => import("@/pages/erp_entries/ErpEntriesPage").then(m => ({ default: m.ErpEntriesPage })))
 const DataEntryRequestsPage = lazy(() => import("@/pages/erp_entries/DataEntryRequestsPage").then(m => ({ default: m.DataEntryRequestsPage })))
@@ -202,6 +203,8 @@ function App() {
                 {/* Accounting Module — 18-tab COA / ledger page */}
                 <Route path="/accounting-module" element={<AccountingPage />} />
                 <Route path="/operations" element={<Navigate to="/accounting" replace />} />
+                {/* Per-company Tally upload + detect/confirm (multi-company §1) */}
+                <Route path="/tally-upload" element={<TallyUploadPage />} />
                 {/* Tally-derived modules */}
                 <Route path="/inventory" element={<InventoryPage />} />
                 <Route path="/purchasing" element={<PurchasingPage />} />
