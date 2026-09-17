@@ -4,6 +4,8 @@ _Verified live against the running server on 2026-09-13. Site `vera.local`, publ
 
 A full-stack, multi-company ERP (HR + Accounts + Sales) for Vera Enterprises. ERPNext runs as a **shadow backend** — employees never touch the Frappe desk (`/app` and `/desk` are `403`-blocked at nginx); all UX is a custom **React SPA**. Serves three companies: Vera Enterprises (VE), Schönes Leben (SL), Hagan Modular (HM).
 
+> 📊 **Visual diagrams:** see [`docs/architecture-diagram.md`](docs/architecture-diagram.md) — GitHub-rendered Mermaid diagrams of the system topology, the multi-company scoping kernel, the auth flow, the Quotation Studio + inter-company PO chain, and the Tally import pipeline.
+
 ---
 
 ## 1. The mental model

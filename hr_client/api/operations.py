@@ -656,12 +656,19 @@ def upload_tally_chunk():
 
 
 @frappe.whitelist()
-def finalize_tally_upload(upload_id, total_chunks, filename):
+def finalize_tally_upload(upload_id, total_chunks, filename, gzipped=0):
     """Reassemble all chunks (in order) into the final XML in the upload folder,
-    then delete the chunk parts. Returns the path for run_tally_import()."""
+    then delete the chunk parts. Returns the path for run_tally_import().
+
+    When `gzipped` is set the browser compressed the file with CompressionStream
+    before chunking (Tally XML compresses ~10-20:1, so the 1.5GB Transactions
+    export crosses the tunnel as ~100MB). The chunks then reassemble into a .gz
+    which is stream-decompressed into the final .xml — memory stays flat and the
+    downstream UTF-16 parser reads the .xml unchanged."""
     _require_admin()
     upload_id = _safe_upload_id(upload_id)
     total = cint(total_chunks)
+    gzipped = cint(gzipped)
     chunk_dir = os.path.join(_CHUNK_ROOT, upload_id)
     if not upload_id or total < 1 or not os.path.isdir(chunk_dir):
         frappe.throw("No chunks found for this upload", frappe.ValidationError)
@@ -679,11 +686,36 @@ def finalize_tally_upload(upload_id, total_chunks, filename):
     if not os.path.realpath(final).startswith(os.path.realpath(_TALLY_UPLOAD_DIR) + os.sep):
         frappe.throw("Invalid filename", frappe.ValidationError)
 
-    with open(final, "wb") as out:
-        for i in range(total):
-            part = os.path.join(chunk_dir, f"{i:06d}.part")
-            with open(part, "rb") as pf:
-                shutil.copyfileobj(pf, out, 4 * 1024 * 1024)
+    if gzipped:
+        # Reassemble into a temp .gz beside the final, then stream-decompress it.
+        gz_tmp = final + ".gz"
+        with open(gz_tmp, "wb") as out:
+            for i in range(total):
+                part = os.path.join(chunk_dir, f"{i:06d}.part")
+                with open(part, "rb") as pf:
+                    shutil.copyfileobj(pf, out, 4 * 1024 * 1024)
+        import gzip as _gzip
+        try:
+            with _gzip.open(gz_tmp, "rb") as gz, open(final, "wb") as out:
+                shutil.copyfileobj(gz, out, 4 * 1024 * 1024)
+        except (OSError, EOFError) as e:
+            shutil.rmtree(chunk_dir, ignore_errors=True)
+            try:
+                os.remove(gz_tmp)
+            except OSError:
+                pass
+            frappe.throw(f"Upload could not be decompressed — please retry: {e}",
+                         frappe.ValidationError)
+        try:
+            os.remove(gz_tmp)
+        except OSError:
+            pass
+    else:
+        with open(final, "wb") as out:
+            for i in range(total):
+                part = os.path.join(chunk_dir, f"{i:06d}.part")
+                with open(part, "rb") as pf:
+                    shutil.copyfileobj(pf, out, 4 * 1024 * 1024)
 
     shutil.rmtree(chunk_dir, ignore_errors=True)
 

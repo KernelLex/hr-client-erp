@@ -8,7 +8,10 @@
 import frappe
 from frappe.utils import getdate, nowdate
 
-from hr_client.api.utils import require_admin, handle_api_error, COMPANY_NAME
+from hr_client.api.utils import (
+    require_admin, handle_api_error, COMPANY_NAME,
+    current_company, require_company, scoped,
+)
 
 BOARDING_STATUS = ["Pending", "In Process", "Completed"]
 
@@ -19,7 +22,7 @@ def get_onboardings():
     require_admin()
     obs = frappe.get_all(
         "Employee Onboarding",
-        filters={"docstatus": ["<", 2]},
+        filters=scoped({"docstatus": ["<", 2]}),
         fields=["name", "employee_name", "designation", "department", "date_of_joining", "boarding_status"],
         order_by="date_of_joining desc",
         limit_page_length=200,
@@ -72,7 +75,7 @@ def get_designation_options():
 @handle_api_error
 def get_department_options():
     require_admin()
-    rows = frappe.get_all("Department", filters={"company": COMPANY_NAME, "is_group": 0}, fields=["name", "department_name"], order_by="department_name asc")
+    rows = frappe.get_all("Department", filters={"company": current_company(), "is_group": 0}, fields=["name", "department_name"], order_by="department_name asc")
     return {"options": [{"value": r.name, "label": r.department_name or r.name} for r in rows]}
 
 
@@ -84,7 +87,9 @@ def onboard_new_hire(applicant_name, email, designation, date_of_joining, depart
     if not (applicant_name and email and designation and date_of_joining):
         frappe.throw("Name, email, designation and joining date are required")
 
-    company = COMPANY_NAME
+    # Resolve + validate the target company as the real caller (before elevating
+    # to Administrator below for the HR-create rights).
+    company = require_company(current_company())
     doj = getdate(date_of_joining)
 
     # Recruitment / onboarding DocTypes require HR create rights; the caller is
@@ -150,6 +155,8 @@ def set_status(name, status):
     require_admin()
     if status not in BOARDING_STATUS:
         frappe.throw("Invalid status")
+    # Only touch an onboarding in a company the caller can access.
+    require_company(frappe.db.get_value("Employee Onboarding", name, "company") or current_company())
     frappe.db.set_value("Employee Onboarding", name, "boarding_status", status)
     frappe.db.commit()
     return {"success": True}

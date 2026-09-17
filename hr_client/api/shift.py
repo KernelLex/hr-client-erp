@@ -7,7 +7,10 @@
 import frappe
 from frappe.utils import getdate
 
-from hr_client.api.utils import require_admin, handle_api_error, COMPANY_NAME
+from hr_client.api.utils import (
+    require_admin, handle_api_error, COMPANY_NAME,
+    current_company, require_company, scoped,
+)
 
 
 # ── Shift Types ──────────────────────────────────────────────────────────────
@@ -24,7 +27,9 @@ def get_shift_types():
     )
     rows = []
     for s in shifts:
-        assigned = frappe.db.count("Shift Assignment", {"shift_type": s.name, "docstatus": 1, "status": "Active"})
+        # Shift Type is a global master (no company field); only the assignment
+        # COUNT is company-siloed, so scope that.
+        assigned = frappe.db.count("Shift Assignment", scoped({"shift_type": s.name, "docstatus": 1, "status": "Active"}))
         rows.append(
             {
                 "shift": s.name,
@@ -96,7 +101,7 @@ def get_shift_assignments():
 
     rows_raw = frappe.get_all(
         "Shift Assignment",
-        filters={"docstatus": ["<", 2]},
+        filters=scoped({"docstatus": ["<", 2]}),
         fields=["name", "employee_name", "shift_type", "start_date", "end_date", "status", "company"],
         order_by="start_date desc",
         limit_page_length=300,
@@ -155,7 +160,8 @@ def assign_shift(employee, shift_type, start_date, end_date=None):
     if not frappe.db.exists("Employee", employee):
         frappe.throw("Unknown employee")
 
-    company = frappe.db.get_value("Employee", employee, "company") or COMPANY_NAME
+    # Scope by the employee's own company — the caller must be able to access it.
+    company = require_company(frappe.db.get_value("Employee", employee, "company") or current_company())
     doc = frappe.get_doc(
         {
             "doctype": "Shift Assignment",

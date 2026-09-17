@@ -73,11 +73,35 @@ function uploadChunk(uploadId: string, index: number, total: number, blob: Blob,
     xhr.send(fd)
   })
 }
-async function uploadFile(file: File, onProgress: (n: number) => void): Promise<{ path: string }> {
-  const total = Math.max(1, Math.ceil(file.size / CHUNK_SIZE))
+// Gzip the file in the browser with the native CompressionStream before chunking.
+// Tally XML is highly repetitive and compresses ~10-20:1, turning the ~1.5GB
+// Transactions export into ~100MB — far fewer, smaller chunks over the tunnel and
+// a much faster upload. Falls back to the raw file when CompressionStream is
+// unavailable (older browsers); the server handles both via the `gzipped` flag.
+async function maybeGzip(file: File): Promise<{ blob: Blob; gzipped: boolean }> {
+  const CS = (window as unknown as { CompressionStream?: unknown }).CompressionStream
+  if (typeof CS !== "function") return { blob: file, gzipped: false }
+  try {
+    const stream = file.stream().pipeThrough(new (CS as new (f: string) => GenericTransformStream)("gzip"))
+    const blob = await new Response(stream as ReadableStream).blob()
+    return { blob, gzipped: true }
+  } catch {
+    return { blob: file, gzipped: false }
+  }
+}
+
+async function uploadFile(
+  file: File,
+  onProgress: (n: number) => void,
+  onStage?: (stage: string) => void,
+): Promise<{ path: string }> {
+  onStage?.("Compressing")
+  const { blob: payload, gzipped } = await maybeGzip(file)
+  onStage?.("Uploading")
+  const total = Math.max(1, Math.ceil(payload.size / CHUNK_SIZE))
   const uploadId = (crypto.randomUUID?.() ?? `up-${Date.now()}-${Math.random().toString(36).slice(2)}`)
   for (let i = 0; i < total; i++) {
-    const blob = file.slice(i * CHUNK_SIZE, Math.min(file.size, (i + 1) * CHUNK_SIZE))
+    const blob = payload.slice(i * CHUNK_SIZE, Math.min(payload.size, (i + 1) * CHUNK_SIZE))
     await uploadChunk(uploadId, i, total, blob, (loaded) => {
       const overall = ((i + (loaded / blob.size)) / total) * 100
       onProgress(Math.min(99, Math.round(overall)))
@@ -85,7 +109,7 @@ async function uploadFile(file: File, onProgress: (n: number) => void): Promise<
   }
   onProgress(99)
   const res = await apiPost("hr_client.api.operations.finalize_tally_upload", {
-    upload_id: uploadId, total_chunks: total, filename: file.name,
+    upload_id: uploadId, total_chunks: total, filename: file.name, gzipped: gzipped ? 1 : 0,
   }) as { path: string }
   onProgress(100)
   return res
@@ -204,9 +228,9 @@ export default function TallyUploadPage() {
         if (!mastersFile || !transFile) return
         setPhase("uploading")
         setUploadStep("Masters"); setPct(0); setMsg(`Uploading ${mastersFile.name}…`)
-        const m = await uploadFile(mastersFile, setPct); setPct(100)
+        const m = await uploadFile(mastersFile, setPct, (s) => setMsg(`${s} ${mastersFile.name}…`)); setPct(100)
         setUploadStep("Transactions"); setPct(0); setMsg(`Uploading ${transFile.name} (${fmtSize(transFile.size)})…`)
-        const t = await uploadFile(transFile, setPct); setPct(100)
+        const t = await uploadFile(transFile, setPct, (s) => setMsg(`${s} ${transFile.name} (${fmtSize(transFile.size)})…`)); setPct(100)
         setMastersPath(m.path); setTransPath(t.path)
         setPhase("verify")
         await runDetect(t.path)

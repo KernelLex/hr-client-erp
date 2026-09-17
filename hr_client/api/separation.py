@@ -7,7 +7,9 @@
 import frappe
 from frappe.utils import getdate, strip_html
 
-from hr_client.api.utils import require_admin, handle_api_error
+from hr_client.api.utils import (
+    require_admin, handle_api_error, current_company, require_company, scoped,
+)
 
 BOARDING_STATUS = ["Pending", "In Process", "Completed"]
 
@@ -18,7 +20,7 @@ def get_separations():
     require_admin()
     seps = frappe.get_all(
         "Employee Separation",
-        filters={"docstatus": ["<", 2]},
+        filters=scoped({"docstatus": ["<", 2]}),
         fields=["name", "employee_name", "department", "designation", "boarding_begins_on", "boarding_status", "resignation_letter_date"],
         order_by="boarding_begins_on desc",
         limit_page_length=200,
@@ -71,6 +73,8 @@ def initiate_separation(employee, exit_date, resignation_letter_date=None):
     emp = frappe.db.get_value(
         "Employee", employee, ["company", "department", "designation", "employee_name"], as_dict=True
     )
+    # Scope by the employee's own company — the caller must be able to access it.
+    require_company(emp.company or current_company())
     doc = frappe.get_doc(
         {
             "doctype": "Employee Separation",
@@ -95,6 +99,7 @@ def set_status(name, status):
     require_admin()
     if status not in BOARDING_STATUS:
         frappe.throw("Invalid status")
+    require_company(frappe.db.get_value("Employee Separation", name, "company") or current_company())
     frappe.db.set_value("Employee Separation", name, "boarding_status", status)
     frappe.db.commit()
     return {"success": True}
@@ -106,6 +111,7 @@ def record_exit_interview(name, notes):
     require_admin()
     if not notes or not str(notes).strip():
         frappe.throw("Interview notes are required")
+    require_company(frappe.db.get_value("Employee Separation", name, "company") or current_company())
     frappe.db.set_value("Employee Separation", name, "exit_interview", strip_html(str(notes)))
     frappe.db.commit()
     return {"success": True}

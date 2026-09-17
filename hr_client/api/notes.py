@@ -1,7 +1,7 @@
 import frappe
 from frappe.utils import now_datetime
 
-from hr_client.api.utils import current_company, ALL_COMPANIES, scoped
+from hr_client.api.utils import current_company, ALL_COMPANIES, scoped, require_company
 
 _ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
 
@@ -35,9 +35,13 @@ def get_notes(employee_email):
     if not emp_name:
         return {"success": False, "error": f"No active employee found for {employee_email}"}
 
+    # Multi-company: only expose notes for an employee in a company the admin can
+    # access — raises PermissionError if the employee is out of scope.
+    require_company(_emp_company(emp_name))
+
     notes = frappe.get_all(
         "Vera Employee Note",
-        filters={"employee": emp_name},
+        filters=scoped({"employee": emp_name}, _emp_company(emp_name)),
         fields=["name", "note_content", "tag", "created_by_user", "created_on"],
         order_by="created_on desc",
     )

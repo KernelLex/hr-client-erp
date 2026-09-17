@@ -56,25 +56,21 @@ GLOBAL_ENDPOINTS = {
     # True global masters — shared across all companies by design.
     "hrms_masters.*": "Department/Designation are shared Vera-wide masters",
     "todo.get_assignable_users": "lists Users (global doctype)",
+    "recruitment.get_interview_rounds": "Interview Round is a global master (no company field)",
+    "recruitment.get_applicant_sources": "Job Applicant Source is a global master (no company field)",
 }
 
-# Known scoping DEBT — native-HR modules that carry a `company` field but hold NO
-# data yet (no employee has run payroll/shifts/onboarding/separation, and the
-# recruitment pipeline is keyed to already-scoped Job Openings). These MUST be
-# scoped before SL/HM HR go-live. The guard WARNS on these but does not fail, so
-# the debt is explicit and greppable rather than hidden in GLOBAL_ENDPOINTS.
+# Known scoping DEBT — the AI/Tally-verification subsystem. All native-HR modules
+# (payroll, shift, training, appraisal, onboarding, separation, recruitment,
+# employee_lifecycle, leave, notes) are now fully company-scoped. What remains is
+# entangled with (a) the per-company Tally snapshot rebuild and (b) the retired
+# Drive-extraction verification doctypes — both belong to the finance/tally_enrich
+# follow-up, so band-aiding them here would produce inconsistent multi-company data
+# or decorate dead code. The guard WARNS on these but does not fail, so the debt is
+# explicit and greppable rather than hidden in GLOBAL_ENDPOINTS.
 PENDING_SCOPE = {
-    "payroll.*": "Salary Structure/Slip/Assignment — scope by Employee.company before HR go-live",
-    "shift.*": "Shift Type/Assignment — scope before multi-co shifts",
-    "training.*": "Training Program/Session — scope before multi-co training",
-    "onboarding.*": "Employee Onboarding — scope by Employee.company before HR go-live",
-    "separation.*": "Employee Separation — scope by Employee.company before HR go-live",
-    "appraisal.*": "Appraisal — scope before multi-co appraisals",
-    "recruitment.*": "pipeline keyed to already-scoped Job Opening; Job Applicant has no company field",
-    "leave.get_employee_leave_history": "admin single-employee history — add employee company check",
-    "notes.get_notes": "single-employee notes by email — add employee company check",
-    "employee_lifecycle.*": "native Employee onboarding/exit — scope by Employee.company before HR go-live",
-    "ai.get_business_snapshot": "reads global VE tally_snapshot — per-company snapshot TODO",
+    "ai.get_business_snapshot": "reads global VE tally_snapshot — needs per-company snapshot rebuild (finance follow-up)",
+    "ai.get_ai_health": "counts Drive File + retired extraction doctypes — scope with tally_enrich follow-up",
     "ai.get_verification_detail": "Tally verification UI — scope with finance modules' re-import",
     "ai.get_review_queue": "Tally enrichment review — scope with tally_enrich follow-up",
     "ai.get_all_extracted_records": "references retired Drive-extraction doctypes (dead) — remove or scope",
@@ -87,10 +83,8 @@ PENDING_SCOPE = {
     "ai.verify_record": "single-doc verify — scope with tally_enrich follow-up",
     "ai.reset_auto_verified": "Tally verification reset — scope with tally_enrich follow-up",
     "ai.auto_verify_all": "Tally verification bulk — scope with tally_enrich follow-up",
-    "ai.compare_periods": "reads vouchers — scope with finance follow-up (admin-only, VE data only today)",
     "ai.generate_report": "reads global VE snapshot — per-company snapshot TODO",
     "ai.get_dashboard_insights": "reads global VE snapshot — per-company snapshot TODO",
-    "ai.get_ai_health": "system health incl. voucher counts — scope with finance follow-up",
 }
 
 # Scoping primitives — any of these appearing in a function's source counts as scoped.

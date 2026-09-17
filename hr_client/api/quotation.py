@@ -480,6 +480,12 @@ def convert_to_sales_order(name: str):
     so.cost_sheet_revision = frappe.db.get_value("Vera Cost Sheet", doc.cost_sheet, "revision") if doc.cost_sheet else None
     so.grand_total = doc.grand_total
     for ln in doc.lines:
+        # Carry the BOQ line's supplying_company forward so SO confirmation (Phase 7
+        # §3) can raise an internal PO to any sibling company that supplies a line.
+        supplying = (
+            frappe.db.get_value("Vera BOQ Line", ln.source_boq_line, "supplying_company")
+            if ln.source_boq_line else None
+        )
         so.append("lines", {
             "line_type": ln.line_type,
             "section": ln.section,
@@ -488,6 +494,8 @@ def convert_to_sales_order(name: str):
             "uom": ln.uom,
             "rate": ln.rate,
             "gross_amount": ln.gross_amount,
+            "source_boq_line": ln.source_boq_line,
+            "supplying_company": supplying,
         })
     so.insert(ignore_permissions=True)
 

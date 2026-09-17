@@ -8,7 +8,10 @@
 import frappe
 from frappe.utils import getdate, flt
 
-from hr_client.api.utils import require_admin, handle_api_error, COMPANY_NAME
+from hr_client.api.utils import (
+    require_admin, handle_api_error, COMPANY_NAME,
+    current_company, require_company, scoped,
+)
 
 STD_TEMPLATE = "Vera Standard Appraisal"
 STD_KRAS = [
@@ -46,13 +49,14 @@ def get_cycles():
     require_admin()
     cycles = frappe.get_all(
         "Appraisal Cycle",
+        filters=scoped({}),
         fields=["name", "cycle_name", "start_date", "end_date", "status"],
         order_by="start_date desc",
         limit_page_length=100,
     )
     rows = []
     for c in cycles:
-        n = frappe.db.count("Appraisal", {"appraisal_cycle": c.name})
+        n = frappe.db.count("Appraisal", scoped({"appraisal_cycle": c.name}))
         rows.append(
             {
                 "id": c.name,
@@ -92,7 +96,7 @@ def create_cycle(cycle_name, start_date, end_date):
         {
             "doctype": "Appraisal Cycle",
             "cycle_name": str(cycle_name).strip(),
-            "company": COMPANY_NAME,
+            "company": require_company(current_company()),
             "start_date": getdate(start_date),
             "end_date": getdate(end_date),
             "kra_evaluation_method": "Manual Rating",
@@ -108,7 +112,7 @@ def create_cycle(cycle_name, start_date, end_date):
 @handle_api_error
 def get_cycle_options():
     require_admin()
-    rows = frappe.get_all("Appraisal Cycle", fields=["name", "cycle_name"], order_by="start_date desc")
+    rows = frappe.get_all("Appraisal Cycle", filters=scoped({}), fields=["name", "cycle_name"], order_by="start_date desc")
     return {"options": [{"value": r.name, "label": r.cycle_name or r.name} for r in rows]}
 
 
@@ -119,7 +123,7 @@ def get_appraisals():
     require_admin()
     apps = frappe.get_all(
         "Appraisal",
-        filters={"docstatus": ["<", 2]},
+        filters=scoped({"docstatus": ["<", 2]}),
         fields=["name", "employee_name", "designation", "appraisal_cycle", "final_score", "docstatus"],
         order_by="modified desc",
         limit_page_length=300,
@@ -170,13 +174,15 @@ def create_appraisal(employee, appraisal_cycle):
     if frappe.db.exists("Appraisal", {"employee": employee, "appraisal_cycle": appraisal_cycle, "docstatus": ["<", 2]}):
         frappe.throw("This employee already has an appraisal in that cycle")
 
+    # Scope by the employee's own company — the caller must be able to access it.
+    company = require_company(frappe.db.get_value("Employee", employee, "company") or current_company())
     template = _ensure_template()
     cyc = frappe.db.get_value("Appraisal Cycle", appraisal_cycle, ["start_date", "end_date"], as_dict=True)
     doc = frappe.get_doc(
         {
             "doctype": "Appraisal",
             "employee": employee,
-            "company": frappe.db.get_value("Employee", employee, "company") or COMPANY_NAME,
+            "company": company,
             "appraisal_cycle": appraisal_cycle,
             "appraisal_template": template,
             "rate_goals_manually": 1,

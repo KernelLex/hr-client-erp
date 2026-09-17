@@ -1,6 +1,6 @@
 import frappe
 import json
-from hr_client.api.utils import ADMIN_USERS, COMPANY_NAME
+from hr_client.api.utils import ADMIN_USERS, COMPANY_NAME, current_company, company_sql
 from hr_client.utils.llm import (
     is_ollama_running,
     get_available_models,
@@ -485,6 +485,10 @@ def compare_periods(period1, period2):
     if not is_ollama_running():
         return {"success": False, "reason": "Ollama not running"}
 
+    # Scope voucher reads to the active company (empty clause for the group console).
+    _co = current_company()
+    _co_sql = company_sql(_co)
+
     def _get_period_stats(period):
         """period = 'YYYY-MM'. Returns sales, purchases, receipts for that month."""
         try:
@@ -496,12 +500,14 @@ def compare_periods(period1, period2):
             date_from = f"{yr}-{mo:02d}-01"
             date_to   = f"{yr}-{mo:02d}-{last_day:02d}"
 
+            params = {"date_from": date_from, "date_to": date_to, "company": _co}
             rows = frappe.db.sql(
                 "SELECT voucher_type, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
                 "FROM `tabVE Tally Voucher` "
-                "WHERE is_cancelled=0 AND voucher_date BETWEEN %s AND %s "
+                "WHERE is_cancelled=0 AND voucher_date BETWEEN %(date_from)s AND %(date_to)s "
+                f"{_co_sql} "
                 "GROUP BY voucher_type",
-                (date_from, date_to), as_dict=True
+                params, as_dict=True
             )
             by_type = {r["voucher_type"]: r for r in rows}
             def _t(t): return float((by_type.get(t) or {}).get("total") or 0)
@@ -511,9 +517,10 @@ def compare_periods(period1, period2):
             top = frappe.db.sql(
                 "SELECT party_name, COALESCE(SUM(amount),0) as total "
                 "FROM `tabVE Tally Voucher` "
-                "WHERE voucher_type='Sales' AND is_cancelled=0 AND voucher_date BETWEEN %s AND %s "
+                "WHERE voucher_type='Sales' AND is_cancelled=0 AND voucher_date BETWEEN %(date_from)s AND %(date_to)s "
+                f"{_co_sql} "
                 "AND party_name != '' GROUP BY party_name ORDER BY total DESC LIMIT 3",
-                (date_from, date_to), as_dict=True
+                params, as_dict=True
             )
             return {
                 "sales":          _t("Sales"),    "sales_count":    _c("Sales"),

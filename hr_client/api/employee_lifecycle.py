@@ -1,6 +1,13 @@
 import frappe
 import json
 
+from hr_client.api.utils import current_company, require_company, scoped
+
+
+def _emp_company(employee_id):
+    """The Employee's own company — the authoritative scope for lifecycle records."""
+    return frappe.db.get_value("Employee", employee_id, "company") or current_company()
+
 
 def _has_custom_field(doctype, fieldname):
     return frappe.db.exists("Custom Field", f"{doctype}-{fieldname}")
@@ -82,7 +89,7 @@ def get_employees(status=None, onboarding_stage=None, search=None, department=No
     if has_onboarding:
         base_fields.append("custom_onboarding_stage")
 
-    employees = frappe.get_all("Employee", filters=filters, fields=base_fields, order_by="employee_name asc")
+    employees = frappe.get_all("Employee", filters=scoped(filters), fields=base_fields, order_by="employee_name asc")
 
     result = []
     for emp in employees:
@@ -116,6 +123,8 @@ def get_employee_detail(employee_id: str):
     except frappe.DoesNotExistError:
         frappe.response.http_status_code = 404
         return {"error": f"Employee {employee_id!r} not found"}
+
+    require_company(emp.company or current_company())
 
     has_docs = _has_custom_field("Employee", "custom_documents_checklist")
     has_it = _has_custom_field("Employee", "custom_it_setup_checklist")
@@ -204,6 +213,8 @@ def get_onboarding_checklist(employee_id: str):
         frappe.response.http_status_code = 404
         return {"error": "Employee not found"}
 
+    require_company(emp.company or current_company())
+
     has_docs = _has_custom_field("Employee", "custom_documents_checklist")
     has_it = _has_custom_field("Employee", "custom_it_setup_checklist")
     has_stage = _has_custom_field("Employee", "custom_onboarding_stage")
@@ -227,6 +238,8 @@ def get_onboarding_checklist(employee_id: str):
 @frappe.whitelist()
 def get_exit_details(employee_id: str):
     frappe.has_permission("Employee", ptype="read", throw=True)
+
+    require_company(_emp_company(employee_id))
 
     if not frappe.db.table_exists("tabEmployee Exit"):
         return {"exit": None}
@@ -262,6 +275,8 @@ def update_onboarding_stage(employee_id: str, stage: str, checklist_data: str = 
     except frappe.DoesNotExistError:
         frappe.response.http_status_code = 404
         return {"error": "Employee not found"}
+
+    require_company(emp.company or current_company())
 
     if _has_custom_field("Employee", "custom_onboarding_stage"):
         emp.custom_onboarding_stage = stage
@@ -306,7 +321,7 @@ def create_employee(first_name: str, last_name: str, date_of_joining: str, desig
     emp.date_of_joining = date_of_joining
     emp.designation = designation
     emp.department = department
-    emp.company = company
+    emp.company = require_company(company or current_company())
     if personal_email:
         emp.personal_email = personal_email
     if cell_number:
@@ -332,6 +347,8 @@ def create_employee(first_name: str, last_name: str, date_of_joining: str, desig
 def submit_resignation(employee_id: str, resignation_date: str, last_working_day: str = None,
                         resignation_letter_url: str = None):
     frappe.has_permission("Employee", ptype="write", throw=True)
+
+    require_company(_emp_company(employee_id))
 
     if not frappe.db.table_exists("tabEmployee Exit"):
         return {"error": "Employee Exit DocType not yet created. Run bench migrate."}
@@ -359,6 +376,8 @@ def submit_exit_interview(employee_id: str, exit_reason: str, would_recommend: s
                            enjoyed_most: str, improvement_suggestions: str, management_feedback: str):
     frappe.has_permission("Employee", ptype="write", throw=True)
 
+    require_company(_emp_company(employee_id))
+
     if not frappe.db.table_exists("tabEmployee Exit"):
         return {"error": "Employee Exit DocType not yet created"}
 
@@ -384,6 +403,7 @@ def send_welcome_email(employee_id: str):
     frappe.has_permission("Employee", ptype="read", throw=True)
 
     emp = frappe.get_doc("Employee", employee_id)
+    require_company(emp.company or current_company())
     email = emp.personal_email or emp.company_email or emp.prefered_email
 
     if not email:

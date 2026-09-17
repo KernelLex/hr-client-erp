@@ -86,6 +86,23 @@ def _require_hr_role():
 		frappe.throw(_("Only HR Manager can access recruitment features"), frappe.PermissionError)
 
 
+def _require_company_of_opening(job_opening):
+	"""Job Openings carry a company; gate access to the opening (and everything
+	hung off it — applicants, interviews, offers) on the caller being able to
+	access that company. Returns the resolved company."""
+	from hr_client.api.utils import current_company, require_company
+	return require_company(frappe.db.get_value("Job Opening", job_opening, "company") or current_company())
+
+
+def _require_company_of_applicant(applicant):
+	"""A Job Applicant has no company field of its own — it inherits the company of
+	its Job Opening (via the `job_title` link). Resolve and gate on that."""
+	from hr_client.api.utils import current_company, require_company
+	jt = frappe.db.get_value("Job Applicant", applicant, "job_title")
+	co = (frappe.db.get_value("Job Opening", jt, "company") if jt else None) or current_company()
+	return require_company(co)
+
+
 # ─── API ENDPOINTS ────────────────────────────────────────────────────────────
 
 @frappe.whitelist()
@@ -129,6 +146,8 @@ def get_pipeline(job_opening):
 	except frappe.DoesNotExistError:
 		frappe.response.http_status_code = 404
 		return {"error": "Job Opening not found"}
+
+	_require_company_of_opening(jo.name)
 
 	rounds = sorted(
 		[
@@ -191,6 +210,8 @@ def get_candidate(name):
 	except frappe.DoesNotExistError:
 		frappe.response.http_status_code = 404
 		return {"error": "Applicant not found"}
+
+	_require_company_of_applicant(doc.name)
 
 	job_title_display = (
 		frappe.db.get_value("Job Opening", doc.job_title, "job_title")
@@ -313,6 +334,7 @@ def add_candidate(job_opening, applicant_name, email_id, phone_number=None,
 	if not jo:
 		frappe.response.http_status_code = 404
 		return {"error": "Job Opening not found"}
+	_require_company_of_opening(jo.name)
 	if jo.status == "Closed":
 		frappe.response.http_status_code = 400
 		return {"error": "Job Opening is closed"}
@@ -362,6 +384,7 @@ def move_candidate(applicant, stage):
 		frappe.response.http_status_code = 404
 		return {"error": "Applicant not found"}
 
+	_require_company_of_applicant(applicant)
 	frappe.db.set_value("Job Applicant", applicant, "custom_pipeline_stage", stage)
 	frappe.db.commit()
 
@@ -380,6 +403,7 @@ def reject_candidate(applicant, rejection_reason=None):
 		frappe.response.http_status_code = 404
 		return {"error": "Applicant not found"}
 
+	_require_company_of_applicant(applicant)
 	frappe.db.set_value(
 		"Job Applicant",
 		applicant,
@@ -402,6 +426,8 @@ def schedule_interview(job_applicant, interview_round, scheduled_on, from_time, 
 	if not frappe.db.exists("Job Applicant", job_applicant):
 		frappe.response.http_status_code = 404
 		return {"error": "Applicant not found"}
+
+	_require_company_of_applicant(job_applicant)
 
 	if not frappe.db.exists("Interview Round", interview_round):
 		frappe.response.http_status_code = 404
@@ -443,11 +469,15 @@ def send_offer(job_applicant, offer_date, designation, company):
 		frappe.response.http_status_code = 400
 		return {"error": f"A Job Offer already exists: {existing}"}
 
+	# The offer's company is the applicant's Job Opening company — validated
+	# against the caller's access rather than trusted from the client param.
+	offer_company = _require_company_of_applicant(job_applicant)
+
 	doc = frappe.new_doc("Job Offer")
 	doc.job_applicant = job_applicant
 	doc.offer_date = offer_date
 	doc.designation = designation
-	doc.company = company
+	doc.company = offer_company
 	doc.status = "Awaiting Response"
 	doc.insert()
 	# on_offer_insert hook fires — updates applicant stage to Offer Sent
@@ -477,6 +507,9 @@ def update_offer_status(offer, status):
 	except frappe.DoesNotExistError:
 		frappe.response.http_status_code = 404
 		return {"error": "Job Offer not found"}
+
+	from hr_client.api.utils import current_company, require_company
+	require_company(doc.company or current_company())
 
 	doc.status = status
 	doc.save()
@@ -519,6 +552,7 @@ def update_candidate_notes(applicant, notes):
 		frappe.response.http_status_code = 404
 		return {"error": "Applicant not found"}
 
+	_require_company_of_applicant(applicant)
 	frappe.db.set_value("Job Applicant", applicant, "custom_internal_notes", notes)
 	frappe.db.commit()
 
@@ -550,6 +584,7 @@ def close_job_opening(job_id):
         frappe.response.http_status_code = 404
         return {"error": "Job Opening not found"}
 
+    _require_company_of_opening(job_id)
     frappe.db.set_value("Job Opening", job_id, "status", "Closed")
     frappe.db.commit()
     return {"success": True}
@@ -564,6 +599,7 @@ def delete_job_opening(job_id):
         frappe.response.http_status_code = 404
         return {"error": "Job Opening not found"}
 
+    _require_company_of_opening(job_id)
     applicants = frappe.db.get_all("Job Applicant", filters={"job_title": job_id}, fields=["name"])
     for app in applicants:
         interviews = frappe.db.get_all("Interview", filters={"job_applicant": app["name"]}, fields=["name"])
@@ -591,9 +627,10 @@ def get_designations():
 def get_departments():
 	"""Return all Departments for Vera Enterprises."""
 	_require_hr_role()
+	from hr_client.api.utils import current_company
 	departments = frappe.get_all(
 		"Department",
-		filters={"company": "Vera Enterprises"},
+		filters={"company": current_company()},
 		fields=["name", "department_name"],
 		order_by="department_name asc",
 	)

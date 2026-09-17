@@ -109,4 +109,16 @@ def set_status(name: str, status: str):
     doc.status = status
     doc.save(ignore_permissions=True)
     frappe.db.commit()
-    return {"success": True, "status": doc.status}
+
+    # Phase 7 §3 — confirming a Sales Order raises an internal PO to every sibling
+    # company that supplies a line (grouped one PO per supplying company). No-op
+    # for ordinary single-company orders. Never let this break the confirm itself.
+    internal_pos = []
+    if status == "Confirmed":
+        try:
+            from hr_client.api.intercompany import generate_internal_pos_for_so
+            internal_pos = generate_internal_pos_for_so(doc.name)
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "sales_order.set_status internal PO")
+
+    return {"success": True, "status": doc.status, "internal_pos": internal_pos}

@@ -11,7 +11,10 @@
 import frappe
 from frappe.utils import getdate, flt, fmt_money
 
-from hr_client.api.utils import require_admin, handle_api_error, COMPANY_NAME
+from hr_client.api.utils import (
+    require_admin, handle_api_error, COMPANY_NAME,
+    current_company, require_company, scoped, assert_doc_company,
+)
 
 # Standard component set — earnings sum to base; PF is 12% of Basic; PT is fixed.
 STD_EARNINGS = [
@@ -73,7 +76,7 @@ def get_salary_structures():
     require_admin()
     structs = frappe.get_all(
         "Salary Structure",
-        filters={"docstatus": ["<", 2]},
+        filters=scoped({"docstatus": ["<", 2]}),
         fields=["name", "company", "is_active", "payroll_frequency", "currency"],
         order_by="modified desc",
         limit_page_length=100,
@@ -118,7 +121,7 @@ def create_standard_structure(structure_name, company=None):
     require_admin()
     if not structure_name or not str(structure_name).strip():
         frappe.throw("Structure name is required")
-    company = company or COMPANY_NAME
+    company = require_company(company or current_company())
     name = str(structure_name).strip()
     if frappe.db.exists("Salary Structure", name):
         frappe.throw(f"A structure named '{name}' already exists")
@@ -161,7 +164,7 @@ def get_assignments():
     require_admin()
     rows_raw = frappe.get_all(
         "Salary Structure Assignment",
-        filters={"docstatus": ["<", 2]},
+        filters=scoped({"docstatus": ["<", 2]}),
         fields=["name", "employee_name", "salary_structure", "from_date", "base", "docstatus"],
         order_by="from_date desc",
         limit_page_length=300,
@@ -204,7 +207,7 @@ def get_assignments():
 @handle_api_error
 def get_structure_options():
     require_admin()
-    rows = frappe.get_all("Salary Structure", filters={"docstatus": 1, "is_active": "Yes"}, fields=["name"], order_by="name asc")
+    rows = frappe.get_all("Salary Structure", filters=scoped({"docstatus": 1, "is_active": "Yes"}), fields=["name"], order_by="name asc")
     return {"options": [{"value": r.name, "label": r.name} for r in rows]}
 
 
@@ -220,7 +223,8 @@ def assign_structure(employee, salary_structure, from_date, base):
     if base_amt <= 0:
         frappe.throw("Base pay must be greater than zero")
 
-    company = frappe.db.get_value("Employee", employee, "company") or COMPANY_NAME
+    # Scope by the employee's own company — the caller must be able to access it.
+    company = require_company(frappe.db.get_value("Employee", employee, "company") or current_company())
     doc = frappe.get_doc(
         {
             "doctype": "Salary Structure Assignment",
@@ -325,7 +329,7 @@ def get_payroll_runs():
     require_admin()
     runs = frappe.get_all(
         "Payroll Entry",
-        filters={"docstatus": ["<", 2]},
+        filters=scoped({"docstatus": ["<", 2]}),
         fields=["name", "start_date", "end_date", "number_of_employees", "status", "salary_slips_created", "salary_slips_submitted"],
         order_by="start_date desc",
         limit_page_length=100,
@@ -368,7 +372,7 @@ def run_payroll(start_date, end_date, company=None):
     require_admin()
     if not (start_date and end_date):
         frappe.throw("Start and end date are required")
-    company = company or COMPANY_NAME
+    company = require_company(company or current_company())
 
     payable = _payroll_payable_account(company)
     cc = _cost_center(company)
@@ -429,7 +433,7 @@ def get_salary_slips():
     require_admin()
     slips = frappe.get_all(
         "Salary Slip",
-        filters={"docstatus": ["<", 2]},
+        filters=scoped({"docstatus": ["<", 2]}),
         fields=["name", "employee_name", "start_date", "end_date", "gross_pay", "total_deduction", "net_pay", "status", "docstatus"],
         order_by="start_date desc",
         limit_page_length=300,
@@ -480,6 +484,7 @@ def submit_slip(name):
     frappe.set_user("Administrator")
     try:
         slip = frappe.get_doc("Salary Slip", name)
+        assert_doc_company(slip)
         if slip.docstatus == 0:
             slip.submit()
             frappe.db.commit()

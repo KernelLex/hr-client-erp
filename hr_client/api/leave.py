@@ -3,6 +3,7 @@ from frappe.utils import now, getdate
 from datetime import timedelta
 from hr_client.api.utils import (
     ADMIN_USERS as _ADMIN_USERS, current_company, ALL_COMPANIES, scoped, assert_doc_company,
+    require_company,
 )
 
 
@@ -187,9 +188,13 @@ def get_employee_leave_history(employee_email):
     if not emp:
         return {"success": False, "error": f"No active employee found for {employee_email}"}
 
+    # Multi-company: an admin may only view history for an employee in a company
+    # they can access — raises PermissionError if the employee is out of scope.
+    require_company(_emp_company(emp.name))
+
     leaves = frappe.get_all(
         "Vera Leave Application",
-        filters={"employee": emp.name},
+        filters=scoped({"employee": emp.name}, _emp_company(emp.name)),
         fields=[
             "name", "leave_type", "from_date", "to_date", "total_days",
             "reason", "status", "admin_remarks", "applied_on", "approved_by", "approved_on",

@@ -10,11 +10,19 @@ ledger with is_intercompany + counterparty_company (fields added in Phase 1) so
 the group console (Phase 8) can eliminate them.
 
 Seed the map by hand (it's a handful of rows), then run tag_intercompany().
+
+Phase 7 §3 — the Quotation Studio payoff — adds the *forward* leg: when a Sales
+Order is confirmed, any line supplied by a sibling company (line.supplying_company
+!= the SO's own company) raises an internal PO to that company, one PO per
+supplying company, tagged inter-company and routed through the supplying company's
+§4.6 authority ladder. See generate_internal_pos_for_so() below.
 """
 
 import frappe
 
-from hr_client.api.utils import require_admin, allowed_companies, ALL_COMPANIES, current_company
+from hr_client.api.utils import (
+    require_admin, allowed_companies, ALL_COMPANIES, current_company, require_company,
+)
 
 
 @frappe.whitelist()
@@ -109,3 +117,138 @@ def reconciliation_report():
             })
     return {"pairs": pairs, "note": "Differences are expected (timing / missing documents). "
                                     "This report surfaces them; it does not assert the sides match."}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Internal POs from Sales Order confirmation (Phase 7 §3)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# §4.6-style value ladder for an internal PO, evaluated in the SUPPLYING company.
+# (cap, authority label, needs_approval). "Internal does not mean unapproved" —
+# anything above the executive auto-approve cap routes to a higher authority.
+_PO_AUTHORITY = [
+    (50_000.0, "Purchase Executive", False),
+    (500_000.0, "Purchase Manager", True),
+    (float("inf"), "Director / CFO", True),
+]
+
+
+def _po_authority(total):
+    """Return (required_authority_label, needs_approval) for an internal PO total."""
+    total = frappe.utils.flt(total)
+    for cap, label, needs in _PO_AUTHORITY:
+        if total <= cap:
+            return label, needs
+    return "Director / CFO", True
+
+
+def generate_internal_pos_for_so(so_name):
+    """Raise one internal PO per supplying company for a confirmed Sales Order.
+
+    A line is inter-company when its supplying_company is set and differs from the
+    SO's own company. Idempotent: a supplying company that already has a PO for
+    this SO is skipped, so re-confirming never duplicates. Runs with elevated
+    permissions — the confirming user need not have access to the supplying
+    company; that company approves the PO in its own books afterwards.
+
+    Returns the list of created internal-PO names (empty when nothing is
+    cross-company, i.e. the ordinary single-company case)."""
+    so = frappe.get_doc("Vera Sales Order", so_name)
+    buying_company = so.company
+
+    # Group cross-company lines by their supplying company.
+    groups = {}
+    for ln in so.lines:
+        supplying = getattr(ln, "supplying_company", None)
+        if not supplying or supplying == buying_company:
+            continue
+        groups.setdefault(supplying, []).append(ln)
+
+    created = []
+    for supplying_company, lines in groups.items():
+        if frappe.db.exists("Vera Internal PO",
+                            {"source_sales_order": so.name, "company": supplying_company}):
+            continue  # idempotent — already raised on a prior confirm
+
+        po = frappe.new_doc("Vera Internal PO")
+        po.company = supplying_company
+        po.buying_company = buying_company
+        po.counterparty_company = buying_company
+        po.is_intercompany = 1
+        po.source_sales_order = so.name
+        po.source_quotation = so.quotation
+        po.boq = so.boq
+        po.po_date = frappe.utils.today()
+        for ln in lines:
+            amount = frappe.utils.flt(ln.gross_amount) or round(
+                frappe.utils.flt(ln.quantity) * frappe.utils.flt(ln.rate), 2)
+            po.append("lines", {
+                "section": ln.section,
+                "specification": ln.specification,
+                "quantity": ln.quantity,
+                "uom": ln.uom,
+                "rate": ln.rate,
+                "amount": amount,
+                "source_boq_line": getattr(ln, "source_boq_line", None),
+            })
+        # validate() sums the lines into po.total; evaluate authority off that.
+        po.insert(ignore_permissions=True)
+        authority, needs_approval = _po_authority(po.total)
+        po.required_authority = authority
+        po.status = "Pending Approval" if needs_approval else "Approved"
+        if not needs_approval:
+            po.approved_by = "Administrator"
+            po.approved_on = frappe.utils.now()
+        po.save(ignore_permissions=True)
+        created.append(po.name)
+
+    if created:
+        frappe.db.commit()
+    return created
+
+
+@frappe.whitelist()
+def get_internal_pos():
+    """List internal POs the caller may see — scoped to the supplying company
+    (the PO's `company`), which is where it is approved."""
+    require_admin()
+    cos = allowed_companies()
+    filters = {} if current_company() == ALL_COMPANIES else {"company": ["in", cos]}
+    rows = frappe.get_all(
+        "Vera Internal PO", filters=filters,
+        fields=["name", "company", "buying_company", "source_sales_order", "po_date",
+                "status", "required_authority", "total"],
+        order_by="modified desc",
+    )
+    return {"rows": rows}
+
+
+@frappe.whitelist(methods=["POST"])
+def approve_internal_po(name):
+    """Approve an internal PO. Only an admin of the SUPPLYING company (the PO's
+    own company) may approve — internal does not mean unapproved (§4.6)."""
+    require_admin()
+    doc = frappe.get_doc("Vera Internal PO", name)
+    require_company(doc.company)          # must hold the supplying company
+    if doc.status not in ("Pending Approval", "Draft"):
+        frappe.throw(f"Cannot approve a PO in status {doc.status}.")
+    doc.status = "Approved"
+    doc.approved_by = frappe.session.user
+    doc.approved_on = frappe.utils.now()
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "status": doc.status}
+
+
+@frappe.whitelist(methods=["POST"])
+def reject_internal_po(name, reason=None):
+    """Reject an internal PO (supplying-company admin only)."""
+    require_admin()
+    doc = frappe.get_doc("Vera Internal PO", name)
+    require_company(doc.company)
+    doc.status = "Rejected"
+    if reason:
+        doc.notes = (doc.notes + "\n" if doc.notes else "") + f"Rejected: {reason}"
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "status": doc.status}
