@@ -16,7 +16,9 @@ has its formulas.
 
 import frappe
 
-from hr_client.api.utils import require_login, handle_api_error
+from hr_client.api.utils import (
+    require_login, handle_api_error, current_company, scoped, ALL_COMPANIES,
+)
 
 # ── Field allow-lists (what create endpoints will accept) ─────────────────────
 _UNIT_FIELDS = (
@@ -63,6 +65,7 @@ def _create(doctype, payload, allowed, required_field, required_label):
         frappe.throw(f"Code '{data['code']}' already exists.")
     doc = frappe.new_doc(doctype)
     doc.update(data)
+    doc.company = current_company()
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"success": True, "name": doc.name}
@@ -79,6 +82,7 @@ def get_units_page():
     _ensure_pricing_seeded()
     rows = frappe.get_all(
         "Vera Quotation Unit",
+        filters=scoped({}),
         fields=["name", "code", "unit_name", "product_group", "category",
                 "pricing_method", "status"],
         order_by="product_group asc, unit_name asc",
@@ -116,6 +120,7 @@ def get_materials_page():
     require_login()
     rows = frappe.get_all(
         "Vera Quotation Material",
+        filters=scoped({}),
         fields=["name", "code", "material_name", "category", "thickness", "uom", "status"],
         order_by="category asc, material_name asc",
     )
@@ -150,6 +155,7 @@ def get_finishes_page():
     require_login()
     rows = frappe.get_all(
         "Vera Quotation Finish",
+        filters=scoped({}),
         fields=["name", "code", "finish_name", "category", "finish_type", "colour", "status"],
         order_by="category asc, finish_name asc",
     )
@@ -185,6 +191,7 @@ def get_hardware_page():
     require_login()
     rows = frappe.get_all(
         "Vera Quotation Hardware",
+        filters=scoped({}),
         fields=["name", "code", "hardware_item", "category", "brand", "series", "status"],
         order_by="brand asc, hardware_item asc",
     )
@@ -225,6 +232,7 @@ def _ensure_pricing_seeded():
         doc = frappe.new_doc("Vera Quotation Pricing Method")
         doc.update(row)
         doc.status = "Active"
+        doc.company = current_company()
         doc.insert(ignore_permissions=True)
     frappe.db.commit()
 
@@ -236,6 +244,7 @@ def get_pricing_page():
     _ensure_pricing_seeded()
     rows = frappe.get_all(
         "Vera Quotation Pricing Method",
+        filters=scoped({}),
         fields=["name", "code", "method", "formula", "uom", "status"],
         order_by="code asc",
     )
@@ -270,6 +279,7 @@ def get_templates_page():
     require_login()
     rows = frappe.get_all(
         "Vera Quotation Template",
+        filters=scoped({}),
         fields=["name", "code", "template_name", "applies_to", "dynamic_fields", "status"],
         order_by="template_name asc",
     )
@@ -309,7 +319,7 @@ def get_master_options():
 
     def opts(doctype, label_field, extra=None):
         fields = ["name", label_field] + (extra or [])
-        return frappe.get_all(doctype, filters={"status": "Active"}, fields=fields,
+        return frappe.get_all(doctype, filters=scoped({"status": "Active"}), fields=fields,
                               order_by=f"{label_field} asc")
 
     return {

@@ -1,6 +1,11 @@
 import frappe
 import json
 
+from hr_client.api.utils import (
+    ALL_COMPANIES, allowed_companies, can_grant_access, current_company,
+    is_group_owner, require_company,
+)
+
 # ──────────────────────────────────────────────────────────────────────────────
 # PERMISSION REGISTRY — the SINGLE source of truth for what can be granted.
 #
@@ -223,12 +228,21 @@ def _require_admin():
         frappe.throw("Only Administrators can manage user permissions", frappe.PermissionError)
 
 
-def _denied_set(frappe_name: str) -> set:
+def _is_per_company_blob(blob: dict) -> bool:
+    """New format stores {company: {key: False}}; legacy stored {key: False}.
+    Per-company if every value is a dict (empty blob → treat as legacy/empty)."""
+    return bool(blob) and all(isinstance(v, dict) for v in blob.values())
+
+
+def _denied_set(frappe_name: str, company: str = None) -> set:
     """
-    The set of permission keys explicitly denied for a user.
-    Sources merged: (1) the sparse permissions_json blob, and (2) any legacy
-    per-column Check field still set to 0 (back-compat with pre-registry saves).
-    Absent record or key => allowed.
+    The set of permission keys explicitly denied for a user WITHIN `company`.
+
+    Storage (permissions_json):
+      • new  → {company: {key: False}}   — per-company module denials
+      • old  → {key: False}              — flat; applied to EVERY company (back-compat)
+    Legacy per-column Check fields (0 = restricted) apply to every company too.
+    Absent record / key => allowed (allow-by-default within a granted company).
     """
     denied = set()
     if not frappe.db.exists("User Module Permission", frappe_name):
@@ -240,11 +254,17 @@ def _denied_set(frappe_name: str) -> set:
     if raw:
         try:
             blob = json.loads(raw)
-            denied |= {k for k, v in blob.items() if v is False}
+            if _is_per_company_blob(blob):
+                if company and company != ALL_COMPANIES:
+                    sub = blob.get(company, {})
+                    denied |= {k for k, v in sub.items() if v is False}
+            else:
+                # Legacy flat blob applies to all companies.
+                denied |= {k for k, v in blob.items() if v is False}
         except Exception:
             pass
 
-    # Legacy columns: a stored 0 means that module was restricted.
+    # Legacy columns: a stored 0 means that module was restricted (all companies).
     for key in LEGACY_MODULE_KEYS:
         if getattr(doc, key, 1) == 0:
             denied.add(key)
@@ -252,9 +272,9 @@ def _denied_set(frappe_name: str) -> set:
     return denied
 
 
-def _resolve_perms(frappe_name: str) -> dict:
-    """Resolved {key: bool} over EVERY registry key for a user (True = allowed)."""
-    denied = _denied_set(frappe_name)
+def _resolve_perms(frappe_name: str, company: str = None) -> dict:
+    """Resolved {key: bool} over EVERY registry key for a user within a company."""
+    denied = _denied_set(frappe_name, company)
     return {k: (k not in denied) for k in _all_keys()}
 
 
@@ -323,29 +343,51 @@ def get_all_users_with_permissions():
             continue
         is_admin = u["name"] in _ADMIN_USERS
         emp = _get_linked_employee(u["name"])
-        permissions = _all_true() if is_admin else _resolve_perms(u["name"])
+        # Company access (positive allowlist) + the default company for the
+        # back-compat flat `permissions` map.
+        access = frappe.get_all(
+            "User Company Access",
+            filters={"parent": u["name"], "parenttype": "User"},
+            fields=["company", "access_level", "is_default"], order_by="idx asc",
+        )
+        default_co = next((a.company for a in access if a.is_default), (access[0].company if access else None))
+        permissions = _all_true() if is_admin else _resolve_perms(u["name"], default_co)
         result.append({
             "name": u["full_name"],
             "email": u["name"],
             "department": emp.get("department") or "",
             "designation": emp.get("designation") or "",
+            # "Employed by" (payroll company, read-only) is SEPARATE from "Can
+            # access" (the granted allowlist). Never conflate them.
+            "employed_by": emp.get("company") or "",
             "company": emp.get("company") or "",
+            "company_access": access,
             "is_admin": is_admin,
             "permissions": permissions,
         })
 
-    return {"users": result, "registry": PERMISSION_REGISTRY, "keys": _all_keys()}
+    return {
+        "users": result,
+        "registry": PERMISSION_REGISTRY,
+        "keys": _all_keys(),
+        "all_companies": frappe.get_all("Company", pluck="name"),
+        "can_grant": can_grant_access(),
+    }
 
 
 @frappe.whitelist(methods=["POST"])
-def update_user_permissions(email: str, permissions: str):
+def update_user_permissions(email: str, permissions: str, company: str = None):
     """
-    Save permissions for any user. Admin only.
-    `permissions`: JSON string of { key: bool } over (any subset of) registry keys.
-    Stored sparsely as the set of denied keys in permissions_json.
+    Save a user's MODULE permissions WITHIN one company (sparse negative — only
+    denied keys are stored). Gated on can_grant_access() (Owais only). A denial
+    on one company never affects the user's other companies.
+
+    `permissions`: JSON string of { key: bool } over (a subset of) registry keys.
+    `company`: which company these denials apply to (defaults to active company).
     """
     try:
-        _require_admin()
+        if not can_grant_access():
+            return {"success": False, "error": "You are not permitted to change access."}
 
         if isinstance(permissions, str):
             try:
@@ -360,53 +402,171 @@ def update_user_permissions(email: str, permissions: str):
         if not frappe.db.exists("User", frappe_name):
             return {"success": False, "error": f"User '{email}' not found"}
 
+        company = require_company(company) if company else current_company()
+        if company == ALL_COMPANIES:
+            return {"success": False, "error": "Pick a specific company to set module access."}
+
         valid_keys = set(_all_keys())
-        # Only keys that are explicitly False and belong to the registry are denied.
         denied = {k for k, v in permissions.items() if v is False and k in valid_keys}
 
-        # ── 1. Persist to the DocType ─────────────────────────────────────────
+        # ── 1. Persist per-company into the sparse blob ───────────────────────
         if frappe.db.exists("User Module Permission", frappe_name):
             doc = frappe.get_doc("User Module Permission", frappe_name)
         else:
             doc = frappe.new_doc("User Module Permission")
             doc.user = frappe_name
 
-        doc.permissions_json = json.dumps({k: False for k in sorted(denied)})
-        # Keep legacy Check columns in sync for the overlapping module keys so any
-        # old reader still sees the right state.
-        for key in LEGACY_MODULE_KEYS:
-            if hasattr(doc, key):
-                setattr(doc, key, 0 if key in denied else 1)
+        # Load + migrate the existing blob to per-company form.
+        try:
+            blob = json.loads(doc.permissions_json) if getattr(doc, "permissions_json", None) else {}
+        except Exception:
+            blob = {}
+        if not _is_per_company_blob(blob):
+            legacy_flat = {k: False for k, v in blob.items() if v is False}
+            # Seed every currently-granted company with the legacy denials so
+            # nothing silently loosens during migration.
+            blob = {c: dict(legacy_flat) for c in allowed_companies(frappe_name)} if legacy_flat else {}
 
+        before = dict(blob.get(company, {}))
+        blob[company] = {k: False for k in sorted(denied)}
+        doc.permissions_json = json.dumps(blob)
         doc.save(ignore_permissions=True)
 
         resolved = {k: (k not in denied) for k in _all_keys()}
+        _log_access(email, f"module_perms::{company}", company, before, blob[company])
 
-        # ── 2. Sync ERPNext roles (non-fatal) ────────────────────────────────
+        # ── 2. Sync ERPNext roles from the UNION across companies (non-fatal) ─
         try:
+            union_allowed = {}
+            for c, sub in (blob.items() if _is_per_company_blob(blob) else {}):
+                for k in _all_keys():
+                    union_allowed[k] = union_allowed.get(k, False) or (k not in sub)
             valid_roles = {r.name for r in frappe.get_all("Role", fields=["name"])}
-            _sync_user_roles(frappe_name, resolved, valid_roles)
+            _sync_user_roles(frappe_name, union_allowed or resolved, valid_roles)
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Role Sync Failed (non-fatal)")
 
         frappe.db.commit()
-        return {"success": True, "email": email, "permissions": resolved}
+        return {"success": True, "email": email, "company": company, "permissions": resolved}
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Permission Update Failed")
         return {"success": False, "error": str(e)}
 
 
+# ── Company access grants (POSITIVE allowlist — deny-by-default) ──────────────
+
+def _log_access(target_user, action, company, before, after):
+    """Append an immutable audit row for a grant/permission change."""
+    try:
+        frappe.get_doc({
+            "doctype": "Company Access Log",
+            "actor": frappe.session.user,
+            "target_user": target_user,
+            "action": action,
+            "company": company or "",
+            "before": json.dumps(before, default=str),
+            "after": json.dumps(after, default=str),
+            "at": frappe.utils.now_datetime(),
+        }).insert(ignore_permissions=True)
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Company Access Log insert failed")
+
+
+@frappe.whitelist()
+def get_user_company_access(email: str):
+    """The companies a user is granted, with access level + default flag.
+    Readable by admins (also drives the access grid)."""
+    frappe.has_permission("User", ptype="read", throw=True)
+    rows = frappe.get_all(
+        "User Company Access",
+        filters={"parent": email, "parenttype": "User"},
+        fields=["company", "access_level", "is_default"],
+        order_by="idx asc",
+    )
+    return {"email": email, "rows": rows}
+
+
+@frappe.whitelist(methods=["POST"])
+def update_user_company_access(user: str, rows: str):
+    """Rewrite a user's company-access allowlist (Owais only). Positive allowlist,
+    deny-by-default: a user sees nothing for a company until it appears here.
+
+    `rows`: JSON list of {company, access_level, is_default}.
+    """
+    try:
+        if not can_grant_access():
+            return {"success": False, "error": "You are not permitted to grant company access."}
+        if user == _PROTECTED_USER:
+            return {"success": False, "error": "The protected admin account's access cannot be modified."}
+        if not frappe.db.exists("User", user):
+            return {"success": False, "error": f"User '{user}' not found"}
+
+        rows_in = json.loads(rows) if isinstance(rows, str) else (rows or [])
+        # Validate every company exists.
+        clean = []
+        seen = set()
+        for r in rows_in:
+            co = (r or {}).get("company")
+            if not co or co in seen or not frappe.db.exists("Company", co):
+                continue
+            seen.add(co)
+            clean.append({
+                "company": co,
+                "access_level": r.get("access_level") if r.get("access_level") in ("Admin", "Full", "ReadOnly") else "Full",
+                "is_default": 1 if r.get("is_default") else 0,
+            })
+        # Exactly one default (first row if none flagged).
+        if clean and not any(r["is_default"] for r in clean):
+            clean[0]["is_default"] = 1
+
+        before = frappe.get_all(
+            "User Company Access", filters={"parent": user, "parenttype": "User"},
+            fields=["company", "access_level", "is_default"], order_by="idx asc",
+        )
+
+        # Rewrite child rows directly (avoid User.save() hooks).
+        frappe.db.delete("User Company Access", {"parent": user, "parenttype": "User"})
+        for i, r in enumerate(clean, start=1):
+            frappe.get_doc({
+                "doctype": "User Company Access",
+                "parent": user, "parenttype": "User", "parentfield": "ve_company_access",
+                "idx": i, "company": r["company"],
+                "access_level": r["access_level"], "is_default": r["is_default"],
+            }).insert(ignore_permissions=True)
+
+        _log_access(user, "company_access", None, before, clean)
+        frappe.db.commit()
+        return {"success": True, "user": user, "rows": clean,
+                "warning": None if clean else "This user now has NO company access — they can log in but see nothing."}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Company Access Update Failed")
+        return {"success": False, "error": str(e)}
+
+
 @frappe.whitelist()
 def get_my_permissions():
     """
-    The calling user's resolved permission map over every registry key.
-    No admin check — every logged-in user can call this. Admins/guests get all-true.
+    The calling user's resolved permission map over every registry key, FOR THE
+    ACTIVE COMPANY (the frontend sends `company` on every request; switching
+    companies clears the query cache and refetches, so `can(key)` is naturally
+    per-company). Admins/guests get all-true. Also returns the caller's company
+    access + tier so the frontend can render the switcher/console correctly.
     """
     user = frappe.session.user
+    try:
+        company = current_company()
+    except Exception:
+        company = None
+    meta = {
+        "active_company": None if company == ALL_COMPANIES else company,
+        "companies": allowed_companies(user) if user != "Guest" else [],
+        "is_group_owner": is_group_owner(user),
+    }
     if user in _ADMIN_USERS or user == "Guest":
-        return {"modules": _all_true(), "keys": _all_keys()}
-    return {"modules": _resolve_perms(user), "keys": _all_keys()}
+        return {"modules": _all_true(), "keys": _all_keys(), **meta}
+    return {"modules": _resolve_perms(user, company), "keys": _all_keys(), **meta}
 
 
 # ── Legacy endpoints (kept for backwards compat) ─────────────────────────────

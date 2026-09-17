@@ -15,7 +15,9 @@ stays permanently traceable, per §4.1.
 
 import frappe
 
-from hr_client.api.utils import require_login, handle_api_error
+from hr_client.api.utils import (
+    require_login, handle_api_error, current_company, assert_doc_company, scoped,
+)
 
 _HEADER_FIELDS = (
     "measurement_title", "opportunity", "company_name", "measurement_type",
@@ -52,6 +54,7 @@ def _rows_of(payload, key):
 
 
 def _assert_editable(doc):
+    assert_doc_company(doc)
     if doc.status not in _EDITABLE_STATUSES:
         frappe.throw(
             f"This measurement is {doc.status} and can no longer be edited. "
@@ -69,6 +72,7 @@ def get_measurements_page():
     require_login()
     rows_raw = frappe.get_all(
         "Vera Measurement Sheet",
+        filters=scoped({}),
         fields=["name", "measurement_title", "company_name", "measurement_type",
                 "status", "revision", "measurement_date", "source"],
         order_by="modified desc",
@@ -144,6 +148,7 @@ def _serialize(doc):
 def get_measurement(name: str):
     require_login()
     doc = frappe.get_doc("Vera Measurement Sheet", name)
+    assert_doc_company(doc)
     return {"success": True, "measurement": _serialize(doc)}
 
 
@@ -160,6 +165,7 @@ def create_measurement(payload):
         frappe.throw("A measurement title is required.")
     doc = frappe.new_doc("Vera Measurement Sheet")
     doc.update(data)
+    doc.company = current_company()
     if doc.opportunity and not doc.company_name:
         doc.company_name = frappe.db.get_value(
             "Vera CRM Opportunity", doc.opportunity, "company_name")
@@ -208,6 +214,7 @@ def save_register(name: str, register: str, rows):
 def submit_measurement(name: str):
     require_login()
     doc = frappe.get_doc("Vera Measurement Sheet", name)
+    assert_doc_company(doc)
     if doc.status != "Draft":
         frappe.throw(f"Only a Draft measurement can be submitted (this is {doc.status}).")
     if not doc.rows:
@@ -224,6 +231,7 @@ def reopen_measurement(name: str):
     """Send a Submitted sheet back to Draft for further editing."""
     require_login()
     doc = frappe.get_doc("Vera Measurement Sheet", name)
+    assert_doc_company(doc)
     if doc.status != "Submitted":
         frappe.throw("Only a Submitted measurement can be reopened.")
     doc.status = "Draft"
@@ -237,6 +245,7 @@ def reopen_measurement(name: str):
 def approve_measurement(name: str):
     require_login()
     doc = frappe.get_doc("Vera Measurement Sheet", name)
+    assert_doc_company(doc)
     if doc.status not in ("Submitted", "Draft"):
         frappe.throw(f"Cannot approve a {doc.status} measurement.")
     if not doc.rows:
@@ -256,6 +265,7 @@ def create_revision(name: str):
     revision+1, mark the source Superseded, and link them via `supersedes`."""
     require_login()
     src = frappe.get_doc("Vera Measurement Sheet", name)
+    assert_doc_company(src)
     new = frappe.copy_doc(src, ignore_no_copy=False)
     new.status = "Draft"
     new.revision = (src.revision or 1) + 1
@@ -282,7 +292,7 @@ def get_approved_measurements():
     require_login()
     return frappe.get_all(
         "Vera Measurement Sheet",
-        filters={"status": "Approved"},
+        filters=scoped({"status": "Approved"}),
         fields=["name", "measurement_title", "company_name", "revision", "opportunity"],
         order_by="modified desc",
     )

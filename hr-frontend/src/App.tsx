@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/context/AuthContext"
+import { CompanyProvider } from "@/context/CompanyContext"
 import { PermissionsProvider } from "@/context/PermissionsContext"
 import { ProtectedRoute, PublicOnlyRoute } from "@/components/auth/ProtectedRoute"
 import { Layout } from "@/components/layout/Layout"
@@ -116,6 +117,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
+          <CompanyProvider>
           <PermissionsProvider>
           <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -241,6 +243,7 @@ function App() {
           </Routes>
           </Suspense>
           </PermissionsProvider>
+          </CompanyProvider>
         </AuthProvider>
       </BrowserRouter>
       <Toaster />

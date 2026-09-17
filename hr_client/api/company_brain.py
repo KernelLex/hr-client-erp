@@ -73,11 +73,20 @@ def _financial_line() -> str:
     )
 
 
-def _load_employees() -> list[dict]:
+def _co_filter(company, base=None):
+    """Add a company filter unless company is falsy or the __ALL__ sentinel."""
+    from hr_client.api.utils import ALL_COMPANIES
+    f = dict(base or {})
+    if company and company != ALL_COMPANIES:
+        f["company"] = company
+    return f
+
+
+def _load_employees(company=None) -> list[dict]:
     try:
         rows = frappe.get_all(
             "Employee",
-            filters={"status": "Active"},
+            filters=_co_filter(company, {"status": "Active"}),
             fields=["name", "employee_name", "designation", "department", "company", "reports_to"],
             order_by="company asc, department asc",
             ignore_permissions=True,
@@ -91,11 +100,11 @@ def _load_employees() -> list[dict]:
     return rows
 
 
-def _load_open_jobs() -> list[dict]:
+def _load_open_jobs(company=None) -> list[dict]:
     try:
         return frappe.get_all(
             "Job Opening",
-            filters={"status": "Open"},
+            filters=_co_filter(company, {"status": "Open"}),
             fields=["name", "job_title", "designation", "department"],
             order_by="creation desc",
             ignore_permissions=True,
@@ -105,8 +114,8 @@ def _load_open_jobs() -> list[dict]:
         return []
 
 
-def _load_org_docs() -> dict[str, list[dict]]:
-    """All Org Hub docs across companies, full fields, for both digest + retrieval."""
+def _load_org_docs(company=None) -> dict[str, list[dict]]:
+    """Org Hub docs for the company (or all, for the group owner), full fields."""
     out = {}
     for dt, spec in _ORG_SPEC.items():
         wanted = ["name", "company", spec["title"]] + (["department"] if True else [])
@@ -116,7 +125,8 @@ def _load_org_docs() -> dict[str, list[dict]]:
         try:
             meta = frappe.get_meta(dt)
             fields = [f for f in wanted if f == "name" or meta.has_field(f)]
-            out[dt] = frappe.get_all(dt, fields=fields, order_by="creation asc",
+            _f = _co_filter(company) if meta.has_field("company") else {}
+            out[dt] = frappe.get_all(dt, filters=_f, fields=fields, order_by="creation asc",
                                      ignore_permissions=True, limit_page_length=0)
         except Exception:
             out[dt] = []
@@ -226,14 +236,20 @@ def _retrieve_relevant(question: str, org: dict[str, list[dict]], emps: list[dic
     return "\n\n".join(parts)
 
 
-def build_company_context(question: str = "") -> str:
+def build_company_context(question: str = "", company: str = None) -> str:
     """
     Full company digest rebuilt live from the DB, plus detail relevant to the
-    question. This is the assistant's knowledge of the entire company.
+    question. This is the assistant's knowledge of the company.
+
+    Scoped to `company` so a VE user's AI chat never surfaces another company's
+    roster / Org Hub / open jobs. The group owner passes company="__ALL__" for the
+    cross-company view. (The financial line still reads the global VE tally
+    snapshot — a known VE-only limitation until per-company snapshots exist; only
+    VE has Tally financials today.)
     """
-    emps = _load_employees()
-    jobs = _load_open_jobs()
-    org = _load_org_docs()
+    emps = _load_employees(company)
+    jobs = _load_open_jobs(company)
+    org = _load_org_docs(company)
 
     blocks = [
         _financial_line(),

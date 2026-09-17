@@ -1,7 +1,9 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/context/AuthContext"
+import { getLoginCompanies, type CompanyBrand } from "@/api/company"
+import { setActiveCompanyCache } from "@/lib/api"
 
 const FEATURES = [
   "Complete HR management in one place",
@@ -17,17 +19,74 @@ export function Login() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
+  // Pre-login company picker. If only one company is login-enabled we skip
+  // straight to its login form; the server still validates the choice.
+  const [companies, setCompanies] = useState<CompanyBrand[] | null>(null)
+  const [picked, setPicked] = useState<CompanyBrand | null>(null)
+
+  useEffect(() => {
+    // Reaching the login screen means no active session — drop any stale company
+    // cache so the pick made here is the single source of truth for the next session.
+    try { setActiveCompanyCache(null) } catch { /* ignore */ }
+    getLoginCompanies()
+      .then((cos) => {
+        setCompanies(cos)
+        if (cos.length === 1) setPicked(cos[0])
+      })
+      .catch(() => setCompanies([]))
+  }, [])
+
+  const accent = picked?.accent || "var(--brand-primary)"
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
     setLoading(true)
     try {
-      await login(email, password)
+      await login(email, password, picked?.name)
     } catch {
+      // Generic message — never reveals whether the account or company was wrong.
       setError("Invalid email or password. Please try again.")
     } finally {
       setLoading(false)
     }
+  }
+
+  // ── Company picker (shown until a company is chosen) ────────────────────────
+  if (companies && companies.length > 1 && !picked) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8" style={{ background: "var(--bg-app)" }}>
+        <div className="w-full max-w-md">
+          <h1 className="font-heading text-2xl text-center mb-1" style={{ color: "var(--text-primary)" }}>
+            Choose your company
+          </h1>
+          <p className="text-center text-sm text-gray-500 mb-8">Select a workspace to sign in to.</p>
+          <div className="space-y-3">
+            {companies.map((c) => (
+              <button
+                key={c.name}
+                onClick={() => { setError(""); setPicked(c) }}
+                className="w-full flex items-center gap-4 rounded-xl border bg-white p-4 text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2"
+                style={{ borderColor: "#e5e7eb", ["--tw-ring-color" as string]: c.accent }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = c.accent }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e5e7eb" }}
+              >
+                <div
+                  className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 font-heading text-lg text-white"
+                  style={{ background: c.accent }}
+                >
+                  {c.abbr}
+                </div>
+                <div>
+                  <div className="font-medium" style={{ color: "var(--text-primary)" }}>{c.label}</div>
+                  <div className="text-xs text-gray-400">Sign in to {c.label}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -35,22 +94,22 @@ export function Login() {
       {/* Left panel */}
       <div
         className="hidden md:flex md:w-2/5 flex-col p-10 relative overflow-hidden"
-        style={{ background: "var(--brand-primary)" }}
+        style={{ background: accent }}
       >
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: "linear-gradient(160deg, var(--brand-primary), var(--bg-sidebar-hover))" }}
+          style={{ background: `linear-gradient(160deg, ${accent}, rgba(0,0,0,0.35))` }}
         />
 
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center gap-2.5">
             <div
-              className="w-9 h-9 rounded-md flex items-center justify-center shrink-0 font-heading text-base"
-              style={{ background: "linear-gradient(150deg, var(--gold-light), var(--gold))", color: "var(--brand-primary)" }}
+              className="w-9 h-9 rounded-md flex items-center justify-center shrink-0 font-heading text-base bg-white/90"
+              style={{ color: accent }}
             >
-              V
+              {picked?.abbr || "V"}
             </div>
-            <span className="font-heading text-lg text-white tracking-tight">Vera Enterprises</span>
+            <span className="font-heading text-lg text-white tracking-tight">{picked?.label || "Vera Enterprises"}</span>
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
@@ -84,7 +143,18 @@ export function Login() {
           </div>
 
           <div className="mb-8">
-            <h2 className="font-heading text-2xl" style={{ color: "var(--text-primary)" }}>Sign in to your account</h2>
+            <h2 className="font-heading text-2xl" style={{ color: "var(--text-primary)" }}>
+              {picked ? `Sign in to ${picked.label}` : "Sign in to your account"}
+            </h2>
+            {picked && companies && companies.length > 1 && (
+              <button
+                type="button"
+                onClick={() => { setPicked(null); setError("") }}
+                className="mt-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                ← Change company
+              </button>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -132,10 +202,8 @@ export function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-10 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-              style={{ background: "var(--brand-primary)" }}
-              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "var(--bg-sidebar-hover)" }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--brand-primary)" }}
+              className="w-full h-10 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+              style={{ background: accent }}
             >
               {loading && (
                 <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />

@@ -21,6 +21,27 @@ def _require_admin():
         frappe.throw("Not permitted", frappe.PermissionError)
 
 
+# ── multi-company scoping helpers (Phase 2) ───────────────────────────────────
+from hr_client.api.utils import ALL_COMPANIES, current_company, require_company
+
+
+def _cc(company=None):
+    return require_company(company) if company else current_company()
+
+
+def _cco(company, alias=""):
+    if company == ALL_COMPANIES:
+        return ""
+    col = f"{alias}.company" if alias else "company"
+    return f" AND {col} = {frappe.db.escape(company)} "
+
+
+def _assert_graph_company(name):
+    """Ensure a saved graph belongs to a company the caller may access."""
+    c = frappe.db.get_value("VE Saved Graph", name, "company")
+    require_company(c) if c else _cc()
+
+
 def _fy_dates(fy: str):
     """Return (start_date, end_date_inclusive) for a FY string like '2025-26'."""
     try:
@@ -227,6 +248,7 @@ def _fetch_monthly_sales_purchases(months=12, fy=None):
         FROM `tabVE Tally Voucher`
         WHERE is_cancelled = 0 {date_clause}
           AND voucher_type IN ('Sales','Purchase','Receipt','Payment')
+          {_cco(_cc())}
         GROUP BY month, voucher_type
         ORDER BY month
         """,
@@ -252,7 +274,7 @@ def _fetch_top_parties(voucher_type="Sales", limit=15, fy="current"):
     fy = fy or _current_fy()
     d_from, d_to = _fy_dates(fy if fy != "current" else _current_fy())
     rows = frappe.db.sql(
-        """
+        f"""
         SELECT party_name AS party,
                COALESCE(SUM(amount), 0) AS total,
                COUNT(*) AS cnt
@@ -260,6 +282,7 @@ def _fetch_top_parties(voucher_type="Sales", limit=15, fy="current"):
         WHERE voucher_type = %s AND is_cancelled = 0
           AND voucher_date BETWEEN %s AND %s
           AND party_name != ''
+          {_cco(_cc())}
         GROUP BY party_name
         ORDER BY total DESC
         LIMIT %s
@@ -291,7 +314,7 @@ def _fetch_voucher_breakdown(fy=None):
                COUNT(*) AS count,
                COALESCE(SUM(amount), 0) AS value
         FROM `tabVE Tally Voucher`
-        WHERE is_cancelled = 0 {date_clause}
+        WHERE is_cancelled = 0 {date_clause} {_cco(_cc())}
         GROUP BY voucher_type
         ORDER BY value DESC
         """,
@@ -319,9 +342,10 @@ def _fetch_cashflow_trend(months=12):
         WHERE is_cancelled = 0
           AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
           AND voucher_type IN ('Receipt','Payment')
+          {cco}
         GROUP BY month, voucher_type
         ORDER BY month
-        """,
+        """.replace("{cco}", _cco(_cc())),
         ('%Y%m', cint(months)), as_dict=True
     )
     pivot = {}
@@ -348,11 +372,12 @@ def _fetch_fy_comparison(fy1=None, fy2=None):
     for fy in (fy1, fy2):
         d_from, d_to = _fy_dates(fy)
         rows = frappe.db.sql(
-            """
+            f"""
             SELECT voucher_type, COALESCE(SUM(amount), 0) AS total
             FROM `tabVE Tally Voucher`
             WHERE is_cancelled = 0 AND voucher_date BETWEEN %s AND %s
               AND voucher_type IN ('Sales','Purchase','Receipt','Payment')
+              {_cco(_cc())}
             GROUP BY voucher_type
             """,
             (d_from, d_to), as_dict=True
@@ -408,7 +433,7 @@ def _fetch_ledger_balances(filter_type="debtors", limit=15):
         SELECT ledger_name AS party,
                ABS(closing_balance) AS balance
         FROM `tabVE Tally Ledger`
-        WHERE `{is_field}` = 1 AND ABS(closing_balance) > 0
+        WHERE `{is_field}` = 1 AND ABS(closing_balance) > 0{_cco(_cc())}
         ORDER BY ABS(closing_balance) DESC
         LIMIT %s
         """,
@@ -432,8 +457,9 @@ def _fetch_sales_growth(months=12):
         FROM `tabVE Tally Voucher`
         WHERE voucher_type = 'Sales' AND is_cancelled = 0
           AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
+          {cco}
         GROUP BY month ORDER BY month
-        """,
+        """.replace("{cco}", _cco(_cc())),
         ('%Y%m', cint(months)), as_dict=True
     )
     data = []
@@ -458,10 +484,10 @@ def _fetch_stock_value(limit=20):
         SELECT item_name,
                COALESCE(standard_rate, 0) AS value
         FROM `tabVE Tally Stock Item`
-        WHERE standard_rate > 0
+        WHERE standard_rate > 0{cco}
         ORDER BY standard_rate DESC
         LIMIT %s
-        """,
+        """.replace("{cco}", _cco(_cc())),
         (cint(limit),), as_dict=True
     )
     data = [{"item": r["item_name"][:40], "value": _fmt(r["value"]), "qty": 0} for r in rows]
@@ -484,8 +510,9 @@ def _fetch_payments_receipts(months=12):
         WHERE is_cancelled = 0
           AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
           AND voucher_type IN ('Receipt','Payment')
+          {cco}
         GROUP BY month, voucher_type ORDER BY month
-        """,
+        """.replace("{cco}", _cco(_cc())),
         ('%Y%m', cint(months)), as_dict=True
     )
     pivot = {}
@@ -513,8 +540,9 @@ def _fetch_credit_debit_notes(months=12):
         WHERE is_cancelled = 0
           AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
           AND voucher_type IN ('Credit Note','Debit Note')
+          {cco}
         GROUP BY month, voucher_type ORDER BY month
-        """,
+        """.replace("{cco}", _cco(_cc())),
         ('%Y%m', cint(months)), as_dict=True
     )
     pivot = {}
@@ -538,12 +566,13 @@ def _fetch_state_wise_sales(fy="current"):
         """
         SELECT l.state AS name, COALESCE(SUM(v.amount), 0) AS value
         FROM `tabVE Tally Voucher` v
-        JOIN `tabVE Tally Ledger` l ON v.party_name = l.ledger_name
+        JOIN `tabVE Tally Ledger` l ON v.party_name = l.ledger_name AND l.company = v.company
         WHERE v.voucher_type = 'Sales' AND v.is_cancelled = 0
           AND v.voucher_date BETWEEN %s AND %s
           AND l.state != '' AND l.state IS NOT NULL
+          {cco}
         GROUP BY l.state ORDER BY value DESC LIMIT 20
-        """,
+        """.replace("{cco}", _cco(_cc(), "v")),
         (d_from, d_to), as_dict=True
     )
     colors = [
@@ -659,7 +688,7 @@ def _execute_ai_query(interpretation, query, date_from=None, date_to=None):
                        {'COUNT(*) AS value' if metric == 'count' else 'COALESCE(SUM(amount),0) AS value'}
                 FROM `tabVE Tally Voucher`
                 WHERE voucher_type = %s AND is_cancelled = 0 {date_clause}
-                  AND party_name != ''
+                  AND party_name != '' {_cco(_cc())}
                 GROUP BY party_name ORDER BY value DESC LIMIT %s
                 """,
                 (vt,) + date_params + (limit,), as_dict=True
@@ -673,7 +702,7 @@ def _execute_ai_query(interpretation, query, date_from=None, date_to=None):
                 SELECT DATE_FORMAT(voucher_date, %s) AS month,
                        {'COUNT(*) AS value' if metric == 'count' else 'COALESCE(SUM(amount),0) AS value'}
                 FROM `tabVE Tally Voucher`
-                WHERE voucher_type = %s AND is_cancelled = 0 {date_clause}
+                WHERE voucher_type = %s AND is_cancelled = 0 {date_clause} {_cco(_cc())}
                 GROUP BY month ORDER BY month
                 """,
                 ('%Y%m', vt) + date_params, as_dict=True
@@ -770,6 +799,7 @@ def save_graph(title, chart_type, data_json, config_json, query_text=None,
     _require_admin()
     try:
         doc = frappe.new_doc("VE Saved Graph")
+        doc.company = _cc()
         doc.title = title
         doc.chart_type = chart_type
         doc.data_json = data_json
@@ -793,7 +823,8 @@ def save_graph(title, chart_type, data_json, config_json, query_text=None,
 @frappe.whitelist()
 def get_saved_graphs(category=None, page=1, page_size=20):
     _require_admin()
-    filters = {}
+    company = _cc()
+    filters = {} if company == ALL_COMPANIES else {"company": company}
     if category and category != "All":
         filters["category"] = category
 
@@ -816,6 +847,7 @@ def get_saved_graphs(category=None, page=1, page_size=20):
 @frappe.whitelist()
 def get_saved_graph(name):
     _require_admin()
+    _assert_graph_company(name)
     try:
         doc = frappe.get_doc("VE Saved Graph", name)
         result = doc.as_dict()
@@ -829,6 +861,7 @@ def get_saved_graph(name):
 @frappe.whitelist()
 def delete_graph(name):
     _require_admin()
+    _assert_graph_company(name)
     try:
         frappe.delete_doc("VE Saved Graph", name, ignore_permissions=True)
         frappe.db.commit()
@@ -840,6 +873,7 @@ def delete_graph(name):
 @frappe.whitelist()
 def get_graph_csv_data(name):
     _require_admin()
+    _assert_graph_company(name)
     try:
         doc = frappe.get_doc("VE Saved Graph", name)
         data = json.loads(doc.data_json or "[]")
@@ -858,13 +892,14 @@ def get_graph_csv_data(name):
 @frappe.whitelist()
 def get_graph_stats():
     _require_admin()
-    total = frappe.db.count("VE Saved Graph")
+    company = _cc()
+    total = frappe.db.count("VE Saved Graph", {} if company == ALL_COMPANIES else {"company": company})
     by_category = frappe.db.sql(
-        "SELECT category, COUNT(*) AS cnt FROM `tabVE Saved Graph` GROUP BY category",
+        f"SELECT category, COUNT(*) AS cnt FROM `tabVE Saved Graph` WHERE 1=1{_cco(company)} GROUP BY category",
         as_dict=True
     )
     by_type = frappe.db.sql(
-        "SELECT chart_type, COUNT(*) AS cnt FROM `tabVE Saved Graph` GROUP BY chart_type",
+        f"SELECT chart_type, COUNT(*) AS cnt FROM `tabVE Saved Graph` WHERE 1=1{_cco(company)} GROUP BY chart_type",
         as_dict=True
     )
     return {

@@ -1,0 +1,38 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-15 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "actor",
+  "target_user",
+  "action",
+  "company",
+  "before",
+  "after",
+  "at"
+ ],
+ "fields": [
+  {"fieldname": "actor", "fieldtype": "Data", "label": "Actor (who made the change)", "in_list_view": 1},
+  {"fieldname": "target_user", "fieldtype": "Data", "label": "Target User", "in_list_view": 1},
+  {"fieldname": "action", "fieldtype": "Data", "label": "Action", "in_list_view": 1},
+  {"fieldname": "company", "fieldtype": "Data", "label": "Company"},
+  {"fieldname": "before", "fieldtype": "Long Text", "label": "Before"},
+  {"fieldname": "after", "fieldtype": "Long Text", "label": "After"},
+  {"fieldname": "at", "fieldtype": "Datetime", "label": "At", "in_list_view": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-15 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR Client",
+ "name": "Company Access Log",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1}
+ ],
+ "sort_field": "at",
+ "sort_order": "DESC",
+ "states": []
+}

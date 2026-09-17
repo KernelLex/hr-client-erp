@@ -143,6 +143,21 @@ def _require_admin():
         frappe.throw("Not permitted", frappe.PermissionError)
 
 
+# ── multi-company scoping helpers (Phase 2) ───────────────────────────────────
+from hr_client.api.utils import ALL_COMPANIES, current_company, require_company
+
+
+def _cc(company=None):
+    return require_company(company) if company else current_company()
+
+
+def _cco(company, alias=""):
+    if company == ALL_COMPANIES:
+        return ""
+    col = f"{alias}.company" if alias else "company"
+    return f" AND {col} = {frappe.db.escape(company)} "
+
+
 # ── Public API endpoints ──────────────────────────────────────────────────────
 
 @frappe.whitelist()
@@ -154,14 +169,16 @@ def get_enrichment_status():
 @frappe.whitelist()
 def get_enrichment_stats():
     _require_admin()
-    total    = frappe.db.count("VE Tally Voucher", {"is_cancelled": 0})
-    enriched = frappe.db.sql("SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE status IN ('Enriched','Verified','Needs Review')", as_list=True)[0][0]
-    anomalies    = frappe.db.sql("SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE anomaly=1", as_list=True)[0][0]
-    needs_review = frappe.db.sql("SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE status='Needs Review' AND human_reviewed=0", as_list=True)[0][0]
-    verified     = frappe.db.sql("SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE human_reviewed=1", as_list=True)[0][0]
-    cats = frappe.db.sql("""
+    company = _cc()
+    cco = _cco(company)
+    total    = frappe.db.count("VE Tally Voucher", {"is_cancelled": 0} if company == ALL_COMPANIES else {"is_cancelled": 0, "company": company})
+    enriched = frappe.db.sql(f"SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE status IN ('Enriched','Verified','Needs Review'){cco}", as_list=True)[0][0]
+    anomalies    = frappe.db.sql(f"SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE anomaly=1{cco}", as_list=True)[0][0]
+    needs_review = frappe.db.sql(f"SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE status='Needs Review' AND human_reviewed=0{cco}", as_list=True)[0][0]
+    verified     = frappe.db.sql(f"SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE human_reviewed=1{cco}", as_list=True)[0][0]
+    cats = frappe.db.sql(f"""
         SELECT tx_category, COUNT(*) as n FROM `tabVE Tally Enrichment`
-        WHERE tx_category != '' GROUP BY tx_category ORDER BY n DESC
+        WHERE tx_category != ''{cco} GROUP BY tx_category ORDER BY n DESC
     """, as_dict=True)
     return {
         "total":        total,
@@ -178,21 +195,22 @@ def get_enrichment_stats():
 def start_enrichment():
     _require_admin()
 
+    company = _cc()
     current = _get_status()
     if current.get("status") == "running":
         return {"queued": False, "message": "Enrichment already running"}
 
-    pending_count = frappe.db.sql("""
+    pending_count = frappe.db.sql(f"""
         SELECT COUNT(*) FROM `tabVE Tally Voucher` v
         LEFT JOIN `tabVE Tally Enrichment` e ON e.name = v.tally_guid
-        WHERE v.is_cancelled = 0 AND e.name IS NULL
+        WHERE v.is_cancelled = 0 AND e.name IS NULL{_cco(company, 'v')}
     """, as_list=True)[0][0]
 
     if not pending_count:
         return {"queued": False, "message": "All vouchers already enriched"}
 
     _set_status("running", 0, 0, int(pending_count), f"Queued: enriching {pending_count:,} vouchers…")
-    frappe.enqueue("hr_client.api.tally_enrich.run_enrichment", queue="long", timeout=18000)
+    frappe.enqueue("hr_client.api.tally_enrich.run_enrichment", queue="long", timeout=18000, company=company)
     return {"queued": True, "pending": int(pending_count)}
 
 
@@ -206,22 +224,23 @@ def stop_enrichment():
 @frappe.whitelist()
 def get_anomaly_queue(page=1, page_size=25):
     _require_admin()
+    company = _cc()
     pg = max(1, int(flt(page)))
     ps = max(10, min(100, int(flt(page_size))))
     off = (pg - 1) * ps
 
     total = frappe.db.sql(
-        "SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE anomaly=1 AND human_reviewed=0",
+        f"SELECT COUNT(*) FROM `tabVE Tally Enrichment` WHERE anomaly=1 AND human_reviewed=0{_cco(company)}",
         as_list=True)[0][0]
 
-    rows = frappe.db.sql("""
+    rows = frappe.db.sql(f"""
         SELECT v.name as voucher_name, v.tally_guid,
                v.voucher_type, v.voucher_number, v.voucher_date,
                v.party_name, v.amount, v.narration, v.debit_ledger, v.credit_ledger,
                e.party_norm, e.anomaly_reason, e.tx_category, e.gst_type, e.confidence
         FROM `tabVE Tally Enrichment` e
-        JOIN `tabVE Tally Voucher` v ON v.tally_guid = e.name
-        WHERE e.anomaly = 1 AND e.human_reviewed = 0
+        JOIN `tabVE Tally Voucher` v ON v.tally_guid = e.name AND v.company = e.company
+        WHERE e.anomaly = 1 AND e.human_reviewed = 0{_cco(company, 'e')}
         ORDER BY e.confidence ASC, v.voucher_date DESC
         LIMIT %s OFFSET %s
     """, (ps, off), as_dict=True)
@@ -252,27 +271,28 @@ def get_anomaly_queue(page=1, page_size=25):
 @frappe.whitelist()
 def get_normalization_queue(page=1, page_size=25):
     _require_admin()
+    company = _cc()
     pg = max(1, int(flt(page)))
     ps = max(10, min(100, int(flt(page_size))))
     off = (pg - 1) * ps
 
-    total = frappe.db.sql("""
+    total = frappe.db.sql(f"""
         SELECT COUNT(DISTINCT LOWER(TRIM(v.party_name)))
         FROM `tabVE Tally Enrichment` e
-        JOIN `tabVE Tally Voucher` v ON v.tally_guid = e.name
+        JOIN `tabVE Tally Voucher` v ON v.tally_guid = e.name AND v.company = e.company
         WHERE e.party_norm != '' AND e.human_reviewed = 0
           AND LOWER(TRIM(e.party_norm)) != LOWER(TRIM(COALESCE(v.party_name, '')))
-          AND v.party_name != ''
+          AND v.party_name != ''{_cco(company, 'e')}
     """, as_list=True)[0][0]
 
-    rows = frappe.db.sql("""
+    rows = frappe.db.sql(f"""
         SELECT v.party_name as original, e.party_norm as normalized,
                COUNT(*) as cnt, MIN(v.name) as sample_voucher
         FROM `tabVE Tally Enrichment` e
-        JOIN `tabVE Tally Voucher` v ON v.tally_guid = e.name
+        JOIN `tabVE Tally Voucher` v ON v.tally_guid = e.name AND v.company = e.company
         WHERE e.party_norm != '' AND e.human_reviewed = 0
           AND LOWER(TRIM(e.party_norm)) != LOWER(TRIM(COALESCE(v.party_name, '')))
-          AND v.party_name != ''
+          AND v.party_name != ''{_cco(company, 'e')}
         GROUP BY v.party_name, e.party_norm
         ORDER BY cnt DESC
         LIMIT %s OFFSET %s
@@ -292,7 +312,11 @@ def get_normalization_queue(page=1, page_size=25):
 @frappe.whitelist()
 def mark_anomaly_reviewed(tally_guid, confirmed=False, note=None):
     _require_admin()
+    allowed = set() if _cc() == ALL_COMPANIES else {_cc()}
     if frappe.db.exists("VE Tally Enrichment", tally_guid):
+        _ecomp = frappe.db.get_value("VE Tally Enrichment", tally_guid, "company")
+        if allowed and _ecomp and _ecomp not in allowed:
+            frappe.throw("Not permitted for this company", frappe.PermissionError)
         frappe.db.set_value("VE Tally Enrichment", tally_guid, {
             "human_reviewed": 1,
             "status": "Needs Review" if frappe.utils.cint(confirmed) else "Verified",
@@ -304,9 +328,14 @@ def mark_anomaly_reviewed(tally_guid, confirmed=False, note=None):
 @frappe.whitelist()
 def bulk_dismiss_anomalies(tally_guids_json):
     _require_admin()
+    company = _cc()
     guids = json.loads(tally_guids_json or "[]")
     for g in guids[:500]:
         if frappe.db.exists("VE Tally Enrichment", g):
+            if company != ALL_COMPANIES:
+                _ec = frappe.db.get_value("VE Tally Enrichment", g, "company")
+                if _ec and _ec != company:
+                    continue
             frappe.db.set_value("VE Tally Enrichment", g, {
                 "human_reviewed": 1, "status": "Verified",
                 "human_note": "Bulk dismissed",
@@ -317,14 +346,18 @@ def bulk_dismiss_anomalies(tally_guids_json):
 
 # ── Background job ────────────────────────────────────────────────────────────
 
-def run_enrichment():
-    """Called via frappe.enqueue — processes unenriched vouchers in batches of 8."""
-    rows = frappe.db.sql("""
-        SELECT v.name, v.tally_guid, v.voucher_type, v.voucher_number, v.voucher_date,
+def run_enrichment(company=None):
+    """Called via frappe.enqueue — processes unenriched vouchers in batches of 8.
+    Scoped to `company` (passed from start_enrichment); each enrichment row is
+    tagged with its voucher's own company. company=None/__ALL__ processes all."""
+    comp_clause = ("" if (not company or company == ALL_COMPANIES)
+                   else f" AND v.company = {frappe.db.escape(company)} ")
+    rows = frappe.db.sql(f"""
+        SELECT v.name, v.tally_guid, v.company, v.voucher_type, v.voucher_number, v.voucher_date,
                v.party_name, v.amount, v.narration, v.debit_ledger, v.credit_ledger
         FROM `tabVE Tally Voucher` v
         LEFT JOIN `tabVE Tally Enrichment` e ON e.name = v.tally_guid
-        WHERE v.is_cancelled = 0 AND e.name IS NULL
+        WHERE v.is_cancelled = 0 AND e.name IS NULL{comp_clause}
         ORDER BY v.voucher_date
     """, as_dict=True)
 
@@ -370,14 +403,15 @@ def run_enrichment():
                 try:
                     frappe.db.sql("""
                         INSERT INTO `tabVE Tally Enrichment`
-                        (name, tally_guid, party_norm, tx_category, gst_type,
+                        (name, tally_guid, company, party_norm, tx_category, gst_type,
                          anomaly, anomaly_reason, confidence, status, human_reviewed,
                          enriched_at, creation, modified, owner, modified_by, docstatus, idx)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,0,%s,%s,%s,
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,0,%s,%s,%s,
                                 'Administrator','Administrator',1,0)
                     """, (
                         v.tally_guid,
                         v.tally_guid,
+                        v.company,
                         str(e.get("party_norm") or v.party_name or "")[:140],
                         _cat(e.get("tx_category")),
                         _gst(e.get("gst_type")),

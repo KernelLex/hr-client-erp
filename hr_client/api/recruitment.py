@@ -93,7 +93,11 @@ def get_job_openings(status=None):
 	"""Return all Job Openings with per-stage applicant counts."""
 	_require_hr_role()
 
+	from hr_client.api.utils import current_company, ALL_COMPANIES
 	filters = {"status": status or "Open"}
+	_co = current_company()
+	if _co != ALL_COMPANIES:
+		filters["company"] = _co
 	openings = frappe.get_all(
 		"Job Opening",
 		filters=filters,
@@ -258,7 +262,8 @@ def create_job_opening(job_title, designation, department=None, description=None
 	doc.employment_type = employment_type
 	doc.location = location
 	doc.status = "Open"
-	doc.company = frappe.defaults.get_user_default("Company")
+	from hr_client.api.utils import current_company
+	doc.company = current_company()
 
 	if lower_range:
 		doc.lower_range = float(lower_range)

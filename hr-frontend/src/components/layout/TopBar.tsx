@@ -11,6 +11,8 @@ import {
 import { LogOut, Menu, Eye, X } from "lucide-react"
 import { api, apiUrl } from "@/lib/api"
 import { useAuth, type ViewAsUser } from "@/context/AuthContext"
+import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
+import { CompanySwitcher } from "./CompanySwitcher"
 
 interface TopBarProps {
   onToggleSidebar?: () => void
@@ -107,6 +109,13 @@ function ViewAsSwitcher() {
 
 export function TopBar({ onToggleSidebar, onOpenSearch }: TopBarProps) {
   const { realUser, logout, isRealAdmin, isImpersonating, viewAs, setViewAs } = useAuth()
+  const { activeCompany, availableCompanies, accentOf } = useCompany()
+
+  const companyLabel =
+    activeCompany === ALL_COMPANIES
+      ? "All Companies"
+      : availableCompanies.find((c) => c.name === activeCompany)?.label || activeCompany || "Vera ERP"
+  const companyAccent = accentOf(activeCompany)
 
   const initials = realUser?.full_name
     ? realUser.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
@@ -136,6 +145,14 @@ export function TopBar({ onToggleSidebar, onOpenSearch }: TopBarProps) {
             <Menu size={18} />
           </button>
 
+          {/* Active company name — always reflects the workspace you're in */}
+          <div className="hidden sm:flex items-center gap-2 pl-1 pr-2 mr-1 border-r" style={{ borderColor: "var(--border,#e0d9cb)" }}>
+            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: companyAccent }} />
+            <span className="font-heading text-[15px] font-semibold whitespace-nowrap max-w-[180px] truncate" style={{ color: "var(--brand-primary)" }}>
+              {companyLabel}
+            </span>
+          </div>
+
           {/* Global search — opens the command palette (also Ctrl/Cmd+K) */}
           <button
             onClick={onOpenSearch}
@@ -151,6 +168,9 @@ export function TopBar({ onToggleSidebar, onOpenSearch }: TopBarProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Active company switcher — always visible when >1 company is accessible */}
+          <CompanySwitcher />
+
           {/* Admin-only interface preview switcher */}
           {isRealAdmin && <ViewAsSwitcher />}
 

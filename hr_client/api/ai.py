@@ -607,7 +607,8 @@ def chat(message, history_json=None, context_type="general"):
     # question, with detail relevant to what was asked. New data (Tally imports,
     # employees, Org Hub docs, job openings) is picked up automatically here.
     from hr_client.api.company_brain import build_company_context
-    context = build_company_context(message)
+    from hr_client.api.utils import current_company
+    context = build_company_context(message, company=current_company())
     system = VERA_SYSTEM_PROMPT + f"\n\nCOMPANY DATA:\n{context}"
 
     messages_for_llm = [{"role": "system", "content": system}]

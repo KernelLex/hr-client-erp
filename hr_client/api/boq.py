@@ -20,7 +20,9 @@ its own revision + approval gate, mirroring measurement sheets. ERP-native.
 
 import frappe
 
-from hr_client.api.utils import require_login, handle_api_error
+from hr_client.api.utils import (
+    require_login, handle_api_error, current_company, assert_doc_company, scoped,
+)
 
 _HEADER_FIELDS = ("boq_title", "opportunity", "measurement_sheet", "company_name",
                   "prepared_by", "notes")
@@ -89,6 +91,7 @@ def _apply_line_maths(doc):
 
 
 def _assert_editable(doc):
+    assert_doc_company(doc)
     if doc.status not in _EDITABLE_STATUSES:
         frappe.throw(
             f"This BOQ is {doc.status} and can no longer be edited. "
@@ -101,7 +104,7 @@ def _assert_editable(doc):
 def _active_names(doctype, label_field):
     return {
         (r[label_field] or "").strip()
-        for r in frappe.get_all(doctype, filters={"status": "Active"}, fields=[label_field])
+        for r in frappe.get_all(doctype, filters=scoped({"status": "Active"}), fields=[label_field])
     }
 
 
@@ -151,6 +154,7 @@ def get_boqs_page():
     require_login()
     rows_raw = frappe.get_all(
         "Vera BOQ",
+        filters=scoped({}),
         fields=["name", "boq_title", "company_name", "status", "revision",
                 "total_selling", "measurement_sheet", "source"],
         order_by="modified desc",
@@ -222,6 +226,7 @@ def _serialize(doc):
 def get_boq(name: str):
     require_login()
     doc = frappe.get_doc("Vera BOQ", name)
+    assert_doc_company(doc)
     out = _serialize(doc)
     out["issues"] = _validate_lines(doc)
     return {"success": True, "boq": out}
@@ -245,11 +250,13 @@ def create_boq(payload, seed_from_measurement: int = 1):
     ms = None
     if ms_name:
         ms = frappe.get_doc("Vera Measurement Sheet", ms_name)
+        assert_doc_company(ms)
         if ms.status != "Approved":
             frappe.throw("A BOQ can only be built on an approved measurement revision.")
 
     doc = frappe.new_doc("Vera BOQ")
     doc.update(data)
+    doc.company = (ms.get("company") if ms else None) or current_company()
     if ms:
         if not doc.company_name:
             doc.company_name = ms.company_name
@@ -313,6 +320,7 @@ def save_lines(name: str, lines):
 def validate_boq(name: str):
     require_login()
     doc = frappe.get_doc("Vera BOQ", name)
+    assert_doc_company(doc)
     issues = _validate_lines(doc)
     return {"success": True, "ready": not issues, "issues": issues}
 
@@ -322,6 +330,7 @@ def validate_boq(name: str):
 def submit_boq(name: str):
     require_login()
     doc = frappe.get_doc("Vera BOQ", name)
+    assert_doc_company(doc)
     if doc.status != "Draft":
         frappe.throw(f"Only a Draft BOQ can be submitted (this is {doc.status}).")
     if not doc.lines:
@@ -337,6 +346,7 @@ def submit_boq(name: str):
 def reopen_boq(name: str):
     require_login()
     doc = frappe.get_doc("Vera BOQ", name)
+    assert_doc_company(doc)
     if doc.status != "Submitted":
         frappe.throw("Only a Submitted BOQ can be reopened.")
     doc.status = "Draft"
@@ -351,6 +361,7 @@ def approve_boq(name: str):
     """Approve — but only if validation passes (§4.3)."""
     require_login()
     doc = frappe.get_doc("Vera BOQ", name)
+    assert_doc_company(doc)
     if doc.status not in ("Submitted", "Draft"):
         frappe.throw(f"Cannot approve a {doc.status} BOQ.")
     issues = _validate_lines(doc)
@@ -370,6 +381,7 @@ def approve_boq(name: str):
 def create_revision(name: str):
     require_login()
     src = frappe.get_doc("Vera BOQ", name)
+    assert_doc_company(src)
     new = frappe.copy_doc(src, ignore_no_copy=False)
     new.status = "Draft"
     new.revision = (src.revision or 1) + 1
@@ -391,7 +403,7 @@ def get_approved_boqs():
     require_login()
     return frappe.get_all(
         "Vera BOQ",
-        filters={"status": "Approved"},
+        filters=scoped({"status": "Approved"}),
         fields=["name", "boq_title", "company_name", "revision", "opportunity",
                 "total_selling", "total_cost"],
         order_by="modified desc",

@@ -1,6 +1,8 @@
 import frappe
 from frappe.utils import today, get_first_day, pretty_date
 
+from hr_client.api.utils import current_company, ALL_COMPANIES
+
 
 @frappe.whitelist()
 def get_dashboard_stats():
@@ -11,8 +13,18 @@ def get_dashboard_stats():
 
     first_day_of_month = get_first_day(today())
 
-    total_employees = frappe.db.count("Employee", {"status": "Active"})
-    open_positions = frappe.db.count("Job Opening", {"status": "Open"})
+    # Scope the company-bearing HR counts to the active company (Employee and Job
+    # Opening carry a native `company` field). Job Applicant/Interview have no
+    # company field in HRMS, so their recent-activity lists are left unscoped.
+    _co = current_company()
+    _emp_f = {"status": "Active"}
+    _job_f = {"status": "Open"}
+    if _co != ALL_COMPANIES:
+        _emp_f["company"] = _co
+        _job_f["company"] = _co
+
+    total_employees = frappe.db.count("Employee", _emp_f)
+    open_positions = frappe.db.count("Job Opening", _job_f)
     candidates_this_month = frappe.db.count(
         "Job Applicant", {"creation": [">=", first_day_of_month]}
     )

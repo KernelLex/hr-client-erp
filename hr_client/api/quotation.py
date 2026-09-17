@@ -12,7 +12,9 @@ any triggered rule demands. All maths + the engine run server-side. ERP-native.
 
 import frappe
 
-from hr_client.api.utils import require_login, handle_api_error
+from hr_client.api.utils import (
+    require_login, handle_api_error, current_company, assert_doc_company, scoped,
+)
 from hr_client.api.cost_sheet import gp_tone
 
 _HEADER_FIELDS = ("quotation_title", "opportunity", "company_name", "prepared_by",
@@ -97,6 +99,7 @@ def _refresh_engine(doc):
 
 
 def _assert_editable(doc):
+    assert_doc_company(doc)
     if doc.status not in _EDITABLE_STATUSES:
         frappe.throw(
             f"This quotation is {doc.status} and can no longer be edited. "
@@ -125,6 +128,7 @@ def get_quotations_page():
     require_login()
     rows_raw = frappe.get_all(
         "Vera Sales Quotation",
+        filters=scoped({}),
         fields=["name", "quotation_title", "company_name", "status", "revision",
                 "grand_total", "gp_percent", "required_authority", "source"],
         order_by="modified desc",
@@ -225,6 +229,7 @@ def _serialize(doc):
 def get_quotation(name: str):
     require_login()
     doc = frappe.get_doc("Vera Sales Quotation", name)
+    assert_doc_company(doc)
     return {"success": True, "quotation": _serialize(doc)}
 
 
@@ -247,12 +252,14 @@ def create_quotation(payload):
     if not cs_name:
         frappe.throw("Select the approved cost sheet to build the quotation on.")
     cs = frappe.get_doc("Vera Cost Sheet", cs_name)
+    assert_doc_company(cs)
     if cs.status != "Approved":
         frappe.throw("A quotation can only be built on an approved cost sheet.")
     boq = frappe.get_doc("Vera BOQ", cs.boq) if cs.boq else None
 
     doc = frappe.new_doc("Vera Sales Quotation")
     doc.update(data)
+    doc.company = cs.get("company") or current_company()   # inherit the owning company
     doc.cost_sheet = cs.name
     doc.boq = cs.boq
     if not doc.company_name:
@@ -319,6 +326,7 @@ def save_lines(name: str, lines):
 def submit_for_approval(name: str):
     require_login()
     doc = frappe.get_doc("Vera Sales Quotation", name)
+    assert_doc_company(doc)
     if doc.status not in ("Draft", "Returned"):
         frappe.throw(f"Only a Draft/Returned quotation can be submitted (this is {doc.status}).")
     if not doc.lines:
@@ -338,6 +346,7 @@ def decide(name: str, action: str, comment: str = None, conditions: str = None):
     Revision, or Reject. Every decision is logged."""
     require_login()
     doc = frappe.get_doc("Vera Sales Quotation", name)
+    assert_doc_company(doc)
     if doc.status != "Pending Approval":
         frappe.throw("Only a quotation pending approval can be decided on.")
 
@@ -378,6 +387,7 @@ def create_revision(name: str):
     """New revision — resets approval state (§4.6)."""
     require_login()
     src = frappe.get_doc("Vera Sales Quotation", name)
+    assert_doc_company(src)
     new = frappe.copy_doc(src, ignore_no_copy=False)
     new.status = "Draft"
     new.revision = (src.revision or 1) + 1
@@ -405,6 +415,7 @@ def set_acceptance(name: str, customer_acceptance: int = None, advance_received:
     """Record the §4.11 conversion prerequisites captured outside the system."""
     require_login()
     doc = frappe.get_doc("Vera Sales Quotation", name)
+    assert_doc_company(doc)
     if customer_acceptance is not None:
         doc.customer_acceptance = frappe.utils.cint(customer_acceptance)
     if advance_received is not None:
@@ -446,6 +457,7 @@ def convert_to_sales_order(name: str):
     """Gated conversion — all six checks must pass (§4.11)."""
     require_login()
     doc = frappe.get_doc("Vera Sales Quotation", name)
+    assert_doc_company(doc)
     if doc.sales_order:
         frappe.throw(f"Already converted to {doc.sales_order}.")
     checks = _conversion_checks(doc)
@@ -455,6 +467,7 @@ def convert_to_sales_order(name: str):
                 "error": "Conversion blocked — " + "; ".join(failed)}
 
     so = frappe.new_doc("Vera Sales Order")
+    so.company = doc.get("company") or current_company()
     so.so_title = doc.quotation_title
     so.opportunity = doc.opportunity
     so.company_name = doc.company_name
@@ -506,6 +519,7 @@ def get_quotation_print(name: str, fmt: str = "summary"):
     if fmt not in _FORMATS:
         frappe.throw(f"Unknown print format: {fmt}")
     doc = frappe.get_doc("Vera Sales Quotation", name)
+    assert_doc_company(doc)
     customer_facing = fmt in _CUSTOMER_FORMATS
 
     lines = []
@@ -565,7 +579,7 @@ def get_approved_quotations():
     require_login()
     return frappe.get_all(
         "Vera Sales Quotation",
-        filters={"status": ["in", ["Approved", "Converted"]]},
+        filters=scoped({"status": ["in", ["Approved", "Converted"]]}),
         fields=["name", "quotation_title", "company_name", "revision", "grand_total", "status"],
         order_by="modified desc",
     )

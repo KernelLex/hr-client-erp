@@ -8,7 +8,7 @@
 import frappe
 from frappe.utils import flt
 
-from hr_client.api.utils import require_admin, handle_api_error
+from hr_client.api.utils import require_admin, handle_api_error, scoped
 from hr_client.api import leave as leave_api
 from hr_client.api import expenses as expense_api
 from hr_client.api import crm as crm_api
@@ -24,7 +24,7 @@ def get_pending_approvals():
 
     for l in frappe.get_all(
         "Vera Leave Application",
-        filters={"status": "Pending"},
+        filters=scoped({"status": "Pending"}),
         fields=["name", "employee_name", "leave_type", "from_date", "to_date", "total_days", "applied_on"],
         order_by="applied_on desc",
     ):
@@ -42,7 +42,7 @@ def get_pending_approvals():
 
     for c in frappe.get_all(
         "Vera Expense Claim",
-        filters={"status": "Pending"},
+        filters=scoped({"status": "Pending"}),
         fields=["name", "employee_name", "claim_type", "amount", "purpose", "claim_date"],
         order_by="claim_date desc",
     ):
@@ -61,7 +61,7 @@ def get_pending_approvals():
     if frappe.db.exists("DocType", "Vera CRM Approval Request"):
         for a in frappe.get_all(
             "Vera CRM Approval Request",
-            filters={"approval_status": "Pending"},
+            filters=scoped({"approval_status": "Pending"}),
             fields=["name", "requested_by_name", "lead_title", "current_stage", "requested_stage"],
             order_by="creation desc",
         ):

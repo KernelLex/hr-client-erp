@@ -1,0 +1,28 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-15 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "tally_ledger_name",
+  "counterparty_company"
+ ],
+ "fields": [
+  {"fieldname": "company", "fieldtype": "Link", "options": "Company", "label": "Company (whose books)", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "tally_ledger_name", "fieldtype": "Data", "label": "Tally Ledger Name", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "counterparty_company", "fieldtype": "Link", "options": "Company", "label": "Counterparty Company", "reqd": 1, "in_list_view": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-15 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR Client",
+ "name": "Intercompany Ledger Map",
+ "owner": "Administrator",
+ "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

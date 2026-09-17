@@ -11,6 +11,40 @@ import datetime
 _ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 _SNAPSHOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tally_snapshot.json")
 
+from hr_client.api.utils import ALL_COMPANIES, current_company, require_company
+
+
+# ── multi-company scoping helpers (Phase 2) ───────────────────────────────────
+# Every financial read here is company-scoped. `company` defaults to the request's
+# active company; the group console (Phase 8) passes ALL_COMPANIES to aggregate.
+# company is a validated Company name (require_company), safe to inline via escape.
+def _cc(company=None):
+    return require_company(company) if company else current_company()
+
+
+def _cco(company, alias=""):
+    """' AND <alias>.company = <company> ' fragment for an existing WHERE (empty for __ALL__).
+    `alias` is the table alias (e.g. 'l', 'v'); omit for a single-table query."""
+    if company == ALL_COMPANIES:
+        return ""
+    col = f"{alias}.company" if alias else "company"
+    return f" AND {col} = {frappe.db.escape(company)} "
+
+
+def _cwhere(company, col="company"):
+    """' WHERE <col> = <company> ' fragment for a query that had no WHERE (empty __ALL__)."""
+    if company == ALL_COMPANIES:
+        return ""
+    return f" WHERE {col} = {frappe.db.escape(company)} "
+
+
+def _cfilters(company, base=None):
+    """Add company to a get_all/count filters dict (no-op for __ALL__)."""
+    f = dict(base or {})
+    if company != ALL_COMPANIES:
+        f["company"] = company
+    return f
+
 
 def _load_snapshot():
     try:
@@ -69,20 +103,21 @@ def _parse_month(m):
 @frappe.whitelist()
 def get_operations_data():
     _require_admin()
+    company = _cc()
 
     # ── Finance: bank/cash/GST/TDS directly from live DB ──────────
     # Sign convention: closing_balance < 0 = Dr balance (asset: money in account)
     #                  closing_balance > 0 = Cr balance (liability: OD / owe to vendor)
-    bank_rows = frappe.db.sql("""
+    bank_rows = frappe.db.sql(f"""
         SELECT ledger_name, closing_balance, parent_group
         FROM `tabVE Tally Ledger`
-        WHERE is_bank = 1
+        WHERE is_bank = 1{_cco(company)}
         ORDER BY closing_balance
     """, as_dict=True)
-    cash_rows = frappe.db.sql("""
+    cash_rows = frappe.db.sql(f"""
         SELECT ledger_name, closing_balance
         FROM `tabVE Tally Ledger`
-        WHERE is_cash = 1
+        WHERE is_cash = 1{_cco(company)}
         ORDER BY closing_balance DESC
     """, as_dict=True)
 
@@ -105,7 +140,7 @@ def get_operations_data():
     # GST closing balances — what remains in GST ledger accounts after govt payments
     # Cr (positive) = output GST still owed to govt; Dr (negative) = unrecovered ITC
     gst_rows = frappe.db.sql(
-        "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE is_gst = 1", as_dict=True
+        f"SELECT closing_balance FROM `tabVE Tally Ledger` WHERE is_gst = 1{_cco(company)}", as_dict=True
     )
     output_gst = sum(flt(r.closing_balance) for r in gst_rows if r.closing_balance > 0)
     input_gst  = sum(abs(flt(r.closing_balance)) for r in gst_rows if r.closing_balance < 0)
@@ -114,8 +149,8 @@ def get_operations_data():
     # Per-voucher GST for the current period (gross collected / claimed on transactions)
     try:
         gst_period = frappe.db.sql(
-            """SELECT gst_type, COALESCE(SUM(igst+cgst+sgst),0) as total
-               FROM `tabVE GST Ledger Entry`
+            f"""SELECT gst_type, COALESCE(SUM(igst+cgst+sgst),0) as total
+               FROM `tabVE GST Ledger Entry`{_cwhere(company)}
                GROUP BY gst_type""",
             as_dict=True,
         )
@@ -127,39 +162,39 @@ def get_operations_data():
 
     # TDS: Cr balance (positive) = TDS payable to govt
     tds_rows = frappe.db.sql(
-        "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE is_tds = 1", as_dict=True
+        f"SELECT closing_balance FROM `tabVE Tally Ledger` WHERE is_tds = 1{_cco(company)}", as_dict=True
     )
     tds_payable = sum(flt(r.closing_balance) for r in tds_rows if r.closing_balance > 0)
 
     # ── Accounts: debtors/creditors from live DB ───────────────────
     # Debtors with Dr balance (closing_balance < 0) = money owed TO Vera
     dr = frappe.db.sql(
-        "SELECT COALESCE(SUM(ABS(closing_balance)),0) as tot FROM `tabVE Tally Ledger` "
-        "WHERE is_debtors=1 AND closing_balance < 0", as_dict=True
+        f"SELECT COALESCE(SUM(ABS(closing_balance)),0) as tot FROM `tabVE Tally Ledger` "
+        f"WHERE is_debtors=1 AND closing_balance < 0{_cco(company)}", as_dict=True
     )
     debtor_total = flt(dr[0].tot if dr else 0)
 
     # Creditors with Cr balance (closing_balance > 0) = Vera owes vendor
     cr = frappe.db.sql(
-        "SELECT COALESCE(SUM(closing_balance),0) as tot FROM `tabVE Tally Ledger` "
-        "WHERE is_creditors=1 AND closing_balance > 0", as_dict=True
+        f"SELECT COALESCE(SUM(closing_balance),0) as tot FROM `tabVE Tally Ledger` "
+        f"WHERE is_creditors=1 AND closing_balance > 0{_cco(company)}", as_dict=True
     )
     creditor_total = flt(cr[0].tot if cr else 0)
 
     # Top debtors from live DB (Dr balance debtors, largest first)
-    top_debtors_rows = frappe.db.sql("""
+    top_debtors_rows = frappe.db.sql(f"""
         SELECT ledger_name as party, ABS(closing_balance) as amount
         FROM `tabVE Tally Ledger`
-        WHERE is_debtors = 1 AND closing_balance < 0
+        WHERE is_debtors = 1 AND closing_balance < 0{_cco(company)}
         ORDER BY closing_balance ASC LIMIT 10
     """, as_dict=True)
     top_debtors = [frappe._dict(party=r.party, amount=flt(r.amount)) for r in top_debtors_rows]
 
     # Top creditors from live DB (Cr balance creditors, largest first)
-    top_creditors_rows = frappe.db.sql("""
+    top_creditors_rows = frappe.db.sql(f"""
         SELECT ledger_name as party, closing_balance as amount
         FROM `tabVE Tally Ledger`
-        WHERE is_creditors = 1 AND closing_balance > 0
+        WHERE is_creditors = 1 AND closing_balance > 0{_cco(company)}
         ORDER BY closing_balance DESC LIMIT 10
     """, as_dict=True)
     top_creditors = [frappe._dict(party=r.party, amount=flt(r.amount)) for r in top_creditors_rows]
@@ -170,6 +205,7 @@ def get_operations_data():
         "FROM `tabVE Tally Voucher` "
         "WHERE is_cancelled = 0 AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) "
         "AND voucher_type IN ('Sales', 'Purchase', 'Receipt') "
+        f"{_cco(company)}"
         "GROUP BY month, voucher_type ORDER BY month",
         ('%Y-%m',), as_dict=True
     )
@@ -197,8 +233,9 @@ def get_operations_data():
         WHERE is_cancelled = 0
           AND voucher_date >= %s AND voucher_date < %s
           AND voucher_type IN ('Sales', 'Purchase', 'Receipt')
+          {cco}
         GROUP BY voucher_type
-        """,
+        """.replace("{cco}", _cco(company)),
         (fy_start, fy_end), as_dict=True
     )
 
@@ -207,22 +244,22 @@ def get_operations_data():
     fy_coll = sum(flt(r.total) for r in fy_totals if r.voucher_type == "Receipt")
 
     # ── Latest voucher date ─────────────────────────────────────────
-    latest = frappe.db.sql("""
-        SELECT MAX(voucher_date) as latest FROM `tabVE Tally Voucher`
+    latest = frappe.db.sql(f"""
+        SELECT MAX(voucher_date) as latest FROM `tabVE Tally Voucher`{_cwhere(company)}
     """, as_dict=True)
     as_of = str(latest[0].latest).replace("-", "") if latest and latest[0].latest else ""
 
     # ── HR from Frappe ─────────────────────────────────────────────
-    total_employees = frappe.db.count("Employee", {"status": "Active"})
-    open_positions = frappe.db.count("Job Opening", {"status": "Open"})
-    pending_leaves = frappe.db.count("Vera Leave Application", {"status": "Pending"})
+    total_employees = frappe.db.count("Employee", _cfilters(company, {"status": "Active"}))
+    open_positions = frappe.db.count("Job Opening", _cfilters(company, {"status": "Open"}))
+    pending_leaves = frappe.db.count("Vera Leave Application", _cfilters(company, {"status": "Pending"}))
 
     # ── CRM from Frappe ────────────────────────────────────────────
     try:
         crm_leads = frappe.get_all(
             "Vera CRM Lead",
             fields=["name", "lead_title", "company_name", "status", "assigned_to"],
-            filters={"status": ["not in", ["Failed"]]},
+            filters=_cfilters(company, {"status": ["not in", ["Failed"]]}),
             order_by="creation desc",
             limit=50,
         )
@@ -237,34 +274,34 @@ def get_operations_data():
 
     pipeline_value = 0
     try:
-        rows = frappe.db.sql("SELECT SUM(total) as t FROM `tabVera CRM Quotation`", as_dict=True)
+        rows = frappe.db.sql(f"SELECT SUM(total) as t FROM `tabVera CRM Quotation`{_cwhere(company)}", as_dict=True)
         pipeline_value = flt(rows[0].t if rows else 0)
     except Exception:
         pass
 
     # ── Inventory from VE Tally Stock Item ─────────────────────────
-    stock_count = frappe.db.count("VE Tally Stock Item")
-    stock_groups = frappe.db.sql("""
+    stock_count = frappe.db.count("VE Tally Stock Item", _cfilters(company))
+    stock_groups = frappe.db.sql(f"""
         SELECT DISTINCT stock_group
         FROM `tabVE Tally Stock Item`
-        WHERE stock_group != ''
+        WHERE stock_group != ''{_cco(company)}
         ORDER BY stock_group
         LIMIT 30
     """, as_dict=True)
     brand_names = [r.stock_group.replace("&amp;", "&") for r in stock_groups]
 
-    vtypes = frappe.db.sql("""
+    vtypes = frappe.db.sql(f"""
         SELECT voucher_type, COUNT(*) as cnt
         FROM `tabVE Tally Voucher`
-        WHERE is_cancelled = 0
+        WHERE is_cancelled = 0{_cco(company)}
         GROUP BY voucher_type
     """, as_dict=True)
     vtype_map = {r.voucher_type: r.cnt for r in vtypes}
 
-    vtotals = frappe.db.sql("""
+    vtotals = frappe.db.sql(f"""
         SELECT voucher_type, COUNT(*) as cnt, SUM(amount) as total
         FROM `tabVE Tally Voucher`
-        WHERE is_cancelled = 0
+        WHERE is_cancelled = 0{_cco(company)}
         GROUP BY voucher_type
     """, as_dict=True)
     vtotal_map = {r.voucher_type: {"cnt": r.cnt, "total": flt(r.total)} for r in vtotals}
@@ -680,6 +717,90 @@ def finalize_tally_upload(upload_id, total_chunks, filename):
     return result
 
 
+def _xml_company_name(path: str) -> str:
+    """Read the Tally XML envelope (first ~256KB) and return its
+    <SVCURRENTCOMPANY> value. Files are UTF-16; only the head is read (they can
+    be gigabytes). Empty string if not found."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(262144).decode("utf-16", errors="ignore")
+    except Exception:
+        try:
+            with open(path, "rb") as f:
+                head = f.read(262144).decode("utf-8", errors="ignore")
+        except Exception:
+            return ""
+    m = re.search(r"<SVCURRENTCOMPANY>([^<]*)</SVCURRENTCOMPANY>", head)
+    if not m:
+        m = re.search(r'<COMPANY[^>]*NAME="([^"]+)"', head)
+    return (m.group(1).strip() if m else "")
+
+
+def _verify_tally_company(path: str, company: str, label: str):
+    """Reject a misfiled export: the file's own company name (from the XML) must
+    match the active company's ve_tally_company_name. This is THE control that
+    stops one company's books being imported into another's. Names BOTH sides."""
+    expected = (frappe.db.get_value("Company", company, "ve_tally_company_name") or "").strip()
+    if not expected:
+        frappe.throw(
+            f"Set the Tally company name for '{company}' before importing "
+            f"(Company.ve_tally_company_name = the exact <SVCURRENTCOMPANY> in the XML).",
+            frappe.ValidationError,
+        )
+    found = _xml_company_name(path)
+    if not found:
+        frappe.throw(
+            f"Could not read the company name from the {label} file — refusing to import "
+            f"(a Tally export must carry <SVCURRENTCOMPANY>).",
+            frappe.ValidationError,
+        )
+    if found.strip().upper() != expected.strip().upper():
+        frappe.throw(
+            f"This {label} file belongs to '{found}', but you are importing into "
+            f"'{company}' (expected '{expected}'). Import refused.",
+            frappe.ValidationError,
+        )
+
+
+@frappe.whitelist()
+def detect_tally_file_company(path: str):
+    """Read the company name Tally stamped inside an uploaded XML file (the
+    <SVCURRENTCOMPANY> tag). The upload UI shows this so the admin CONFIRMS the
+    file is the right company's — no need to know the exact string in advance.
+    Also reports whether it already matches the active company's saved name."""
+    _require_admin()
+    company = _cc()
+    real = os.path.realpath(path)
+    if not _allowed_root(real) or not os.path.isfile(real):
+        frappe.throw("File not found in an allowed Tally folder", frappe.ValidationError)
+    detected = _xml_company_name(real)
+    expected = (frappe.db.get_value("Company", company, "ve_tally_company_name") or "").strip()
+    return {
+        "detected": detected,
+        "active_company": None if company == ALL_COMPANIES else company,
+        "expected": expected,
+        "matches": bool(detected and expected and detected.strip().upper() == expected.strip().upper()),
+        "confirmed": bool(expected),
+    }
+
+
+@frappe.whitelist(methods=["POST"])
+def confirm_tally_company_name(company: str, tally_company_name: str):
+    """Owner confirms (from the detected value) the exact <SVCURRENTCOMPANY>
+    string for a company, saving it to ve_tally_company_name so future imports
+    content-verify against it. Owner only."""
+    from hr_client.api.utils import can_grant_access, require_company
+    if not can_grant_access():
+        frappe.throw("Only the group owner may confirm a company's Tally name.", frappe.PermissionError)
+    require_company(company)
+    name = (tally_company_name or "").strip()
+    if not name:
+        frappe.throw("A company name is required.", frappe.ValidationError)
+    frappe.db.set_value("Company", company, "ve_tally_company_name", name)
+    frappe.db.commit()
+    return {"success": True, "company": company, "tally_company_name": name}
+
+
 @frappe.whitelist()
 def run_tally_import(masters_path: str, transactions_path: str):
     """
@@ -689,6 +810,7 @@ def run_tally_import(masters_path: str, transactions_path: str):
     Status polled via get_import_status().
     """
     _require_admin()
+    company = _cc()
 
     # Restrict to the allowed Tally directories to prevent path traversal
     for label, path in (("masters", masters_path), ("transactions", transactions_path)):
@@ -698,6 +820,8 @@ def run_tally_import(masters_path: str, transactions_path: str):
                          frappe.PermissionError)
         if not os.path.isfile(real):
             frappe.throw(f"{label.capitalize()} file not found: {path}")
+        # Content-verify: the file's own company must match the active company.
+        _verify_tally_company(real, company, label)
 
     from hr_client.api import tally_transformer as _tt
 
@@ -718,6 +842,7 @@ def run_tally_import(masters_path: str, transactions_path: str):
         timeout=7200,
         masters_path=masters_path,
         transactions_path=transactions_path,
+        company=_cc(),
     )
     return {"queued": True}
 
@@ -773,38 +898,40 @@ def get_tally_financial_summary():
                      closing_balance > 0 = Cr = liability (OD drawn / owed by us).
     """
     _require_admin()
+    company = _cc()
     L = "`tabVE Tally Ledger`"
+    cco = _cco(company)
 
     def sq(sql, params=()):
         rows = frappe.db.sql(sql, params, as_dict=True)
         return flt(rows[0].v) if rows else 0.0
 
-    if not frappe.db.sql("SELECT 1 FROM `tabVE Tally Voucher` LIMIT 1"):
+    if not frappe.db.sql(f"SELECT 1 FROM `tabVE Tally Voucher`{_cwhere(company)} LIMIT 1"):
         return None
 
-    cash        = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_cash=1 AND closing_balance<0")
-    bank_credit = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_bank=1 AND closing_balance<0")
+    cash        = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_cash=1 AND closing_balance<0{cco}")
+    bank_credit = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_bank=1 AND closing_balance<0{cco}")
     # LIKE pattern passed as a parameter — a literal '%virtual%' collides with
     # pymysql's %s paramstyle ("not enough arguments for format string").
-    bank_od     = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_bank=1 AND closing_balance>0 AND LOWER(ledger_name) NOT LIKE %s", ("%virtual%",))
-    bank_virtual= sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_bank=1 AND closing_balance>0 AND LOWER(ledger_name) LIKE %s", ("%virtual%",))
+    bank_od     = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_bank=1 AND closing_balance>0 AND LOWER(ledger_name) NOT LIKE %s{cco}", ("%virtual%",))
+    bank_virtual= sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_bank=1 AND closing_balance>0 AND LOWER(ledger_name) LIKE %s{cco}", ("%virtual%",))
     bank_total  = bank_credit + bank_virtual - bank_od
     cash_bank   = cash + bank_total
 
-    receivables = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_debtors=1 AND closing_balance<0")
-    payables    = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_creditors=1 AND closing_balance>0")
+    receivables = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_debtors=1 AND closing_balance<0{cco}")
+    payables    = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_creditors=1 AND closing_balance>0{cco}")
 
-    output_gst  = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_gst=1 AND closing_balance>0")
-    input_gst   = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_gst=1 AND closing_balance<0")
+    output_gst  = sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_gst=1 AND closing_balance>0{cco}")
+    input_gst   = sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_gst=1 AND closing_balance<0{cco}")
     net_gst     = output_gst - input_gst
 
     fy_start, fy_end, _lbl = _current_fy()
     V = "`tabVE Tally Voucher`"
-    fy_sales    = sq(f"SELECT COALESCE(SUM(amount),0) v FROM {V} WHERE voucher_type='Sales' AND is_cancelled=0 AND voucher_date>=%s AND voucher_date<%s", (fy_start, fy_end))
-    fy_purch    = sq(f"SELECT COALESCE(SUM(amount),0) v FROM {V} WHERE voucher_type='Purchase' AND is_cancelled=0 AND voucher_date>=%s AND voucher_date<%s", (fy_start, fy_end))
+    fy_sales    = sq(f"SELECT COALESCE(SUM(amount),0) v FROM {V} WHERE voucher_type='Sales' AND is_cancelled=0 AND voucher_date>=%s AND voucher_date<%s{cco}", (fy_start, fy_end))
+    fy_purch    = sq(f"SELECT COALESCE(SUM(amount),0) v FROM {V} WHERE voucher_type='Purchase' AND is_cancelled=0 AND voucher_date>=%s AND voucher_date<%s{cco}", (fy_start, fy_end))
 
-    stock_skus  = frappe.db.count("VE Tally Stock Item")
-    as_of_row   = frappe.db.sql(f"SELECT MAX(voucher_date) as d FROM {V}", as_dict=True)
+    stock_skus  = frappe.db.count("VE Tally Stock Item", _cfilters(company))
+    as_of_row   = frappe.db.sql(f"SELECT MAX(voucher_date) as d FROM {V}{_cwhere(company)}", as_dict=True)
     as_of       = str(as_of_row[0].d) if as_of_row and as_of_row[0].d else ""
 
     return {
@@ -828,11 +955,13 @@ def get_tally_financial_summary():
 def get_cashflow_trend():
     """12-month cashflow: sales, purchases, receipts, payments per month."""
     _require_admin()
+    company = _cc()
     rows = frappe.db.sql(
         "SELECT DATE_FORMAT(voucher_date, %s) as month, voucher_type, SUM(amount) as total "
         "FROM `tabVE Tally Voucher` "
         "WHERE is_cancelled = 0 AND voucher_date >= DATE_SUB(CURDATE(), INTERVAL 13 MONTH) "
         "AND voucher_type IN ('Sales','Purchase','Receipt','Payment') "
+        f"{_cco(company)}"
         "GROUP BY month, voucher_type ORDER BY month",
         ('%Y-%m',), as_dict=True
     )
@@ -869,13 +998,15 @@ def get_cashflow_trend():
 def get_debtor_aging():
     """Debtors with outstanding balance bucketed by days since last invoice."""
     _require_admin()
+    company = _cc()
     rows = frappe.db.sql(
         "SELECT l.ledger_name, l.closing_balance, "
         "MAX(v.voucher_date) as last_sale "
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
+        "AND v.company = l.company "
         "AND v.voucher_type = 'Sales' AND v.is_cancelled = 0 "
-        "WHERE l.is_debtors = 1 AND l.closing_balance < 0 "
+        f"WHERE l.is_debtors = 1 AND l.closing_balance < 0{_cco(company, 'l')} "
         "GROUP BY l.ledger_name, l.closing_balance "
         "ORDER BY l.closing_balance ASC",
         as_dict=True
@@ -933,11 +1064,12 @@ def get_debtor_aging():
 def get_party_statement(party_name: str, limit: int = 50):
     """All vouchers for a party, newest first, with running balance."""
     _require_admin()
+    company = _cc()
     if not party_name:
         frappe.throw("party_name required")
 
     ledger = frappe.db.get_value(
-        "VE Tally Ledger", {"ledger_name": party_name},
+        "VE Tally Ledger", _cfilters(company, {"ledger_name": party_name}),
         ["ledger_name", "closing_balance", "is_debtors", "is_creditors", "parent_group"],
         as_dict=True,
     )
@@ -945,7 +1077,7 @@ def get_party_statement(party_name: str, limit: int = 50):
     vouchers = frappe.db.sql(
         "SELECT voucher_type, voucher_number, voucher_date, amount, narration "
         "FROM `tabVE Tally Voucher` "
-        "WHERE party_name = %s AND is_cancelled = 0 "
+        f"WHERE party_name = %s AND is_cancelled = 0{_cco(company)} "
         "ORDER BY voucher_date DESC, name DESC LIMIT %s",
         (party_name, int(limit)), as_dict=True
     )
@@ -976,6 +1108,7 @@ def get_party_statement(party_name: str, limit: int = 50):
 def search_tally(query: str = "", voucher_type: str = "", from_date: str = "", to_date: str = "", page: int = 1):
     """Search vouchers by party name or narration."""
     _require_admin()
+    company = _cc()
     query = (query or "").strip()
     if len(query) < 2 and not voucher_type and not from_date:
         return {"results": [], "total": 0}
@@ -996,7 +1129,7 @@ def search_tally(query: str = "", voucher_type: str = "", from_date: str = "", t
         conds.append("voucher_date <= %s")
         params.append(to_date)
 
-    where = " AND ".join(conds)
+    where = " AND ".join(conds) + _cco(company)
     page = max(1, int(page))
     offset = (page - 1) * 50
 
@@ -1035,6 +1168,7 @@ def search_tally(query: str = "", voucher_type: str = "", from_date: str = "", t
 def get_creditor_list():
     """Top creditors with balance."""
     _require_admin()
+    company = _cc()
     snap = _load_snapshot()
     top = snap.get("top_creditors", {})
     rows = frappe.db.sql(
@@ -1042,8 +1176,9 @@ def get_creditor_list():
         "MAX(v.voucher_date) as last_purchase "
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
+        "AND v.company = l.company "
         "AND v.voucher_type = 'Purchase' AND v.is_cancelled = 0 "
-        "WHERE l.is_creditors = 1 AND l.closing_balance > 0 "
+        f"WHERE l.is_creditors = 1 AND l.closing_balance > 0{_cco(company, 'l')} "
         "GROUP BY l.ledger_name, l.closing_balance "
         "ORDER BY l.closing_balance DESC LIMIT 50",
         as_dict=True
@@ -1069,13 +1204,15 @@ def get_advance_from_debtors():
     Cr balance means the customer has paid us more than what we've invoiced.
     Aged in months since their last sale voucher, mirroring get_debtor_aging's day-based aging."""
     _require_admin()
+    company = _cc()
     rows = frappe.db.sql(
         "SELECT l.ledger_name, l.closing_balance, "
         "MAX(v.voucher_date) as last_sale "
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
+        "AND v.company = l.company "
         "AND v.voucher_type = 'Sales' AND v.is_cancelled = 0 "
-        "WHERE l.is_debtors = 1 AND l.closing_balance > 0 "
+        f"WHERE l.is_debtors = 1 AND l.closing_balance > 0{_cco(company, 'l')} "
         "GROUP BY l.ledger_name, l.closing_balance "
         "ORDER BY l.closing_balance DESC LIMIT 50",
         as_dict=True
@@ -1103,13 +1240,15 @@ def get_advance_to_creditors():
     Dr balance means the vendor owes us (we overpaid / paid advance).
     Aged in months since our last purchase voucher, mirroring get_creditor_list's day-based aging."""
     _require_admin()
+    company = _cc()
     rows = frappe.db.sql(
         "SELECT l.ledger_name, l.closing_balance, "
         "MAX(v.voucher_date) as last_purchase "
         "FROM `tabVE Tally Ledger` l "
         "LEFT JOIN `tabVE Tally Voucher` v ON v.party_name = l.ledger_name "
+        "AND v.company = l.company "
         "AND v.voucher_type = 'Purchase' AND v.is_cancelled = 0 "
-        "WHERE l.is_creditors = 1 AND l.closing_balance < 0 "
+        f"WHERE l.is_creditors = 1 AND l.closing_balance < 0{_cco(company, 'l')} "
         "GROUP BY l.ledger_name, l.closing_balance "
         "ORDER BY l.closing_balance ASC LIMIT 50",
         as_dict=True
@@ -1135,21 +1274,22 @@ def get_advance_to_creditors():
 def get_tally_ledgers(group=None, search=None, limit=50):
     """Query VE Tally Ledger table - usable by other parts of the app."""
     _require_admin()
+    company = _cc()
     filters = {}
     if group:
         filters["parent_group"] = group
     if search:
-        return frappe.db.sql("""
+        return frappe.db.sql(f"""
             SELECT ledger_name, parent_group, closing_balance, is_debtors, is_creditors
             FROM `tabVE Tally Ledger`
-            WHERE ledger_name LIKE %s
+            WHERE ledger_name LIKE %s{_cco(company)}
             ORDER BY ABS(closing_balance) DESC
             LIMIT %s
         """, (f"%{search}%", int(limit)), as_dict=True)
     return frappe.get_all(
         "VE Tally Ledger",
         fields=["ledger_name", "parent_group", "closing_balance", "is_debtors", "is_creditors"],
-        filters=filters,
+        filters=_cfilters(company, filters),
         order_by="ABS(closing_balance) DESC",
         limit=int(limit),
     )
@@ -1159,6 +1299,7 @@ def get_tally_ledgers(group=None, search=None, limit=50):
 def get_tally_vouchers(party=None, voucher_type=None, from_date=None, to_date=None, limit=50):
     """Query VE Tally Voucher table - usable by other parts of the app."""
     _require_admin()
+    company = _cc()
     conditions = ["is_cancelled = 0"]
     params = []
     if party:
@@ -1174,7 +1315,7 @@ def get_tally_vouchers(party=None, voucher_type=None, from_date=None, to_date=No
         conditions.append("voucher_date <= %s")
         params.append(to_date)
     params.append(int(limit))
-    where = " AND ".join(conditions)
+    where = " AND ".join(conditions) + _cco(company)
     return frappe.db.sql(f"""
         SELECT name, tally_guid, voucher_type, voucher_number, voucher_date,
                party_name, amount, narration, debit_ledger, credit_ledger
@@ -1189,11 +1330,12 @@ def get_tally_vouchers(party=None, voucher_type=None, from_date=None, to_date=No
 def get_tally_stock_items(group=None, search=None, limit=100):
     """Query VE Tally Stock Item table."""
     _require_admin()
+    company = _cc()
     if search:
-        return frappe.db.sql("""
+        return frappe.db.sql(f"""
             SELECT item_name, stock_group, hsn_code, gst_rate, unit, standard_rate
             FROM `tabVE Tally Stock Item`
-            WHERE item_name LIKE %s OR stock_group LIKE %s
+            WHERE (item_name LIKE %s OR stock_group LIKE %s){_cco(company)}
             ORDER BY item_name
             LIMIT %s
         """, (f"%{search}%", f"%{search}%", int(limit)), as_dict=True)
@@ -1203,7 +1345,7 @@ def get_tally_stock_items(group=None, search=None, limit=100):
     return frappe.get_all(
         "VE Tally Stock Item",
         fields=["item_name", "stock_group", "hsn_code", "gst_rate", "unit", "standard_rate"],
-        filters=filters,
+        filters=_cfilters(company, filters),
         order_by="item_name",
         limit=int(limit),
     )
@@ -1216,6 +1358,7 @@ def get_financial_summary(fy=None):
     fy: None / "all" = all-time; "2025-2026" = Apr 2025 – Mar 2026.
     """
     _require_admin()
+    company = _cc()
 
     where_parts = ["is_cancelled = 0"]
     params = []
@@ -1230,7 +1373,7 @@ def get_financial_summary(fy=None):
         except (ValueError, IndexError):
             pass
 
-    where = " AND ".join(where_parts)
+    where = " AND ".join(where_parts) + _cco(company)
 
     rows = frappe.db.sql(
         f"SELECT voucher_type, COUNT(*) as cnt, SUM(amount) as total "
@@ -1284,7 +1427,8 @@ def get_period_options():
 def get_available_financial_years():
     """Returns all FY strings that have tally data, newest first."""
     _require_admin()
-    rows = frappe.db.sql("""
+    company = _cc()
+    rows = frappe.db.sql(f"""
         SELECT DISTINCT
           CASE
             WHEN MONTH(voucher_date) >= 4
@@ -1292,7 +1436,7 @@ def get_available_financial_years():
             ELSE CONCAT(YEAR(voucher_date)-1, '-', YEAR(voucher_date))
           END AS fy
         FROM `tabVE Tally Voucher`
-        WHERE is_cancelled = 0 AND voucher_date IS NOT NULL
+        WHERE is_cancelled = 0 AND voucher_date IS NOT NULL{_cco(company)}
         ORDER BY fy DESC
     """, as_dict=True)
     return [r.fy for r in rows]
@@ -1307,6 +1451,7 @@ def get_voucher_list(voucher_type, fy=None, year=None, month=None, search=None, 
     the legacy fy string as fallback — one shared definition across all tabs.
     """
     _require_admin()
+    company = _cc()
     import html as _html
     from hr_client.api import finance_core
 
@@ -1323,7 +1468,7 @@ def get_voucher_list(voucher_type, fy=None, year=None, month=None, search=None, 
         where_parts.append("(party_name LIKE %s OR narration LIKE %s OR voucher_number LIKE %s)")
         params += [s, s, s]
 
-    where = " AND ".join(where_parts)
+    where = " AND ".join(where_parts) + _cco(company)
 
     # Total count
     cnt_row = frappe.db.sql(
@@ -1391,6 +1536,7 @@ def get_voucher_summary(voucher_type, fy=None, year=None, month=None, search=Non
     Party falls back to credit/debit ledger when party_name is blank (journals).
     """
     _require_admin()
+    company = _cc()
     import html as _html
     from hr_client.api import finance_core
 
@@ -1407,7 +1553,7 @@ def get_voucher_summary(voucher_type, fy=None, year=None, month=None, search=Non
         where_parts.append("(party_name LIKE %s OR narration LIKE %s OR voucher_number LIKE %s)")
         params += [s, s, s]
 
-    where = " AND ".join(where_parts)
+    where = " AND ".join(where_parts) + _cco(company)
     p = tuple(params)
 
     agg = frappe.db.sql(
@@ -1453,17 +1599,18 @@ def get_voucher_detail(name):
     import json as _json
     import html as _html
     _require_admin()
+    company = _cc()
 
     rows = frappe.db.sql(
-        """SELECT v.name, v.voucher_type, v.voucher_number, v.voucher_date, v.party_name,
+        f"""SELECT v.name, v.voucher_type, v.voucher_number, v.voucher_date, v.party_name,
                   v.amount, v.narration, v.debit_ledger, v.credit_ledger,
                   v.all_ledger_entries, v.inventory_entries,
                   l.mailing_name, l.gstin as party_gstin, l.address as party_address,
                   l.state as party_state, l.pincode as party_pincode,
                   l.phone as party_phone, l.gst_registration_type
            FROM `tabVE Tally Voucher` v
-           LEFT JOIN `tabVE Tally Ledger` l ON l.ledger_name = v.party_name
-           WHERE v.name = %s LIMIT 1""",
+           LEFT JOIN `tabVE Tally Ledger` l ON l.ledger_name = v.party_name AND l.company = v.company
+           WHERE v.name = %s{_cco(company, 'v')} LIMIT 1""",
         (name,), as_dict=True
     )
     if not rows:
@@ -1508,11 +1655,12 @@ def get_voucher_detail(name):
 def get_ledger_profile(ledger_name):
     """Return full party profile for a ledger name (address, GSTIN, phone, balance)."""
     _require_admin()
+    company = _cc()
     rows = frappe.db.sql(
-        """SELECT ledger_name, mailing_name, parent_group, closing_balance,
+        f"""SELECT ledger_name, mailing_name, parent_group, closing_balance,
                   gstin, pan_number, gst_registration_type, state, pincode, phone, address,
                   is_debtors, is_creditors, is_bank, is_cash
-           FROM `tabVE Tally Ledger` WHERE ledger_name = %s LIMIT 1""",
+           FROM `tabVE Tally Ledger` WHERE ledger_name = %s{_cco(company)} LIMIT 1""",
         (ledger_name,), as_dict=True
     )
     if not rows:
@@ -1541,10 +1689,11 @@ def get_ledger_profile(ledger_name):
 def get_bank_accounts():
     """Return all bank account ledgers with balance summary."""
     _require_admin()
-    rows = frappe.db.sql("""
+    company = _cc()
+    rows = frappe.db.sql(f"""
         SELECT ledger_name, closing_balance, parent_group
         FROM `tabVE Tally Ledger`
-        WHERE is_bank = 1
+        WHERE is_bank = 1{_cco(company)}
         ORDER BY ledger_name
     """, as_dict=True)
 
@@ -1566,7 +1715,7 @@ def get_bank_accounts():
         # Count transactions for this account
         cnt = frappe.db.sql(
             "SELECT COUNT(*) as c FROM `tabVE Tally Voucher` "
-            "WHERE is_cancelled=0 AND (debit_ledger=%s OR credit_ledger=%s)",
+            f"WHERE is_cancelled=0 AND (debit_ledger=%s OR credit_ledger=%s){_cco(company)}",
             (r.ledger_name, r.ledger_name), as_dict=True
         )
 
@@ -1610,6 +1759,7 @@ def _ledger_txn_query(ledger_name, from_date=None, to_date=None,
                       page=1, page_size=50, search=None):
     page      = cint(page) or 1
     page_size = cint(page_size) or 50
+    company   = _cc()
 
     conds = list(_JSON_BASE)
     vals  = []
@@ -1620,7 +1770,7 @@ def _ledger_txn_query(ledger_name, from_date=None, to_date=None,
     if search:
         conds.append("(v.narration LIKE %s OR v.party_name LIKE %s OR v.voucher_number LIKE %s)")
         vals += [f"%{search}%", f"%{search}%", f"%{search}%"]
-    where = " AND ".join(conds)
+    where = " AND ".join(conds) + _cco(company, "v")
 
     count_row = frappe.db.sql(
         f"SELECT COUNT(*) AS c FROM `tabVE Tally Voucher` v {_JSON_JOIN} WHERE {where}",
@@ -1684,7 +1834,7 @@ def _ledger_txn_query(ledger_name, from_date=None, to_date=None,
         })
 
     ledger_rows = frappe.db.sql(
-        "SELECT closing_balance FROM `tabVE Tally Ledger` WHERE ledger_name = %s",
+        f"SELECT closing_balance FROM `tabVE Tally Ledger` WHERE ledger_name = %s{_cco(company)}",
         (ledger_name,), as_dict=True,
     )
     cb = flt(ledger_rows[0].closing_balance) if ledger_rows else 0.0

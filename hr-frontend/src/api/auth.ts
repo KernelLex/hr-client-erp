@@ -9,12 +9,17 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK !== "false"
 const MOCK_USER: User = { name: "admin@clienterp.com", full_name: "HR Admin" }
 const STORAGE_KEY = "auth_user"
 
-export async function loginUser(email: string, password: string): Promise<User> {
+export async function loginUser(email: string, password: string, company?: string): Promise<User> {
   if (USE_MOCK) {
     if (!email || !password) throw new Error("Invalid credentials")
     return MOCK_USER
   }
-  const res = await api.post(apiUrl("login"), { usr: email, pwd: password })
+  // `company` (from the pre-login picker) is validated server-side by the
+  // on_session_creation hook; a wrong/forbidden company returns the SAME generic
+  // "Invalid login credentials" as a bad password (no company enumeration).
+  const body: Record<string, string> = { usr: email, pwd: password }
+  if (company) body.company = company
+  const res = await api.post(apiUrl("login"), body)
   // Frappe returns "Logged In" for users with a default app, "No App" for users without one.
   // Both mean login succeeded — only "Invalid login credentials" means failure.
   const msg: string = res.data.message ?? ""

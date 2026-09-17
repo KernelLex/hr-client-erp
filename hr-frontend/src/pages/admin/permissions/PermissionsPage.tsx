@@ -1,11 +1,11 @@
 import { ADMIN_USERS } from "@/lib/constants"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
-import { Shield, Save, Users, CheckCircle2, ChevronRight } from "lucide-react"
+import { Shield, Save, Users, CheckCircle2, ChevronRight, Building2, Star, Lock } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { useAuth } from "@/context/AuthContext"
-import { useUsersWithPermissions, useUpdatePermissions } from "./usePermissions"
-import type { PermissionMap, RegistryGroup, UserPermissions } from "./types"
+import { useUsersWithPermissions, useUpdatePermissions, useUpdateCompanyAccess } from "./usePermissions"
+import type { PermissionMap, RegistryGroup, UserPermissions, CompanyAccessRow } from "./types"
 import { Navigate } from "react-router-dom"
 
 
@@ -106,7 +106,167 @@ function GroupBlock({
   )
 }
 
-function UserPermissionCard({ user, registry }: { user: UserPermissions; registry: RegistryGroup[] }) {
+function CompanyAccessBlock({
+  user,
+  allCompanies,
+  canGrant,
+}: {
+  user: UserPermissions
+  allCompanies: string[]
+  canGrant: boolean
+}) {
+  const initial = user.company_access ?? []
+  const [granted, setGranted] = useState<Set<string>>(() => new Set(initial.map((r) => r.company)))
+  const [defaultCo, setDefaultCo] = useState<string | null>(() => {
+    const d = initial.find((r) => r.is_default)
+    return d?.company ?? initial[0]?.company ?? null
+  })
+  const [dirty, setDirty] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const update = useUpdateCompanyAccess()
+
+  function toggle(co: string) {
+    if (!canGrant) return
+    setGranted((prev) => {
+      const next = new Set(prev)
+      if (next.has(co)) {
+        next.delete(co)
+        setDefaultCo((d) => (d === co ? null : d))
+      } else {
+        next.add(co)
+        setDefaultCo((d) => d ?? co) // first company granted becomes the default
+      }
+      return next
+    })
+    setDirty(true)
+    setSaved(false)
+  }
+
+  function makeDefault(co: string) {
+    if (!canGrant || !granted.has(co)) return
+    setDefaultCo(co)
+    setDirty(true)
+    setSaved(false)
+  }
+
+  async function save() {
+    const rows: CompanyAccessRow[] = Array.from(granted).map((co) => ({
+      company: co,
+      access_level: "Full",
+      is_default: co === defaultCo ? 1 : 0,
+    }))
+    try {
+      const res = await update.mutateAsync({ user: user.email, rows })
+      setDirty(false)
+      setSaved(true)
+      if (res && (res as { warning?: string }).warning) {
+        toast.warning((res as { warning?: string }).warning as string)
+      } else {
+        toast.success(`Company access saved for ${user.name}`)
+      }
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err: unknown) {
+      toast.error(`Failed to save access: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-forest-100 bg-forest-50/40 p-3.5">
+      <div className="flex items-center gap-2 mb-2.5">
+        <Building2 size={15} className="text-forest-700" />
+        <span className="text-sm font-semibold text-gray-800">Company Access</span>
+        <span className="text-[11px] text-gray-400">— which books this person can open</span>
+      </div>
+
+      {user.employed_by && (
+        <p className="text-[11px] text-gray-400 mb-2">
+          Employed by <span className="font-medium text-gray-500">{user.employed_by}</span> (payroll — separate from access)
+        </p>
+      )}
+
+      <div className="space-y-1.5">
+        {allCompanies.map((co) => {
+          const on = granted.has(co)
+          const isDefault = defaultCo === co
+          return (
+            <div
+              key={co}
+              className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 border ${
+                on ? "border-forest-200 bg-white" : "border-gray-100 bg-gray-50/60"
+              }`}
+            >
+              <span className={`text-sm flex-1 truncate ${on ? "text-gray-800 font-medium" : "text-gray-400"}`}>
+                {co}
+              </span>
+              {on && (
+                <button
+                  type="button"
+                  onClick={() => makeDefault(co)}
+                  disabled={!canGrant}
+                  title={isDefault ? "Default company" : "Set as default"}
+                  className={`flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                    isDefault ? "text-gold-600" : "text-gray-300 hover:text-gold-500"
+                  } ${canGrant ? "cursor-pointer" : "cursor-default"}`}
+                >
+                  <Star size={12} fill={isDefault ? "currentColor" : "none"} />
+                  {isDefault ? "default" : ""}
+                </button>
+              )}
+              <Switch checked={on} onCheckedChange={() => toggle(co)} disabled={!canGrant} />
+            </div>
+          )
+        })}
+      </div>
+
+      {canGrant ? (
+        <div className="flex items-center justify-between mt-2.5">
+          <span className="text-[11px] text-gray-400">
+            {granted.size === 0 ? "No access — can log in but sees nothing" : `${granted.size} compan${granted.size === 1 ? "y" : "ies"}`}
+          </span>
+          <button
+            onClick={save}
+            disabled={!dirty || update.isPending}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-all ${
+              saved
+                ? "bg-green-100 text-green-700"
+                : dirty
+                  ? "bg-forest-700 text-white hover:bg-forest-800 shadow-sm"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {saved ? (
+              <>
+                <CheckCircle2 size={13} /> Saved
+              </>
+            ) : update.isPending ? (
+              "Saving…"
+            ) : (
+              <>
+                <Save size={13} /> Save Access
+              </>
+            )}
+          </button>
+        </div>
+      ) : (
+        <p className="flex items-center gap-1.5 text-[11px] text-gray-400 mt-2.5">
+          <Lock size={11} /> You don’t have permission to change company access.
+        </p>
+      )}
+    </div>
+  )
+}
+
+function UserPermissionCard({
+  user,
+  registry,
+  allCompanies,
+  canGrant,
+}: {
+  user: UserPermissions
+  registry: RegistryGroup[]
+  allCompanies: string[]
+  canGrant: boolean
+}) {
   const [perms, setPerms] = useState<PermissionMap>(() => ({ ...user.permissions }))
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -174,14 +334,24 @@ function UserPermissionCard({ user, registry }: { user: UserPermissions; registr
         <p className="text-xs text-gray-500 italic">{user.designation}</p>
       </div>
 
-      {/* Registry tree */}
-      <div className="px-5 py-4 space-y-2">
+      {/* Company access + registry tree */}
+      <div className="px-5 py-4 space-y-3">
         {user.is_admin ? (
-          <p className="text-xs text-gold-500 py-2">Administrator — full access to every module, cannot be restricted.</p>
+          <>
+            <div className="rounded-xl border border-gold-100 bg-gold-50/50 p-3.5 flex items-center gap-2">
+              <Building2 size={15} className="text-gold-600" />
+              <span className="text-sm font-medium text-gray-700">All companies</span>
+              <span className="text-[11px] text-gray-400">— owner / platform admin, cannot be restricted</span>
+            </div>
+            <p className="text-xs text-gold-500 py-1">Administrator — full access to every module, cannot be restricted.</p>
+          </>
         ) : (
-          registry.map((g) => (
-            <GroupBlock key={g.key} group={g} perms={perms} disabled={false} onToggleKey={toggleKey} />
-          ))
+          <>
+            <CompanyAccessBlock user={user} allCompanies={allCompanies} canGrant={canGrant} />
+            {registry.map((g) => (
+              <GroupBlock key={g.key} group={g} perms={perms} disabled={false} onToggleKey={toggleKey} />
+            ))}
+          </>
         )}
       </div>
 
@@ -205,13 +375,26 @@ function UserPermissionCard({ user, registry }: { user: UserPermissions; registr
   )
 }
 
+// A user is shown under a company filter if they can access it (admins see all).
+function userInCompany(u: UserPermissions, company: string | null): boolean {
+  if (!company) return true
+  if (u.is_admin) return true
+  return (u.company_access ?? []).some((r) => r.company === company)
+}
+
 export function PermissionsPage() {
   const { user } = useAuth()
   const { data, isLoading, isError } = useUsersWithPermissions()
+  const [companyFilter, setCompanyFilter] = useState<string | null>(null)
 
   if (!user || !ADMIN_USERS.has(user.name)) {
     return <Navigate to="/" replace />
   }
+
+  const companies = data?.all_companies ?? []
+  const allUsers = data?.users ?? []
+  const visibleUsers = allUsers.filter((u) => userInCompany(u, companyFilter))
+  const countFor = (co: string | null) => allUsers.filter((u) => userInCompany(u, co)).length
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -224,7 +407,7 @@ export function PermissionsPage() {
           <div>
             <h1 className="text-xl font-bold text-gray-900">Role Control</h1>
             <p className="text-xs text-gray-500 mt-0.5">
-              Full access by default — restrict any module or subsection per user
+              Grant company access, and restrict modules per user — people see only the companies they’re granted
             </p>
           </div>
         </div>
@@ -235,6 +418,38 @@ export function PermissionsPage() {
           </div>
         )}
       </div>
+
+      {/* Company filter — group people by which company they can access */}
+      {data && companies.length > 0 && (
+        <div className="flex items-center gap-2 mb-5 flex-wrap">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 flex items-center gap-1 mr-1">
+            <Building2 size={12} /> Company
+          </span>
+          <button
+            onClick={() => setCompanyFilter(null)}
+            className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+              companyFilter === null
+                ? "bg-forest-700 text-white border-forest-700"
+                : "bg-white text-gray-600 border-gray-200 hover:border-forest-300"
+            }`}
+          >
+            All <span className="tabular-nums opacity-70">({countFor(null)})</span>
+          </button>
+          {companies.map((co) => (
+            <button
+              key={co}
+              onClick={() => setCompanyFilter(co)}
+              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                companyFilter === co
+                  ? "bg-forest-700 text-white border-forest-700"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-forest-300"
+              }`}
+            >
+              {co} <span className="tabular-nums opacity-70">({countFor(co)})</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading && (
         <div className="space-y-4">
@@ -265,9 +480,21 @@ export function PermissionsPage() {
 
       {data && (
         <div className="space-y-4">
-          {data.users.map((u) => (
-            <UserPermissionCard key={u.email} user={u} registry={data.registry} />
-          ))}
+          {visibleUsers.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-sm text-gray-400">
+              No one has access to {companyFilter} yet.
+            </div>
+          ) : (
+            visibleUsers.map((u) => (
+              <UserPermissionCard
+                key={u.email}
+                user={u}
+                registry={data.registry}
+                allCompanies={data.all_companies ?? []}
+                canGrant={data.can_grant ?? false}
+              />
+            ))
+          )}
         </div>
       )}
     </div>

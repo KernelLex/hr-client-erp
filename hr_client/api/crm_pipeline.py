@@ -12,7 +12,9 @@ renders (kpis / columns / rows / note).
 
 import frappe
 
-from hr_client.api.utils import require_login, handle_api_error
+from hr_client.api.utils import (
+    require_login, handle_api_error, current_company, assert_doc_company, scoped,
+)
 
 _ENQUIRY_FIELDS = (
     "enquiry_title", "company_name", "contact_person", "phone", "email",
@@ -55,6 +57,7 @@ def get_enquiries_page():
     require_login()
     rows_raw = frappe.get_all(
         "Vera CRM Enquiry",
+        filters=scoped({}),
         fields=[
             "name", "enquiry_title", "company_name", "budget_band", "timeline",
             "status", "created_opportunity", "source",
@@ -103,6 +106,7 @@ def create_enquiry(payload, source_lead: str = None):
         frappe.throw("An enquiry title is required.")
     doc = frappe.new_doc("Vera CRM Enquiry")
     doc.update(data)
+    doc.company = current_company()
     if source_lead:
         doc.source_lead = source_lead
     if not doc.assigned_to:
@@ -118,10 +122,12 @@ def convert_enquiry_to_opportunity(name: str):
     """Create an Opportunity from an Enquiry and link them permanently."""
     require_login()
     enq = frappe.get_doc("Vera CRM Enquiry", name)
+    assert_doc_company(enq)
     if enq.created_opportunity:
         frappe.throw("This enquiry has already been converted.")
 
     opp = frappe.new_doc("Vera CRM Opportunity")
+    opp.company = enq.get("company") or current_company()
     opp.opportunity_title = enq.enquiry_title
     opp.company_name = enq.company_name
     opp.contact_person = enq.contact_person
@@ -150,6 +156,7 @@ def get_opportunities_page():
     require_login()
     rows_raw = frappe.get_all(
         "Vera CRM Opportunity",
+        filters=scoped({}),
         fields=[
             "name", "opportunity_title", "company_name", "stage",
             "estimated_value", "probability", "expected_close", "source",
@@ -203,6 +210,7 @@ def create_opportunity(payload):
         frappe.throw("An opportunity title is required.")
     doc = frappe.new_doc("Vera CRM Opportunity")
     doc.update(data)
+    doc.company = current_company()
     if not doc.assigned_to:
         doc.assigned_to = frappe.session.user
     if not doc.stage:
@@ -223,6 +231,7 @@ def set_opportunity_stage(name: str, stage: str, loss_reason: str = None):
     if stage == "Lost" and not loss_reason:
         frappe.throw("A loss reason is required to mark an opportunity Lost.")
     doc = frappe.get_doc("Vera CRM Opportunity", name)
+    assert_doc_company(doc)
     doc.stage = stage
     if stage == "Lost":
         doc.loss_reason = loss_reason

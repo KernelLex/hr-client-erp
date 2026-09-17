@@ -134,10 +134,13 @@ def get_status():
 
 
 def run(masters_path: str = "/home/vera/Master.xml",
-        transactions_path: str = "/home/vera/All Transactions.xml"):
+        transactions_path: str = "/home/vera/All Transactions.xml",
+        company: str = "Vera Enterprises"):
     """
     Full two-stage pipeline. Safe to frappe.enqueue or call directly.
     Both XML files must be UTF-16 encoded Tally exports.
+    All rows are written scoped to `company`; a re-import replaces only that
+    company's data (see tally_import_job.run / accounts_tally_import.run).
     """
     import os
     frappe.flags.in_tally_sync = True  # exempts the sync from ERP read-only guards (Phase 2 §2.2)
@@ -153,6 +156,22 @@ def run(masters_path: str = "/home/vera/Master.xml",
 
     _set("running", 2, "Starting Stage 1 — parsing XML files…")
 
+    # ── Cross-company leak guard (snapshot OTHER companies' counts) ──────────
+    # A company-scoped import must never touch another company's rows. Snapshot
+    # every other company's voucher + ledger counts now; re-check after Stage 2.
+    def _other_counts():
+        out = {}
+        for c in frappe.get_all("Company", pluck="name"):
+            if c == company:
+                continue
+            out[c] = (
+                frappe.db.count("VE Tally Voucher", {"company": c}),
+                frappe.db.count("VE Tally Ledger", {"company": c}),
+            )
+        return out
+
+    _pre_others = _other_counts()
+
     # ── Stage 1: XML → VE Tally tables ───────────────────────────────────────
     try:
         from hr_client.api import tally_import_job
@@ -164,7 +183,7 @@ def run(masters_path: str = "/home/vera/Master.xml",
 
         tally_import_job._set_status = _s1
         try:
-            result1 = tally_import_job.run(masters_path, transactions_path)
+            result1 = tally_import_job.run(masters_path, transactions_path, company=company)
         finally:
             tally_import_job._set_status = orig_set
 
@@ -187,7 +206,7 @@ def run(masters_path: str = "/home/vera/Master.xml",
 
         ati._set_status = _s2
         try:
-            result2 = ati.run()
+            result2 = ati.run(company=company)
         finally:
             ati._set_status = orig_ati
 
@@ -197,12 +216,25 @@ def run(masters_path: str = "/home/vera/Master.xml",
         _set("error", 55, msg, error=msg)
         return {"success": False, "error": msg}
 
+    # ── Cross-company leak assertion ─────────────────────────────────────────
+    # If any OTHER company's voucher/ledger counts moved, rows crossed company
+    # lines (the Phase 1 name-scoping failed) — fail loudly rather than serve
+    # contaminated books.
+    _post_others = _other_counts()
+    _moved = {c: {"before": _pre_others[c], "after": _post_others.get(c)}
+              for c in _pre_others if _post_others.get(c) != _pre_others[c]}
+    if _moved:
+        msg = f"CROSS-COMPANY LEAK: import for '{company}' changed other companies' counts: {_moved}"
+        frappe.log_error(msg, "tally_transformer — cross-company leak")
+        _set("error", 96, "Import aborted — cross-company row movement detected.", error=msg)
+        return {"success": False, "error": msg, "moved": _moved}
+
     # ── Stage 3: Reconciliation check ────────────────────────────────────────
     _set("running", 96, "Running reconciliation check…")
     recon = {}
     try:
         from hr_client.api import accounts_tally_import as _ati_recon
-        recon = _ati_recon.reconcile()
+        recon = _ati_recon.reconcile(company=company)
     except Exception:
         frappe.log_error(frappe.get_traceback(), "tally_transformer — reconcile")
 
@@ -211,7 +243,7 @@ def run(masters_path: str = "/home/vera/Master.xml",
     # dashboard discrepancies fixed on 2026-08-11.
     try:
         from hr_client.api import finance_core
-        cross = finance_core.reconcile()
+        cross = finance_core.reconcile(company=company)
         if cross.get("issues"):
             frappe.log_error(
                 frappe.as_json(cross["report"]),

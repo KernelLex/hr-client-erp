@@ -116,10 +116,23 @@ def get_status():
     return json.loads(raw)
 
 
-def run(masters_path: str, transactions_path: str):
-    """Main import function. Call via frappe.enqueue or directly."""
+def run(masters_path: str, transactions_path: str, company: str = "Vera Enterprises"):
+    """Main import function. Call via frappe.enqueue or directly.
+
+    Multi-company: all rows are written scoped to `company`. The DELETE step only
+    clears THIS company's rows (a VE re-import never touches SL/HM), and every
+    row's primary `name` is company-prefixed so identically-named ledgers / stock
+    items / voucher series across companies never collide.
+    """
     frappe.flags.in_tally_sync = True  # exempts the sync from ERP read-only guards (Phase 2 §2.2)
     t0 = time.time()
+    _abbr = (frappe.db.get_value("Company", company, "abbr") or company[:4]).strip()
+    _cesc = frappe.db.escape(company)
+
+    def _nm(raw):
+        """Company-prefixed primary key, capped to the 140-char name column."""
+        return f"{_abbr}-{raw}"[:140]
+
     _set_status("running", 2, "Loading All Masters XML…")
 
     try:
@@ -629,16 +642,17 @@ def run(masters_path: str, transactions_path: str):
         OWNER = "Administrator"
         BATCH = 500
 
-        frappe.db.sql("DELETE FROM `tabVE Tally Group`")
-        frappe.db.sql("DELETE FROM `tabVE Tally Ledger`")
-        frappe.db.sql("DELETE FROM `tabVE Tally Stock Item`")
-        frappe.db.sql("DELETE FROM `tabVE Tally Voucher`")
+        # Scope the wipe to THIS company only — never touch other companies' books.
+        frappe.db.sql(f"DELETE FROM `tabVE Tally Group` WHERE company = {_cesc}")
+        frappe.db.sql(f"DELETE FROM `tabVE Tally Ledger` WHERE company = {_cesc}")
+        frappe.db.sql(f"DELETE FROM `tabVE Tally Stock Item` WHERE company = {_cesc}")
+        frappe.db.sql(f"DELETE FROM `tabVE Tally Voucher` WHERE company = {_cesc}")
         frappe.db.commit()
 
         # Groups (full hierarchy — needed to render a real nested Chart of Accounts)
         group_rows = [
             (
-                gname[:140], gname[:140],
+                _nm(gname), gname[:140], company,
                 d["parent_group"][:140], d["root_group"][:20], d["is_primary"],
                 NOW, NOW, OWNER, OWNER, 1, 0,
             )
@@ -646,10 +660,10 @@ def run(masters_path: str, transactions_path: str):
         ]
         for i in range(0, len(group_rows), BATCH):
             batch = group_rows[i:i+BATCH]
-            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
+            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
             frappe.db.sql(
                 f"INSERT INTO `tabVE Tally Group` "
-                f"(name,group_name,parent_group,root_group,is_primary,"
+                f"(name,group_name,company,parent_group,root_group,is_primary,"
                 f"creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}",
                 [x for row in batch for x in row]
             )
@@ -660,7 +674,7 @@ def run(masters_path: str, transactions_path: str):
         for name, d in ledger_data.items():
             closing = round(ledger_balances.get(name, 0.0), 2)
             ledger_rows.append((
-                name[:140], name[:140],
+                _nm(name), name[:140], company,
                 d.get('mailing_name', name)[:200],
                 d['parent'][:140], d.get('root_group', '')[:20],
                 0.0, closing,
@@ -676,10 +690,10 @@ def run(masters_path: str, transactions_path: str):
             ))
         for i in range(0, len(ledger_rows), BATCH):
             batch = ledger_rows[i:i+BATCH]
-            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
+            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
             frappe.db.sql(
                 f"INSERT INTO `tabVE Tally Ledger` "
-                f"(name,ledger_name,mailing_name,parent_group,root_group,opening_balance,closing_balance,"
+                f"(name,ledger_name,company,mailing_name,parent_group,root_group,opening_balance,closing_balance,"
                 f"is_debtors,is_creditors,is_bank,is_cash,is_gst,is_tds,"
                 f"gstin,pan_number,gst_registration_type,state,pincode,phone,address,"
                 f"creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}",
@@ -688,7 +702,7 @@ def run(masters_path: str, transactions_path: str):
         frappe.db.commit()
 
         # Stock items (with fixed HSN + GST rate)
-        stock_rows = [(d['item_name'], d['item_name'], d['stock_group'], d['hsn_code'],
+        stock_rows = [(_nm(d['item_name']), d['item_name'][:140], company, d['stock_group'], d['hsn_code'],
                        d.get('gst_rate', 0.0), d['unit'],
                        d['standard_rate'] or item_rate.get(d['item_name'], ('', 0.0))[1],
                        d.get('opening_qty', 0.0), d.get('opening_value', 0.0),
@@ -696,8 +710,8 @@ def run(masters_path: str, transactions_path: str):
                       for d in stock_data]
         for i in range(0, len(stock_rows), BATCH):
             batch = stock_rows[i:i+BATCH]
-            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
-            frappe.db.sql(f"INSERT INTO `tabVE Tally Stock Item` (name,item_name,stock_group,hsn_code,gst_rate,unit,standard_rate,opening_qty,opening_value,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
+            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
+            frappe.db.sql(f"INSERT INTO `tabVE Tally Stock Item` (name,item_name,company,stock_group,hsn_code,gst_rate,unit,standard_rate,opening_qty,opening_value,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
         frappe.db.commit()
 
         _set_status("running", 80, f"Ledgers + stock items saved. Inserting {len(vouchers)} vouchers…")
@@ -711,7 +725,7 @@ def run(masters_path: str, transactions_path: str):
                 continue
             seen_guids.add(v['tally_guid'])
             v_rows.append((
-                f"VTV-{counter:05d}", v['tally_guid'], v['voucher_type'], v['voucher_number'],
+                f"{_abbr}-VTV-{counter:05d}", v['tally_guid'], company, v['voucher_type'], v['voucher_number'],
                 v['voucher_date'], v['party_name'], v['amount'], v['narration'],
                 v['debit_ledger'], v['credit_ledger'], v['is_cancelled'],
                 v.get('all_ledger_entries', '[]'), v.get('inventory_entries', '[]'),
@@ -722,15 +736,15 @@ def run(masters_path: str, transactions_path: str):
         VBATCH = 500
         for i in range(0, len(v_rows), VBATCH):
             batch = v_rows[i:i+VBATCH]
-            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
-            frappe.db.sql(f"INSERT INTO `tabVE Tally Voucher` (name,tally_guid,voucher_type,voucher_number,voucher_date,party_name,amount,narration,debit_ledger,credit_ledger,is_cancelled,all_ledger_entries,inventory_entries,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
+            ph = ','.join(['(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'] * len(batch))
+            frappe.db.sql(f"INSERT INTO `tabVE Tally Voucher` (name,tally_guid,company,voucher_type,voucher_number,voucher_date,party_name,amount,narration,debit_ledger,credit_ledger,is_cancelled,all_ledger_entries,inventory_entries,creation,modified,owner,modified_by,docstatus,idx) VALUES {ph}", [x for row in batch for x in row])
         frappe.db.commit()
 
-        # Remove enrichments whose voucher no longer exists (cancelled/deleted in Tally)
-        frappe.db.sql("""
+        # Remove enrichments whose voucher no longer exists (this company only).
+        frappe.db.sql(f"""
             DELETE e FROM `tabVE Tally Enrichment` e
             LEFT JOIN `tabVE Tally Voucher` v ON v.tally_guid = e.name
-            WHERE v.name IS NULL
+            WHERE v.name IS NULL AND e.company = {_cesc}
         """)
         frappe.db.commit()
 

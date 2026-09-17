@@ -3,11 +3,39 @@ import functools
 import frappe
 
 
-# ── Shared admin sets ────────────────────────────────────────────────────────
-# Single source of truth. Import from here instead of redefining per file.
-ADMIN_USERS  = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
-OWAIS_USERS  = ADMIN_USERS   # same set; alias for clarity in approval flows
+# ── Role tiers (Phase 0 — multi-company) ─────────────────────────────────────
+# Membership-based, NEVER role-based. `require_admin()` still passes on the
+# System Manager role for back-compat, BUT grant rights and the __ALL__ group
+# view must gate on is_group_owner() only — otherwise any System Manager could
+# grant themselves another company's books.
+GROUP_OWNER    = frozenset({"owais@veraenterprises.in"})   # + "Administrator" break-glass
+PLATFORM_ADMIN = frozenset({"amoghspace@gmail.com"})       # developer: all companies, no grants
+
+# Back-compat admin set (union). Existing code imports ADMIN_USERS / OWAIS_USERS.
+ADMIN_USERS  = frozenset({"Administrator"}) | GROUP_OWNER | PLATFORM_ADMIN
+OWAIS_USERS  = ADMIN_USERS   # alias kept for the legacy approval flows
 COMPANY_NAME = "Vera Enterprises"
+
+
+def _u(user=None) -> str:
+    return user or frappe.session.user
+
+
+def is_group_owner(user=None) -> bool:
+    """Group owner = Owais (+ Administrator break-glass). Membership only."""
+    u = _u(user)
+    return u == "Administrator" or u in GROUP_OWNER
+
+
+def is_platform_admin(user=None) -> bool:
+    """Developer tier: sees all companies, but cannot grant access."""
+    return _u(user) in PLATFORM_ADMIN
+
+
+def can_grant_access(user=None) -> bool:
+    """Group owner or platform admin may grant/revoke company access.
+    (Owner's decision 2026-09-16: Amogh/platform-admin manages company membership too.)"""
+    return is_group_owner(user) or is_platform_admin(user)
 
 
 def require_login():
@@ -23,6 +51,123 @@ def require_admin():
         frappe.throw("Not permitted", frappe.PermissionError)
     if user not in ADMIN_USERS and "System Manager" not in frappe.get_roles(user):
         frappe.throw("Not permitted", frappe.PermissionError)
+
+
+# ── Multi-company scoping kernel (Phase 0) ───────────────────────────────────
+# Every endpoint touching per-company (siloed) data resolves + validates a
+# company here. Records shared across companies are exempt via GLOBAL_DOCTYPES.
+ALL_COMPANIES = "__ALL__"   # group-console sentinel; group owner only
+
+GLOBAL_DOCTYPES = frozenset({
+    "User", "Role", "Has Role", "ToDo",
+    "Vera Chat Room", "Vera Chat Message", "Vera Chat Room Member",
+    "UOM", "Item", "Item Group", "Company",
+    "User Company Access", "Company Access Log",
+})
+
+
+def allowed_companies(user=None) -> list:
+    """Companies the user may access. Owner / platform-admin implicitly get
+    every Company that exists; everyone else gets their ve_company_access rows."""
+    u = _u(user)
+    if is_group_owner(u) or is_platform_admin(u):
+        return frappe.get_all("Company", pluck="name")
+    rows = frappe.get_all(
+        "User Company Access",
+        filters={"parent": u, "parenttype": "User"},
+        fields=["company"], pluck="company",
+    )
+    return list(dict.fromkeys(rows))   # dedupe, preserve order
+
+
+def require_company(company) -> str:
+    """Validate the user may act within `company`. Raises PermissionError if not.
+    __ALL__ is permitted only for the group owner."""
+    user = frappe.session.user
+    if company == ALL_COMPANIES:
+        if is_group_owner(user):
+            return company
+        frappe.throw("Not permitted", frappe.PermissionError)
+    if company in allowed_companies(user):
+        return company
+    frappe.throw("Not permitted for this company", frappe.PermissionError)
+
+
+def current_company() -> str:
+    """Resolve the active company for this request, always validated.
+    Precedence: form_dict → session → user default → is_default row → first allowed."""
+    user = frappe.session.user
+
+    c = frappe.form_dict.get("company")
+    if c:
+        return require_company(c)
+
+    sess = getattr(frappe.local, "session", None)
+    c = (getattr(sess, "data", None) or {}).get("active_company") if sess else None
+    if c:
+        try:
+            return require_company(c)
+        except frappe.PermissionError:
+            pass
+
+    c = frappe.defaults.get_user_default("active_company")
+    if c:
+        try:
+            return require_company(c)
+        except frappe.PermissionError:
+            pass
+
+    allowed = allowed_companies(user)
+    row = frappe.get_all(
+        "User Company Access",
+        filters={"parent": user, "parenttype": "User", "is_default": 1},
+        fields=["company"], limit=1,
+    )
+    if row and row[0].company in allowed:
+        return row[0].company
+
+    if allowed:
+        return allowed[0]
+    frappe.throw("No company access", frappe.PermissionError)
+
+
+def scoped(filters: dict, company: str = None) -> dict:
+    """Add a company filter to a frappe.get_all filters dict (no-op for __ALL__)."""
+    company = require_company(company or current_company())
+    filters = dict(filters or {})
+    if company != ALL_COMPANIES:
+        filters["company"] = company
+    return filters
+
+
+def company_sql(company: str = None, alias: str = "") -> str:
+    """SQL fragment ' AND `alias`.company = %(company)s ' (empty for __ALL__).
+    Always pass the resolved company into the query params as {"company": company}."""
+    company = require_company(company or current_company())
+    if company == ALL_COMPANIES:
+        return ""
+    prefix = f"`{alias}`." if alias else ""
+    return f" AND {prefix}company = %(company)s "
+
+
+def company_scoped(fn):
+    """Decorator: resolve + validate the company, inject it as kwarg `company`."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        c = kwargs.get("company") or frappe.form_dict.get("company")
+        kwargs["company"] = require_company(c) if c else current_company()
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+def assert_doc_company(doc_or_company):
+    """Guard a fetched document: raise PermissionError if its company is not one
+    the caller may access. Accepts a Document (reads `.company`) or a company str.
+    No-op when the value is empty (legacy/unscoped rows)."""
+    c = getattr(doc_or_company, "company", doc_or_company)
+    if c:
+        require_company(c)
+    return c
 
 
 # ── Financial year helpers ───────────────────────────────────────────────────

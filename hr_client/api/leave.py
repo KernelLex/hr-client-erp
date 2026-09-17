@@ -1,7 +1,13 @@
 import frappe
 from frappe.utils import now, getdate
 from datetime import timedelta
-from hr_client.api.utils import ADMIN_USERS as _ADMIN_USERS
+from hr_client.api.utils import (
+    ADMIN_USERS as _ADMIN_USERS, current_company, ALL_COMPANIES, scoped, assert_doc_company,
+)
+
+
+def _emp_company(emp_name):
+    return frappe.db.get_value("Employee", emp_name, "company") or current_company()
 
 _ALLOWED_LEAVE_TYPES = frozenset([
     "Earned Leave", "Sick Leave", "Casual Leave",
@@ -93,6 +99,7 @@ def apply_leave(leave_type, from_date, to_date, reason):
 
     try:
         doc = frappe.new_doc("Vera Leave Application")
+        doc.company = _emp_company(emp.name)
         doc.employee = emp.name
         doc.employee_name = emp.employee_name
         doc.leave_type = leave_type
@@ -149,7 +156,7 @@ def get_all_leaves(status="All", employee_email=None):
 
     leaves = frappe.get_all(
         "Vera Leave Application",
-        filters=filters,
+        filters=scoped(filters),
         fields=[
             "name", "employee", "employee_name", "leave_type", "from_date", "to_date",
             "total_days", "reason", "status", "admin_remarks",
@@ -198,6 +205,7 @@ def approve_leave(leave_id, admin_remarks=None):
 
     try:
         doc = frappe.get_doc("Vera Leave Application", leave_id)
+        assert_doc_company(doc)
         doc.status = "Approved"
         doc.approved_by = frappe.session.user
         doc.approved_on = now()
@@ -223,6 +231,7 @@ def reject_leave(leave_id, admin_remarks):
 
     try:
         doc = frappe.get_doc("Vera Leave Application", leave_id)
+        assert_doc_company(doc)
         doc.status = "Rejected"
         doc.approved_by = frappe.session.user
         doc.approved_on = now()
@@ -272,6 +281,7 @@ def admin_apply_leave(employee, leave_type, from_date, to_date, reason, status="
 
     try:
         doc = frappe.new_doc("Vera Leave Application")
+        doc.company = _emp_company(emp.name)
         doc.employee = emp.name
         doc.employee_name = emp.employee_name
         doc.leave_type = leave_type
@@ -466,9 +476,13 @@ def get_leave_summary():
     _require_admin()
 
     current_year = str(getdate(now()).year)
+    _lf = [["from_date", ">=", f"{current_year}-01-01"]]
+    _cc = current_company()
+    if _cc != ALL_COMPANIES:
+        _lf.append(["company", "=", _cc])
     leaves = frappe.get_all(
         "Vera Leave Application",
-        filters=[["from_date", ">=", f"{current_year}-01-01"]],
+        filters=_lf,
         fields=["employee", "employee_name", "leave_type", "total_days", "status"],
     )
 

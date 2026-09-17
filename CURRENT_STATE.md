@@ -1,6 +1,10 @@
 # Vera ERP — Current State
 _Last updated: 2026-08-09 (session: AI company brain + qwen2.5)_
 
+> 🚧 **ACTIVE MULTI-COMPANY BUILD (2026-09-15) — see `HANDOFF_MULTICOMPANY.md` to resume.**
+> 3-company platform (VE / Schones Leben / Hagan Modular). Phases 0 & 1 live-verified; Phase 2
+> scoping in progress. Not yet committed to git (owner tests live first).
+
 > ⚠️ **Two current-state corrections since this doc was first written:**
 > 1. **Server IP is `192.168.1.16`** (static), not `192.168.1.32`. Site `vera.local`, bench port 8000.
 > 2. **Tally data is currently PARTIAL** — 1,414 vouchers, latest `2026-03-31` (a partial current-FY

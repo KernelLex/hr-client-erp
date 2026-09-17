@@ -13,7 +13,9 @@ across later BOQ revisions. All maths run server-side. ERP-native.
 
 import frappe
 
-from hr_client.api.utils import require_login, handle_api_error
+from hr_client.api.utils import (
+    require_login, handle_api_error, current_company, assert_doc_company, scoped,
+)
 
 # Header fields a user may edit (lines are a frozen snapshot).
 _HEADER_FIELDS = ("cost_title", "opportunity", "company_name", "prepared_by",
@@ -52,6 +54,7 @@ def _apply_maths(doc):
 
 
 def _assert_editable(doc):
+    assert_doc_company(doc)
     if doc.status not in _EDITABLE_STATUSES:
         frappe.throw(
             f"This cost sheet is {doc.status} and can no longer be edited. "
@@ -69,6 +72,7 @@ def get_cost_sheets_page():
     require_login()
     rows_raw = frappe.get_all(
         "Vera Cost Sheet",
+        filters=scoped({}),
         fields=["name", "cost_title", "company_name", "status", "revision",
                 "total_cost", "projected_gp_percent", "source"],
         order_by="modified desc",
@@ -148,6 +152,7 @@ def _serialize(doc):
 def get_cost_sheet(name: str):
     require_login()
     doc = frappe.get_doc("Vera Cost Sheet", name)
+    assert_doc_company(doc)
     return {"success": True, "cost_sheet": _serialize(doc)}
 
 
@@ -172,11 +177,13 @@ def create_cost_sheet(payload):
     if not boq_name:
         frappe.throw("Select the approved BOQ to build the cost sheet on.")
     boq = frappe.get_doc("Vera BOQ", boq_name)
+    assert_doc_company(boq)
     if boq.status != "Approved":
         frappe.throw("A cost sheet can only be built on an approved BOQ.")
 
     doc = frappe.new_doc("Vera Cost Sheet")
     doc.update(data)
+    doc.company = boq.get("company") or current_company()
     doc.boq = boq.name
     if not doc.company_name:
         doc.company_name = boq.company_name
@@ -222,6 +229,7 @@ def update_cost_sheet(name: str, payload):
 def submit_cost_sheet(name: str):
     require_login()
     doc = frappe.get_doc("Vera Cost Sheet", name)
+    assert_doc_company(doc)
     if doc.status != "Draft":
         frappe.throw(f"Only a Draft cost sheet can be submitted (this is {doc.status}).")
     doc.status = "Submitted"
@@ -235,6 +243,7 @@ def submit_cost_sheet(name: str):
 def reopen_cost_sheet(name: str):
     require_login()
     doc = frappe.get_doc("Vera Cost Sheet", name)
+    assert_doc_company(doc)
     if doc.status != "Submitted":
         frappe.throw("Only a Submitted cost sheet can be reopened.")
     doc.status = "Draft"
@@ -248,6 +257,7 @@ def reopen_cost_sheet(name: str):
 def approve_cost_sheet(name: str):
     require_login()
     doc = frappe.get_doc("Vera Cost Sheet", name)
+    assert_doc_company(doc)
     if doc.status not in ("Submitted", "Draft"):
         frappe.throw(f"Cannot approve a {doc.status} cost sheet.")
     if not doc.lines:
@@ -265,6 +275,7 @@ def approve_cost_sheet(name: str):
 def create_revision(name: str):
     require_login()
     src = frappe.get_doc("Vera Cost Sheet", name)
+    assert_doc_company(src)
     new = frappe.copy_doc(src, ignore_no_copy=False)
     new.status = "Draft"
     new.revision = (src.revision or 1) + 1
@@ -286,7 +297,7 @@ def get_approved_cost_sheets():
     require_login()
     return frappe.get_all(
         "Vera Cost Sheet",
-        filters={"status": "Approved"},
+        filters=scoped({"status": "Approved"}),
         fields=["name", "cost_title", "company_name", "revision", "boq",
                 "total_cost", "target_gp_percent", "min_gp_percent"],
         order_by="modified desc",

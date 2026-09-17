@@ -9,7 +9,9 @@ All ERP-native. List endpoints return the ModulePayload envelope for SystemPage.
 
 import frappe
 
-from hr_client.api.utils import require_login, require_admin, handle_api_error
+from hr_client.api.utils import (
+    require_login, require_admin, handle_api_error, current_company, assert_doc_company, scoped,
+)
 
 _CONTACT_FIELDS = ("contact_name", "customer", "role", "phone", "email", "whatsapp", "preferred_channel", "notes")
 _TEAM_FIELDS = ("member", "territory", "reports_to", "approval_authority", "status")
@@ -30,6 +32,7 @@ def get_contacts_page():
     require_login()
     rows = frappe.get_all(
         "Vera CRM Contact",
+        filters=scoped({}),
         fields=["name", "contact_name", "customer", "role", "phone", "email", "preferred_channel", "source"],
         order_by="modified desc",
     )
@@ -59,6 +62,7 @@ def create_contact(payload):
         frappe.throw("A contact name is required.")
     doc = frappe.new_doc("Vera CRM Contact")
     doc.update(data)
+    doc.company = current_company()
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"success": True, "name": doc.name}
@@ -72,6 +76,7 @@ def get_team_page():
     require_login()
     rows = frappe.get_all(
         "Vera Sales Team Member",
+        filters=scoped({}),
         fields=["name", "full_name", "member", "territory", "approval_authority", "status", "source"],
         order_by="full_name asc",
     )
@@ -108,6 +113,7 @@ def create_team_member(payload):
         frappe.throw("That user is already on the sales team.")
     doc = frappe.new_doc("Vera Sales Team Member")
     doc.update(data)
+    doc.company = current_company()
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"success": True, "name": doc.name}
@@ -135,6 +141,7 @@ def get_followups_page():
     require_login()
     rows = frappe.get_all(
         "Vera CRM Followup",
+        filters=scoped({}),
         fields=["name", "subject", "linked_type", "linked_name", "due_date", "status", "source"],
         order_by="status asc, due_date asc",
     )
@@ -174,6 +181,7 @@ def create_followup(payload):
         frappe.throw("A subject is required.")
     doc = frappe.new_doc("Vera CRM Followup")
     doc.update(data)
+    doc.company = current_company()
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"success": True, "name": doc.name}
@@ -184,6 +192,7 @@ def create_followup(payload):
 def complete_followup(name: str, outcome: str = None, next_action: str = None):
     require_login()
     doc = frappe.get_doc("Vera CRM Followup", name)
+    assert_doc_company(doc)
     doc.status = "Done"
     if outcome:
         doc.outcome = outcome

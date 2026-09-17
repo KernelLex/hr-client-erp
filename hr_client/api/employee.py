@@ -1,6 +1,6 @@
 import frappe
 import json
-from hr_client.api.utils import handle_api_error
+from hr_client.api.utils import handle_api_error, current_company, ALL_COMPANIES
 
 ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
 
@@ -255,9 +255,13 @@ def get_all_employees():
     if not _is_admin():
         frappe.throw("Admin access required", frappe.PermissionError)
 
+    _co = current_company()
+    _ef = {"status": "Active"}
+    if _co != ALL_COMPANIES:
+        _ef["company"] = _co
     employees = frappe.db.get_all(
         "Employee",
-        filters={"status": "Active"},
+        filters=_ef,
         fields=["name", "employee_name", "first_name", "last_name", "designation",
                 "department", "image", "company_email", "user_id", "date_of_joining"],
         order_by="employee_name asc",

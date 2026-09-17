@@ -11,7 +11,7 @@ list + detail read views. ERP-native.
 
 import frappe
 
-from hr_client.api.utils import require_login, handle_api_error
+from hr_client.api.utils import require_login, handle_api_error, assert_doc_company, scoped
 
 
 def _flt(v):
@@ -24,6 +24,7 @@ def get_sales_orders_page():
     require_login()
     rows_raw = frappe.get_all(
         "Vera Sales Order",
+        filters=scoped({}),
         fields=["name", "so_title", "company_name", "status", "grand_total",
                 "quotation", "so_date", "source"],
         order_by="modified desc",
@@ -75,6 +76,7 @@ def get_sales_orders_page():
 def get_sales_order(name: str):
     require_login()
     doc = frappe.get_doc("Vera Sales Order", name)
+    assert_doc_company(doc)
     return {"success": True, "sales_order": {
         "name": doc.name,
         "so_title": doc.so_title,
@@ -103,6 +105,7 @@ def set_status(name: str, status: str):
     if status not in ("Open", "Confirmed", "Cancelled"):
         frappe.throw(f"Unknown status: {status}")
     doc = frappe.get_doc("Vera Sales Order", name)
+    assert_doc_company(doc)
     doc.status = status
     doc.save(ignore_permissions=True)
     frappe.db.commit()

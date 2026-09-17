@@ -12,7 +12,9 @@ entry (the two are linked permanently). Entries are voided, never hard-deleted.
 
 import frappe
 
-from hr_client.api.utils import require_login, require_admin, handle_api_error
+from hr_client.api.utils import (
+    require_login, require_admin, handle_api_error, current_company, assert_doc_company, scoped,
+)
 
 # Fields a requester/admin may set on an entry or request. Everything else
 # (status, provenance, audit fields) is server-controlled.
@@ -56,6 +58,7 @@ def create_entry(payload: str):
 
     doc = frappe.new_doc("Vera ERP Entry")
     doc.update(data)
+    doc.company = current_company()
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"success": True, "name": doc.name}
@@ -69,6 +72,7 @@ def void_entry(name: str, reason: str):
     if not reason:
         frappe.throw("A reason is required to void an entry.")
     doc = frappe.get_doc("Vera ERP Entry", name)
+    assert_doc_company(doc)
     doc.void(reason)
     frappe.db.commit()
     return {"success": True, "name": doc.name, "status": doc.status}
@@ -86,7 +90,7 @@ def list_entries(status: str = None, entry_type: str = None):
         filters["entry_type"] = entry_type
     rows = frappe.get_all(
         "Vera ERP Entry",
-        filters=filters,
+        filters=scoped(filters),
         fields=[
             "name", "entry_type", "entry_date", "party", "amount", "description",
             "status", "source", "created_via_request", "created_by_user",
@@ -111,6 +115,7 @@ def save_request(payload: str, name: str = None):
 
     if name:
         doc = frappe.get_doc("Vera Data Entry Request", name)
+        assert_doc_company(doc)
         _assert_requester(doc)
         if doc.request_status not in ("Draft", "Returned for Info"):
             frappe.throw("Only draft or returned requests can be edited.")
@@ -121,6 +126,7 @@ def save_request(payload: str, name: str = None):
             frappe.throw("Entry type, date and description are required.")
         doc = frappe.new_doc("Vera Data Entry Request")
         doc.update(data)
+        doc.company = current_company()
         doc.request_status = "Draft"
         doc.insert(ignore_permissions=True)
 
@@ -134,6 +140,7 @@ def submit_request(name: str):
     """Draft / Returned → Submitted. Requester can no longer edit after this."""
     require_login()
     doc = frappe.get_doc("Vera Data Entry Request", name)
+    assert_doc_company(doc)
     _assert_requester(doc)
     if doc.request_status not in ("Draft", "Returned for Info"):
         frappe.throw("This request has already been submitted.")
@@ -150,6 +157,7 @@ def withdraw_request(name: str):
     """Requester withdraws a submitted request (before it is approved/rejected)."""
     require_login()
     doc = frappe.get_doc("Vera Data Entry Request", name)
+    assert_doc_company(doc)
     _assert_requester(doc)
     if doc.request_status not in ("Submitted", "Under Review"):
         frappe.throw("Only a submitted or under-review request can be withdrawn.")
@@ -170,7 +178,7 @@ def my_requests(status: str = None):
         filters["request_status"] = status
     rows = frappe.get_all(
         "Vera Data Entry Request",
-        filters=filters,
+        filters=scoped(filters),
         fields=[
             "name", "entry_type", "entry_date", "party", "amount", "description",
             "request_status", "submitted_on", "rejection_reason", "admin_notes",
@@ -199,7 +207,7 @@ def list_requests(status: str = None, entry_type: str = None, requester: str = N
         filters["requested_by"] = requester
     rows = frappe.get_all(
         "Vera Data Entry Request",
-        filters=filters,
+        filters=scoped(filters),
         fields=[
             "name", "entry_type", "entry_date", "party", "amount", "description",
             "reason", "request_status", "requested_by", "requested_by_name",
@@ -209,10 +217,12 @@ def list_requests(status: str = None, entry_type: str = None, requester: str = N
         ],
         order_by="submitted_on asc",
     )
-    pending = frappe.db.count(
-        "Vera Data Entry Request",
-        {"request_status": ["in", ["Submitted", "Under Review"]]},
-    )
+    from hr_client.api.utils import ALL_COMPANIES
+    _pf = {"request_status": ["in", ["Submitted", "Under Review"]]}
+    _cc = current_company()
+    if _cc != ALL_COMPANIES:
+        _pf["company"] = _cc
+    pending = frappe.db.count("Vera Data Entry Request", _pf)
     return {"requests": rows, "pending_count": pending}
 
 
@@ -222,6 +232,7 @@ def mark_under_review(name: str):
     """Submitted → Under Review. Visible to the requester so they know."""
     require_admin()
     doc = frappe.get_doc("Vera Data Entry Request", name)
+    assert_doc_company(doc)
     if doc.request_status != "Submitted":
         frappe.throw("Only a submitted request can be moved to Under Review.")
     doc.request_status = "Under Review"
@@ -237,12 +248,14 @@ def approve_request(name: str, admin_notes: str = None):
     """Approve: materialise the real ERP Entry from the request and link them."""
     require_admin()
     doc = frappe.get_doc("Vera Data Entry Request", name)
+    assert_doc_company(doc)
     if doc.request_status not in ("Submitted", "Under Review"):
         frappe.throw("Only a submitted or under-review request can be approved.")
 
     entry = frappe.new_doc("Vera ERP Entry")
     for field in _ENTRY_FIELDS:
         entry.set(field, doc.get(field))
+    entry.company = doc.get("company") or current_company()
     entry.created_via_request = doc.name
     entry.created_by_user = doc.requested_by
     entry.insert(ignore_permissions=True)
@@ -266,6 +279,7 @@ def reject_request(name: str, rejection_reason: str, admin_notes: str = None):
     if not rejection_reason:
         frappe.throw("A rejection reason is required.")
     doc = frappe.get_doc("Vera Data Entry Request", name)
+    assert_doc_company(doc)
     if doc.request_status not in ("Submitted", "Under Review"):
         frappe.throw("Only a submitted or under-review request can be rejected.")
     doc.request_status = "Rejected"
@@ -287,6 +301,7 @@ def return_request(name: str, admin_notes: str):
     if not admin_notes:
         frappe.throw("Please say what needs correcting when returning a request.")
     doc = frappe.get_doc("Vera Data Entry Request", name)
+    assert_doc_company(doc)
     if doc.request_status not in ("Submitted", "Under Review"):
         frappe.throw("Only a submitted or under-review request can be returned.")
     doc.request_status = "Returned for Info"
@@ -337,6 +352,7 @@ def get_entries_page():
     require_login()
     entries = frappe.get_all(
         "Vera ERP Entry",
+        filters=scoped({}),
         fields=[
             "name", "entry_type", "entry_date", "party", "amount", "status",
             "source", "description", "created_by_user", "created_via_request",
@@ -390,7 +406,7 @@ def get_requests_page():
     filters = {} if admin else {"requested_by": frappe.session.user}
     requests = frappe.get_all(
         "Vera Data Entry Request",
-        filters=filters,
+        filters=scoped(filters),
         fields=[
             "name", "entry_type", "entry_date", "party", "amount", "description",
             "request_status", "requested_by_name", "submitted_on",

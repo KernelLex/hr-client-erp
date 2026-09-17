@@ -1,7 +1,15 @@
 import frappe
 from frappe.utils import now_datetime, getdate, today
 
+from hr_client.api.utils import (
+    current_company, ALL_COMPANIES, scoped, assert_doc_company,
+)
+
 OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
+
+
+def _emp_company(emp_name):
+    return frappe.db.get_value("Employee", emp_name, "company") or current_company()
 PETROL_RATE_PER_KM = 4.0
 
 
@@ -156,6 +164,7 @@ def get_all_claims():
 
     claims = frappe.get_all(
         "Vera Expense Claim",
+        filters=scoped({}),
         fields=[
             "name", "claim_title", "employee", "employee_name", "employee_email",
             "claim_type", "claim_date", "amount", "purpose", "status",
@@ -218,6 +227,7 @@ def submit_claim(
     claim_title = f"{emp_doc.employee_name} - {claim_type} - {month_year}"
 
     doc = frappe.new_doc("Vera Expense Claim")
+    doc.company = _emp_company(emp_name)
     doc.claim_title = claim_title
     doc.employee = emp_name
     doc.employee_name = emp_doc.employee_name
@@ -303,6 +313,7 @@ def admin_submit_claim(
     month_year = dt.strftime("%b %Y")
 
     doc = frappe.new_doc("Vera Expense Claim")
+    doc.company = _emp_company(emp_doc.name)
     doc.claim_title = f"{emp_doc.employee_name} - {claim_type} - {month_year}"
     doc.employee = emp_doc.name
     doc.employee_name = emp_doc.employee_name
@@ -364,6 +375,7 @@ def approve_claim(claim_id, admin_notes=""):
         doc = frappe.get_doc("Vera Expense Claim", claim_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Claim not found"}
+    assert_doc_company(doc)
 
     doc.status = "Approved"
     doc.admin_notes = admin_notes or ""
@@ -387,6 +399,7 @@ def reject_claim(claim_id, rejection_reason, admin_notes=""):
         doc = frappe.get_doc("Vera Expense Claim", claim_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Claim not found"}
+    assert_doc_company(doc)
 
     doc.status = "Rejected"
     doc.rejection_reason = str(rejection_reason).strip()
@@ -416,12 +429,13 @@ def get_monthly_summary(month=None, year=None):
         to_date = f"{target_year}-{target_month + 1:02d}-01"
 
     if _is_owais():
+        _f = [["claim_date", ">=", from_date], ["claim_date", "<", to_date]]
+        _cc = current_company()
+        if _cc != ALL_COMPANIES:
+            _f.append(["company", "=", _cc])
         claims = frappe.get_all(
             "Vera Expense Claim",
-            filters=[
-                ["claim_date", ">=", from_date],
-                ["claim_date", "<", to_date],
-            ],
+            filters=_f,
             fields=["employee", "employee_name", "claim_type", "amount", "status"],
         )
     else:

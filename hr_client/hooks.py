@@ -63,6 +63,14 @@ for _dt in _TALLY_READONLY_DOCTYPES:
 		"on_trash": "hr_client.api.data_source.guard_tally_write",
 	}
 
+# Multi-company ORM safety net (Phase 2) — every siloed DocType is auto-scoped
+# to the caller's active company for get_all/get_list/get_count. Owner and
+# platform admin are unrestricted. Raw SQL is scoped explicitly via company_sql.
+from hr_client.api.scoping import SILOED_QC as _SILOED_QC, qc_name as _qc_name  # noqa: E402
+permission_query_conditions = {
+	_dt: f"hr_client.api.scoping.{_qc_name(_dt)}" for _dt in _SILOED_QC
+}
+
 # Drive Sync — scheduled tasks
 scheduler_events = {
 	"daily": [
@@ -267,8 +275,16 @@ scheduler_events = {
 # Request Events
 # ----------------
 # Custom TOTP 2FA gate — dormant until site-config `enforce_2fa` is set.
-before_request = ["hr_client.api.twofa.enforce"]
+# company.resolve runs AFTER 2FA so we never resolve an unverified session.
+before_request = [
+	"hr_client.api.twofa.enforce",
+	"hr_client.api.company.resolve",
+]
 # after_request = ["hr_client.utils.after_request"]
+
+# Phase 3 — bind the company chosen on the login screen to the new session
+# (validates it against the user's access; generic failure if not permitted).
+on_session_creation = ["hr_client.api.company.on_login"]
 
 # Job Events
 # ----------

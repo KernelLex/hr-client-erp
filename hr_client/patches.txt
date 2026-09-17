@@ -4,3 +4,5 @@
 
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
+hr_client.patches.phase0_company_dimension
+hr_client.patches.phase1_company_dimension

@@ -34,9 +34,18 @@ def get_status():
     return json.loads(raw)
 
 
+# Company for the in-progress run() — set at the top of run(), used by _upsert so
+# every derived row is tagged and the tally_guid lookup is company-scoped.
+_RUN_CO = None
+
+
 def _upsert(doctype, tally_guid, data):
-    """Insert or update a record identified by tally_guid."""
-    existing = frappe.db.get_value(doctype, {"tally_guid": tally_guid}, "name")
+    """Insert or update a record identified by tally_guid (scoped to _RUN_CO)."""
+    lookup = {"tally_guid": tally_guid}
+    if _RUN_CO:
+        lookup["company"] = _RUN_CO
+        data = {**data, "company": _RUN_CO}
+    existing = frappe.db.get_value(doctype, lookup, "name")
     if existing:
         frappe.db.set_value(doctype, existing, data)
     else:
@@ -47,14 +56,19 @@ def _upsert(doctype, tally_guid, data):
         doc.insert(ignore_permissions=True)
 
 
-def run(masters_path=None, transactions_path=None):
+def run(masters_path=None, transactions_path=None, company="Vera Enterprises"):
     """
     Populate VE Accounts DocTypes from existing VE Tally Voucher + VE Tally Ledger tables.
     masters_path / transactions_path kept as args for API compatibility but are unused —
-    data comes from the already-imported Frappe tables.
+    data comes from the already-imported Frappe tables. Scoped to `company`: reads only
+    that company's Tally rows, tags every derived row with it, wipes only its derived rows.
     """
+    global _RUN_CO
     frappe.flags.in_tally_sync = True  # exempts the sync from ERP read-only guards (Phase 2 §2.2)
     t0 = time.time()
+    _RUN_CO = company
+    _CO = frappe.db.escape(company)
+    _ACO = f" AND company = {_CO} "          # for tabVE Tally Voucher/Ledger reads
     _set_status("running", 5, "Reading VE Tally Voucher table…")
     counts = defaultdict(int)
     today_d = datetime.date.today()
@@ -71,18 +85,18 @@ def run(masters_path=None, transactions_path=None):
             "VE GST Ledger Entry", "VE Cash Flow Entry",
             "VE Stock Movement Summary", "VE Debtor Advance", "VE Creditor Advance",
         ):
-            frappe.db.sql(f"DELETE FROM `tab{_dt}`")
+            frappe.db.sql(f"DELETE FROM `tab{_dt}` WHERE company = {_CO}")
         frappe.db.commit()
 
         # ── 1. Sales Register: Sales vouchers only ────────────────────────────
         # Matches Tally's Sales Register exactly (no PERFORMA, no Credit Notes).
         _set_status("running", 10, "Building Sales Register…")
         sales_vouchers = frappe.db.sql(
-            """SELECT tally_guid, voucher_number, voucher_date, party_name,
+            f"""SELECT tally_guid, voucher_number, voucher_date, party_name,
                       amount, all_ledger_entries, narration
                FROM `tabVE Tally Voucher`
                WHERE voucher_type = 'Sales'
-                 AND is_cancelled=0""",
+                 AND is_cancelled=0{_ACO}""",
             as_dict=True,
         )
 
@@ -125,11 +139,11 @@ def run(masters_path=None, transactions_path=None):
         # Debit Notes (purchase returns) are a separate register in Tally.
         # They are NOT included here, matching Tally's Purchase Register total.
         purchase_vouchers = frappe.db.sql(
-            """SELECT tally_guid, voucher_number, voucher_date, party_name,
+            f"""SELECT tally_guid, voucher_number, voucher_date, party_name,
                       amount, all_ledger_entries, narration, debit_ledger
                FROM `tabVE Tally Voucher`
                WHERE voucher_type = 'Purchase'
-                 AND is_cancelled=0""",
+                 AND is_cancelled=0{_ACO}""",
             as_dict=True,
         )
 
@@ -174,10 +188,10 @@ def run(masters_path=None, transactions_path=None):
 
         # ── 3. GST Ledger from all vouchers ──────────────────────────────────
         all_vouchers = frappe.db.sql(
-            """SELECT tally_guid, voucher_type, voucher_date, all_ledger_entries
+            f"""SELECT tally_guid, voucher_type, voucher_date, all_ledger_entries
                FROM `tabVE Tally Voucher`
                WHERE is_cancelled=0 AND all_ledger_entries IS NOT NULL
-                 AND all_ledger_entries NOT IN ('null','[]','')""",
+                 AND all_ledger_entries NOT IN ('null','[]',''){_ACO}""",
             as_dict=True,
         )
 
@@ -238,11 +252,11 @@ def run(masters_path=None, transactions_path=None):
 
         # ── 4. Cash Flow from Receipt/Payment/Journal/Contra vouchers ────────
         cf_vouchers = frappe.db.sql(
-            """SELECT tally_guid, voucher_type, voucher_date, party_name,
+            f"""SELECT tally_guid, voucher_type, voucher_date, party_name,
                       amount, all_ledger_entries, narration
                FROM `tabVE Tally Voucher`
                WHERE voucher_type IN ('Receipt','Payment','Journal','Contra')
-                 AND is_cancelled=0""",
+                 AND is_cancelled=0{_ACO}""",
             as_dict=True,
         )
 
@@ -289,10 +303,10 @@ def run(masters_path=None, transactions_path=None):
 
         # ── 5. Debtor Advances from Receipt vouchers with "advance" narration ─
         adv_receipts = frappe.db.sql(
-            """SELECT tally_guid, voucher_date, party_name, amount, narration
+            f"""SELECT tally_guid, voucher_date, party_name, amount, narration
                FROM `tabVE Tally Voucher`
                WHERE voucher_type='Receipt' AND is_cancelled=0
-                 AND LOWER(narration) LIKE '%advance%'""",
+                 AND LOWER(narration) LIKE '%advance%'{_ACO}""",
             as_dict=True,
         )
         for v in adv_receipts:
@@ -308,10 +322,10 @@ def run(masters_path=None, transactions_path=None):
 
         # ── 6. Creditor Advances from Payment vouchers with "advance" narration
         adv_payments = frappe.db.sql(
-            """SELECT tally_guid, voucher_date, party_name, amount, narration
+            f"""SELECT tally_guid, voucher_date, party_name, amount, narration
                FROM `tabVE Tally Voucher`
                WHERE voucher_type='Payment' AND is_cancelled=0
-                 AND LOWER(narration) LIKE '%advance%'""",
+                 AND LOWER(narration) LIKE '%advance%'{_ACO}""",
             as_dict=True,
         )
         for v in adv_payments:
@@ -330,30 +344,31 @@ def run(masters_path=None, transactions_path=None):
         # Truncate both ledger tables before rebuild — Python hash() is session-random
         # so _upsert's tally_guid lookup never finds existing rows and would insert
         # duplicates on every run. Full delete + re-insert is safe (fully derived data).
-        frappe.db.sql("DELETE FROM `tabVE Debtor Ledger`")
-        frappe.db.sql("DELETE FROM `tabVE Creditor Ledger`")
+        frappe.db.sql(f"DELETE FROM `tabVE Debtor Ledger` WHERE company = {_CO}")
+        frappe.db.sql(f"DELETE FROM `tabVE Creditor Ledger` WHERE company = {_CO}")
         frappe.db.commit()
 
         # ── 7. Debtor Ledger from VE Tally Ledger closing balances ───────────
         # Sign convention: closing_balance < 0 = Dr = money owed TO Vera (receivable)
         debtor_rows = frappe.db.sql(
-            """SELECT ledger_name, closing_balance
+            f"""SELECT ledger_name, closing_balance
                FROM `tabVE Tally Ledger`
-               WHERE is_debtors=1 AND closing_balance < 0""",
+               WHERE is_debtors=1 AND closing_balance < 0{_ACO}""",
             as_dict=True,
         )
         for r in debtor_rows:
             lname = r.ledger_name or ""
             bal   = abs(flt(r.closing_balance))
             last_sale = frappe.db.sql(
-                """SELECT MAX(voucher_date) as ld FROM `tabVE Tally Voucher`
-                   WHERE voucher_type='Sales' AND party_name=%s""",
+                f"""SELECT MAX(voucher_date) as ld FROM `tabVE Tally Voucher`
+                   WHERE voucher_type='Sales' AND party_name=%s{_ACO}""",
                 (lname,), as_dict=True,
             )
             inv_date = str(last_sale[0].ld)[:10] if last_sale and last_sale[0].ld else today_d.isoformat()
             aging = (today_d - datetime.date.fromisoformat(inv_date)).days
             status = "Overdue" if aging > 60 else "Outstanding"
             doc = frappe.new_doc("VE Debtor Ledger")
+            doc.company      = company
             doc.client_name  = lname[:140]
             doc.due_amount   = bal
             doc.invoice_date = inv_date
@@ -364,23 +379,24 @@ def run(masters_path=None, transactions_path=None):
         # ── 8. Creditor Ledger from VE Tally Ledger closing balances ─────────
         # Sign convention: closing_balance > 0 = Cr = Vera owes vendors (payable)
         creditor_rows = frappe.db.sql(
-            """SELECT ledger_name, closing_balance
+            f"""SELECT ledger_name, closing_balance
                FROM `tabVE Tally Ledger`
-               WHERE is_creditors=1 AND closing_balance > 0""",
+               WHERE is_creditors=1 AND closing_balance > 0{_ACO}""",
             as_dict=True,
         )
         for r in creditor_rows:
             lname = r.ledger_name or ""
             bal   = flt(r.closing_balance)
             last_bill = frappe.db.sql(
-                """SELECT MAX(voucher_date) as ld FROM `tabVE Tally Voucher`
-                   WHERE voucher_type='Purchase' AND party_name=%s""",
+                f"""SELECT MAX(voucher_date) as ld FROM `tabVE Tally Voucher`
+                   WHERE voucher_type='Purchase' AND party_name=%s{_ACO}""",
                 (lname,), as_dict=True,
             )
             bill_date = str(last_bill[0].ld)[:10] if last_bill and last_bill[0].ld else today_d.isoformat()
             aging = (today_d - datetime.date.fromisoformat(bill_date)).days
             status = "Overdue" if aging > 60 else "Outstanding"
             doc = frappe.new_doc("VE Creditor Ledger")
+            doc.company      = company
             doc.vendor_name  = lname[:140]
             doc.due_amount   = bal
             doc.invoice_date = bill_date
@@ -398,12 +414,12 @@ def run(masters_path=None, transactions_path=None):
         stock_agg = defaultdict(lambda: {"sold_value": 0.0, "sold_qty": 0.0, "purch_qty": 0.0, "last_period": ""})
 
         inv_vouchers = frappe.db.sql(
-            """SELECT voucher_type, voucher_date, inventory_entries
+            f"""SELECT voucher_type, voucher_date, inventory_entries
                FROM `tabVE Tally Voucher`
                WHERE voucher_type IN ('Sales','Delivery Note','Purchase','Credit Note','Debit Note')
                  AND is_cancelled=0
                  AND inventory_entries IS NOT NULL
-                 AND inventory_entries NOT IN ('null','[]','')""",
+                 AND inventory_entries NOT IN ('null','[]',''){_ACO}""",
             as_dict=True,
         )
 
@@ -435,7 +451,7 @@ def run(masters_path=None, transactions_path=None):
 
         # Opening quantities from the stock master (seed for on-hand).
         opening_qty_map = {r[0]: flt(r[1]) for r in frappe.db.sql(
-            "SELECT item_name, opening_qty FROM `tabVE Tally Stock Item`")}
+            f"SELECT item_name, opening_qty FROM `tabVE Tally Stock Item` WHERE company = {_CO}")}
 
         # Classify by sold_value percentile (top 20% = Fast, etc.)
         today_period = today_d.strftime("%Y-%m")
@@ -455,7 +471,7 @@ def run(masters_path=None, transactions_path=None):
             period = agg["last_period"] or today_period
             cat = "Fast" if sv >= p80 else "Mid" if sv >= p50 else "Slow" if sv >= p20 else "Dead"
 
-            _upsert("VE Stock Movement Summary", f"SM-{iname[:50]}", {
+            _upsert("VE Stock Movement Summary", f"SM-{company}-{iname[:50]}", {
                 "item_code":         iname[:140],
                 "item_description":  iname[:140],
                 "period":            period,
@@ -487,6 +503,8 @@ def run(masters_path=None, transactions_path=None):
         frappe.log_error(frappe.get_traceback(), "accounts_tally_import.run")
         _set_status("error", 0, "Import failed — see Error Log")
         raise
+    finally:
+        _RUN_CO = None
 
 
 # ── Reconciliation ───────────────────────────────────────────────────────────
@@ -511,12 +529,15 @@ def _rec_compare(src_cnt, src_val, drv_cnt, drv_val, val_threshold=0.01, count_m
     }
 
 
-def reconcile():
+def reconcile(company="Vera Enterprises"):
     """
-    Compare VE Tally Voucher source vs Dashboard DocType derived data.
-    Call after run() to verify the import produced consistent numbers.
+    Compare VE Tally Voucher source vs Dashboard DocType derived data, within one
+    company. Call after run() to verify the import produced consistent numbers.
     Returns a dict keyed by section with status "ok"/"warn"/"error".
     """
+    _CO = frappe.db.escape(company)
+    _A = f" AND company = {_CO} "     # append to an existing WHERE
+    _W = f" WHERE company = {_CO} "   # sole WHERE for derived tables
 
     def _q(sql, params=()):
         rows = frappe.db.sql(sql, params, as_dict=True)
@@ -526,71 +547,64 @@ def reconcile():
     # ── Sales Register ───────────────────────────────────────────────────────
     src_sc, src_sv = _q(
         "SELECT COUNT(*) cnt, COALESCE(SUM(amount),0) val FROM `tabVE Tally Voucher` "
-        "WHERE voucher_type='Sales' AND is_cancelled=0"
+        f"WHERE voucher_type='Sales' AND is_cancelled=0{_A}"
     )
     drv_sc, drv_sv = _q(
-        "SELECT COUNT(*) cnt, COALESCE(SUM(total),0) val FROM `tabVE Sales Register Entry`"
+        f"SELECT COUNT(*) cnt, COALESCE(SUM(total),0) val FROM `tabVE Sales Register Entry`{_W}"
     )
 
     # ── Purchase Register ────────────────────────────────────────────────────
     src_pc, src_pv = _q(
         "SELECT COUNT(*) cnt, COALESCE(SUM(amount),0) val FROM `tabVE Tally Voucher` "
-        "WHERE voucher_type='Purchase' AND is_cancelled=0"
+        f"WHERE voucher_type='Purchase' AND is_cancelled=0{_A}"
     )
     drv_pc, drv_pv = _q(
-        "SELECT COUNT(*) cnt, COALESCE(SUM(total),0) val FROM `tabVE Purchase Register Entry`"
+        f"SELECT COUNT(*) cnt, COALESCE(SUM(total),0) val FROM `tabVE Purchase Register Entry`{_W}"
     )
 
     # ── GST Output ───────────────────────────────────────────────────────────
-    # Source: sum of gst_amount on Sales Register entries (CGST+SGST+IGST per invoice)
-    # Derived: VE GST Ledger Entry (one row per GST component) → count intentionally differs
     src_goc, src_gov = _q(
-        "SELECT COUNT(*) cnt, COALESCE(SUM(gst_amount),0) val FROM `tabVE Sales Register Entry`"
+        f"SELECT COUNT(*) cnt, COALESCE(SUM(gst_amount),0) val FROM `tabVE Sales Register Entry`{_W}"
     )
     drv_goc, drv_gov = _q(
         "SELECT COUNT(*) cnt, COALESCE(SUM(igst+cgst+sgst),0) val "
-        "FROM `tabVE GST Ledger Entry` WHERE gst_type='Output'"
+        f"FROM `tabVE GST Ledger Entry` WHERE gst_type='Output'{_A}"
     )
 
     # ── GST Input ────────────────────────────────────────────────────────────
     src_gic, src_giv = _q(
-        "SELECT COUNT(*) cnt, COALESCE(SUM(itc_amount),0) val FROM `tabVE Purchase Register Entry`"
+        f"SELECT COUNT(*) cnt, COALESCE(SUM(itc_amount),0) val FROM `tabVE Purchase Register Entry`{_W}"
     )
     drv_gic, drv_giv = _q(
         "SELECT COUNT(*) cnt, COALESCE(SUM(igst+cgst+sgst),0) val "
-        "FROM `tabVE GST Ledger Entry` WHERE gst_type='Input'"
+        f"FROM `tabVE GST Ledger Entry` WHERE gst_type='Input'{_A}"
     )
 
     # ── Debtor Ledger ────────────────────────────────────────────────────────
-    # Source: VE Tally Ledger Dr-balance debtors (live); Derived: VE Debtor Ledger (imported)
     src_dc, src_dv = _q(
         "SELECT COUNT(*) cnt, COALESCE(SUM(ABS(closing_balance)),0) val "
-        "FROM `tabVE Tally Ledger` WHERE is_debtors=1 AND closing_balance < 0"
+        f"FROM `tabVE Tally Ledger` WHERE is_debtors=1 AND closing_balance < 0{_A}"
     )
     drv_dc, drv_dv = _q(
-        "SELECT COUNT(*) cnt, COALESCE(SUM(due_amount),0) val FROM `tabVE Debtor Ledger`"
+        f"SELECT COUNT(*) cnt, COALESCE(SUM(due_amount),0) val FROM `tabVE Debtor Ledger`{_W}"
     )
 
     # ── Creditor Ledger ──────────────────────────────────────────────────────
     src_cc, src_cv = _q(
         "SELECT COUNT(*) cnt, COALESCE(SUM(closing_balance),0) val "
-        "FROM `tabVE Tally Ledger` WHERE is_creditors=1 AND closing_balance > 0"
+        f"FROM `tabVE Tally Ledger` WHERE is_creditors=1 AND closing_balance > 0{_A}"
     )
     drv_cc, drv_cv = _q(
-        "SELECT COUNT(*) cnt, COALESCE(SUM(due_amount),0) val FROM `tabVE Creditor Ledger`"
+        f"SELECT COUNT(*) cnt, COALESCE(SUM(due_amount),0) val FROM `tabVE Creditor Ledger`{_W}"
     )
 
     # ── Cash Flow ────────────────────────────────────────────────────────────
     src_cfc, src_cfv = _q(
         "SELECT COUNT(*) cnt, COALESCE(SUM(amount),0) val FROM `tabVE Tally Voucher` "
-        "WHERE voucher_type IN ('Receipt','Payment','Journal','Contra') AND is_cancelled=0"
+        f"WHERE voucher_type IN ('Receipt','Payment','Journal','Contra') AND is_cancelled=0{_A}"
     )
-    # Compare GROSS movement (inflow+outflow), not net: each voucher maps to one
-    # cash-flow entry with either inflow OR outflow = abs(amount), so gross derived
-    # == source SUM(amount). Comparing net (inflow-outflow) against gross source is
-    # apples-to-oranges and always mismatches once there are any payments.
     drv_cfc, drv_cfv = _q(
-        "SELECT COUNT(*) cnt, COALESCE(SUM(inflow+outflow),0) val FROM `tabVE Cash Flow Entry`"
+        f"SELECT COUNT(*) cnt, COALESCE(SUM(inflow+outflow),0) val FROM `tabVE Cash Flow Entry`{_W}"
     )
 
     # ── Stock Movement ───────────────────────────────────────────────────────
@@ -599,9 +613,9 @@ def reconcile():
         "FROM `tabVE Tally Voucher` v "
         "JOIN JSON_TABLE(v.inventory_entries,'$[*]' COLUMNS(value JSON PATH '$')) ie "
         "WHERE v.voucher_type IN ('Sales','Delivery Note') AND v.is_cancelled=0"
-        "  AND v.inventory_entries NOT IN ('null','[]','') AND v.inventory_entries IS NOT NULL"
+        f"  AND v.inventory_entries NOT IN ('null','[]','') AND v.inventory_entries IS NOT NULL AND v.company = {_CO}"
     )
-    drv_stc, _ = _q("SELECT COUNT(*) cnt, 0 val FROM `tabVE Stock Movement Summary`")
+    drv_stc, _ = _q(f"SELECT COUNT(*) cnt, 0 val FROM `tabVE Stock Movement Summary`{_W}")
 
     result = {
         "sales_register":   _rec_compare(src_sc, src_sv, drv_sc, drv_sv),

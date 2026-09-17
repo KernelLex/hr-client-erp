@@ -3,6 +3,8 @@ import json
 from frappe.utils import now_datetime
 from datetime import date, timedelta
 
+from hr_client.api.utils import current_company, assert_doc_company, scoped
+
 OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
 STAGE_ORDER = ["Lead", "Discussion", "Quotation", "Order", "Delivery", "Success"]
 
@@ -30,6 +32,7 @@ def get_all_leads():
     frappe.has_permission("Vera CRM Lead", ptype="read", throw=True)
     leads = frappe.get_all(
         "Vera CRM Lead",
+        filters=scoped({}),
         fields=[
             "name", "lead_title", "company_name", "contact_person", "phone",
             "email", "service_interest", "source", "notes", "status",
@@ -58,6 +61,7 @@ def get_lead(lead_id):
         lead = frappe.get_doc("Vera CRM Lead", lead_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Lead not found"}
+    assert_doc_company(lead)
 
     data = lead.as_dict()
     data["assigned_to_name"] = _user_full_name(lead.assigned_to) if lead.assigned_to else ""
@@ -98,6 +102,7 @@ def create_lead(lead_title, company_name, contact_person, phone, email,
                 service_interest, source=None, notes=None):
     frappe.has_permission("Vera CRM Lead", ptype="create", throw=True)
     doc = frappe.new_doc("Vera CRM Lead")
+    doc.company = current_company()
     doc.lead_title = lead_title
     doc.company_name = company_name
     doc.contact_person = contact_person
@@ -124,6 +129,7 @@ def update_lead(lead_id, data):
         doc = frappe.get_doc("Vera CRM Lead", lead_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Lead not found"}
+    assert_doc_company(doc)
 
     if not _is_owais() and doc.assigned_to != frappe.session.user:
         return {"success": False, "error": "Not authorized to update this lead"}
@@ -145,6 +151,7 @@ def request_next_stage(lead_id, request_notes=""):
         lead = frappe.get_doc("Vera CRM Lead", lead_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Lead not found"}
+    assert_doc_company(lead)
 
     if lead.status in ("Failed", "Success"):
         return {"success": False, "error": "Cannot advance a completed lead"}
@@ -162,6 +169,7 @@ def request_next_stage(lead_id, request_notes=""):
         return {"success": False, "error": "An approval request is already pending for this lead"}
 
     approval = frappe.new_doc("Vera CRM Approval Request")
+    approval.company = lead.get("company") or current_company()
     approval.lead = lead_id
     approval.lead_title = lead.lead_title
     approval.company_name = lead.company_name
@@ -194,6 +202,7 @@ def approve_stage(approval_id, admin_notes=""):
         approval = frappe.get_doc("Vera CRM Approval Request", approval_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Approval request not found"}
+    assert_doc_company(approval)
 
     if approval.approval_status != "Pending":
         return {"success": False, "error": "This request has already been reviewed"}
@@ -223,6 +232,7 @@ def reject_stage(approval_id, rejection_reason, admin_notes=""):
         approval = frappe.get_doc("Vera CRM Approval Request", approval_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Approval request not found"}
+    assert_doc_company(approval)
 
     if approval.approval_status != "Pending":
         return {"success": False, "error": "This request has already been reviewed"}
@@ -250,6 +260,7 @@ def mark_failed(lead_id, reason):
         lead = frappe.get_doc("Vera CRM Lead", lead_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Lead not found"}
+    assert_doc_company(lead)
 
     lead.status = "Failed"
     lead.rejection_reason = reason
@@ -266,7 +277,7 @@ def get_pending_approvals():
 
     approvals = frappe.get_all(
         "Vera CRM Approval Request",
-        filters={"approval_status": "Pending"},
+        filters=scoped({"approval_status": "Pending"}),
         fields=[
             "name", "lead", "lead_title", "company_name", "contact_person",
             "phone", "email", "service_interest", "current_stage", "requested_stage",
@@ -298,6 +309,7 @@ def create_quotation(lead_id, items, terms="", validity_days=30, tax_percent=18)
         lead = frappe.get_doc("Vera CRM Lead", lead_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Lead not found"}
+    assert_doc_company(lead)
 
     subtotal = sum(float(i.get("quantity", 0)) * float(i.get("unit_price", 0)) for i in items)
     tax_pct = float(tax_percent)
@@ -308,6 +320,7 @@ def create_quotation(lead_id, items, terms="", validity_days=30, tax_percent=18)
         frappe.delete_doc("Vera CRM Quotation", existing[0]["name"], ignore_permissions=True)
 
     q = frappe.new_doc("Vera CRM Quotation")
+    q.company = lead.get("company") or current_company()
     q.lead = lead_id
     q.quotation_number = f"Q-{lead_id}-{frappe.utils.now_datetime().strftime('%Y%m%d')}"
     q.subtotal = subtotal
@@ -405,7 +418,7 @@ def get_quotation(lead_id):
     frappe.has_permission("Vera CRM Lead", ptype="read", throw=True)
     quotations = frappe.get_all(
         "Vera CRM Quotation",
-        filters={"lead": lead_id},
+        filters=scoped({"lead": lead_id}),
         fields=["name"],
         limit=1,
         order_by="creation desc",

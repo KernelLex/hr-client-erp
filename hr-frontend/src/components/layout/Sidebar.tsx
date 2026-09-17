@@ -6,6 +6,7 @@ import { useUnreadCounts } from "@/pages/chat/useChat"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
 import { usePermissions } from "@/context/PermissionsContext"
+import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
 
 
 function getInitials(name: string) {
@@ -199,6 +200,7 @@ function readLS(key: string, defaultVal: boolean): boolean {
 export function Sidebar({ open = true, onClose }: SidebarProps) {
   const { user, logout } = useAuth()
   const { can } = usePermissions()
+  const { activeCompany, availableCompanies, accentOf } = useCompany()
   const location = useLocation()
   const { data: unreadData } = useUnreadCounts()
   const totalUnread = unreadData?.total_unread ?? 0
@@ -321,6 +323,13 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const showOrgHub = can("org_hub")
   const showTodo = can("todo")
 
+  // Brand reflects the active company so each workspace looks distinct.
+  const isAllCompanies = activeCompany === ALL_COMPANIES
+  const activeBrand = availableCompanies.find((c) => c.name === activeCompany)
+  const brandName = isAllCompanies ? "All Companies" : activeBrand?.label || "Vera ERP"
+  const brandAbbr = isAllCompanies ? "◆" : activeBrand?.abbr || "V"
+  const brandAccent = accentOf(activeCompany)
+
   const sidebarBody = (
     <div
       className="flex flex-col h-full overflow-hidden"
@@ -330,13 +339,13 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
       <div className="px-4 pt-5 pb-3 shrink-0">
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 font-heading text-lg"
-            style={{ background: "linear-gradient(150deg, var(--gold-light), var(--gold))", color: "var(--brand-primary)", border: "0.5px solid rgba(255,255,255,0.25)", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}
+            className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 font-heading text-lg text-white"
+            style={{ background: `linear-gradient(150deg, ${brandAccent}, ${brandAccent}cc)`, border: "0.5px solid rgba(255,255,255,0.25)", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}
           >
-            V
+            {brandAbbr}
           </div>
           <div className="leading-tight">
-            <div className="font-heading text-[16px] text-[var(--cream,#f5efe4)] whitespace-nowrap" style={{ color: "#f5efe4" }}>Vera Enterprises</div>
+            <div className="font-heading text-[16px] text-[var(--cream,#f5efe4)] whitespace-nowrap" style={{ color: "#f5efe4" }}>{brandName}</div>
             <div className="text-[9px] tracking-[1.5px] mt-0.5" style={{ color: "#8a9c8a" }}>ERP WORKSPACE</div>
           </div>
         </div>

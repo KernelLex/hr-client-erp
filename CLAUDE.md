@@ -1,6 +1,12 @@
 # ClientERP — Master Context
 _Last updated: 2026-08-09 (session: AI company brain + qwen2.5 model upgrade)_
 
+> 🚧 **ACTIVE MULTI-COMPANY BUILD (2026-09-15) — resume from `HANDOFF_MULTICOMPANY.md`.**
+> Converting this single-company ERP into a 3-company platform (VE / Schones Leben / Hagan Modular,
+> one site/DB, company-scoped). Phases 0 & 1 done + live-verified; Phase 2 (endpoint scoping) in
+> progress (`finance_core.py` done). **Not committed to git** (owner tests live first). If you are a
+> fresh Claude picking this up, READ `HANDOFF_MULTICOMPANY.md` FIRST, then continue.
+
 > **Live infra (authoritative):** server `192.168.1.16` (static), Frappe site **`vera.local`**, bench
 > gunicorn on **port 8000**, frontend dist served by nginx from `/var/www/hr-frontend/`, public domain
 > `veraenterprises.in` via Cloudflare Tunnel. Older references below to `hrms.localhost`/port 8001 are

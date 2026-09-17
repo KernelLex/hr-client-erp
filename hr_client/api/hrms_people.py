@@ -7,18 +7,23 @@
 # ---------------------------------------------------------------------------
 import frappe
 
-from hr_client.api.utils import require_admin, handle_api_error
+from hr_client.api.utils import require_admin, handle_api_error, current_company, ALL_COMPANIES
 
 
 @frappe.whitelist()
 @handle_api_error
 def get_employee_master():
-    """Full active-employee roster across all group companies."""
+    """Active-employee roster for the active company (all companies for the
+    group owner viewing __ALL__)."""
     require_admin()
 
+    _co = current_company()
+    _f = {"status": ["!=", "Left"]}
+    if _co != ALL_COMPANIES:
+        _f["company"] = _co
     emps = frappe.get_all(
         "Employee",
-        filters={"status": ["!=", "Left"]},
+        filters=_f,
         fields=[
             "name",
             "employee_name",

@@ -1,18 +1,26 @@
 import { useEffect, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/context/AuthContext"
+import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
 import {
   getTwoFAStatus, beginEnroll, confirmEnroll, verifyTwoFA, type EnrollStart,
 } from "@/api/twofa"
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const { activeCompany, availableCompanies } = useCompany()
+  const brand = availableCompanies.find((c) => c.name === activeCompany)
+  const abbr = activeCompany === ALL_COMPANIES ? "◆" : brand?.abbr || "V"
+  const label = activeCompany === ALL_COMPANIES ? "All Companies" : brand?.label || "Vera ERP"
   return (
     <div className="flex items-center justify-center h-screen px-4" style={{ background: "var(--bg-sidebar, #1e3a2f)" }}>
       <div className="w-full bg-white rounded-2xl shadow-xl p-7" style={{ maxWidth: "440px", border: "0.5px solid var(--border, #e0d9cb)" }}>
         <div className="flex items-center gap-2.5 mb-5">
-          <div className="w-9 h-9 rounded-[10px] flex items-center justify-center font-heading text-lg"
-            style={{ background: "linear-gradient(150deg, var(--gold-light,#d4b675), var(--gold,#c8a45c))", color: "var(--brand-primary,#1e3a2f)" }}>V</div>
-          <div className="font-heading text-[17px] text-gray-900">Two-Factor Authentication</div>
+          <div className="w-9 h-9 rounded-[10px] flex items-center justify-center font-heading text-lg text-white"
+            style={{ background: "linear-gradient(150deg, var(--gold-light,#d4b675), var(--gold,#c8a45c))" }}>{abbr}</div>
+          <div className="leading-tight">
+            <div className="font-heading text-[16px] text-gray-900">{label}</div>
+            <div className="text-[11px] text-gray-500">Two-Factor Authentication</div>
+          </div>
         </div>
         {children}
       </div>

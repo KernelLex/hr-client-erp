@@ -19,22 +19,44 @@ import re
 import frappe
 from frappe.utils import flt
 
+from hr_client.api.utils import ALL_COMPANIES, current_company, require_company
+
 # ── account classification (by ledger name, for the funds breakdown) ──────────
 _OD_RE = re.compile(r"\bOD\b|overdraft|\bO/?D A", re.I)
 _VIRTUAL_RE = re.compile(r"virtual", re.I)
 
 
-def _ledgers(where):
+# ── multi-company scoping helpers (Phase 2) ───────────────────────────────────
+# Every read here is company-scoped. `company` defaults to the request's active
+# company, so existing callers keep working and are scoped automatically; the
+# group console (Phase 8) passes company="__ALL__" to aggregate across companies.
+def _co(company=None):
+    return require_company(company) if company else current_company()
+
+
+def _co_clause(company, params, col="company"):
+    """Append the company filter to a positional-param SQL list (empty for __ALL__)."""
+    if company == ALL_COMPANIES:
+        return ""
+    params.append(company)
+    return f" AND `{col}` = %s "
+
+
+def _ledgers(where, company=None):
     # Full precision — no ROUND(). The ERP must display the exact figure.
+    company = _co(company)
+    params = []
+    clause = _co_clause(company, params)
     return frappe.db.sql(
         f"""SELECT ledger_name, closing_balance AS bal, is_bank, is_cash
-            FROM `tabVE Tally Ledger` WHERE {where}""",
+            FROM `tabVE Tally Ledger` WHERE {where}{clause}""",
+        params,
         as_dict=True,
     )
 
 
 # ── Available Funds — from VE Tally Ledger (is_bank / is_cash) ─────────────────
-def funds_summary():
+def funds_summary(company=None):
     """Bank / cash / virtual / OD balances from the Tally ledger.
 
     Manual `VE Bank/Virtual/OD Account Balance` rows, if any exist, override the
@@ -42,7 +64,8 @@ def funds_summary():
     tables are empty, so everything derives from the ledger — which matches the
     client's Tally to the rupee (OD −97,11,213 · Virtual −3,27,882).
     """
-    rows = _ledgers("is_bank = 1 OR is_cash = 1")
+    company = _co(company)
+    rows = _ledgers("is_bank = 1 OR is_cash = 1", company)
 
     banks, virtuals, ods = [], [], []
     for r in rows:
@@ -72,8 +95,10 @@ def funds_summary():
             )
 
     # Manual overrides (empty today, but honoured if an admin adds them).
+    man_filters = {} if company == ALL_COMPANIES else {"company": company}
     man_banks = frappe.get_all(
         "VE Bank Account Balance",
+        filters=man_filters,
         fields=["bank_name", "account_no", "account_type", "balance", "last_synced"],
     )
     if man_banks:
@@ -97,6 +122,58 @@ def funds_summary():
         "virtuals": virtuals,
         "od_accounts": ods,
         "source": "VE Tally Ledger",
+    }
+
+
+# ── Group console (Phase 8) — per-company + consolidated summary ──────────────
+def group_summary(start=None, end=None):
+    """Consolidated view for the group console (group owner only). Returns each
+    accessible company's sales/purchase/funds figures plus a `group` total and a
+    naive elimination of tagged inter-company vouchers.
+
+    Requires the __ALL__ scope (group owner); require_company enforces it.
+    Elimination here removes inter-company sales/purchase *value* so group
+    revenue isn't double-counted; unmatched differences remain visible via
+    intercompany.reconciliation_report (never silently dropped)."""
+    require_company(ALL_COMPANIES)   # group owner only
+    from hr_client.api.utils import allowed_companies as _allowed
+    companies = [c for c in _allowed() if c != ALL_COMPANIES]
+
+    per = {}
+    group = {"sales": 0.0, "purchase": 0.0, "funds": 0.0}
+    for c in companies:
+        a = accounts_summary(start, end, company=c)
+        f = funds_summary(company=c)
+        row = {
+            "sales": a["sales"]["total"],
+            "purchase": a["purchase"]["total"],
+            "funds": f["totals"]["grand_total"],
+        }
+        per[c] = row
+        for k in group:
+            group[k] += row[k]
+
+    # Elimination: inter-company sales/purchase value tagged on vouchers.
+    elim = frappe.db.sql(
+        """SELECT voucher_type, COALESCE(SUM(amount),0) v FROM `tabVE Tally Voucher`
+           WHERE is_intercompany=1 GROUP BY voucher_type""",
+        as_dict=True,
+    )
+    elim_sales = sum(flt(r.v) for r in elim if r.voucher_type == "Sales")
+    elim_purch = sum(flt(r.v) for r in elim if r.voucher_type == "Purchase")
+
+    return {
+        "companies": companies,
+        "per_company": per,
+        "group_raw": group,
+        "eliminations": {"sales": round(elim_sales, 2), "purchase": round(elim_purch, 2)},
+        "group_consolidated": {
+            "sales": round(group["sales"] - elim_sales, 2),
+            "purchase": round(group["purchase"] - elim_purch, 2),
+            "funds": round(group["funds"], 2),
+        },
+        "note": "Consolidated = Σ companies − matched inter-company pairs. Unmatched "
+                "inter-company differences are shown in the reconciliation report.",
     }
 
 
@@ -130,15 +207,19 @@ def period_bounds(year=None, month=None, fy=None):
     return None, None
 
 
-def period_options():
+def period_options(company=None):
     """The Year → Month tree that actually has vouchers — from VE Tally Voucher,
     the single source. Drives the cascading dropdowns so no empty period is shown
     and every Accounting tab shares one definition of 'what periods exist'."""
+    company = _co(company)
+    params = []
+    clause = _co_clause(company, params)
     rows = frappe.db.sql(
-        """SELECT YEAR(voucher_date) y, MONTH(voucher_date) m, COUNT(*) cnt
+        f"""SELECT YEAR(voucher_date) y, MONTH(voucher_date) m, COUNT(*) cnt
            FROM `tabVE Tally Voucher`
-           WHERE COALESCE(is_cancelled,0)=0 AND voucher_date IS NOT NULL
+           WHERE COALESCE(is_cancelled,0)=0 AND voucher_date IS NOT NULL{clause}
            GROUP BY y, m ORDER BY y DESC, m ASC""",
+        params,
         as_dict=True,
     )
     years = {}
@@ -156,19 +237,21 @@ _TXN_TYPE = {
 }
 
 
-def txn_summary(kind, start=None, end=None):
+def txn_summary(kind, start=None, end=None, company=None):
     """Count + value for a voucher kind, optionally within [start, end].
 
     Count matches Tally's voucher numbering (cancelled vouchers keep their number
     but carry zero value, so they are counted but contribute nothing to value).
     Value is full precision — no rounding — so the ERP shows the exact figure.
     """
+    company = _co(company)
     vtype = _TXN_TYPE[kind]
     where = "voucher_type = %s"
     params = [vtype]
     if start and end:
         where += " AND voucher_date BETWEEN %s AND %s"
         params += [start, end]
+    where += _co_clause(company, params)
     row = frappe.db.sql(
         f"SELECT COUNT(*) c, SUM(amount) v FROM `tabVE Tally Voucher` WHERE {where}",
         params,
@@ -178,14 +261,16 @@ def txn_summary(kind, start=None, end=None):
 
 
 # ── Monthly series + period accounts summary (single source for dashboards) ───
-def monthly_series(kind, start=None, end=None):
+def monthly_series(kind, start=None, end=None, company=None):
     """Month-wise value for a voucher kind — voucher source, full precision."""
+    company = _co(company)
     vtype = _TXN_TYPE[kind]
     where = "voucher_type = %s"
     params = [vtype]
     if start and end:
         where += " AND voucher_date BETWEEN %s AND %s"
         params += [start, end]
+    where += _co_clause(company, params)
     rows = frappe.db.sql(
         f"""SELECT DATE_FORMAT(voucher_date, '%%Y-%%m') AS month, SUM(amount) AS amount
             FROM `tabVE Tally Voucher` WHERE {where}
@@ -195,7 +280,7 @@ def monthly_series(kind, start=None, end=None):
     return [{"month": r.month, "amount": flt(r.amount)} for r in rows]
 
 
-def accounts_summary(start=None, end=None):
+def accounts_summary(start=None, end=None, company=None):
     """Canonical Sales / Purchase summary for the accounting dashboard.
 
     Everything derives from `VE Tally Voucher` (+ `gst_summary` for the tax split)
@@ -203,11 +288,12 @@ def accounts_summary(start=None, end=None):
     that reads this. `net_*` subtracts returns (Credit Notes from sales, Debit
     Notes from purchases). No rounding — exact figures.
     """
-    sales = txn_summary("sales", start, end)
-    purch = txn_summary("purchase", start, end)
-    cn = txn_summary("credit_note", start, end)
-    dn = txn_summary("debit_note", start, end)
-    gst = gst_summary(start, end)
+    company = _co(company)
+    sales = txn_summary("sales", start, end, company)
+    purch = txn_summary("purchase", start, end, company)
+    cn = txn_summary("credit_note", start, end, company)
+    dn = txn_summary("debit_note", start, end, company)
+    gst = gst_summary(start, end, company)
 
     sales_gst = gst["output"]["total"]
     purch_gst = gst["input"]["total"]
@@ -230,8 +316,8 @@ def accounts_summary(start=None, end=None):
             "returns_count": dn["count"],
             "net_total": purch["value"] - dn["value"],
         },
-        "monthly_sales": monthly_series("sales", start, end),
-        "monthly_purchase": monthly_series("purchase", start, end),
+        "monthly_sales": monthly_series("sales", start, end, company),
+        "monthly_purchase": monthly_series("purchase", start, end, company),
         "source": "VE Tally Voucher",
     }
 
@@ -245,7 +331,7 @@ def _is_gst_ledger(name):
     return any(k in low for k in ("gst", "cgst", "sgst", "igst"))
 
 
-def gst_summary(start=None, end=None):
+def gst_summary(start=None, end=None, company=None):
     """Correct Output / Input GST straight from each voucher's ledger breakdown,
     NET of sales/purchase returns.
 
@@ -263,11 +349,13 @@ def gst_summary(start=None, end=None):
 
     Full precision — no rounding.
     """
+    company = _co(company)
     where = "all_ledger_entries LIKE '%%GST%%'"
     params = []
     if start and end:
         where += " AND voucher_date BETWEEN %s AND %s"
         params = [start, end]
+    where += _co_clause(company, params)
     rows = frappe.db.sql(
         f"SELECT voucher_type vt, all_ledger_entries ale FROM `tabVE Tally Voucher` WHERE {where}",
         params,
@@ -320,7 +408,7 @@ def gst_summary(start=None, end=None):
 
 
 # ── Cash Flow — direct method from actual cash/bank movements ─────────────────
-def cash_flow_statement(start=None, end=None):
+def cash_flow_statement(start=None, end=None, company=None):
     """Real cash flow (direct method) from the single source (VE Tally Voucher).
 
     Cash & cash-equivalents = cash-in-hand + bank accounts, EXCLUDING the OD
@@ -336,8 +424,13 @@ def cash_flow_statement(start=None, end=None):
     opening cash balance, which the current export omits; the figure is otherwise
     definitionally correct and becomes rupee-exact once a full export is imported.
     """
+    company = _co(company)
+    _lparams = []
+    _lclause = _co_clause(company, _lparams)
     led = frappe.db.sql(
-        "SELECT ledger_name, root_group, parent_group, is_cash, is_bank FROM `tabVE Tally Ledger`",
+        f"SELECT ledger_name, root_group, parent_group, is_cash, is_bank "
+        f"FROM `tabVE Tally Ledger`{(' WHERE 1=1' + _lclause) if _lclause else ''}",
+        _lparams,
         as_dict=True,
     )
     is_cash_equiv = {}
@@ -361,6 +454,7 @@ def cash_flow_statement(start=None, end=None):
     if start and end:
         where += " AND voucher_date BETWEEN %s AND %s"
         params = [start, end]
+    where += _co_clause(company, params)
     rows = frappe.db.sql(
         f"SELECT voucher_date vd, all_ledger_entries ale FROM `tabVE Tally Voucher` WHERE {where}",
         params, as_dict=True,
@@ -437,14 +531,19 @@ def cash_flow_statement(start=None, end=None):
 
 
 # ── Reconciliation guard ──────────────────────────────────────────────────────
-def reconcile():
+def reconcile(company=None):
     """Compare the same figures across the voucher / register / ledger sources.
 
     Returns a per-metric report and logs any material drift (>1%) to the Error
     Log so a bad Tally import can never silently reintroduce the discrepancies.
+    All comparisons are within a single company.
     """
+    company = _co(company)
     q = frappe.db.sql
     report = []
+
+    def cc(params):
+        return _co_clause(company, params)
 
     def add(metric, a, b, la, lb):
         base = max(abs(flt(a)), abs(flt(b)), 1)
@@ -455,26 +554,31 @@ def reconcile():
         )
 
     for kind, vtype in _TXN_TYPE.items():
-        vv = flt(q("SELECT ROUND(SUM(amount)) FROM `tabVE Tally Voucher` WHERE voucher_type=%s", vtype)[0][0])
+        p = [vtype]
+        vv = flt(q(f"SELECT ROUND(SUM(amount)) FROM `tabVE Tally Voucher` WHERE voucher_type=%s{cc(p)}", p)[0][0])
         if kind == "sales":
-            rr = flt(q("SELECT ROUND(SUM(total)) FROM `tabVE Sales Register Entry`")[0][0])
+            p2 = []
+            rr = flt(q(f"SELECT ROUND(SUM(total)) FROM `tabVE Sales Register Entry` WHERE 1=1{cc(p2)}", p2)[0][0])
             add("sales_value", vv, rr, "voucher", "register")
         elif kind == "purchase":
-            rr = flt(q("SELECT ROUND(SUM(total)) FROM `tabVE Purchase Register Entry`")[0][0])
+            p2 = []
+            rr = flt(q(f"SELECT ROUND(SUM(total)) FROM `tabVE Purchase Register Entry` WHERE 1=1{cc(p2)}", p2)[0][0])
             add("purchase_value", vv, rr, "voucher", "register")
 
     # sales/purchase COUNT drift
+    ps = ["Sales"]; psr = []
     add(
         "sales_count",
-        q("SELECT COUNT(*) FROM `tabVE Tally Voucher` WHERE voucher_type='Sales'")[0][0],
-        q("SELECT COUNT(*) FROM `tabVE Sales Register Entry`")[0][0],
+        q(f"SELECT COUNT(*) FROM `tabVE Tally Voucher` WHERE voucher_type=%s{cc(ps)}", ps)[0][0],
+        q(f"SELECT COUNT(*) FROM `tabVE Sales Register Entry` WHERE 1=1{cc(psr)}", psr)[0][0],
         "voucher",
         "register",
     )
+    pp = ["Purchase"]; ppr = []
     add(
         "purchase_count",
-        q("SELECT COUNT(*) FROM `tabVE Tally Voucher` WHERE voucher_type='Purchase'")[0][0],
-        q("SELECT COUNT(*) FROM `tabVE Purchase Register Entry`")[0][0],
+        q(f"SELECT COUNT(*) FROM `tabVE Tally Voucher` WHERE voucher_type=%s{cc(pp)}", pp)[0][0],
+        q(f"SELECT COUNT(*) FROM `tabVE Purchase Register Entry` WHERE 1=1{cc(ppr)}", ppr)[0][0],
         "voucher",
         "register",
     )

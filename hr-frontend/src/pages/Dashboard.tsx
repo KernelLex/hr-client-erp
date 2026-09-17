@@ -12,6 +12,8 @@ import {
 import { useTallySummary, formatDate as tallyFmtDate } from "@/api/tally"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
+import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
+import { GroupConsole } from "@/pages/GroupConsole"
 import { api, apiUrl } from "@/lib/api"
 import { getAIHealth, type AIHealth } from "@/api/ai"
 import { PageHeader, StatCard } from "@/components/dashboard"
@@ -277,6 +279,7 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
 export function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { activeCompany } = useCompany()
   const isAdmin = user && ADMIN_USERS.has(user.name)
   const { data, isLoading } = useDashboardStats()
   const { data: pwCheck } = useDefaultPasswordCheck()
@@ -344,6 +347,18 @@ export function Dashboard() {
       onClick: () => navigate("/recruitment"),
     },
   ]
+
+  // Group console — Owais viewing "All companies". Placed after all hooks to
+  // respect the Rules of Hooks.
+  if (activeCompany === ALL_COMPANIES) {
+    return (
+      <div className="min-h-full" style={{ background: "var(--bg-app)" }}>
+        <div className="px-6 md:px-7 py-6 max-w-5xl">
+          <GroupConsole />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-full" style={{ background: "var(--bg-app)" }}>

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { useNavigate } from "react-router-dom"
 import { ADMIN_USERS } from "@/lib/constants"
 import { User, loginUser, logoutUser, getCurrentUser, storeUser, clearUser } from "@/api/auth"
+import { setActiveCompanyCache } from "@/lib/api"
 
 // A user an admin is previewing the interface "as" (Option-1 impersonation:
 // UI/permissions only — the backend session stays the real admin).
@@ -23,7 +24,7 @@ interface AuthContextValue {
   isImpersonating: boolean
   viewAs: ViewAsUser | null
   setViewAs: (target: ViewAsUser | null) => void
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, company?: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -59,8 +60,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch { /* ignore */ }
   }
 
-  async function login(email: string, password: string) {
-    const u = await loginUser(email, password)
+  async function login(email: string, password: string, company?: string) {
+    // A fresh login must never inherit the previous session's company. Set the
+    // cache BEFORE the request so the very first authed call (getMyCompanies)
+    // carries the correct company — or is cleared so the server-resolved default
+    // wins. Without this, a stale cached company param overrides the pick and the
+    // user lands in the wrong company's books.
+    try {
+      setActiveCompanyCache(company ?? null)
+    } catch {
+      /* ignore */
+    }
+    const u = await loginUser(email, password, company)
     storeUser(u)
     setRealUser(u)
     navigate("/")
@@ -71,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await logoutUser()
     } finally {
       clearUser()
+      // Clear the active-company cache so it can never bleed into the next login.
+      try { setActiveCompanyCache(null) } catch { /* ignore */ }
       try { sessionStorage.removeItem(VIEW_AS_KEY) } catch { /* ignore */ }
       setViewAsState(null)
       setRealUser(null)

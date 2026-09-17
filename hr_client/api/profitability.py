@@ -16,7 +16,21 @@ import json
 import frappe
 from frappe.utils import flt, cint, today
 
-from hr_client.api.utils import require_admin, handle_api_error
+from hr_client.api.utils import (
+    ALL_COMPANIES, current_company, handle_api_error, require_admin, require_company,
+)
+
+
+# ── multi-company scoping helpers (Phase 2) ───────────────────────────────────
+def _cc(company=None):
+    return require_company(company) if company else current_company()
+
+
+def _cco(company, alias=""):
+    if company == ALL_COMPANIES:
+        return ""
+    col = f"{alias}.company" if alias else "company"
+    return f" AND {col} = {frappe.db.escape(company)} "
 
 
 # ── Period helpers ─────────────────────────────────────────────────────────────
@@ -55,12 +69,13 @@ def _pct(curr, prev):
 
 # ── Shared: stock value snapshot ───────────────────────────────────────────────
 
-def _stock_value_snapshot():
+def _stock_value_snapshot(company=None):
     """
     Returns (total_value, neg_value) using VE Stock Movement Summary × VE Tally Stock Item.
     This is a current-state snapshot — Tally doesn't expose per-period stock levels.
     """
-    rows = frappe.db.sql("""
+    company = _cc(company)
+    rows = frappe.db.sql(f"""
         SELECT
             COALESCE(SUM(GREATEST(s.stock_on_hand, 0) * COALESCE(i.standard_rate, 0)), 0) AS total_value,
             COALESCE(SUM(CASE WHEN s.stock_on_hand < 0
@@ -69,7 +84,8 @@ def _stock_value_snapshot():
             COUNT(CASE WHEN s.stock_on_hand != 0 THEN 1 END) AS active_skus,
             COUNT(CASE WHEN s.stock_on_hand < 0 THEN 1 END) AS neg_sku_count
         FROM `tabVE Stock Movement Summary` s
-        LEFT JOIN `tabVE Tally Stock Item` i ON i.item_name = s.item_code
+        LEFT JOIN `tabVE Tally Stock Item` i ON i.item_name = s.item_code AND i.company = s.company
+        {('WHERE 1=1' + _cco(company, 's')) if _cco(company, 's') else ''}
     """, as_dict=True)
     r = rows[0] if rows else {}
     return (flt(r.get("total_value")), flt(r.get("neg_value")),
@@ -78,13 +94,14 @@ def _stock_value_snapshot():
 
 # ── Shared: voucher totals ─────────────────────────────────────────────────────
 
-def _voucher_total(vtypes: tuple, from_date: str, to_date: str) -> float:
+def _voucher_total(vtypes: tuple, from_date: str, to_date: str, company=None) -> float:
     if not vtypes: return 0.0
+    company = _cc(company)
     rows = frappe.db.sql(
-        """SELECT COALESCE(SUM(amount), 0) AS total
+        f"""SELECT COALESCE(SUM(amount), 0) AS total
            FROM `tabVE Tally Voucher`
            WHERE is_cancelled = 0 AND voucher_type IN %s
-           AND voucher_date BETWEEN %s AND %s""",
+           AND voucher_date BETWEEN %s AND %s{_cco(company)}""",
         (vtypes, from_date, to_date), as_dict=True,
     )
     return flt(rows[0].total) if rows else 0.0
@@ -92,7 +109,7 @@ def _voucher_total(vtypes: tuple, from_date: str, to_date: str) -> float:
 
 # ── Shared: opex computation ───────────────────────────────────────────────────
 
-def _compute_opex(from_date: str, to_date: str):
+def _compute_opex(from_date: str, to_date: str, company=None):
     """
     Aggregate opex from three sources:
     1. Tally Ledger expense groups (YTD balance, best available without line-level Tally data)
@@ -100,11 +117,12 @@ def _compute_opex(from_date: str, to_date: str):
     3. VE Transport Records in period (period-specific)
     Returns (total_opex, breakdown_dict)
     """
+    company = _cc(company)
     breakdown = {}
 
     # Source 1 — Tally expense ledger balances (YTD, not period-filtered)
     # Dr balance (negative) on expense accounts = expense incurred
-    exp_rows = frappe.db.sql("""
+    exp_rows = frappe.db.sql(f"""
         SELECT ledger_name, parent_group, closing_balance
         FROM `tabVE Tally Ledger`
         WHERE (
@@ -114,7 +132,7 @@ def _compute_opex(from_date: str, to_date: str):
             OR parent_group LIKE '%Rent%'
             OR parent_group LIKE '%Admin%'
         )
-        AND closing_balance < 0
+        AND closing_balance < 0{_cco(company)}
         ORDER BY closing_balance ASC
     """, as_dict=True)
 
@@ -133,9 +151,9 @@ def _compute_opex(from_date: str, to_date: str):
     claim_total = 0.0
     try:
         claim_rows = frappe.db.sql(
-            """SELECT claim_type, COALESCE(SUM(amount), 0) AS total
+            f"""SELECT claim_type, COALESCE(SUM(amount), 0) AS total
                FROM `tabVera Expense Claim`
-               WHERE status = 'Approved' AND claim_date BETWEEN %s AND %s
+               WHERE status = 'Approved' AND claim_date BETWEEN %s AND %s{_cco(company)}
                GROUP BY claim_type""",
             (from_date, to_date), as_dict=True,
         )
@@ -152,9 +170,9 @@ def _compute_opex(from_date: str, to_date: str):
     transport_total = 0.0
     try:
         tr_rows = frappe.db.sql(
-            """SELECT source, COALESCE(SUM(amount), 0) AS total
+            f"""SELECT source, COALESCE(SUM(amount), 0) AS total
                FROM `tabVE Transport Record`
-               WHERE entry_date BETWEEN %s AND %s
+               WHERE entry_date BETWEEN %s AND %s{_cco(company)}
                GROUP BY source""",
             (from_date, to_date), as_dict=True,
         )
@@ -174,30 +192,31 @@ def _compute_opex(from_date: str, to_date: str):
 
 # ── Public utility: get_profitability_summary ──────────────────────────────────
 
-def get_profitability_summary(from_date: str, to_date: str):
+def get_profitability_summary(from_date: str, to_date: str, company=None):
     """
     Shared computation used by Cards 1 and 4.
     COGS = Purchases in period (proxy — Tally doesn't expose period-specific stock levels).
     For full COGS accounting, closing_stock value is shown separately.
     """
-    gross_sales = _voucher_total(("Sales",), from_date, to_date)
-    credit_notes = _voucher_total(("Credit Note",), from_date, to_date)
+    company = _cc(company)
+    gross_sales = _voucher_total(("Sales",), from_date, to_date, company)
+    credit_notes = _voucher_total(("Credit Note",), from_date, to_date, company)
     net_sales = gross_sales - credit_notes
 
-    purchases = _voucher_total(("Purchase",), from_date, to_date)
-    debit_notes = _voucher_total(("Debit Note",), from_date, to_date)
+    purchases = _voucher_total(("Purchase",), from_date, to_date, company)
+    debit_notes = _voucher_total(("Debit Note",), from_date, to_date, company)
     net_purchases = purchases - debit_notes
 
-    closing_stock, neg_stock_value, active_skus, _ = _stock_value_snapshot()
+    closing_stock, neg_stock_value, active_skus, _ = _stock_value_snapshot(company)
     cogs = net_purchases   # simplified: stock change approximated as 0 for short periods
     gross_profit = net_sales - cogs
 
-    opex_period, opex_ytd, opex_breakdown = _compute_opex(from_date, to_date)
+    opex_period, opex_ytd, opex_breakdown = _compute_opex(from_date, to_date, company)
     net_profit = gross_profit - opex_period
 
     prev_from, prev_to = _prior_period(from_date, to_date)
-    prev_net_sales = _voucher_total(("Sales",), prev_from, prev_to) - _voucher_total(("Credit Note",), prev_from, prev_to)
-    prev_purchases = _voucher_total(("Purchase",), prev_from, prev_to) - _voucher_total(("Debit Note",), prev_from, prev_to)
+    prev_net_sales = _voucher_total(("Sales",), prev_from, prev_to, company) - _voucher_total(("Credit Note",), prev_from, prev_to, company)
+    prev_purchases = _voucher_total(("Purchase",), prev_from, prev_to, company) - _voucher_total(("Debit Note",), prev_from, prev_to, company)
     prev_gross_profit = prev_net_sales - prev_purchases
 
     return {
@@ -249,6 +268,7 @@ def get_card_ageing():
     Drill-down lists included per bucket.
     """
     require_admin()
+    company = _cc()
     today_str = today()
 
     def _invoice_ageing(doctype, date_col, amount_col, party_col):
@@ -256,7 +276,7 @@ def get_card_ageing():
             f"""SELECT {party_col} AS party, {amount_col} AS amount, {date_col} AS inv_date,
                        DATEDIFF(%s, {date_col}) AS days
                 FROM `tab{doctype}`
-                WHERE status NOT IN ('Cleared')""",
+                WHERE status NOT IN ('Cleared'){_cco(company)}""",
             (today_str,), as_dict=True,
         )
         buckets = {"b0_20": [], "b21_45": [], "b46_90": [], "b90plus": []}
@@ -280,7 +300,7 @@ def get_card_ageing():
         rows = frappe.db.sql(
             f"""SELECT {party_col} AS party, {amount_col} AS amount, {date_col} AS adv_date,
                        TIMESTAMPDIFF(MONTH, {date_col}, %s) AS months
-                FROM `tab{doctype}`""",
+                FROM `tab{doctype}` WHERE 1=1{_cco(company)}""",
             (today_str,), as_dict=True,
         )
         buckets = {"b0_6m": [], "b7_12m": [], "b13_24m": [], "b24plus": []}
@@ -319,35 +339,38 @@ def get_card_ageing():
 @handle_api_error
 def get_card_inventory():
     require_admin()
+    company = _cc()
 
-    total_val, neg_val, active_skus, neg_sku_count = _stock_value_snapshot()
+    total_val, neg_val, active_skus, neg_sku_count = _stock_value_snapshot(company)
 
     # Groups / brands breakdown
-    group_rows = frappe.db.sql("""
+    group_rows = frappe.db.sql(f"""
         SELECT i.stock_group AS grp,
                COUNT(DISTINCT s.item_code) AS sku_count,
                COALESCE(SUM(GREATEST(s.stock_on_hand, 0) * COALESCE(i.standard_rate, 0)), 0) AS value
         FROM `tabVE Stock Movement Summary` s
-        LEFT JOIN `tabVE Tally Stock Item` i ON i.item_name = s.item_code
-        WHERE i.stock_group IS NOT NULL AND i.stock_group != ''
+        LEFT JOIN `tabVE Tally Stock Item` i ON i.item_name = s.item_code AND i.company = s.company
+        WHERE i.stock_group IS NOT NULL AND i.stock_group != ''{_cco(company, 's')}
         GROUP BY i.stock_group
         ORDER BY value DESC
         LIMIT 30
     """, as_dict=True)
 
     # Category / movement type breakdown
-    cat_rows = frappe.db.sql("""
+    cat_rows = frappe.db.sql(f"""
         SELECT s.movement_category AS category,
                COUNT(*) AS sku_count,
                COALESCE(SUM(GREATEST(s.stock_on_hand, 0) * COALESCE(i.standard_rate, 0)), 0) AS value
         FROM `tabVE Stock Movement Summary` s
-        LEFT JOIN `tabVE Tally Stock Item` i ON i.item_name = s.item_code
+        LEFT JOIN `tabVE Tally Stock Item` i ON i.item_name = s.item_code AND i.company = s.company
+        WHERE 1=1{_cco(company, 's')}
         GROUP BY s.movement_category
         ORDER BY value DESC
     """, as_dict=True)
 
-    total_skus = frappe.db.count("VE Stock Movement Summary")
-    reorder_count = frappe.db.count("VE Stock Movement Summary", {"movement_category": "Reorder"})
+    _icf = {} if company == ALL_COMPANIES else {"company": company}
+    total_skus = frappe.db.count("VE Stock Movement Summary", _icf)
+    reorder_count = frappe.db.count("VE Stock Movement Summary", {**_icf, "movement_category": "Reorder"})
 
     return {
         "total_stock_value": round(total_val, 2),
@@ -392,17 +415,18 @@ def get_card_opex(period="mtd", custom_start=None, custom_end=None):
 @handle_api_error
 def get_card_transport(period="mtd", custom_start=None, custom_end=None):
     require_admin()
+    company = _cc()
     from_date, to_date = _period_bounds(period, custom_start, custom_end)
 
     rows = frappe.db.sql(
-        """SELECT source,
+        f"""SELECT source,
                   COALESCE(SUM(amount), 0) AS total,
                   COALESCE(SUM(labour_day_charges), 0) AS day_charges,
                   COALESCE(SUM(labour_transport), 0) AS labour_transport,
                   COALESCE(SUM(labour_food), 0) AS labour_food,
                   COUNT(*) AS entry_count
            FROM `tabVE Transport Record`
-           WHERE entry_date BETWEEN %s AND %s
+           WHERE entry_date BETWEEN %s AND %s{_cco(company)}
            GROUP BY source""",
         (from_date, to_date), as_dict=True,
     )
@@ -421,10 +445,10 @@ def get_card_transport(period="mtd", custom_start=None, custom_end=None):
     total = sum(v["total"] for v in by_source.values())
 
     recent = frappe.db.sql(
-        """SELECT name, source, entry_date, amount, description,
+        f"""SELECT name, source, entry_date, amount, description,
                   labour_day_charges, labour_transport, labour_food, notes
            FROM `tabVE Transport Record`
-           WHERE entry_date BETWEEN %s AND %s
+           WHERE entry_date BETWEEN %s AND %s{_cco(company)}
            ORDER BY entry_date DESC LIMIT 50""",
         (from_date, to_date), as_dict=True,
     )
@@ -450,6 +474,7 @@ def create_transport_record(
         frappe.throw("Invalid source. Must be Porter, Rapido, Other, or Labour.")
 
     doc = frappe.new_doc("VE Transport Record")
+    doc.company = _cc()
     doc.source = source
     doc.entry_date = entry_date
     doc.description = description or ""
@@ -479,6 +504,7 @@ def upload_transport_csv():
     For Labour rows: additionally labour_day_charges, labour_transport, labour_food
     """
     require_admin()
+    company = _cc()
     import io
     import csv
 
@@ -526,6 +552,7 @@ def upload_transport_csv():
                 continue
 
             doc = frappe.new_doc("VE Transport Record")
+            doc.company = company
             doc.source = src
             doc.entry_date = entry_date
             doc.description = row.get("description", "")[:140]

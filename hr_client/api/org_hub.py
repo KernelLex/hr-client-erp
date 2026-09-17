@@ -3,9 +3,17 @@ Org Hub API — whitelisted endpoints for the Organisation Hub React page.
 Includes get_* endpoints for admin and employee views, plus CRUD for admin.
 """
 import frappe
-from hr_client.api.utils import handle_api_error
+from hr_client.api.utils import handle_api_error, current_company, require_company, ALL_COMPANIES
 
 _ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
+
+
+def _scope_co(company=None):
+    """Resolve the effective company for an Org Hub read/write. A passed company
+    is validated against access; unset defaults to the active company; returns
+    None for the group-owner __ALL__ view (meaning 'no company filter')."""
+    c = require_company(company) if company else current_company()
+    return None if c == ALL_COMPANIES else c
 
 _ALLOWED_DOCTYPES = {
     "VE Job Description", "VE KRA", "VE KPI", "VE SOP", "VE Policy",
@@ -25,8 +33,9 @@ def _require_admin():
 @handle_api_error
 def get_job_descriptions(company=None, department=None, designation=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     if department:
         filters["department"] = department
     if designation:
@@ -45,8 +54,9 @@ def get_job_descriptions(company=None, department=None, designation=None):
 @handle_api_error
 def get_kras(company=None, department=None, designation=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     if department:
         filters["department"] = department
     if designation:
@@ -65,8 +75,9 @@ def get_kras(company=None, department=None, designation=None):
 @handle_api_error
 def get_kpis(company=None, department=None, designation=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     if department:
         filters["department"] = department
     if designation:
@@ -85,8 +96,9 @@ def get_kpis(company=None, department=None, designation=None):
 @handle_api_error
 def get_sops(company=None, department=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     if department:
         filters["department"] = department
     return frappe.get_all(
@@ -103,8 +115,9 @@ def get_sops(company=None, department=None):
 @handle_api_error
 def get_policies(company=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     return frappe.get_all(
         "VE Policy",
         filters=filters,
@@ -118,8 +131,9 @@ def get_policies(company=None):
 @handle_api_error
 def get_handbook(company=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     return frappe.get_all(
         "VE Employee Handbook",
         filters=filters,
@@ -133,8 +147,9 @@ def get_handbook(company=None):
 @handle_api_error
 def get_operations_manual(company=None, department=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     if department:
         filters["department"] = department
     return frappe.get_all(
@@ -150,8 +165,9 @@ def get_operations_manual(company=None, department=None):
 @handle_api_error
 def get_processes(company=None, department=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     if department:
         filters["department"] = department
     return frappe.get_all(
@@ -168,8 +184,9 @@ def get_processes(company=None, department=None):
 @handle_api_error
 def get_forms_checklists(company=None, department=None):
     filters = {}
-    if company:
-        filters["company"] = company
+    _c = _scope_co(company)
+    if _c:
+        filters["company"] = _c
     if department:
         filters["department"] = department
     return frappe.get_all(
@@ -198,7 +215,8 @@ def get_org_hub_summary():
         "processes": "VE Department Process",
         "forms_checklists": "VE Forms Checklist",
     }
-    companies = ["Vera Enterprises", "Schones Leben", "Hagan Modular"]
+    from hr_client.api.utils import allowed_companies
+    companies = allowed_companies()
     for co in companies:
         result[co] = {}
         for key, dt in doctypes.items():
@@ -224,6 +242,8 @@ def create_org_doc(doctype, fields_json):
     for k, v in fields.items():
         if hasattr(doc, k):
             setattr(doc, k, v)
+    # Company: validate a supplied one against access; else stamp the active company.
+    doc.company = require_company(fields["company"]) if fields.get("company") else current_company()
     doc.flags.ignore_mandatory = True
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
@@ -239,6 +259,8 @@ def update_org_doc(doctype, name, fields_json):
         frappe.throw("Invalid doctype")
     fields = json.loads(fields_json) if isinstance(fields_json, str) else fields_json
     doc = frappe.get_doc(doctype, name)
+    if doc.get("company"):
+        require_company(doc.company)     # can only edit docs in an accessible company
     for k, v in fields.items():
         if hasattr(doc, k):
             setattr(doc, k, v)
@@ -253,6 +275,9 @@ def delete_org_doc(doctype, name):
     _require_admin()
     if doctype not in _ALLOWED_DOCTYPES:
         frappe.throw("Invalid doctype")
+    _dc = frappe.db.get_value(doctype, name, "company")
+    if _dc:
+        require_company(_dc)             # can only delete docs in an accessible company
     frappe.delete_doc(doctype, name, ignore_permissions=True, force=True)
     frappe.db.commit()
     return {"success": True}
@@ -317,6 +342,7 @@ def get_my_org_docs():
 def get_all_for_company(company):
     """Admin: get all Org Hub docs for a specific company across all departments."""
     _require_admin()
+    require_company(company)             # only companies the caller may access
     result = {}
     for dt in _ALLOWED_DOCTYPES:
         meta = frappe.get_meta(dt)

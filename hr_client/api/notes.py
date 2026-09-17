@@ -1,7 +1,13 @@
 import frappe
 from frappe.utils import now_datetime
 
+from hr_client.api.utils import current_company, ALL_COMPANIES, scoped
+
 _ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
+
+
+def _emp_company(emp_name):
+    return frappe.db.get_value("Employee", emp_name, "company") or current_company()
 
 
 def _require_admin():
@@ -54,6 +60,7 @@ def add_note(employee_email, note_content, tag):
         return {"success": False, "error": f"No active employee found for {employee_email}"}
 
     doc = frappe.new_doc("Vera Employee Note")
+    doc.company = _emp_company(emp_name)
     doc.employee = emp_name
     doc.note_content = str(note_content).strip()
     doc.tag = tag
@@ -87,6 +94,9 @@ def update_note(note_id, note_content, tag):
         doc = frappe.get_doc("Vera Employee Note", note_id)
     except frappe.DoesNotExistError:
         return {"success": False, "error": "Note not found"}
+    _cc = current_company()
+    if _cc != ALL_COMPANIES and doc.get("company") and doc.company != _cc:
+        return {"success": False, "error": "Not permitted for this company"}
 
     doc.note_content = str(note_content).strip()
     doc.tag = tag
@@ -100,6 +110,11 @@ def update_note(note_id, note_content, tag):
 def delete_note(note_id):
     _require_admin()
 
+    _cc = current_company()
+    if _cc != ALL_COMPANIES:
+        _nc = frappe.db.get_value("Vera Employee Note", note_id, "company")
+        if _nc and _nc != _cc:
+            return {"success": False, "error": "Not permitted for this company"}
     try:
         frappe.delete_doc("Vera Employee Note", note_id, ignore_permissions=True)
         frappe.db.commit()
@@ -117,6 +132,7 @@ def get_all_notes():
 
     notes = frappe.get_all(
         "Vera Employee Note",
+        filters=scoped({}),
         fields=["name", "employee", "employee_name", "note_content", "tag", "created_by_user", "created_on"],
         order_by="created_on desc",
         limit_page_length=300,
@@ -170,6 +186,7 @@ def create_note(employee, note_content, tag):
         frappe.throw("Unknown employee")
 
     doc = frappe.new_doc("Vera Employee Note")
+    doc.company = _emp_company(employee)
     doc.employee = employee
     doc.note_content = str(note_content).strip()
     doc.tag = tag
@@ -184,9 +201,13 @@ def create_note(employee, note_content, tag):
 def get_employee_options():
     """All non-left employees as {value: id, label: name} for note/shift pickers."""
     _require_admin()
+    _f = {"status": ["!=", "Left"]}
+    _cc = current_company()
+    if _cc != ALL_COMPANIES:
+        _f["company"] = _cc
     rows = frappe.get_all(
         "Employee",
-        filters={"status": ["!=", "Left"]},
+        filters=_f,
         fields=["name", "employee_name", "company"],
         order_by="employee_name asc",
     )

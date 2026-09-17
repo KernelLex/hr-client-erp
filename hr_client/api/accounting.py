@@ -12,7 +12,27 @@ from collections import defaultdict
 import frappe
 from frappe.utils import flt, cint
 
-from hr_client.api.utils import handle_api_error, require_admin
+from hr_client.api.utils import (
+    ALL_COMPANIES, current_company, handle_api_error, require_admin, require_company,
+)
+
+
+# ── multi-company scoping helpers (Phase 2) ───────────────────────────────────
+def _cc(company=None):
+    return require_company(company) if company else current_company()
+
+
+def _cco(company, col="company"):
+    if company == ALL_COMPANIES:
+        return ""
+    return f" AND {col} = {frappe.db.escape(company)} "
+
+
+def _cfilters(company, base=None):
+    f = dict(base or {})
+    if company != ALL_COMPANIES:
+        f["company"] = company
+    return f
 
 
 # ── Sign convention helper ──────────────────────────────────────────────────
@@ -40,13 +60,16 @@ def get_tally_chart_of_accounts():
     {name, account_name, parent_account, root_type, is_group, balance, children[]}.
     """
     require_admin()
+    company = _cc()
 
     groups = frappe.db.get_all(
         "VE Tally Group",
+        filters=_cfilters(company),
         fields=["group_name", "parent_group", "root_group", "is_primary"],
     )
     ledgers = frappe.db.get_all(
         "VE Tally Ledger",
+        filters=_cfilters(company),
         fields=["ledger_name", "mailing_name", "parent_group", "root_group", "closing_balance"],
     )
 
@@ -120,6 +143,7 @@ def _fy_bounds(fy):
 def _register_list(doctype, date_col, party_col, no_col, extra_cols, fy, search, page, page_size, sort, sort_map,
                    year=None, month=None):
     from hr_client.api import finance_core
+    company = _cc()
     where = ["1=1"]
     values = []
     start, end = finance_core.period_bounds(year=year, month=month, fy=fy)
@@ -130,7 +154,7 @@ def _register_list(doctype, date_col, party_col, no_col, extra_cols, fy, search,
         s = f"%{str(search).strip()}%"
         where.append(f"({party_col} LIKE %s OR {no_col} LIKE %s)")
         values += [s, s]
-    where_sql = " AND ".join(where)
+    where_sql = " AND ".join(where) + _cco(company)
 
     page = cint(page) or 1
     # Cap raised so the UI can pull a whole year (or all years) in one request and
@@ -201,6 +225,7 @@ def get_register_summary(kind="sales", fy="all", year=None, month=None, search=N
         doctype, date_col, party_col, no_col, gst_col = (
             "VE Sales Register Entry", "invoice_date", "customer", "invoice_no", "gst_amount")
 
+    company = _cc()
     where = ["1=1"]
     values = []
     start, end = finance_core.period_bounds(year=year, month=month, fy=fy)
@@ -211,7 +236,7 @@ def get_register_summary(kind="sales", fy="all", year=None, month=None, search=N
         s = f"%{str(search).strip()}%"
         where.append(f"({party_col} LIKE %s OR {no_col} LIKE %s)")
         values += [s, s]
-    where_sql = " AND ".join(where)
+    where_sql = " AND ".join(where) + _cco(company)
     p = tuple(values)
 
     agg = frappe.db.sql(
@@ -262,6 +287,7 @@ def search_ledgers(search=None, scope=None, limit=30):
     scope: None (all), 'bank_cash' (is_bank=1 OR is_cash=1), 'fixed_assets'
     (root_group='Asset' under the Fixed Assets group)."""
     require_admin()
+    company = _cc()
     where = ["1=1"]
     values = []
     if search and str(search).strip():
@@ -272,6 +298,8 @@ def search_ledgers(search=None, scope=None, limit=30):
     elif scope == "fixed_assets":
         where.append("root_group='Asset' AND parent_group LIKE %s")
         values.append("%Fixed Assets%")
+    if company != ALL_COMPANIES:
+        where.append(f"company = {frappe.db.escape(company)}")
 
     # When no search query, sort by balance magnitude so the most active
     # accounts appear first in the picker dropdown.
@@ -310,18 +338,20 @@ def get_profit_and_loss(from_date=None, to_date=None):
     """Period P&L — built from actual voucher ledger-entry movement in range
     (not static closing_balance), so it's period-aware like the rest of the app."""
     require_admin()
+    company = _cc()
     if not from_date or not to_date:
         frappe.throw("from_date and to_date are required")
 
     rg_map = {
         r.ledger_name: (r.root_group, r.parent_group)
-        for r in frappe.db.get_all("VE Tally Ledger", fields=["ledger_name", "root_group", "parent_group"])
+        for r in frappe.db.get_all("VE Tally Ledger", filters=_cfilters(company),
+                                   fields=["ledger_name", "root_group", "parent_group"])
     }
 
     vouchers = frappe.db.sql(
-        """SELECT all_ledger_entries FROM `tabVE Tally Voucher`
+        f"""SELECT all_ledger_entries FROM `tabVE Tally Voucher`
            WHERE is_cancelled=0 AND voucher_date BETWEEN %s AND %s
-             AND all_ledger_entries IS NOT NULL AND all_ledger_entries NOT IN ('null','[]','')""",
+             AND all_ledger_entries IS NOT NULL AND all_ledger_entries NOT IN ('null','[]',''){_cco(company)}""",
         (from_date, to_date), as_dict=True,
     )
 
@@ -373,11 +403,12 @@ def get_balance_sheet():
     (e.g. a debtor in credit becomes a customer advance).
     """
     require_admin()
+    company = _cc()
 
     rows = frappe.db.sql(
-        """SELECT ledger_name, parent_group, root_group, closing_balance,
+        f"""SELECT ledger_name, parent_group, root_group, closing_balance,
                   is_debtors, is_creditors, is_bank, is_cash, is_gst, is_tds
-           FROM `tabVE Tally Ledger` WHERE closing_balance <> 0""",
+           FROM `tabVE Tally Ledger` WHERE closing_balance <> 0{_cco(company)}""",
         as_dict=True,
     )
 
@@ -441,6 +472,7 @@ def get_balance_sheet():
 @handle_api_error
 def get_depreciation_entries(fy="all", page=1, page_size=100000):
     require_admin()
+    company = _cc()
     where = [
         "is_cancelled = 0", "voucher_type = 'Journal'",
         "(debit_ledger LIKE %s OR credit_ledger LIKE %s OR all_ledger_entries LIKE %s)",
@@ -455,7 +487,7 @@ def get_depreciation_entries(fy="all", page=1, page_size=100000):
         except (ValueError, IndexError):
             pass
 
-    where_sql = " AND ".join(where)
+    where_sql = " AND ".join(where) + _cco(company)
     page = cint(page) or 1
     page_size = max(10, min(100000, cint(page_size) or 50))
 
@@ -479,10 +511,12 @@ def resolve_voucher_by_guid(guid):
     'SR-<guid>' / 'PR-<guid>' (accounts_tally_import.py's _upsert key). Strip the
     prefix, find the source VE Tally Voucher, and return its full detail."""
     require_admin()
+    company = _cc()
     if not guid:
         frappe.throw("guid required")
     original_guid = guid[3:] if guid[:3] in ("SR-", "PR-") else guid
-    voucher_name = frappe.db.get_value("VE Tally Voucher", {"tally_guid": original_guid}, "name")
+    voucher_name = frappe.db.get_value(
+        "VE Tally Voucher", _cfilters(company, {"tally_guid": original_guid}), "name")
     if not voucher_name:
         frappe.throw("Source voucher not found", frappe.DoesNotExistError)
     from hr_client.api import operations

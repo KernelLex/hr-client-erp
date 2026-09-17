@@ -8,7 +8,28 @@ import json
 import frappe
 from frappe.utils import flt, cint, today
 
-from hr_client.api.utils import require_admin, handle_api_error, COMPANY_NAME
+from hr_client.api.utils import (
+    ALL_COMPANIES, COMPANY_NAME, current_company, handle_api_error, require_admin, require_company,
+)
+
+
+# ── multi-company scoping helpers (Phase 2) ───────────────────────────────────
+def _cc(company=None):
+    return require_company(company) if company else current_company()
+
+
+def _cco(company, alias=""):
+    if company == ALL_COMPANIES:
+        return ""
+    col = f"{alias}.company" if alias else "company"
+    return f" AND {col} = {frappe.db.escape(company)} "
+
+
+def _cfilters(company, base=None):
+    f = dict(base or {})
+    if company != ALL_COMPANIES:
+        f["company"] = company
+    return f
 
 
 # ── Period helpers ────────────────────────────────────────────────────────────
@@ -160,7 +181,8 @@ def get_gst_summary(period="ytd", custom_start=None, custom_end=None):
         "input": g["input"],
         "net": g["net"],
         "next_due_date": due.isoformat(),
-        "gstr2b_mismatches": frappe.db.count("VE GST Ledger Entry", {"gstr2b_match_status": "Mismatched"}),
+        "gstr2b_mismatches": frappe.db.count(
+            "VE GST Ledger Entry", _cfilters(_cc(), {"gstr2b_match_status": "Mismatched"})),
     }
 
 
@@ -171,6 +193,7 @@ def get_gst_summary(period="ytd", custom_start=None, custom_end=None):
 def get_receivables_payables_summary(period="ytd", custom_start=None, custom_end=None):
     frappe.has_permission("VE Debtor Ledger", ptype="read", throw=True)
 
+    company = _cc()
     today_str = today()
 
     def _aging_buckets(doctype, date_col, amount_col):
@@ -178,7 +201,7 @@ def get_receivables_payables_summary(period="ytd", custom_start=None, custom_end
             f"""SELECT {amount_col},
                        DATEDIFF(%s, {date_col}) as days
                 FROM `tab{doctype}`
-                WHERE status NOT IN ('Cleared')""",
+                WHERE status NOT IN ('Cleared'){_cco(company)}""",
             (today_str,), as_dict=True,
         )
         buckets = {"0_30": 0, "31_60": 0, "61_90": 0, "90_plus": 0}
@@ -199,7 +222,7 @@ def get_receivables_payables_summary(period="ytd", custom_start=None, custom_end
 
     def _advance_total(doctype, amount_col):
         r = frappe.db.sql(
-            f"SELECT COALESCE(SUM({amount_col}),0) as total FROM `tab{doctype}`",
+            f"SELECT COALESCE(SUM({amount_col}),0) as total FROM `tab{doctype}` WHERE 1=1{_cco(company)}",
             as_dict=True,
         )
         return flt(r[0].total) if r else 0
@@ -242,7 +265,7 @@ def get_creditors_report(search=None, aging_filter=None, sort_by="invoice_date",
         filters.append("vendor_name LIKE %s")
         values.append(f"%{search}%")
 
-    where = " AND ".join(filters)
+    where = " AND ".join(filters) + _cco(_cc())
     safe_sort = sort_by if sort_by in ("invoice_date", "due_amount", "vendor_name") else "invoice_date"
     safe_order = "DESC" if sort_order.lower() == "desc" else "ASC"
 
@@ -304,6 +327,7 @@ def get_creditors_advance_report(search=None, sort_by="advance_date",
         where = "vendor_name LIKE %s"
         values.append(f"%{search}%")
 
+    where = where + _cco(_cc())
     safe_sort = sort_by if sort_by in ("advance_date", "advance_amount", "vendor_name") else "advance_date"
     safe_order = "DESC" if sort_order.lower() == "desc" else "ASC"
 
@@ -348,7 +372,7 @@ def get_debtors_report(search=None, aging_filter=None, sort_by="invoice_date",
         filters.append("client_name LIKE %s")
         values.append(f"%{search}%")
 
-    where = " AND ".join(filters)
+    where = " AND ".join(filters) + _cco(_cc())
     safe_sort = sort_by if sort_by in ("invoice_date", "due_amount", "client_name") else "invoice_date"
     safe_order = "DESC" if sort_order.lower() == "desc" else "ASC"
 
@@ -410,6 +434,7 @@ def get_debtors_advance_report(search=None, sort_by="advance_date",
         where = "client_name LIKE %s"
         values.append(f"%{search}%")
 
+    where = where + _cco(_cc())
     safe_sort = sort_by if sort_by in ("advance_date", "advance_amount", "client_name") else "advance_date"
     safe_order = "DESC" if sort_order.lower() == "desc" else "ASC"
 
@@ -467,27 +492,28 @@ def get_cash_flow_statement(period="ytd", custom_start=None, custom_end=None):
 @handle_api_error
 def get_inventory_summary():
     frappe.has_permission("VE Stock Movement Summary", ptype="read", throw=True)
+    company = _cc()
 
     # Count by category
     cat_rows = frappe.db.sql(
-        """SELECT movement_category, COUNT(*) as sku_count,
+        f"""SELECT movement_category, COUNT(*) as sku_count,
                   COALESCE(SUM(stock_on_hand),0) as total_stock
-           FROM `tabVE Stock Movement Summary`
+           FROM `tabVE Stock Movement Summary` WHERE 1=1{_cco(company)}
            GROUP BY movement_category""",
         as_dict=True,
     )
 
     # Negative stock
-    neg_stock = frappe.db.count("VE Stock Movement Summary", {"stock_on_hand": ["<", 0]})
+    neg_stock = frappe.db.count("VE Stock Movement Summary", _cfilters(company, {"stock_on_hand": ["<", 0]}))
 
     # Reorder alerts
-    reorder_count = frappe.db.count("VE Stock Movement Summary", {"movement_category": "Reorder"})
+    reorder_count = frappe.db.count("VE Stock Movement Summary", _cfilters(company, {"movement_category": "Reorder"}))
 
     return {
         "by_category": [dict(r) for r in cat_rows],
         "negative_stock_count": neg_stock,
         "reorder_alert_count": reorder_count,
-        "total_sku_count": frappe.db.count("VE Stock Movement Summary"),
+        "total_sku_count": frappe.db.count("VE Stock Movement Summary", _cfilters(company)),
     }
 
 
@@ -511,7 +537,7 @@ def get_stock_movement_report(category=None, search=None, sort_by="item_code",
         filters.append("(item_code LIKE %s OR item_description LIKE %s)")
         values += [f"%{search}%", f"%{search}%"]
 
-    where = " AND ".join(filters) if filters else "1=1"
+    where = (" AND ".join(filters) if filters else "1=1") + _cco(_cc())
     safe_sort = sort_by if sort_by in (
         "item_code", "item_description", "units_sold", "stock_on_hand",
         "turnover_days", "movement_category",
@@ -571,6 +597,7 @@ def trigger_tally_import():
         "hr_client.api.tally_transformer.run",
         masters_path=MASTERS_PATH,
         transactions_path=TRANSACTIONS_PATH,
+        company=_cc(),
         queue="long",
         timeout=7200,
     )
@@ -596,4 +623,4 @@ def get_reconciliation_report():
     """
     require_admin()
     from hr_client.api import accounts_tally_import as ati
-    return ati.reconcile()
+    return ati.reconcile(company=_cc())
