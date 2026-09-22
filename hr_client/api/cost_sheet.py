@@ -44,8 +44,40 @@ def gp_tone(gp_pct, target, minimum):
     return "green"
 
 
+# Line-level cost components (spec §2.2 / §60). When any is filled the line cost
+# is their sum; otherwise it falls back to the simple cost_rate × calc_qty.
+_COST_COMPONENTS = ("material_cost", "finish_cost", "hardware_cost", "glass_cost",
+                    "aluminium_cost", "manufacturing_cost", "labour_cost",
+                    "installation_cost", "transportation_cost", "site_cost",
+                    "outsourcing_cost", "overhead", "other_cost")
+
+
+def _line_maths(ln, target_gp):
+    """Compute a cost-sheet line's total_cost (from components or rate×qty), a
+    suggested selling price from the target GP, and its GP once a selling price
+    is proposed. Returns the line total_cost. Backward-compatible: with no
+    components filled, total_cost == cost_rate × calc_qty (the old behaviour)."""
+    comp = sum(_flt(ln.get(c)) for c in _COST_COMPONENTS)
+    total = comp if comp > 0 else _flt(ln.cost_rate) * _flt(ln.calc_qty)
+    ln.total_cost = round(total, 2)
+    ln.cost_amount = round(_flt(ln.cost_rate) * _flt(ln.calc_qty), 2)  # keep legacy field in sync
+    tg = _flt(target_gp)
+    if tg and tg < 100:
+        ln.suggested_selling_price = round(total / (1 - tg / 100.0), 2)
+    proposed = _flt(ln.proposed_selling_price)
+    if proposed and _flt(ln.discount_percent):
+        ln.final_selling_price = round(proposed * (1 - _flt(ln.discount_percent) / 100.0), 2)
+    elif proposed:
+        ln.final_selling_price = round(proposed, 2)
+    sell = _flt(ln.final_selling_price) or proposed or _flt(ln.suggested_selling_price)
+    ln.gp_amount = round(sell - total, 2)
+    ln.gp_percent = round(ln.gp_amount / sell * 100.0, 2) if sell else 0.0
+    return ln.total_cost
+
+
 def _apply_maths(doc):
-    base = sum(_flt(ln.cost_amount) for ln in doc.lines)
+    tg = _flt(doc.target_gp_percent)
+    base = sum(_line_maths(ln, tg) for ln in doc.lines)
     doc.base_cost = round(base, 2)
     doc.total_cost = round(base * (1 + _flt(doc.overhead_percent) / 100.0), 2)
     sell = _flt(doc.selling_total)
