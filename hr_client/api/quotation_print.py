@@ -118,21 +118,80 @@ _HTML = r"""
 """
 
 
-def seed_print_format():
-    """Create/update the customer Print Format (idempotent)."""
-    existing = frappe.db.exists("Print Format", FORMAT_NAME)
-    doc = frappe.get_doc("Print Format", FORMAT_NAME) if existing else frappe.new_doc("Print Format")
+SUMMARY_NAME = "Vera Quotation - Summary"
+
+# Section-level summary (spec §9): one line per section + grand total, no item
+# detail. Same branding + totals + T&C, still hides every internal field.
+_SUMMARY_HTML = r"""
+<div class="ve-quote">
+<style>
+  .ve-quote{font-family:'Helvetica Neue',Arial,sans-serif;color:#1f2d24;font-size:12px}
+  .ve-head{display:flex;justify-content:space-between;border-bottom:3px solid #C6A15B;padding-bottom:10px;margin-bottom:14px}
+  .ve-brand{font-size:22px;font-weight:700;color:#22432f}
+  .ve-brand small{display:block;font-size:11px;font-weight:400;color:#6b7a70}
+  .ve-doc{text-align:right}.ve-doc .t{font-size:16px;font-weight:700;color:#22432f}
+  table.ve-lines{width:100%;border-collapse:collapse;margin-bottom:8px}
+  table.ve-lines th{background:#22432f;color:#fff;padding:6px 8px;text-align:left}
+  table.ve-lines td{padding:6px 8px;border-bottom:1px solid #e5eae6}
+  table.ve-lines td.n,table.ve-lines th.n{text-align:right;white-space:nowrap}
+  .ve-tot{width:340px;margin-left:auto;border-collapse:collapse;margin-top:10px}
+  .ve-tot td{padding:4px 8px}.ve-tot td.n{text-align:right;white-space:nowrap}
+  .ve-tot tr.grand td{background:#22432f;color:#fff;font-size:14px;font-weight:700}
+  .ve-words{margin:8px 0 16px;font-style:italic;color:#3a4a40}
+  .ve-terms{margin-top:18px;border-top:1px solid #e5eae6;padding-top:10px}
+  .ve-terms pre{white-space:pre-wrap;font-family:inherit;font-size:11px;color:#3a4a40;margin:0}
+</style>
+<div class="ve-head">
+  <div class="ve-brand">{{ frappe.db.get_value("Company", doc.company, "company_name") or "Vera Enterprises" }}
+    <small>Modular Interiors &middot; Trading &middot; Projects</small></div>
+  <div class="ve-doc"><div class="t">QUOTATION (SUMMARY)</div>
+    <div>{{ doc.name }}{% if doc.revision %} &middot; Rev {{ doc.revision }}{% endif %}</div>
+    <div>{{ frappe.utils.formatdate(doc.creation, "dd MMM yyyy") }} &middot; {{ doc.company_name or "" }}</div></div>
+</div>
+<table class="ve-lines"><thead><tr><th>Scope / Section</th><th class="n">Amount</th></tr></thead><tbody>
+{% for section, rows in doc.lines|groupby("section") %}
+  <tr><td>{{ section or "Items" }}</td>
+      <td class="n">{{ frappe.utils.fmt_money(rows|sum(attribute="gross_amount"), currency="INR") }}</td></tr>
+{% endfor %}
+</tbody></table>
+<table class="ve-tot">
+  <tr><td>Sub Total</td><td class="n">{{ frappe.utils.fmt_money(doc.gross_total or 0, currency="INR") }}</td></tr>
+  {% if doc.discount_amount %}<tr><td>Discount</td><td class="n">- {{ frappe.utils.fmt_money(doc.discount_amount or 0, currency="INR") }}</td></tr>{% endif %}
+  <tr><td>Taxable Value</td><td class="n">{{ frappe.utils.fmt_money(doc.net_before_gst or 0, currency="INR") }}</td></tr>
+  {% set gsthalf = (doc.gst_amount or 0) / 2 %}
+  <tr><td>CGST</td><td class="n">{{ frappe.utils.fmt_money(gsthalf, currency="INR") }}</td></tr>
+  <tr><td>SGST</td><td class="n">{{ frappe.utils.fmt_money(gsthalf, currency="INR") }}</td></tr>
+  <tr class="grand"><td>Grand Total</td><td class="n">{{ frappe.utils.fmt_money(doc.grand_total or 0, currency="INR") }}</td></tr>
+</table>
+<div class="ve-words">Amount in words: {{ frappe.utils.money_in_words(doc.grand_total or 0) }}</div>
+{% if doc.terms_and_conditions %}<div class="ve-terms"><h3>Terms &amp; Conditions</h3><pre>{{ doc.terms_and_conditions }}</pre></div>{% endif %}
+</div>
+"""
+
+
+def _register(name, html):
+    existing = frappe.db.exists("Print Format", name)
+    doc = frappe.get_doc("Print Format", name) if existing else frappe.new_doc("Print Format")
     doc.update({
-        "name": FORMAT_NAME,
-        "doc_type": "Vera Sales Quotation",
-        "module": "Hr Client",
-        "print_format_type": "Jinja",
-        "standard": "No",
-        "custom_format": 1,
-        "disabled": 0,
-        "html": _HTML,
+        "name": name, "doc_type": "Vera Sales Quotation", "module": "Hr Client",
+        "print_format_type": "Jinja", "standard": "No", "custom_format": 1,
+        "disabled": 0, "html": html,
     })
     doc.flags.ignore_permissions = True
     doc.save()
+    return not existing
+
+
+def seed_print_format():
+    """Register the customer Detailed Print Format (idempotent)."""
+    created = _register(FORMAT_NAME, _HTML)
     frappe.db.commit()
-    return {"print_format": FORMAT_NAME, "created": not existing}
+    return {"print_format": FORMAT_NAME, "created": created}
+
+
+def seed_all():
+    """Register both customer print formats (Detailed + Summary)."""
+    out = {FORMAT_NAME: _register(FORMAT_NAME, _HTML),
+           SUMMARY_NAME: _register(SUMMARY_NAME, _SUMMARY_HTML)}
+    frappe.db.commit()
+    return out
