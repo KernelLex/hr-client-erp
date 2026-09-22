@@ -340,6 +340,27 @@ def save_lines(name: str, lines):
             "gp_percent": doc.gp_percent, "required_authority": doc.required_authority}
 
 
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def set_negotiated_total(name: str, final_total):
+    """§66 — sales negotiates a round final grand total. The gap becomes an
+    `adjustment` (negotiated reduction if negative) that flows into the net →
+    GP → approval engine, rather than silently altering the total."""
+    require_login()
+    doc = frappe.get_doc("Vera Sales Quotation", name)
+    _assert_editable(doc)
+    _apply_maths(doc)                                  # refresh gross + discount
+    gst_factor = 1 + _flt(doc.gst_percent) / 100.0
+    target_net = _flt(final_total) / gst_factor if gst_factor else _flt(final_total)
+    base_net = _flt(doc.gross_total) - _flt(doc.discount_amount)
+    doc.adjustment = round(target_net - base_net, 2)
+    _refresh_engine(doc)                               # re-cascade maths + authority
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "grand_total": doc.grand_total, "adjustment": doc.adjustment,
+            "gp_percent": doc.gp_percent, "required_authority": doc.required_authority}
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # TERMS & CONDITIONS
 # ══════════════════════════════════════════════════════════════════════════════
