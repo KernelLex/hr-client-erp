@@ -1,0 +1,50 @@
+{
+ "autoname": "field:rule_code",
+ "creation": "2026-09-22 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_code",
+  "rule_name",
+  "dimension",
+  "product_category",
+  "customer_group",
+  "from_amount",
+  "to_amount",
+  "required_level",
+  "severity",
+  "active",
+  "effective_from",
+  "effective_until",
+  "notes"
+ ],
+ "fields": [
+  {"fieldname": "rule_code", "fieldtype": "Data", "label": "Rule Code", "reqd": 1, "unique": 1, "in_list_view": 1},
+  {"fieldname": "rule_name", "fieldtype": "Data", "label": "Rule Name", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "dimension", "fieldtype": "Select", "label": "Dimension", "reqd": 1, "in_list_view": 1, "options": "Discount\nQuotation Value\nFOC\nInstallation Waiver\nTransport Waiver\nPrice Override"},
+  {"fieldname": "product_category", "fieldtype": "Data", "label": "Product Category", "in_list_view": 1, "description": "Blank = all categories. e.g. Hardware / Appliances / Modular / Stone / Services"},
+  {"fieldname": "customer_group", "fieldtype": "Data", "label": "Customer Group"},
+  {"fieldname": "from_amount", "fieldtype": "Float", "label": "From (inclusive)", "in_list_view": 1, "precision": "2", "description": "Lower bound in the dimension's unit (% for Discount/Price Override, INR for Value/FOC/Waiver)"},
+  {"fieldname": "to_amount", "fieldtype": "Float", "label": "To (exclusive)", "in_list_view": 1, "precision": "2", "description": "Upper bound; 0/blank = no upper limit"},
+  {"fieldname": "required_level", "fieldtype": "Select", "label": "Required Level", "reqd": 1, "in_list_view": 1, "options": "L0 Sales Executive\nL1 Sales Manager\nL2 Commercial Manager\nL3 CFO\nL4 Director\nL5 Managing Director"},
+  {"fieldname": "severity", "fieldtype": "Select", "label": "Severity", "options": "Information\nWarning\nApproval Required\nHard Block", "default": "Approval Required"},
+  {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"},
+  {"fieldname": "effective_from", "fieldtype": "Date", "label": "Effective From"},
+  {"fieldname": "effective_until", "fieldtype": "Date", "label": "Effective Until"},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+ ],
+ "modified": "2026-09-22 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Commercial Approval Rule",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 0, "delete": 0, "read": 1, "role": "Employee", "write": 0}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
