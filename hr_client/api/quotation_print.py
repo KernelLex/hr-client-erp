@@ -169,6 +169,61 @@ _SUMMARY_HTML = r"""
 """
 
 
+INTERNAL_NAME = "Vera Quotation - Internal Costing"
+
+# INTERNAL ONLY (spec §3 "Internal Costing"): shows the commercial picture —
+# cost, GP, required authority, triggered rules. Never to be shared with a
+# customer; watermarked accordingly.
+_INTERNAL_HTML = r"""
+<div class="ve-quote">
+<style>
+  .ve-quote{font-family:'Helvetica Neue',Arial,sans-serif;color:#1f2d24;font-size:12px}
+  .ve-head{display:flex;justify-content:space-between;border-bottom:3px solid #b23b3b;padding-bottom:10px;margin-bottom:14px}
+  .ve-brand{font-size:20px;font-weight:700;color:#22432f}
+  .ve-doc{text-align:right}.ve-doc .t{font-size:15px;font-weight:700;color:#b23b3b}
+  table.ve-lines{width:100%;border-collapse:collapse;margin-bottom:8px}
+  table.ve-lines th{background:#3a4a40;color:#fff;padding:5px 8px;text-align:left}
+  table.ve-lines td{padding:5px 8px;border-bottom:1px solid #e5eae6}
+  table.ve-lines td.n,.ve-lines th.n{text-align:right;white-space:nowrap}
+  .ve-comm{width:420px;margin-left:auto;border-collapse:collapse;margin-top:10px}
+  .ve-comm td{padding:4px 8px;border-bottom:1px solid #eee}.ve-comm td.n{text-align:right;white-space:nowrap}
+  .ve-comm tr.k td{background:#22432f;color:#fff;font-weight:700}
+  .g{color:#1c7c40;font-weight:700}.a{color:#b8860b;font-weight:700}.r{color:#b23b3b;font-weight:700}
+  .ve-auth{margin-top:12px;padding:8px 10px;background:#faf3ef;border:1px solid #b23b3b;border-radius:4px}
+  .ve-wm{position:fixed;top:42%;left:14%;font-size:64px;color:rgba(178,59,59,.10);transform:rotate(-26deg);z-index:0}
+</style>
+<div class="ve-wm">INTERNAL — DO NOT SHARE</div>
+<div class="ve-head">
+  <div class="ve-brand">{{ frappe.db.get_value("Company", doc.company, "company_name") or "Vera Enterprises" }}</div>
+  <div class="ve-doc"><div class="t">INTERNAL COSTING</div>
+    <div>{{ doc.name }} &middot; Rev {{ doc.revision }} &middot; {{ doc.status }}</div>
+    <div>{{ doc.company_name or "" }}</div></div>
+</div>
+<table class="ve-lines"><thead><tr><th>Section</th><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Selling</th></tr></thead><tbody>
+{% for r in doc.lines %}
+  <tr><td>{{ r.section or "" }}</td><td>{{ r.specification or "" }}</td>
+      <td class="n">{{ "%.2f"|format(r.quantity or 0) }}</td>
+      <td class="n">{{ frappe.utils.fmt_money(r.rate or 0, currency="INR") }}</td>
+      <td class="n">{{ frappe.utils.fmt_money(r.gross_amount or 0, currency="INR") }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% set tone = "g" if (doc.gp_percent or 0) >= (doc.target_gp_percent or 0) else ("r" if (doc.gp_percent or 0) < (doc.min_gp_percent or 0) else "a") %}
+<table class="ve-comm">
+  <tr><td>Gross Selling</td><td class="n">{{ frappe.utils.fmt_money(doc.gross_total or 0, currency="INR") }}</td></tr>
+  <tr><td>Discount ({{ doc.discount_percent or 0 }}%)</td><td class="n">- {{ frappe.utils.fmt_money(doc.discount_amount or 0, currency="INR") }}</td></tr>
+  {% if doc.adjustment %}<tr><td>Negotiated Adjustment</td><td class="n">{{ frappe.utils.fmt_money(doc.adjustment or 0, currency="INR") }}</td></tr>{% endif %}
+  <tr><td>Net (taxable)</td><td class="n">{{ frappe.utils.fmt_money(doc.net_before_gst or 0, currency="INR") }}</td></tr>
+  <tr><td>Estimated Cost</td><td class="n">{{ frappe.utils.fmt_money(doc.cost_basis or 0, currency="INR") }}</td></tr>
+  <tr><td>Gross Profit</td><td class="n">{{ frappe.utils.fmt_money(doc.gross_profit or 0, currency="INR") }}</td></tr>
+  <tr class="k"><td>GP %</td><td class="n"><span class="{{ tone }}">{{ "%.2f"|format(doc.gp_percent or 0) }}%</span>
+      &nbsp; (target {{ doc.target_gp_percent or 0 }}% / min {{ doc.min_gp_percent or 0 }}%)</td></tr>
+</table>
+<div class="ve-auth"><b>Required Approval Authority:</b> {{ doc.required_authority or "—" }}<br>
+  <b>Triggered Rules:</b> {{ doc.triggered_rules or "None" }}</div>
+</div>
+"""
+
+
 def _register(name, html):
     existing = frappe.db.exists("Print Format", name)
     doc = frappe.get_doc("Print Format", name) if existing else frappe.new_doc("Print Format")
@@ -190,8 +245,9 @@ def seed_print_format():
 
 
 def seed_all():
-    """Register both customer print formats (Detailed + Summary)."""
+    """Register all print formats: Detailed + Summary (customer) + Internal Costing."""
     out = {FORMAT_NAME: _register(FORMAT_NAME, _HTML),
-           SUMMARY_NAME: _register(SUMMARY_NAME, _SUMMARY_HTML)}
+           SUMMARY_NAME: _register(SUMMARY_NAME, _SUMMARY_HTML),
+           INTERNAL_NAME: _register(INTERNAL_NAME, _INTERNAL_HTML)}
     frappe.db.commit()
     return out
