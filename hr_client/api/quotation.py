@@ -651,6 +651,14 @@ def get_quotation_print(name: str, fmt: str = "summary"):
             "min_gp_percent": doc.min_gp_percent,
             "cost_sheet": doc.cost_sheet,
             "conditions": doc.conditions,
+            # Approval routing + the concessions that drove it (§4.6/§36-43) — so
+            # the approver's copy shows why it escalated and what was granted.
+            "required_authority": doc.required_authority,
+            "triggered_rules": doc.triggered_rules,
+            "foc_value": doc.foc_value,
+            "installation_waiver": doc.installation_waiver,
+            "transport_waiver": doc.transport_waiver,
+            "price_override_percent": doc.price_override_percent,
         })
     return out
 

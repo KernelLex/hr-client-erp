@@ -20,6 +20,8 @@ interface PrintDoc {
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
   confidential?: boolean; cost_basis?: number; gross_profit?: number; gp_percent?: number
   target_gp_percent?: number; min_gp_percent?: number; cost_sheet?: string; conditions?: string
+  required_authority?: string; triggered_rules?: string
+  foc_value?: number; installation_waiver?: number; transport_waiver?: number; price_override_percent?: number
 }
 
 const inr = (n?: number) => (n == null ? "—" : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n))
@@ -122,8 +124,18 @@ export function QuotationPrintPage() {
               <Row label="GP %" value={`${d.gp_percent?.toFixed(1)}%`} />
               <Row label="Target / Min GP %" value={`${d.target_gp_percent}% / ${d.min_gp_percent}%`} />
               {d.cost_sheet && <Row label="Cost Sheet" value={d.cost_sheet} />}
+              {d.required_authority && <Row label="Approval Authority" value={d.required_authority} />}
+              {!!d.foc_value && <Row label="FOC Granted" value={inr(d.foc_value)} />}
+              {!!d.installation_waiver && <Row label="Installation Waiver" value={inr(d.installation_waiver)} />}
+              {!!d.transport_waiver && <Row label="Transport Waiver" value={inr(d.transport_waiver)} />}
+              {!!d.price_override_percent && <Row label="Price Override %" value={`${d.price_override_percent}%`} />}
               {d.conditions && <Row label="Conditions" value={d.conditions} />}
             </div>
+            {d.triggered_rules && (
+              <div className="mt-2 text-[11px]" style={{ color: "#b91c1c" }}>
+                <span className="font-semibold">Triggered rules: </span>{d.triggered_rules}
+              </div>
+            )}
           </div>
         )}
 
