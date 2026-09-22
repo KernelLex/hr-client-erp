@@ -341,6 +341,31 @@ def save_lines(name: str, lines):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# TERMS & CONDITIONS
+# ══════════════════════════════════════════════════════════════════════════════
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def apply_terms_template(name: str, template: str = None):
+    """Expand a coded Terms Template's clauses into the quotation's customer-
+    facing terms_and_conditions text (numbered title + clause text)."""
+    require_login()
+    doc = frappe.get_doc("Vera Sales Quotation", name)
+    _assert_editable(doc)
+    tmpl_name = template or doc.terms_template
+    if not tmpl_name:
+        frappe.throw("Select a terms template first.")
+    tmpl = frappe.get_doc("Vera Terms Template", tmpl_name)
+    parts = [f"{i}. {row.title}\n{row.customer_text}" for i, row in enumerate(tmpl.clauses, 1)]
+    doc.terms_template = tmpl_name
+    doc.terms_and_conditions = "\n\n".join(parts)
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "clauses": len(tmpl.clauses),
+            "terms_and_conditions": doc.terms_and_conditions}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # APPROVAL WORKFLOW (§4.6)
 # ══════════════════════════════════════════════════════════════════════════════
 
