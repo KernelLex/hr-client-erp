@@ -59,15 +59,18 @@ with open(OUT, "w") as fh:
     fh.write("import frappe\n\n")
     fh.write("CLAUSES = " + json.dumps(clauses, ensure_ascii=False, indent=1) + "\n\n")
     fh.write("TEMPLATES = " + json.dumps(templates, ensure_ascii=False, indent=1) + "\n\n\n")
-    fh.write('''def seed_all():
-    made = {"clauses": 0, "templates": 0}
+    fh.write('''def seed_all(company=None):
+    if not company:
+        company = (frappe.db.get_value("Company", {"company_name": "Vera Enterprises"}, "name")
+                   or frappe.db.get_value("Company", {}, "name"))
+    made = {"clauses": 0, "templates": 0, "company": company}
     for c in CLAUSES:
         if frappe.db.exists("Vera Terms Clause", c["code"]):
             continue
         doc = frappe.new_doc("Vera Terms Clause")
         doc.update({"code": c["code"], "title": c["title"][:140], "category": c["category"],
                     "applies_to_scope": "All", "mandatory": c["mandatory"],
-                    "status": "Active", "customer_text": c["customer_text"]})
+                    "status": "Active", "customer_text": c["customer_text"], "company": company})
         doc.insert(ignore_permissions=True)
         made["clauses"] += 1
     by_code = {c["code"]: c for c in CLAUSES}
@@ -76,7 +79,7 @@ with open(OUT, "w") as fh:
             continue
         doc = frappe.new_doc("Vera Terms Template")
         doc.update({"code": t["code"], "template_name": t["name"], "category": t["category"],
-                    "version": "1", "status": "Active"})
+                    "version": "1", "status": "Active", "company": company})
         for code in t["clauses"]:
             c = by_code.get(code)
             if not c:
