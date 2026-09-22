@@ -48,6 +48,29 @@ def run(only: list[str] | None = None) -> dict:
         if not v.parser:
             summary.append({"vendor": key, "status": "parser pending", "note": v.note})
             continue
+        if v.parser == "vision":
+            # Brochure vendors whose text is unusable: rows were vision-extracted
+            # offline into <key>.json (see vision_ingest.py). Fold that committed
+            # output into the combined file + summary so aggregates stay complete.
+            jpath = os.path.join(OUT, f"{key}.json")
+            if not os.path.exists(jpath):
+                summary.append({"vendor": key, "status": "vision pending",
+                                "note": v.note})
+                continue
+            with open(jpath) as fh:
+                data = json.load(fh)
+            rows = [PriceRow(**{k: r.get(k) for k in r
+                                if k in PriceRow.__dataclass_fields__}) for r in data]
+            combined.extend(rows)
+            summary.append({
+                "vendor": key, "status": "ok (vision)", "raw_rows": len(rows),
+                "unique_skus": len(rows),
+                "null_mrp": sum(1 for r in rows if r.mrp is None),
+                "with_hsn": sum(1 for r in rows if r.hsn),
+                "gst_inclusive": v.gst_inclusive, "valid_from": v.valid_from,
+            })
+            print(f"[run] {key:12s} {len(rows):5d} SKUs (vision)")
+            continue
         try:
             mod = importlib.import_module(f".parsers.{v.parser}", __package__)
             rows = mod.parse(v)

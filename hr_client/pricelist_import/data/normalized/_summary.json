@@ -46,23 +46,43 @@
   },
   {
     "vendor": "bosch",
-    "status": "parser pending",
-    "note": "brochure layout, ~55-75 appliances"
+    "status": "ok (vision)",
+    "raw_rows": 74,
+    "unique_skus": 74,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": false,
+    "valid_from": ""
   },
   {
     "vendor": "siemens",
-    "status": "parser pending",
-    "note": "brochure, freestanding 2026-08-01 / built-in 2026-09-01 split"
+    "status": "ok (vision)",
+    "raw_rows": 67,
+    "unique_skus": 67,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": false,
+    "valid_from": "2026-09-01"
   },
   {
     "vendor": "reginox",
-    "status": "parser pending",
-    "note": "sinks, NO article codes -> synthesize"
+    "status": "ok (vision)",
+    "raw_rows": 105,
+    "unique_skus": 105,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": false,
+    "valid_from": "2026-09-01"
   },
   {
     "vendor": "luxury",
-    "status": "parser pending",
-    "note": "uses H\u00e4fele article namespace"
+    "status": "ok",
+    "raw_rows": 79,
+    "unique_skus": 79,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": true,
+    "valid_from": "2026-05-20"
   },
   {
     "vendor": "ksf",

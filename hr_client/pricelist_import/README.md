@@ -48,7 +48,9 @@ Cross-vendor rules baked in from the analysis:
 - One row per `item_code` in the written CSV/JSON (first wins); raw multi-row
   counts kept in `_summary.json`.
 
-## Parser archetypes (five built, cover every layout class)
+## Parsers built (9 of 11 vendors — every text-extractable layout class)
+
+**Text parsers** — deterministic, reproducible via `run.py`:
 
 | Vendor | Parser | Archetype | Unique SKUs | HSN | Notes |
 |--------|--------|-----------|------------:|:---:|-------|
@@ -57,16 +59,31 @@ Cross-vendor rules baked in from the analysis:
 | Tataria | `tataria` | blocks + sibling inheritance | 996 | — | `₹NNNN/-`, inherits desc/finish |
 | EBCO | `ebco` | **positional** (rightmost-number MRP) | 912 | — | GST-inclusive; MRP per SPU pack; varying table width |
 | KSF | `ksf` | line triplets colour/article/MRP | 161 | — | Häfele `NNN.NN.NNN` namespace |
+| Luxury | `luxury` | **label-anchored bands** (Model/Article/MRP) | 79 | — | ASKO/Falmec brochure; GST-inclusive; Häfele namespace |
 
-**Total: 6,330 unique SKUs, 0 null MRP.**
+**Vision-extracted** (`parser="vision"`) — brochure layouts whose PDF text is
+graphically exploded to single chars; pages rendered by `render.py`, read by a
+vision model, normalized by `vision_ingest.py`. `run.py` folds the committed
+`<vendor>.json` back into the combined file + summary:
 
-## Parsers pending (Phase 1 continuation)
+| Vendor | Unique SKUs | Notes |
+|--------|------------:|-------|
+| Reginox | 105 | sinks, no printed codes → synthesized `REGINOX-…` codes |
+| Bosch | 74 | built-in appliances |
+| Siemens | 67 | appliances, freestanding + built-in |
 
-`kesseboehmer` (BOM sets + positional colour grids), `bosch` / `siemens` /
-`reginox` / `luxury` (brochure layouts — Bosch's text is exploded to single
-chars, Reginox has no codes → synthesize). Häfele/KSF/Luxury share the
-`NNN.NN.NNN` namespace → dedupe on load. **`blum` is ~80 % scanned (322 MB)** —
-request Blum's source Excel; do **not** blind-OCR.
+**Total: 6,655 unique SKUs across 9 vendors, 0 null MRP.**
+Häfele/KSF/Luxury share the `NNN.NN.NNN` namespace → dedupe on load.
+
+## Parsers still pending (2 vendors — need vision-heavy work or owner source)
+
+- **`kesseboehmer`** — BOM sets (one sellable *Child Article* = several *BOM
+  Article* components + Pc/Set) over 88 pages, positional colour grids, and the
+  **MRP column is not in the extractable text layer** (no rupee/comma prices
+  present at all). Needs vision extraction + BOM disentangling, or the owner's
+  source price file. Do **not** infer prices from the dimension numbers.
+- **`blum`** — ~80 % scanned (322 MB). Request Blum's source Excel; do **not**
+  blind-OCR.
 
 ## Images in the drop (analysed, non-pricelist)
 
