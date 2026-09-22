@@ -1,0 +1,913 @@
+vendor,brand,item_code,code_synthesized,description,size,finish,colour,uom,pack_qty,mrp,currency,gst_inclusive,hsn,price_valid_from,source_file,source_page,raw_line
+ebco,EBCO,BMDS30,False,,,,,,15,174.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,5,BMDS30 MRP 174.0 /SPU 15
+ebco,EBCO,BMDS35,False,,,,,,15,194.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,5,BMDS35 MRP 194.0 /SPU 15
+ebco,EBCO,BMDS40,False,Bottom Mounting Drawer,,,,,15,214.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,5,BMDS40 MRP 214.0 /SPU 15
+ebco,EBCO,BMDS45,False,,,,,,15,236.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,5,BMDS45 MRP 236.0 /SPU 15
+ebco,EBCO,BMDS50,False,,,,,,15,260.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,5,BMDS50 MRP 260.0 /SPU 15
+ebco,EBCO,CKDS-35,False,Computer Keyboard Slide,,,,,10,476.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,8,CKDS-35 MRP 476.0 /SPU 10
+ebco,EBCO,CDSS2-SB900,False,Concealed Drawer Slide - Length,,,,,900,300.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,9,CDSS2-SB900 MRP 300.0 /SPU 900
+ebco,EBCO,E-HS1,False,ø,,,,,100,94.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HS1 MRP 94.0 /SPU 100
+ebco,EBCO,E-HS2,False,"Overlay, Half Overlay & ø",,,,,100,102.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HS2 MRP 102.0 /SPU 100
+ebco,EBCO,E-HS3,False,ø,,,,,100,108.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HS3 MRP 108.0 /SPU 100
+ebco,EBCO,E-HS1M1,False,Slip on Hinge - EURO with ø,,,,,100,100.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HS1M1 MRP 100.0 /SPU 100
+ebco,EBCO,E-HS2M1,False,4 Hole Mounting Plate - ø,,,,,100,108.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HS2M1 MRP 108.0 /SPU 100
+ebco,EBCO,E-HS3M1,False,Inset ø,,,,,100,114.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HS3M1 MRP 114.0 /SPU 100
+ebco,EBCO,E-HS1M130,False,Slip on Hinge - EURO with ø,,,,,100,102.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HS1M130 MRP 102.0 /SPU 100
+ebco,EBCO,E-HS2M130,False,30mm ø,,,,,100,108.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HS2M130 MRP 108.0 /SPU 100
+ebco,EBCO,E-HSM1,False,Overlay with 2 hole ø,,,,,50,190.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HSM1 MRP 190.0 /SPU 50
+ebco,EBCO,E-HSM2,False,Half Overlay with 2 hole ø,,,,,50,192.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HSM2 MRP 192.0 /SPU 50
+ebco,EBCO,E-HSM3,False,Inset with 2 hole Mounting ø,,,,,50,200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,10,E-HSM3 MRP 200.0 /SPU 50
+ebco,EBCO,HSM1-M1,False,ø,,,,,2,234.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSM1-M1 MRP 234.0 /SPU 2
+ebco,EBCO,HSM2-M1,False,Hinge Slow-Motion - 4 ø,,,,,2,236.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSM2-M1 MRP 236.0 /SPU 2
+ebco,EBCO,HSM3-M1,False,ø,,,,,2,242.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSM3-M1 MRP 242.0 /SPU 2
+ebco,EBCO,HSM1-3DM,False,Hinge Slow-Motion - 3D Door Thickness 18- NP Set,,,,,,304.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSM1-3DM MRP 304.0 /SPU 
+ebco,EBCO,HSM2-3DM,False,Hinge Slow-Motion - 3D Door Thickness 18- NP Set,,,,,,304.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSM2-3DM MRP 304.0 /SPU 
+ebco,EBCO,HSM3-3DM,False,Hinge Slow-Motion - 3D Door Thickness 18- NP Set,,,,,,304.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSM3-3DM MRP 304.0 /SPU 
+ebco,EBCO,HSMS1-NP,False,Hinge Slow-Motion 'S' Door Thickness NP Set of,,,,,2,190.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSMS1-NP MRP 190.0 /SPU 2
+ebco,EBCO,HSMS2-NP,False,Hinge Slow-Motion 'S' Door Thickness NP Set of,,,,,2,192.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSMS2-NP MRP 192.0 /SPU 2
+ebco,EBCO,HSMS3-NP,False,Hinge Slow-Motion 'S' Door Thickness NP Set of,,,,,2,200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,HSMS3-NP MRP 200.0 /SPU 2
+ebco,EBCO,SPO1-SC2,False,Fitting (including 2 Click Light GR Set,,,,,,830.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,SPO1-SC2 MRP 830.0 /SPU 
+ebco,EBCO,SPO2-SC2,False,Fitting (including 2 Click Light GR Set,,,,,,830.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,SPO2-SC2 MRP 830.0 /SPU 
+ebco,EBCO,SPO1-SC4,False,Fitting (including 4 Click Medium GR Set,,,,,,1130.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,SPO1-SC4 MRP 1130.0 /SPU 
+ebco,EBCO,SPO2-SC4,False,Fitting (including 4 Click Medium GR Set,,,,,,1130.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,SPO2-SC4 MRP 1130.0 /SPU 
+ebco,EBCO,SPO1-SC5,False,Fitting (including 5 Click Heavy GR Set,,,,,,1280.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,SPO1-SC5 MRP 1280.0 /SPU 
+ebco,EBCO,SPO2-SC5,False,Fitting (including 5 Click Heavy GR Set,,,,,,1280.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,11,SPO2-SC5 MRP 1280.0 /SPU 
+ebco,EBCO,HAP1,False,Overlay Side Panel Thickness: 18- NP Set of,,,,,2,431.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,12,HAP1 MRP 431.0 /SPU 2
+ebco,EBCO,HAP2,False,Half Overlay Side Panel Thickness: 18- NP Set of,,,,,2,431.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,12,HAP2 MRP 431.0 /SPU 2
+ebco,EBCO,HAP1-TN,False,Overlay Side Panel Thickness: 18- TN Set of,,,,,2,527.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,12,HAP1-TN MRP 527.0 /SPU 2
+ebco,EBCO,HAP2-TN,False,Half Overlay Side Panel Thickness: 18- TN Set of,,,,,2,527.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,12,HAP2-TN MRP 527.0 /SPU 2
+ebco,EBCO,HAPL1-TN,False,Overlay with Linear Side Panel Thickness: 18- TN Set of,,,,,2,565.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,12,HAPL1-TN MRP 565.0 /SPU 2
+ebco,EBCO,HAPL2-TN,False,Half Overlay with Linear Side Panel Thickness: 18- TN Set of,,,,,2,565.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,12,HAPL2-TN MRP 565.0 /SPU 2
+ebco,EBCO,HTD1-SC,False,Overlay - Soft Close ø,,,,,50,364.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,13,HTD1-SC MRP 364.0 /SPU 50
+ebco,EBCO,HTD2-SC,False,Overlay - Soft Close ø,,,,,50,364.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,13,HTD2-SC MRP 364.0 /SPU 50
+ebco,EBCO,HTD3-SC,False,Soft Close ø,,,,,50,364.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,13,HTD3-SC MRP 364.0 /SPU 50
+ebco,EBCO,HPO1-POM,False,Hinges Push Open - ø,,,,,35,204.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,13,HPO1-POM MRP 204.0 /SPU 35
+ebco,EBCO,HPO2-POM,False,"Overlay, Half Overlay & ø",,,,,35,204.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,13,HPO2-POM MRP 204.0 /SPU 35
+ebco,EBCO,HPO3-POM,False,ø,,,,,35,204.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,13,HPO3-POM MRP 204.0 /SPU 35
+ebco,EBCO,HPOF1,False,Overlay (without spring ø,,,,,2,94.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,13,HPOF1 MRP 94.0 /SPU 2
+ebco,EBCO,HTD1,False,Thick Door Hinge - ø,,,,,100,248.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,14,HTD1 MRP 248.0 /SPU 100
+ebco,EBCO,HTD2,False,"Overlay, Half Overlay & ø",,,,,100,250.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,14,HTD2 MRP 250.0 /SPU 100
+ebco,EBCO,HTD3,False,ø,,,,,100,256.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,14,HTD3 MRP 256.0 /SPU 100
+ebco,EBCO,HM1,False,Mini Hinge - Overlay ø,,,,,100,84.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,14,HM1 MRP 84.0 /SPU 100
+ebco,EBCO,HFD1,False,Folding Door Hinge ø,,,,,100,432.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,14,HFD1 MRP 432.0 /SPU 100
+ebco,EBCO,HFD1-I,False,Folding Door Hinge (I) ø,,,,,100,382.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,14,HFD1-I MRP 382.0 /SPU 100
+ebco,EBCO,EHBC-1,False,Blind Corner Hinge-EURO ø,,,,,100,290.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,14,EHBC-1 MRP 290.0 /SPU 100
+ebco,EBCO,HSA1-M1,False,Short Arm Hinge with 4 ø,,,,,100,98.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,15,HSA1-M1 MRP 98.0 /SPU 100
+ebco,EBCO,H270,False,Hinge 270° ø,,,,,50,634.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,15,H270 MRP 634.0 /SPU 50
+ebco,EBCO,EH45,False,45° Cross Corner Hinge- ø,,,,,100,290.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,15,EH45 MRP 290.0 /SPU 100
+ebco,EBCO,HDT1,False,Hinge Drilling Template,,,,,60,36.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,15,HDT1 MRP 36.0 /SPU 60
+ebco,EBCO,HGD1-26,False,ø26 mm NP Set of,,,,,100,154.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,15,HGD1-26 MRP 154.0 /SPU 100
+ebco,EBCO,HGD2-26,False,"Overlay, Half Overlay, Inset ø26 mm NP Set of",,,,,100,154.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,15,HGD2-26 MRP 154.0 /SPU 100
+ebco,EBCO,HGD3-26,False,ø26 mm NP Set of,,,,,100,154.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,15,HGD3-26 MRP 154.0 /SPU 100
+ebco,EBCO,PH-40,False,Plano Hinge 40mm NP Pair,,,,,,422.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,PH-40 MRP 422.0 /SPU 
+ebco,EBCO,HGI1,False,Glass Hinge - Inset 4-6mm Glass CP Set of,,,,,50,278.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,HGI1 MRP 278.0 /SPU 50
+ebco,EBCO,HI1,False,Inline Hinge BL Set of,,,,,50,304.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,HI1 MRP 304.0 /SPU 50
+ebco,EBCO,HPS1,False,Pivot Hinge with Spring,,,,,25,32.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,HPS1 MRP 32.0 /SPU 25
+ebco,EBCO,PGH1,False,Pivot Glass Hinge 8 mm mm / Bottom Panel SS,,,,,2,418.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,PGH1 MRP 418.0 /SPU 2
+ebco,EBCO,HCT1,False,Cabinet Hinge,,,,,30,66.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,HCT1 MRP 66.0 /SPU 30
+ebco,EBCO,HL1PC,False,Spring Loaded Hinge BL/BR Set of,,,,,25,68.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,HL1PC MRP 68.0 /SPU 25
+ebco,EBCO,HKPC1,False,Cranked Hinge Max Shutter Size:,,,,,50,64.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,HKPC1 MRP 64.0 /SPU 50
+ebco,EBCO,E-HD1,False,Dowel for Hinge - EURO Hole Centre Distance: WH Set of,,,,,800,14.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,E-HD1 MRP 14.0 /SPU 800
+ebco,EBCO,HHC35,False,Ø 35 mm Cover Ø,,,,,300,128.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,HHC35 MRP 128.0 /SPU 300
+ebco,EBCO,EQM1,False,Euro Quick Manual -,,,,,,39800.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,EQM1 MRP 39800.0 /SPU 
+ebco,EBCO,EQM2,False,Euro Quick Manual - Hinge,,,,,,49800.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,EQM2 MRP 49800.0 /SPU 
+ebco,EBCO,EQP1,False,Euro Quick Pneumatic -,,,,,,128000.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,16,EQP1 MRP 128000.0 /SPU 
+ebco,EBCO,CCS15,False,ø 15 mm Carbide Standard,,,,,1,308.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,CCS15 MRP 308.0 /SPU 1
+ebco,EBCO,CCS26,False,ø 26 mm Carbide,,,,,1,420.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,CCS26 MRP 420.0 /SPU 1
+ebco,EBCO,CCS35,False,ø 35 mm Carbide,,,,,35,580.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,CCS35 MRP 580.0 /SPU 35
+ebco,EBCO,CCS40,False,ø 40 mm Carbide,,,,,40,648.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,CCS40 MRP 648.0 /SPU 40
+ebco,EBCO,SD-TM1,False,Safe Drawer -Top Mount -,,,,,60,1782.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,SD-TM1 MRP 1782.0 /SPU 60
+ebco,EBCO,SDM-TM1,False,Single - (with Felt Mat),,,,,60,2034.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,SDM-TM1 MRP 2034.0 /SPU 60
+ebco,EBCO,SD-TM1D,False,Safe Drawer - Top Mount-,,,,,125,3492.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,SD-TM1D MRP 3492.0 /SPU 125
+ebco,EBCO,SDM-TM1D,False,Safe Drawer - Top Mount,,,,,125,3768.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,SDM-TM1D MRP 3768.0 /SPU 125
+ebco,EBCO,SMD-SM1,False,Safe Drawer Mini - Single,,,,,270,1648.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,SMD-SM1 MRP 1648.0 /SPU 270
+ebco,EBCO,SMD-DM1,False,Safe Drawer Mini - Double,,,,,270,3008.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,17,SMD-DM1 MRP 3008.0 /SPU 270
+ebco,EBCO,SB332,False,Sofa Base 332,,,,,45,56.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,18,SB332 MRP 56.0 /SPU 45
+ebco,EBCO,SB333,False,Sofa Base 333,,,,,75,82.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,18,SB333 MRP 82.0 /SPU 75
+ebco,EBCO,RCF1,False,Recliner Chair Fitting,,,,,925,6160.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,RCF1 MRP 6160.0 /SPU 925
+ebco,EBCO,RCFB1,False,Recliner chair fitting-Basic,,,,,925,4500.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,RCFB1 MRP 4500.0 /SPU 925
+ebco,EBCO,PLSB1,False,Prolift Sofa-Bed fittings Max width - 3-6ft AT Set,,,,,1,1654.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,PLSB1 MRP 1654.0 /SPU 1
+ebco,EBCO,PLSB1-G,False,"Pro-Lift Sofa Bed fittings Min Depth 845mm, AT Set",,,,,1,3508.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,PLSB1-G MRP 3508.0 /SPU 1
+ebco,EBCO,SCBC2,False,Sofa-cum-Bed Fitting ZY Set,,,,,,800.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,SCBC2 MRP 800.0 /SPU 
+ebco,EBCO,SCBC3,False,Sofa-cum-Bed Fitting ZY Set,,,,,,860.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,SCBC3 MRP 860.0 /SPU 
+ebco,EBCO,SOC1,False,Sofa Connector,,,,,2,50.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,SOC1 MRP 50.0 /SPU 2
+ebco,EBCO,SOC2,False,Sofa Connector-2,,,,,2,35.5,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,SOC2 MRP 35.5 /SPU 2
+ebco,EBCO,BCC1,False,Bed Crossbar Clamp,,,,,4,210.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,BCC1 MRP 210.0 /SPU 4
+ebco,EBCO,BC4,False,"95mm / 4"" ZY Set of",,,,,25,170.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,BC4 MRP 170.0 /SPU 25
+ebco,EBCO,BC6,False,,,,,,20,242.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,BC6 MRP 242.0 /SPU 20
+ebco,EBCO,HBK1,False,Hanger Bracket - Mini,,,,,4,6250.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,HBK1 MRP 6250.0 /SPU 4
+ebco,EBCO,HBK2,False,Hanger Bracket - Regular,,,,,4,12750.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,HBK2 MRP 12750.0 /SPU 4
+ebco,EBCO,PB25,False,Plinth Bush Ø25mm BR Each,,,,,100,187.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,PB25 MRP 187.0 /SPU 100
+ebco,EBCO,PBP19,False,Plinth Bush with Pin Ø19mm BR Each,,,,,100,160.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,PBP19 MRP 160.0 /SPU 100
+ebco,EBCO,PP15,False,Plinth Pin,,,,,500,1330.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,19,PP15 MRP 1330.0 /SPU 500
+ebco,EBCO,PP156,False,Plinth Pin Depth,,,,,500,1330.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PP156 MRP 1330.0 /SPU 500
+ebco,EBCO,FF20PF,False,Furn Felt - Press Fit,,,,,20,18.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,FF20PF MRP 18.0 /SPU 20
+ebco,EBCO,FF22,False,ø 22mm GR Each,,,,,500,980.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,FF22 MRP 980.0 /SPU 500
+ebco,EBCO,FFE27,False,ø 27mm GR Each,,,,,500,990.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,FFE27 MRP 990.0 /SPU 500
+ebco,EBCO,FF22P,False,FURN FELT - with pin ø 22mm GR Each,,,,,100,610.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,FF22P MRP 610.0 /SPU 100
+ebco,EBCO,BPI-516,False,Base Plinth Insert,,,,,5,630.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,BPI-516 MRP 630.0 /SPU 5
+ebco,EBCO,BP616,False,Base Plinth 6 mm 16mm x 50mm x 6mm BL/WH Each,,,,,100,546.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,BP616 MRP 546.0 /SPU 100
+ebco,EBCO,BP1418,False,Base Plinth 14 mm 14mm x 51mm x 18mm BL Each,,,,,100,1378.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,BP1418 MRP 1378.0 /SPU 100
+ebco,EBCO,M6,False,PSR610-29 x,,,,,100,900.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,M6 MRP 900.0 /SPU 100
+ebco,EBCO,M8,False,PSR824-29 x,,,,,100,1300.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,M8 MRP 1300.0 /SPU 100
+ebco,EBCO,PSB624,False,M6x24 mm Plated / Nylon Each,,,,,100,1092.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PSB624 MRP 1092.0 /SPU 100
+ebco,EBCO,PSB824,False,M8x24 mm Plated / Nylon Each,,,,,100,1312.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PSB824 MRP 1312.0 /SPU 100
+ebco,EBCO,PSB1024,False,M10x24 mm Plated / Nylon Each,,,,,50,1136.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PSB1024 MRP 1136.0 /SPU 50
+ebco,EBCO,PSB1224,False,M12x24 mm Plated / Nylon Each,,,,,50,1517.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PSB1224 MRP 1517.0 /SPU 50
+ebco,EBCO,BHP870,False,M8 X,,,,,50,82.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,BHP870 MRP 82.0 /SPU 50
+ebco,EBCO,BHP840,False,M8 X,,,,,50,70.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,BHP840 MRP 70.0 /SPU 50
+ebco,EBCO,PB1,False,Plinth Base - Adjustable Load:,,,,,15,118.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PB1 MRP 118.0 /SPU 15
+ebco,EBCO,PC28,False,Pedestal Castor ht 28mm/Dia 60mm BL Set of,,,,,8,314.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PC28 MRP 314.0 /SPU 8
+ebco,EBCO,PCR35,False,Pedestal Castor Recessed Ø,,,,,4,174.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PCR35 MRP 174.0 /SPU 4
+ebco,EBCO,PCR60,False,Pedestal Castor Recessed - Ø,,,,,8,314.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,20,PCR60 MRP 314.0 /SPU 8
+ebco,EBCO,BS1-29,False,Bumper ø,,,,,81,389.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,BS1-29 MRP 389.0 /SPU 81
+ebco,EBCO,BS2-1,False,ø,,,,,264,920.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,BS2-1 MRP 920.0 /SPU 264
+ebco,EBCO,BS2-5,False,ø,,,,,252,766.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,BS2-5 MRP 766.0 /SPU 252
+ebco,EBCO,BS2-20,False,,,,,,350,1036.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,BS2-20 MRP 1036.0 /SPU 350
+ebco,EBCO,BS2-32,False,Bumper,,,,,242,794.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,BS2-32 MRP 794.0 /SPU 242
+ebco,EBCO,BS2-6,False,ø,,,,,720,1512.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,BS2-6 MRP 1512.0 /SPU 720
+ebco,EBCO,BS2-34,False,ø,,,,,120,963.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,BS2-34 MRP 963.0 /SPU 120
+ebco,EBCO,BS2-35,False,ø,,,,,84,1798.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,BS2-35 MRP 1798.0 /SPU 84
+ebco,EBCO,CB5,False,Cabinet Bumper ø 5mm CL Each,,,,,500,540.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,CB5 MRP 540.0 /SPU 500
+ebco,EBCO,R1,False,Safety Corner Bumper SCBR41-1,,,,,15,318.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,R1 MRP 318.0 /SPU 15
+ebco,EBCO,CDB1,False,Ø,,,,,3,9.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,CDB1 MRP 9.0 /SPU 3
+ebco,EBCO,CDB2,False,Ø,,,,,3,12.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,CDB2 MRP 12.0 /SPU 3
+ebco,EBCO,CDB3,False,Ø,,,,,37,12.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,CDB3 MRP 12.0 /SPU 37
+ebco,EBCO,CDB4,False,Ø,,,,,26,5.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,21,CDB4 MRP 5.0 /SPU 26
+ebco,EBCO,CSS1,False,Load:,,,,,2000,13000.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,CSS1 MRP 13000.0 /SPU 2000
+ebco,EBCO,CSS1N,False,Load:,,,,,2000,11000.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,CSS1N MRP 11000.0 /SPU 2000
+ebco,EBCO,CSS1-TN,False,Cab Shelf Support 1 Lug Load:,,,,,2000,13360.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,CSS1-TN MRP 13360.0 /SPU 2000
+ebco,EBCO,CSS2,False,Cab Shelf Support 2 Lug Load:,,,,,2000,14440.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,CSS2 MRP 14440.0 /SPU 2000
+ebco,EBCO,PSS1-2,False,Pin Shelf Support (Glass / Wooden Shelves PSS,,,,,2500,8250.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,PSS1-2 MRP 8250.0 /SPU 2500
+ebco,EBCO,GSS1,False,Glass Shelf Support Load:,,,,,1000,11280.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GSS1 MRP 11280.0 /SPU 1000
+ebco,EBCO,GSS2,False,(Screw) Load:,,,,,1000,11100.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GSS2 MRP 11100.0 /SPU 1000
+ebco,EBCO,GSS2-TN,False,Load:,,,,,1000,11360.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GSS2-TN MRP 11360.0 /SPU 1000
+ebco,EBCO,GSS3,False,Glass Shelf Support Load:,,,,,1000,7760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GSS3 MRP 7760.0 /SPU 1000
+ebco,EBCO,CCSS1,False,Concealed Shelf Support Ø 15mm /,,,,,1000,554.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,CCSS1 MRP 554.0 /SPU 1000
+ebco,EBCO,GCH-1,False,Glass Thickness: 4mm IV Set of,,,,,50,803.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GCH-1 MRP 803.0 /SPU 50
+ebco,EBCO,GCH-2,False,Glass Thickness: 4mm CL Set of,,,,,50,650.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GCH-2 MRP 650.0 /SPU 50
+ebco,EBCO,GCH-2E,False,Glass Corner Holder - Eco Glass Thickness: 4mm CL Set of,,,,,50,562.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GCH-2E MRP 562.0 /SPU 50
+ebco,EBCO,GSH-1,False,Glass Thickness: 4mm IV Set of,,,,,50,340.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GSH-1 MRP 340.0 /SPU 50
+ebco,EBCO,GSH-2,False,Glass Thickness: 4mm CL Set of,,,,,50,352.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GSH-2 MRP 352.0 /SPU 50
+ebco,EBCO,GCP-1,False,Glass Clamp Glass Thickness: 4mm CL Set of,,,,,50,510.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,22,GCP-1 MRP 510.0 /SPU 50
+ebco,EBCO,SC2-ZW,False,Spring Clip - Cupboard x 750mm ZW Set,,,,,125,1378.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,SC2-ZW MRP 1378.0 /SPU 125
+ebco,EBCO,BHTM1,False,Bag Hook (Top Mount),,,,,3,30.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,BHTM1 MRP 30.0 /SPU 3
+ebco,EBCO,BHSM1,False,Bag Hook (Side Mount),,,,,3,30.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,BHSM1 MRP 30.0 /SPU 3
+ebco,EBCO,MH1,False,Mirror Holder,,,,,50,97.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,MH1 MRP 97.0 /SPU 50
+ebco,EBCO,PNCT1,False,Panel Catch Ø32 X,,,,,2,16.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,PNCT1 MRP 16.0 /SPU 2
+ebco,EBCO,SCF-1,False,Sliding Cabinet Shutter Load: 12kg/set Nylon Set of,,,,,25,94.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,SCF-1 MRP 94.0 /SPU 25
+ebco,EBCO,SCF-A1,False,Alu Profile Rail for Sliding AS 244m,,,,,100,310.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,SCF-A1 MRP 310.0 /SPU 100
+ebco,EBCO,DSTF1,False,Door Stiffner 2010mm AL Set,,,,,10,752.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,DSTF1 MRP 752.0 /SPU 10
+ebco,EBCO,DSTF2-HD,False,Door Stiffner HD Thickness:,,,,,15,976.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,DSTF2-HD MRP 976.0 /SPU 15
+ebco,EBCO,DSTF3-20,False,Door Stiffener Concealed,,,,,2000,1870.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,DSTF3-20 MRP 1870.0 /SPU 2000
+ebco,EBCO,DSTF3-24,False,Door Stiffener Concealed,,,,,2400,2160.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,23,DSTF3-24 MRP 2160.0 /SPU 2400
+ebco,EBCO,DSTF4-19,False,Door Stiffener Concealed,,,,,1900,1220.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,DSTF4-19 MRP 1220.0 /SPU 1900
+ebco,EBCO,DSTF4-23,False,Door Stiffener Concealed,,,,,2300,1370.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,DSTF4-23 MRP 1370.0 /SPU 2300
+ebco,EBCO,DSTF4-27,False,Door Stiffener Concealed,,,,,2700,1530.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,DSTF4-27 MRP 1530.0 /SPU 2700
+ebco,EBCO,DSTF3,False,Cutter for DSTF3-C Ø,,,,,11.8,2460.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,DSTF3 MRP 2460.0 /SPU 11.8
+ebco,EBCO,DW2,False,Door Wedge,,,,,20,42.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,DW2 MRP 42.0 /SPU 20
+ebco,EBCO,VG40,False,Ventilation Grill Dia 40mm Ø 40mm BL/GR/ Each,,,,,20,18.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,VG40 MRP 18.0 /SPU 20
+ebco,EBCO,VG34168,False,Ventilation Grill -,,,,,10,47.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,VG34168 MRP 47.0 /SPU 10
+ebco,EBCO,POM12,False,Push open fitting- Push force: 35kg/pc GR set,,,,,50,58.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,POM12 MRP 58.0 /SPU 50
+ebco,EBCO,POM40,False,magnetic (stroke 40mm) Extended length: GR/BL set,,,,,50,58.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,POM40 MRP 58.0 /SPU 50
+ebco,EBCO,POMR38,False,magnetic Recessed Stroke - 38mm GR Set,,,,,,96.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,24,POMR38 MRP 96.0 /SPU 
+ebco,EBCO,AGSS1,False,,,,,,20,132.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,AGSS1 MRP 132.0 /SPU 20
+ebco,EBCO,AGSS2,False,,,,,,20,198.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,AGSS2 MRP 198.0 /SPU 20
+ebco,EBCO,GSBD1-10,False,Glass Shelf Bracket D1-8 GSBD1-8,,,,,8,76.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,GSBD1-10 MRP 76.0 /SPU 8
+ebco,EBCO,D1-10,False,Glass Shelf Bracket GSBD1-10,,,,,10,94.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,D1-10 MRP 94.0 /SPU 10
+ebco,EBCO,D1-12,False,Glass Shelf Bracket GSBD1-12,,,,,12,144.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,D1-12 MRP 144.0 /SPU 12
+ebco,EBCO,SBLP-7,False,Shelf Bracket Lite,,,,,177,98.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,SBLP-7 MRP 98.0 /SPU 177
+ebco,EBCO,WSR-100,False,,,,,,50,66.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,WSR-100 MRP 66.0 /SPU 50
+ebco,EBCO,WSR-150,False,,,,,,50,83.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,WSR-150 MRP 83.0 /SPU 50
+ebco,EBCO,WSRA-150,False,150mm ZY Each,,,,,20,98.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,WSRA-150 MRP 98.0 /SPU 20
+ebco,EBCO,WSRA-200,False,Wall Shelf Rod - 200mm ZY Each,,,,,20,115.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,WSRA-200 MRP 115.0 /SPU 20
+ebco,EBCO,WSRA-250,False,250mm ZY Each,,,,,15,128.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,WSRA-250 MRP 128.0 /SPU 15
+ebco,EBCO,WSRD-10100,False,Ø 10*100 BR Each,,,,,,74.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,WSRD-10100 MRP 74.0 /SPU 
+ebco,EBCO,WSRD-10145,False,Wall Shelf Rod-HD Ø 10*145 BR Each,,,,,,80.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,WSRD-10145 MRP 80.0 /SPU 
+ebco,EBCO,WSRD-14140,False,Ø 14*140 BR Each,,,,,,115.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,WSRD-14140 MRP 115.0 /SPU 
+ebco,EBCO,LSHCS1,False,L Shape Hanging Cabinet,,,,,120,818.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,LSHCS1 MRP 818.0 /SPU 120
+ebco,EBCO,HDCS1,False,Heavy Duty Cabinet,,,,,60,1140.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,HDCS1 MRP 1140.0 /SPU 60
+ebco,EBCO,ACB1,False,Adjustable Corner Bracket WH Set of,,,,,25,2425.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,ACB1 MRP 2425.0 /SPU 25
+ebco,EBCO,ACB-W1,False,Wall Plate (For adjustable ZW Set of,,,,,100,3400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,ACB-W1 MRP 3400.0 /SPU 100
+ebco,EBCO,HGR6,False,,,,,,500,2670.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,HGR6 MRP 2670.0 /SPU 500
+ebco,EBCO,HGR8,False,Hanger,,,,,500,3390.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,HGR8 MRP 3390.0 /SPU 500
+ebco,EBCO,HGR10,False,,,,,,500,3940.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,25,HGR10 MRP 3940.0 /SPU 500
+ebco,EBCO,HPL1,False,Hanger Plate Load: 80kg/pc ZW Each,,,,,1000,3880.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,HPL1 MRP 3880.0 /SPU 1000
+ebco,EBCO,CHC1,False,Cabinet Hanger -,,,,,25,334.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,CHC1 MRP 334.0 /SPU 25
+ebco,EBCO,CHB1,False,Cabinet Hanger Bracket,,,,,2,78.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,CHB1 MRP 78.0 /SPU 2
+ebco,EBCO,MC-US1,False,,,,,,100,30.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,MC-US1 MRP 30.0 /SPU 100
+ebco,EBCO,MC-US1L,False,,,,,,100,33.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,MC-US1L MRP 33.0 /SPU 100
+ebco,EBCO,MC-US2,False,,,,,,100,41.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,MC-US2 MRP 41.0 /SPU 100
+ebco,EBCO,MC-US2L,False,,,,,,100,46.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,MC-US2L MRP 46.0 /SPU 100
+ebco,EBCO,MC-I1,False,Magnetic Catch - Ultra,,,,,100,45.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,MC-I1 MRP 45.0 /SPU 100
+ebco,EBCO,MC-I1L,False,,,,,,100,52.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,MC-I1L MRP 52.0 /SPU 100
+ebco,EBCO,LS-56,False,Latch Straight,,,,,250,5675.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,LS-56 MRP 5675.0 /SPU 250
+ebco,EBCO,LC-56,False,,,,,,200,4800.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,LC-56 MRP 4800.0 /SPU 200
+ebco,EBCO,LC-96,False,Latch Cranked,,,,,100,3040.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,LC-96 MRP 3040.0 /SPU 100
+ebco,EBCO,LC-150,False,,,,,,80,3336.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,LC-150 MRP 3336.0 /SPU 80
+ebco,EBCO,PLC-06,False,60N AT Pair,,,,,,276.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLC-06 MRP 276.0 /SPU 
+ebco,EBCO,PLC-08,False,80N AT Pair,,,,,,276.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLC-08 MRP 276.0 /SPU 
+ebco,EBCO,PLC-10,False,100N AT Pair,,,,,,276.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLC-10 MRP 276.0 /SPU 
+ebco,EBCO,PLC-12,False,PRO-LIFT 120N AT Pair,,,,,,276.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLC-12 MRP 276.0 /SPU 
+ebco,EBCO,PLC-15,False,150N AT Pair,,,,,,276.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLC-15 MRP 276.0 /SPU 
+ebco,EBCO,PLC-20,False,200N AT Pair,,,,,,320.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLC-20 MRP 320.0 /SPU 
+ebco,EBCO,PLC-25,False,250N AT Pair,,,,,,364.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLC-25 MRP 364.0 /SPU 
+ebco,EBCO,PLP-06,False,60N AT Pair,,,,,,390.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLP-06 MRP 390.0 /SPU 
+ebco,EBCO,PLP-08,False,80N AT Pair,,,,,,390.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLP-08 MRP 390.0 /SPU 
+ebco,EBCO,PLP-10,False,100N AT Pair,,,,,,390.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLP-10 MRP 390.0 /SPU 
+ebco,EBCO,PLP-12,False,PRO-LIFT Progressive 120N AT Pair,,,,,,390.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLP-12 MRP 390.0 /SPU 
+ebco,EBCO,PLP-15,False,150N AT Pair,,,,,,390.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLP-15 MRP 390.0 /SPU 
+ebco,EBCO,PLP-20,False,200N AT Pair,,,,,,430.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLP-20 MRP 430.0 /SPU 
+ebco,EBCO,PLP-25,False,250N AT Pair,,,,,,470.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,26,PLP-25 MRP 470.0 /SPU 
+ebco,EBCO,PLCHD-25,False,250N AT Pair,,,,,,824.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,PLCHD-25 MRP 824.0 /SPU 
+ebco,EBCO,PLCHD-30,False,PRO-LIFT Heavy Duty 300N AT Pair,,,,,,824.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,PLCHD-30 MRP 824.0 /SPU 
+ebco,EBCO,PLCHD-35,False,350N AT Pair,,,,,,824.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,PLCHD-35 MRP 824.0 /SPU 
+ebco,EBCO,CS1,False,Cabinet Stay (Right/Left),,,,,25,386.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,CS1 MRP 386.0 /SPU 25
+ebco,EBCO,CS1-HR,False,Cabinet Stay - Heavy,,,,,10,680.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,CS1-HR MRP 680.0 /SPU 10
+ebco,EBCO,CS1-HL,False,Cabinet Stay - Heavy,,,,,10,680.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,CS1-HL MRP 680.0 /SPU 10
+ebco,EBCO,LS1,False,Lid Stay - SS,,,,,50,304.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,LS1 MRP 304.0 /SPU 50
+ebco,EBCO,FPS1,False,Regular (180mm) BR Set of,,,,,25,270.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,FPS1 MRP 270.0 /SPU 25
+ebco,EBCO,FPS2,False,Flap Stay Large (230mm) BR Set of,,,,,25,314.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,FPS2 MRP 314.0 /SPU 25
+ebco,EBCO,FPS3,False,Extra Large (280mm) BR Set of,,,,,25,348.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,FPS3 MRP 348.0 /SPU 25
+ebco,EBCO,TB30,False,,,,,,1,762.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TB30 MRP 762.0 /SPU 1
+ebco,EBCO,TB40,False,,,,,,1,918.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TB40 MRP 918.0 /SPU 1
+ebco,EBCO,TB50,False,,,,,,1,1110.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TB50 MRP 1110.0 /SPU 1
+ebco,EBCO,TB60,False,,,,,,1,1572.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TB60 MRP 1572.0 /SPU 1
+ebco,EBCO,TBR30,False,,,,,,1,976.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TBR30 MRP 976.0 /SPU 1
+ebco,EBCO,TBR40,False,Table Bracket - Recessed,,,,,1,1164.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TBR40 MRP 1164.0 /SPU 1
+ebco,EBCO,TBR50,False,,,,,,1,1378.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TBR50 MRP 1378.0 /SPU 1
+ebco,EBCO,TBM-225,False,225mm AT/BR/WM Set of,,,,,1,414.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TBM-225 MRP 414.0 /SPU 1
+ebco,EBCO,TBM-325,False,325mm AT/BR/WM Set of,,,,,1,530.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TBM-325 MRP 530.0 /SPU 1
+ebco,EBCO,TBD-7L,False,Max Load 20N AT Each,,,,,,398.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TBD-7L MRP 398.0 /SPU 
+ebco,EBCO,TBD-25H,False,Max Load 40N AT Each,,,,,,398.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,27,TBD-25H MRP 398.0 /SPU 
+ebco,EBCO,FLB-35,False,,,,,,2,472.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,FLB-35 MRP 472.0 /SPU 2
+ebco,EBCO,FLB-45,False,450mm AT/WM/BR Set of,,,,,2,642.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,FLB-45 MRP 642.0 /SPU 2
+ebco,EBCO,FUT60,False,,,,,,1,2566.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,FUT60 MRP 2566.0 /SPU 1
+ebco,EBCO,FUT75,False,,,,,,1,3080.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,FUT75 MRP 3080.0 /SPU 1
+ebco,EBCO,FUT90,False,,,,,,1,3610.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,FUT90 MRP 3610.0 /SPU 1
+ebco,EBCO,FUT120,False,,,,,,1,4732.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,FUT120 MRP 4732.0 /SPU 1
+ebco,EBCO,FTM1,False,"(Folding mechanism ø76 mm, BL Each",,,,,2,1350.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,FTM1 MRP 1350.0 /SPU 2
+ebco,EBCO,FTMT1-11,False,Twin with 1100mm Bar,,,,,76,3300.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,FTMT1-11 MRP 3300.0 /SPU 76
+ebco,EBCO,MLUS1-AT,False,Mixer Lift Up Stand Min Depth:,,,,,550,10091.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,MLUS1-AT MRP 10091.0 /SPU 550
+ebco,EBCO,ACMB1,False,AC Mounting Bracket 500mm WT Set,,,,,1,956.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,28,ACMB1 MRP 956.0 /SPU 1
+ebco,EBCO,TL-200,False,Table Lift 200 Stroke: 200mm AT Pair,,,,,1,1842.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,29,TL-200 MRP 1842.0 /SPU 1
+ebco,EBCO,TTM2-9,False,Thickness:08mm BL Each,,,,,,390.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,29,TTM2-9 MRP 390.0 /SPU 
+ebco,EBCO,TTM2-12,False,TTM2-12 Thickness:08mm BL Each,,,,,,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,29,TTM2-12 MRP 490.0 /SPU 
+ebco,EBCO,TTM-100,False,,,,,,10,156.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,29,TTM-100 MRP 156.0 /SPU 10
+ebco,EBCO,TTM-150,False,Turn Table Mechanism,,,,,3,288.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,29,TTM-150 MRP 288.0 /SPU 3
+ebco,EBCO,TTM-200,False,,,,,,2,452.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,29,TTM-200 MRP 452.0 /SPU 2
+ebco,EBCO,TTMH-200,False,Turn Table Mechanism,,,,,21,616.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,29,TTMH-200 MRP 616.0 /SPU 21
+ebco,EBCO,CBS-3012,False,,,,,,4000,1120.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3012 MRP 1120.0 /SPU 4000
+ebco,EBCO,CBS-3016,False,,,,,,2000,680.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3016 MRP 680.0 /SPU 2000
+ebco,EBCO,CBS-3020,False,,,,,,2000,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3020 MRP 760.0 /SPU 2000
+ebco,EBCO,CBS-3512,False,,,,,,2000,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3512 MRP 760.0 /SPU 2000
+ebco,EBCO,CBS-3516,False,,,,,,2000,840.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3516 MRP 840.0 /SPU 2000
+ebco,EBCO,CBS-3520,False,,,,,,2000,1000.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3520 MRP 1000.0 /SPU 2000
+ebco,EBCO,CBS-3525,False,,,,,,1000,580.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3525 MRP 580.0 /SPU 1000
+ebco,EBCO,CBS-3530,False,,,,,,1000,640.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3530 MRP 640.0 /SPU 1000
+ebco,EBCO,CBS-3535,False,,,,,,1000,780.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-3535 MRP 780.0 /SPU 1000
+ebco,EBCO,CBS-4016,False,Pozi Recess Csk Head,,,,,2000,920.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-4016 MRP 920.0 /SPU 2000
+ebco,EBCO,CBS-4020,False,Hardened Zinc Plated,,,,,1000,540.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-4020 MRP 540.0 /SPU 1000
+ebco,EBCO,CBS-4025,False,,,,,,1000,620.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-4025 MRP 620.0 /SPU 1000
+ebco,EBCO,CBS-4030,False,,,,,,1000,740.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-4030 MRP 740.0 /SPU 1000
+ebco,EBCO,CBS-4035,False,,,,,,500,420.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-4035 MRP 420.0 /SPU 500
+ebco,EBCO,CBS-4040,False,,,,,,500,470.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-4040 MRP 470.0 /SPU 500
+ebco,EBCO,CBS-4045,False,,,,,,250,265.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-4045 MRP 265.0 /SPU 250
+ebco,EBCO,CBS-4050,False,,,,,,400,456.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-4050 MRP 456.0 /SPU 400
+ebco,EBCO,CBS-5050,False,,,,,,200,352.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-5050 MRP 352.0 /SPU 200
+ebco,EBCO,CBS-6035,False,,,,,,200,424.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-6035 MRP 424.0 /SPU 200
+ebco,EBCO,CBS-6050,False,,,,,,200,572.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,30,CBS-6050 MRP 572.0 /SPU 200
+ebco,EBCO,PCBS-3012,False,,,,,,4000,1520.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-3012 MRP 1520.0 /SPU 4000
+ebco,EBCO,PCBS-3016,False,,,,,,2000,840.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-3016 MRP 840.0 /SPU 2000
+ebco,EBCO,PCBS-3512,False,,,,,,2000,1000.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-3512 MRP 1000.0 /SPU 2000
+ebco,EBCO,PCBS-3516,False,,,,,,2000,1040.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-3516 MRP 1040.0 /SPU 2000
+ebco,EBCO,PCBS-3520,False,Pozi Recess Pan Head,,,,,1000,580.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-3520 MRP 580.0 /SPU 1000
+ebco,EBCO,PCBS-4016,False,Hardened Zinc Plated,,,,,1000,680.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-4016 MRP 680.0 /SPU 1000
+ebco,EBCO,PCBS-4025,False,,,,,,1000,860.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-4025 MRP 860.0 /SPU 1000
+ebco,EBCO,PCBS-4030,False,,,,,,500,510.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-4030 MRP 510.0 /SPU 500
+ebco,EBCO,PCBS-4035,False,,,,,,500,560.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-4035 MRP 560.0 /SPU 500
+ebco,EBCO,PCBS-4040,False,,,,,,250,335.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,PCBS-4040 MRP 335.0 /SPU 250
+ebco,EBCO,CBSS-3012,False,,,,,,4000,1440.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-3012 MRP 1440.0 /SPU 4000
+ebco,EBCO,CBSS-3016,False,,,,,,2000,840.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-3016 MRP 840.0 /SPU 2000
+ebco,EBCO,CBSS-3512,False,,,,,,4000,1680.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-3512 MRP 1680.0 /SPU 4000
+ebco,EBCO,CBSS-3516,False,,,,,,2000,880.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-3516 MRP 880.0 /SPU 2000
+ebco,EBCO,CBSS-3520,False,,,,,,2000,960.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-3520 MRP 960.0 /SPU 2000
+ebco,EBCO,CBSS-3525,False,,,,,,1000,580.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-3525 MRP 580.0 /SPU 1000
+ebco,EBCO,CBSS-3530,False,,,,,,1000,640.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-3530 MRP 640.0 /SPU 1000
+ebco,EBCO,CBSS-4016,False,,,,,,2000,960.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4016 MRP 960.0 /SPU 2000
+ebco,EBCO,CBSS-4020,False,,,,,,1000,560.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4020 MRP 560.0 /SPU 1000
+ebco,EBCO,CBSS-4025,False,,,,,,1000,640.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4025 MRP 640.0 /SPU 1000
+ebco,EBCO,CBSS-4030,False,Pozi Recess CSK Head,,,,,500,380.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4030 MRP 380.0 /SPU 500
+ebco,EBCO,CBSS-4035,False,Screw with Saw-Thread *,,,,,500,450.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4035 MRP 450.0 /SPU 500
+ebco,EBCO,CBSS-4040,False,,,,,,500,480.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4040 MRP 480.0 /SPU 500
+ebco,EBCO,CBSS-4045,False,,,,,,250,290.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4045 MRP 290.0 /SPU 250
+ebco,EBCO,CBSS-4050,False,,,,,,200,260.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4050 MRP 260.0 /SPU 200
+ebco,EBCO,CBSS-4540,False,,,,,,250,288.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4540 MRP 288.0 /SPU 250
+ebco,EBCO,CBSS-4550,False,,,,,,200,316.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4550 MRP 316.0 /SPU 200
+ebco,EBCO,CBSS-4560,False,,,,,,200,368.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4560 MRP 368.0 /SPU 200
+ebco,EBCO,CBSS-4570,False,,,,,,100,236.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-4570 MRP 236.0 /SPU 100
+ebco,EBCO,CBSS-5050,False,,,,,,200,404.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-5050 MRP 404.0 /SPU 200
+ebco,EBCO,CBSS-5070,False,,,,,,100,262.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-5070 MRP 262.0 /SPU 100
+ebco,EBCO,CBSS-5090,False,,,,,,100,340.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CBSS-5090 MRP 340.0 /SPU 100
+ebco,EBCO,CDS-3913,False,39x13mm ZW Each,,,,,2000,1040.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CDS-3913 MRP 1040.0 /SPU 2000
+ebco,EBCO,CDS-3916,False,39x16mm ZW Each,,,,,2000,1240.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CDS-3916 MRP 1240.0 /SPU 2000
+ebco,EBCO,CDS-3919,False,39x19mm ZW Each,,,,,2000,1400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CDS-3919 MRP 1400.0 /SPU 2000
+ebco,EBCO,CDS-3925,False,Phil Recess CSK Head 39x25mm ZW Each,,,,,1000,880.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CDS-3925 MRP 880.0 /SPU 1000
+ebco,EBCO,CDS-3930,False,,,,,,1000,1020.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CDS-3930 MRP 1020.0 /SPU 1000
+ebco,EBCO,CDS-3938,False,39x38mm ZW Each,,,,,500,630.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CDS-3938 MRP 630.0 /SPU 500
+ebco,EBCO,CDS-3950,False,,,,,,250,405.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,31,CDS-3950 MRP 405.0 /SPU 250
+ebco,EBCO,PDS-3913,False,39x13mm ZW Each,,,,,2000,1800.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,PDS-3913 MRP 1800.0 /SPU 2000
+ebco,EBCO,PDS-3916,False,39x16mm ZW Each,,,,,1000,920.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,PDS-3916 MRP 920.0 /SPU 1000
+ebco,EBCO,PDS-3919,False,Phil Recess PAN Head 39x19mm ZW Each,,,,,1000,1200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,PDS-3919 MRP 1200.0 /SPU 1000
+ebco,EBCO,PDS-3925,False,39x25mm ZW Each,,,,,1000,1220.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,PDS-3925 MRP 1220.0 /SPU 1000
+ebco,EBCO,PDS-3938,False,39x38mm ZW Each,,,,,500,660.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,PDS-3938 MRP 660.0 /SPU 500
+ebco,EBCO,ACS-650,False,Allen Socket CSK Hd M6x50 mm ZW Each,,,,,100,472.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,ACS-650 MRP 472.0 /SPU 100
+ebco,EBCO,ACS-670,False,M6x70 mm ZW Each,,,,,100,606.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,ACS-670 MRP 606.0 /SPU 100
+ebco,EBCO,BHAS-625,False,M6 x,,,,,100,254.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,BHAS-625 MRP 254.0 /SPU 100
+ebco,EBCO,BHAS-650,False,Bugle Head Allen Screw - M6 x,,,,,100,398.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,BHAS-650 MRP 398.0 /SPU 100
+ebco,EBCO,BHAS-675,False,M6 x,,,,,200,1076.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,BHAS-675 MRP 1076.0 /SPU 200
+ebco,EBCO,CSKCAP1,False,Cap for CSK Screw,,,,,38,22400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CSKCAP1 MRP 22400.0 /SPU 38
+ebco,EBCO,HFS22,False,22mm Plated,,,,,500,142.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HFS22 MRP 142.0 /SPU 500
+ebco,EBCO,HFS26,False,26mm Plated,,,,,500,160.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HFS26 MRP 160.0 /SPU 500
+ebco,EBCO,HFS32,False,32mm Plated,,,,,500,194.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HFS32 MRP 194.0 /SPU 500
+ebco,EBCO,HFS38,False,38mm Plated,,,,,500,224.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HFS38 MRP 224.0 /SPU 500
+ebco,EBCO,M10,False,PF-E x,,,,,100,980.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,M10 MRP 980.0 /SPU 100
+ebco,EBCO,HAPS-108,False,M10x80mm EB Each,,,,,,35.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HAPS-108 MRP 35.0 /SPU 
+ebco,EBCO,HAPS-1010,False,M10x100mm EB Each,,,,,,40.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HAPS-1010 MRP 40.0 /SPU 
+ebco,EBCO,HAPS-1012,False,Anchor Plug with Screw M10x120mm EB Each,,,,,,43.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HAPS-1012 MRP 43.0 /SPU 
+ebco,EBCO,HAPS-1014,False,M10x140mm EB Each,,,,,,49.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HAPS-1014 MRP 49.0 /SPU 
+ebco,EBCO,HAPS-1016,False,M10x160mm EB Each,,,,,,52.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,HAPS-1016 MRP 52.0 /SPU 
+ebco,EBCO,CAPS-86,False,M8 x 60mm EB Each,,,,,,11.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CAPS-86 MRP 11.0 /SPU 
+ebco,EBCO,CAPS-88,False,M8 x 80mm EB Each,,,,,,13.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CAPS-88 MRP 13.0 /SPU 
+ebco,EBCO,CAPS-810,False,M8x100mm EB Each,,,,,,15.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CAPS-810 MRP 15.0 /SPU 
+ebco,EBCO,CAPS-108,False,Anchor Plug with Screw M10x80mm EB Each,,,,,,22.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CAPS-108 MRP 22.0 /SPU 
+ebco,EBCO,CAPS-1010,False,(CSK Head) M10x100mm EB Each,,,,,,24.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CAPS-1010 MRP 24.0 /SPU 
+ebco,EBCO,CAPS-1012,False,M10x120mm EB Each,,,,,,27.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CAPS-1012 MRP 27.0 /SPU 
+ebco,EBCO,CAPS-1014,False,M10x140mm EB Each,,,,,,34.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CAPS-1014 MRP 34.0 /SPU 
+ebco,EBCO,CAPS-1016,False,M10x160mm EB Each,,,,,,37.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,CAPS-1016 MRP 37.0 /SPU 
+ebco,EBCO,MFSA550,False,Modular Furniture Screw -,,,,,250,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,MFSA550 MRP 490.0 /SPU 250
+ebco,EBCO,MFSA750,False,Modular Furniture Screw-,,,,,250,775.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,MFSA750 MRP 775.0 /SPU 250
+ebco,EBCO,MFSA7C,False,Cap for Modular Furniture ø,,,,,1000,540.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,MFSA7C MRP 540.0 /SPU 1000
+ebco,EBCO,MFSP550,False,Modular Furniture Screw -,,,,,250,530.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,MFSP550 MRP 530.0 /SPU 250
+ebco,EBCO,MFSP525,False,Modular Furniture Screw-,,,,,500,710.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,32,MFSP525 MRP 710.0 /SPU 500
+ebco,EBCO,MF12,False,Ø,,,,,1000,7660.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MF12 MRP 7660.0 /SPU 1000
+ebco,EBCO,MF16,False,Ø,,,,,1000,8660.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MF16 MRP 8660.0 /SPU 1000
+ebco,EBCO,MF18,False,Ø,,,,,1000,9120.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MF18 MRP 9120.0 /SPU 1000
+ebco,EBCO,MF25,False,Ø,,,,,1000,11640.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MF25 MRP 11640.0 /SPU 1000
+ebco,EBCO,EF18,False,EFIX Housing Ø,,,,,250,700.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,EF18 MRP 700.0 /SPU 250
+ebco,EBCO,MFES7-I,False,Minifix Ecoscrew - 7mm Ø,,,,,250,2700.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MFES7-I MRP 2700.0 /SPU 250
+ebco,EBCO,MFR7-I,False,7mm Dia ROTOR Screw (I) Ø,,,,,250,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MFR7-I MRP 760.0 /SPU 250
+ebco,EBCO,MFSM6-I,False,6 mm Screw (I) Ø,,,,,250,1125.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MFSM6-I MRP 1125.0 /SPU 250
+ebco,EBCO,MFS7-I,False,7 mm Dia Screw (I) Ø,,,,,250,1125.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MFS7-I MRP 1125.0 /SPU 250
+ebco,EBCO,MFBD68,False,Double End Bolt Ø,,,,,500,6560.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MFBD68 MRP 6560.0 /SPU 500
+ebco,EBCO,MFMJ44,False,Mitre Joint Connector Ø,,,,,500,13440.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MFMJ44 MRP 13440.0 /SPU 500
+ebco,EBCO,STC1-V,False,Cap for Steelfix (SF16V/18V) Compatibility: WH Each,,,,,10000,86.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,STC1-V MRP 86.0 /SPU 10000
+ebco,EBCO,STC1,False,Cap For Steelfix Compatibility: WH Each,,,,,10000,8600.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,STC1 MRP 8600.0 /SPU 10000
+ebco,EBCO,MFC1,False,Cap for Minifix Compatibility: BR/ BL/ WH/ Each,,,,,10000,7400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MFC1 MRP 7400.0 /SPU 10000
+ebco,EBCO,MFC2,False,Cap for Minifix (MF12) Compatibility: AT Each,,,,,10000,7400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,33,MFC2 MRP 7400.0 /SPU 10000
+ebco,EBCO,BCF1,False,Block Connector Fittings - WH Each,,,,,150,4017.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,BCF1 MRP 4017.0 /SPU 150
+ebco,EBCO,MC1-P,False,Modular Clip - Permanent Routing Dimensions: ZW Set,,,,,500,6850.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,MC1-P MRP 6850.0 /SPU 500
+ebco,EBCO,MC1-S,False,Modular Clip - Semi,,,,,500,6850.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,MC1-S MRP 6850.0 /SPU 500
+ebco,EBCO,SFC2,False,Shelf Cam ø20 mm FW/BR Set,,,,,,18.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,SFC2 MRP 18.0 /SPU 
+ebco,EBCO,PFS1,False,Push Fix ø,,,,,250,5360.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,PFS1 MRP 5360.0 /SPU 250
+ebco,EBCO,DF1,False,Dowel Fix Hole size: ø12 x,,,,,1000,7960.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,DF1 MRP 7960.0 /SPU 1000
+ebco,EBCO,RAB2,False,,,,,,1000,4480.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RAB2 MRP 4480.0 /SPU 1000
+ebco,EBCO,RAB4,False,,,,,,500,3660.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RAB4 MRP 3660.0 /SPU 500
+ebco,EBCO,RAB6,False,,,,,,250,3040.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RAB6 MRP 3040.0 /SPU 250
+ebco,EBCO,RAB8,False,RA Bracket,,,,,250,3815.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RAB8 MRP 3815.0 /SPU 250
+ebco,EBCO,RAB2-SS,False,,,,,,1000,1040.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RAB2-SS MRP 1040.0 /SPU 1000
+ebco,EBCO,RAB4-SS,False,,,,,,500,1810.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RAB4-SS MRP 1810.0 /SPU 500
+ebco,EBCO,RAC2,False,,,,,,2000,10680.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RAC2 MRP 10680.0 /SPU 2000
+ebco,EBCO,RAC4,False,,,,,,1000,7160.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RAC4 MRP 7160.0 /SPU 1000
+ebco,EBCO,MCB2,False,Multi Corner Bracket 49x49x18mm ZY Each,,,,,,20.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,MCB2 MRP 20.0 /SPU 
+ebco,EBCO,MCB7,False,Multi Corner Bracket,,,,,100,108.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,MCB7 MRP 108.0 /SPU 100
+ebco,EBCO,UCB84,False,Utility Corner Bracket,,,,,84,56.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,UCB84 MRP 56.0 /SPU 84
+ebco,EBCO,CC38,False,Corner Clamp,,,,,100,2770.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,CC38 MRP 2770.0 /SPU 100
+ebco,EBCO,RA1,False,Right Angle Block - IV Each,,,,,50,561.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,RA1 MRP 561.0 /SPU 50
+ebco,EBCO,TC1,False,Table Connector - ZB Each,,,,,50,3570.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,34,TC1 MRP 3570.0 /SPU 50
+ebco,EBCO,CNS21,False,,,,,,1000,21520.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,CNS21 MRP 21520.0 /SPU 1000
+ebco,EBCO,CNS29,False,,,,,,1000,12400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,CNS29 MRP 12400.0 /SPU 1000
+ebco,EBCO,M4,False,Sleeve Connecting CNS33,,,,,1000,13060.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,M4 MRP 13060.0 /SPU 1000
+ebco,EBCO,CNS41,False,,,,,,1000,7720.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,CNS41 MRP 7720.0 /SPU 1000
+ebco,EBCO,CNS47,False,,,,,,500,8300.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,CNS47 MRP 8300.0 /SPU 500
+ebco,EBCO,RNM310,False,M3 x,,,,,2000,2200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,RNM310 MRP 2200.0 /SPU 2000
+ebco,EBCO,RNM410,False,M4 x,,,,,1000,1120.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,RNM410 MRP 1120.0 /SPU 1000
+ebco,EBCO,RNM512,False,Rivet Nuts M5 x,,,,,1000,1140.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,RNM512 MRP 1140.0 /SPU 1000
+ebco,EBCO,RNM615,False,M6 x,,,,,1000,1640.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,RNM615 MRP 1640.0 /SPU 1000
+ebco,EBCO,RNM816,False,M8 x,,,,,1000,2640.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,RNM816 MRP 2640.0 /SPU 1000
+ebco,EBCO,WP1050,False,Wall Plug,,,,,200,552.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,WP1050 MRP 552.0 /SPU 200
+ebco,EBCO,WP535,False,Wall Plug,,,,,25,54.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,WP535 MRP 54.0 /SPU 25
+ebco,EBCO,WP630,False,Wall Plug,,,,,1000,460.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,WP630 MRP 460.0 /SPU 1000
+ebco,EBCO,TN-410,False,M4x10 mm ZW Each,,,,,2500,7750.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TN-410 MRP 7750.0 /SPU 2500
+ebco,EBCO,TNI-613,False,M6x13 mm ZW Each,,,,,5000,24500.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TNI-613 MRP 24500.0 /SPU 5000
+ebco,EBCO,TN-818,False,ST Insert / Collarless / M8x18 mm ZW Each,,,,,1500,13470.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TN-818 MRP 13470.0 /SPU 1500
+ebco,EBCO,TNC13,False,Self Tapping Insert M6x13 mm ZW Each,,,,,2000,13480.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TNC13 MRP 13480.0 /SPU 2000
+ebco,EBCO,TNC16,False,M6x16 mm ZW Each,,,,,2000,11940.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TNC16 MRP 11940.0 /SPU 2000
+ebco,EBCO,TN-1020,False,M10 x,,,,,20,22120.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TN-1020 MRP 22120.0 /SPU 20
+ebco,EBCO,TN1-611,False,M6 x,,,,,2000,9400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TN1-611 MRP 9400.0 /SPU 2000
+ebco,EBCO,TN1-613,False,S.T. Insert -1 M6 x,,,,,2000,9200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TN1-613 MRP 9200.0 /SPU 2000
+ebco,EBCO,TN1-616,False,M6 x,,,,,2000,11400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TN1-616 MRP 11400.0 /SPU 2000
+ebco,EBCO,TN1-620,False,M6 x,,,,,1000,8100.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,TN1-620 MRP 8100.0 /SPU 1000
+ebco,EBCO,IS-5,False,ø 5 mm Insert Screw,,,,,1000,1900.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,IS-5 MRP 1900.0 /SPU 1000
+ebco,EBCO,ID-5A,False,ø 5 mm Insert Ø,,,,,5,940.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,ID-5A MRP 940.0 /SPU 5
+ebco,EBCO,ID5-05,False,Ø 5 mm Insert Ø,,,,,1000,1000.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,ID5-05 MRP 1000.0 /SPU 1000
+ebco,EBCO,IP-5,False,Dia 5 mm Plug Ø 5mm WH Each,,,,,1000,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,IP-5 MRP 760.0 /SPU 1000
+ebco,EBCO,DP620,False,,,,,,1000,620.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,DP620 MRP 620.0 /SPU 1000
+ebco,EBCO,DP625,False,,,,,,1000,660.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,DP625 MRP 660.0 /SPU 1000
+ebco,EBCO,DP630,False,,,,,,1000,720.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,DP630 MRP 720.0 /SPU 1000
+ebco,EBCO,DP635,False,Dowel,,,,,1000,860.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,DP635 MRP 860.0 /SPU 1000
+ebco,EBCO,DP830,False,,,,,,500,430.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,DP830 MRP 430.0 /SPU 500
+ebco,EBCO,DP835,False,,,,,,500,470.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,DP835 MRP 470.0 /SPU 500
+ebco,EBCO,DP840,False,,,,,,500,520.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,35,DP840 MRP 520.0 /SPU 500
+ebco,EBCO,P-ATL1C,False,Anti-Tilt Lock Cutout: Ø,,,,,19,684.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,36,P-ATL1C MRP 684.0 /SPU 19
+ebco,EBCO,L635,False,Anti-Tilt Bar - (2 ATB2D-635 Length:,,,,,635,620.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,36,L635 MRP 620.0 /SPU 635
+ebco,EBCO,L890,False,Anti-Tilt Bar - (3 ATB3D-890 Length:,,,,,890,820.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,36,L890 MRP 820.0 /SPU 890
+ebco,EBCO,PSW1-32,False,Push Lock 32 (for Sliding Drilling: Ø,,,,,32,376.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,36,PSW1-32 MRP 376.0 /SPU 32
+ebco,EBCO,P-GDLS1,False,,,,,,20,438.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,36,P-GDLS1 MRP 438.0 /SPU 20
+ebco,EBCO,P-GDLS2,False,,,,,,20,448.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,36,P-GDLS2 MRP 448.0 /SPU 20
+ebco,EBCO,P-GDLD1,False,,,,,,18,446.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,36,P-GDLD1 MRP 446.0 /SPU 18
+ebco,EBCO,P-GDLD2,False,,,,,,18,446.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,36,P-GDLD2 MRP 446.0 /SPU 18
+ebco,EBCO,OAK1,False,(for Wardrobe Lock & - NP Set,,,,,20,294.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,37,OAK1 MRP 294.0 /SPU 20
+ebco,EBCO,P-LKA1,False,Lock Knob Adaptor - AC Each,,,,,18,390.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,37,P-LKA1 MRP 390.0 /SPU 18
+ebco,EBCO,P-LC1,False,Lock Core with 2 Keys* - NP Each,,,,,,149.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,37,P-LC1 MRP 149.0 /SPU 
+ebco,EBCO,P-LC2FL,False,(5000 combinations flip - NP Each,,,,,,280.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,37,P-LC2FL MRP 280.0 /SPU 
+ebco,EBCO,P-LC3FL,False,(5000 Combinations Flip - NP Each,,,,,,362.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,37,P-LC3FL MRP 362.0 /SPU 
+ebco,EBCO,MPL1-22,False,Round Straight with Cutout: Ø,,,,,25,220.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MPL1-22 MRP 220.0 /SPU 25
+ebco,EBCO,MPL1-22M,False,Round straight Cutout: Ø,,,,,25,244.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MPL1-22M MRP 244.0 /SPU 25
+ebco,EBCO,SQL1-22,False,Square Lock 22 mm with Cutout: Ø,,,,,25,176.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,SQL1-22 MRP 176.0 /SPU 25
+ebco,EBCO,SQL1-22M,False,Metal Key) with Receiver Cutout: Ø,,,,,25,204.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,SQL1-22M MRP 204.0 /SPU 25
+ebco,EBCO,SQL1-22P,False,Folding Key) with Cutout: Ø,,,,,18,222.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,SQL1-22P MRP 222.0 /SPU 18
+ebco,EBCO,SQL1-32,False,Square Lock 32 mm with Cutout: Ø,,,,,18,290.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,SQL1-32 MRP 290.0 /SPU 18
+ebco,EBCO,FMDL48,False,,,,,,25,310.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,FMDL48 MRP 310.0 /SPU 25
+ebco,EBCO,FMDL58,False,,,,,,25,324.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,FMDL58 MRP 324.0 /SPU 25
+ebco,EBCO,MCL1-22,False,Cam Lock - Standard Cutout: Ø,,,,,18,182.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MCL1-22 MRP 182.0 /SPU 18
+ebco,EBCO,MCL2-16,False,NP Each,,,,,25,166.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MCL2-16 MRP 166.0 /SPU 25
+ebco,EBCO,MCL2-25,False,mm / 25mm / 30mm) For Metal: Ø,,,,,25,168.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MCL2-25 MRP 168.0 /SPU 25
+ebco,EBCO,MCL2-30,False,NP Each,,,,,18,172.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MCL2-30 MRP 172.0 /SPU 18
+ebco,EBCO,MPT1-22,False,Push Lock Cutout: Ø,,,,,25,208.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MPT1-22 MRP 208.0 /SPU 25
+ebco,EBCO,MPL2-22,False,Pedestal Lock Cutout: Ø,,,,,18,187.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MPL2-22 MRP 187.0 /SPU 18
+ebco,EBCO,MPL2-22M,False,Pedestal Lock with Metal Cutout: Ø,,,,,18,210.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,MPL2-22M MRP 210.0 /SPU 18
+ebco,EBCO,SML1-22,False,Mortise Lock for Cabinet Cutout: Ø,,,,,18,266.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,38,SML1-22 MRP 266.0 /SPU 18
+ebco,EBCO,CSQL1,False,Cupboard Lock - NP Each,,,,,10,262.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,39,CSQL1 MRP 262.0 /SPU 10
+ebco,EBCO,CSQL1LK,False,Cupboard Lock (Longer - NP Each,,,,,10,284.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,39,CSQL1LK MRP 284.0 /SPU 10
+ebco,EBCO,CSQL3-SF,False,Cupboard Lock for Steel - NP Each,,,,,,540.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,39,CSQL3-SF MRP 540.0 /SPU 
+ebco,EBCO,P-SL1,False,Handle,,,,,20,310.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,39,P-SL1 MRP 310.0 /SPU 20
+ebco,EBCO,P-SH1,False,Steel Cabinet Handle Metal Thickness:,,,,,10,49.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,39,P-SH1 MRP 49.0 /SPU 10
+ebco,EBCO,E-FMDL48,False,Front Multi Drawer Lock -,,,,,50,246.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,39,E-FMDL48 MRP 246.0 /SPU 50
+ebco,EBCO,E-FMDL58,False,Front Multi Drawer Lock -,,,,,50,256.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,39,E-FMDL58 MRP 256.0 /SPU 50
+ebco,EBCO,FMDS1-48,False,Front Mounting,,,,,100,136.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,41,FMDS1-48 MRP 136.0 /SPU 100
+ebco,EBCO,FMDS1-58,False,/580 mm and accessories,,,,,100,154.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,41,FMDS1-58 MRP 154.0 /SPU 100
+ebco,EBCO,ESDL-EBPC1,False,Emergency Battery Pack Load capacity: 4pcs AA Each,,,,,,788.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,42,ESDL-EBPC1 MRP 788.0 /SPU 
+ebco,EBCO,ESDL-EPC1,False,Emergency Power Cable - Each,,,,,,472.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,42,ESDL-EPC1 MRP 472.0 /SPU 
+ebco,EBCO,ESDL-MC1,False,Management Card 1 - Each,,,,,,158.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,42,ESDL-MC1 MRP 158.0 /SPU 
+ebco,EBCO,ESDL-UC1,False,User Card 1 - Each,,,,,,148.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,42,ESDL-UC1 MRP 148.0 /SPU 
+ebco,EBCO,SLDL-W1,False,Sliding Door Lock - Wood - NP Each,,,,,10,1024.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,43,SLDL-W1 MRP 1024.0 /SPU 10
+ebco,EBCO,SWDL-A1,False,Swing Door Lock - - NP Each,,,,,10,1020.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,43,SWDL-A1 MRP 1020.0 /SPU 10
+ebco,EBCO,MDLB1-S,False,Bracket for Bottom - IV Each,,,,,1000,6200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,43,MDLB1-S MRP 6200.0 /SPU 1000
+ebco,EBCO,MDLB2-F,False,Dr Sl - IV Each,,,,,1000,6200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,43,MDLB2-F MRP 6200.0 /SPU 1000
+ebco,EBCO,LRP1,False,Lock Receiver Plate - NP Each,,,,,1000,2450.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,43,LRP1 MRP 2450.0 /SPU 1000
+ebco,EBCO,KH2-CP,False,,,,,,14,35.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,43,KH2-CP MRP 35.0 /SPU 14
+ebco,EBCO,KH2-AQ,False,Key Hole 2,,,,,14,48.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,43,KH2-AQ MRP 48.0 /SPU 14
+ebco,EBCO,KH2-NP,False,,,,,,14,48.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,43,KH2-NP MRP 48.0 /SPU 14
+ebco,EBCO,DSS-WS61,False,,,,,,12,98.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-WS61 MRP 98.0 /SPU 12
+ebco,EBCO,DSS-WS91,False,Wood Shelf Bracket,,,,,10,122.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-WS91 MRP 122.0 /SPU 10
+ebco,EBCO,DSS-WS121,False,with Nut and Screw,,,,,8,148.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-WS121 MRP 148.0 /SPU 8
+ebco,EBCO,DSS-WS151,False,,,,,,6,172.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-WS151 MRP 172.0 /SPU 6
+ebco,EBCO,DSS-GS61,False,,,,,,20,80.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-GS61 MRP 80.0 /SPU 20
+ebco,EBCO,DSS-GS91,False,Glass Shelf Bracket,,,,,16,98.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-GS91 MRP 98.0 /SPU 16
+ebco,EBCO,DSS-GS121,False,with Nut and Screw,,,,,14,118.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-GS121 MRP 118.0 /SPU 14
+ebco,EBCO,DSS-GS151,False,,,,,,12,138.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-GS151 MRP 138.0 /SPU 12
+ebco,EBCO,DSS-HH61W,False,,,,,,25,184.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-HH61W MRP 184.0 /SPU 25
+ebco,EBCO,DSS-HH101W,False,,,,,,25,222.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-HH101W MRP 222.0 /SPU 25
+ebco,EBCO,DSS-SN1,False,Stabiliser Screw and Nut - ZW Set,,,,,1000,6600.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-SN1 MRP 6600.0 /SPU 1000
+ebco,EBCO,DSS-RHB1,False,Horizontal Hanger (Rect) - 75mm AT Pair,,,,,12,184.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-RHB1 MRP 184.0 /SPU 12
+ebco,EBCO,DSS-RHRS1,False,Horizontal Hanger (Rect) -,,,,,12,656.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-RHRS1 MRP 656.0 /SPU 12
+ebco,EBCO,DSS-RHHB1,False,Horizontal Hanger (Rect) - 250mm AT Each,,,,,8,84.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-RHHB1 MRP 84.0 /SPU 8
+ebco,EBCO,DSS-HHB1,False,Horizontal Hanger 300mm AT Pair,,,,,2,396.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-HHB1 MRP 396.0 /SPU 2
+ebco,EBCO,DSS-HHP1,False,Horizontal Hanger,,,,,10,248.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSS-HHP1 MRP 248.0 /SPU 10
+ebco,EBCO,DSSH-WS150,False,Wood Shelf Bracket 150mm AT Each,,,,,20,56.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSSH-WS150 MRP 56.0 /SPU 20
+ebco,EBCO,DSSH-GS150,False,Glass Shelf Bracket 150mm AT Each,,,,,20,58.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSSH-GS150 MRP 58.0 /SPU 20
+ebco,EBCO,DSSH-RH100,False,100mm AT Each,,,,,50,775.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSSH-RH100 MRP 775.0 /SPU 50
+ebco,EBCO,DSSH-RH150,False,Rod Hanger 150mm AT Each,,,,,25,900.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSSH-RH150 MRP 900.0 /SPU 25
+ebco,EBCO,DSSH-RH250,False,250mm AT Each,,,,,25,460.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSSH-RH250 MRP 460.0 /SPU 25
+ebco,EBCO,DSSH-SB70,False,Adapter Bracket 70mm AT Each,,,,,50,22.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,44,DSSH-SB70 MRP 22.0 /SPU 50
+ebco,EBCO,CSPC-2W,False,Cube Shelving Connector -,,,,,18,42.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,46,CSPC-2W MRP 42.0 /SPU 18
+ebco,EBCO,CSPC-3W,False,Cube Shelving Connector -,,,,,18,48.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,46,CSPC-3W MRP 48.0 /SPU 18
+ebco,EBCO,CSPC-3WC,False,Cube Shelving Connector -,,,,,53,58.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,46,CSPC-3WC MRP 58.0 /SPU 53
+ebco,EBCO,CSPC-4W,False,Cube Shelving Connector -,,,,,18,58.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,46,CSPC-4W MRP 58.0 /SPU 18
+ebco,EBCO,CSPC-4WE,False,Cube Shelving Connector -,,,,,88,66.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,46,CSPC-4WE MRP 66.0 /SPU 88
+ebco,EBCO,CSPC-5W,False,Cube Shelving Connector -,,,,,53,68.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,46,CSPC-5W MRP 68.0 /SPU 53
+ebco,EBCO,FRS8HL,False,,,,,,2,358.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,FRS8HL MRP 358.0 /SPU 2
+ebco,EBCO,FRS10HL,False,,,,,,25,386.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,FRS10HL MRP 386.0 /SPU 25
+ebco,EBCO,FRS12HL,False,,,,,,25,428.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,FRS12HL MRP 428.0 /SPU 25
+ebco,EBCO,FRS14HL,False,Friction Stay - HI LOAD,,,,,25,508.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,FRS14HL MRP 508.0 /SPU 25
+ebco,EBCO,FRS16HL,False,(SS304),,,,,2,818.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,FRS16HL MRP 818.0 /SPU 2
+ebco,EBCO,FRS20HL,False,,,,,,2,942.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,FRS20HL MRP 942.0 /SPU 2
+ebco,EBCO,FRS24HL,False,,,,,,2,1074.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,FRS24HL MRP 1074.0 /SPU 2
+ebco,EBCO,FRS28HL,False,,,,,,2,1196.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,FRS28HL MRP 1196.0 /SPU 2
+ebco,EBCO,AWH-H1L,False,Window Handle - Heavy 36x18 WH/BL Each,,,,,,174.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,AWH-H1L MRP 174.0 /SPU 
+ebco,EBCO,AWH-H1R,False,Window Handle - Heavy 36x18 WH/BL Each,,,,,,174.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,AWH-H1R MRP 174.0 /SPU 
+ebco,EBCO,AWH-D2L,False,Al Window Handle Ø40 WH/BL Each,,,,,,292.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,AWH-D2L MRP 292.0 /SPU 
+ebco,EBCO,AWH-D2R,False,Al Window Handle 40x40 WH/BL Each,,,,,,292.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,AWH-D2R MRP 292.0 /SPU 
+ebco,EBCO,AWH-DML3,False,Mortise Window Handle - Ø70 WH/BL Each,,,,,,406.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,AWH-DML3 MRP 406.0 /SPU 
+ebco,EBCO,AWH-DM3,False,Mortise Window Handle-3 Ø41 WH/BL Each,,,,,,192.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,AWH-DM3 MRP 192.0 /SPU 
+ebco,EBCO,WDH1-PL,False,Window-Door Handle with 71x53 WH/BL Each,,,,,,234.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,WDH1-PL MRP 234.0 /SPU 
+ebco,EBCO,ADH1,False,Al Door Handle 36x36 WH/BL Each,,,,,,372.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,ADH1 MRP 372.0 /SPU 
+ebco,EBCO,CRF1,False,Connector Rope Fitting 40x40 Each,,,,,,382.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,47,CRF1 MRP 382.0 /SPU 
+ebco,EBCO,SWL1,False,Sliding Window Latch - BR/BL/WW/ Pair,,,,,25,512.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,48,SWL1 MRP 512.0 /SPU 25
+ebco,EBCO,SWL4,False,Sliding Window Latch - - BR/BL/WW/ Pair,,,,,25,546.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,48,SWL4 MRP 546.0 /SPU 25
+ebco,EBCO,SWL5,False,Sliding Window Latch - - BR/BL/WW/ Pair,,,,,25,524.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,48,SWL5 MRP 524.0 /SPU 25
+ebco,EBCO,SWL2-C,False,- BR / BL / WW/ Each,,,,,100,11.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,48,SWL2-C MRP 11.0 /SPU 100
+ebco,EBCO,SWL3-D,False,- BL/WW Each,,,,,100,11.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,48,SWL3-D MRP 11.0 /SPU 100
+ebco,EBCO,SWL2,False,C SWL3 D SWL4 C SWL4-C - BR/BL/WW/ Each,,,,,100,31.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,48,SWL2 MRP 31.0 /SPU 100
+ebco,EBCO,SWL5-CP,False,- SS Each,,,,,100,10.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,48,SWL5-CP MRP 10.0 /SPU 100
+ebco,EBCO,SWL6-CPH,False,- BL/SS Each,,,,,100,24.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,48,SWL6-CPH MRP 24.0 /SPU 100
+ebco,EBCO,SDF-125SM,False,Standard - 125 Kgs - ZW Set,,,,,1,1024.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,49,SDF-125SM MRP 1024.0 /SPU 1
+ebco,EBCO,SDF-125FM,False,Flush - 125 Kgs - ZW Set,,,,,1,1202.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,49,SDF-125FM MRP 1202.0 /SPU 1
+ebco,EBCO,SDF-125GM,False,Glass - 125 Kgs - ZW Set,,,,,1,1558.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,49,SDF-125GM MRP 1558.0 /SPU 1
+ebco,EBCO,SDF-12,False,mm Bottom Guide SDF-BG12 Glass thk 12mm GR Each,,,,,,27.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,49,SDF-12 MRP 27.0 /SPU 
+ebco,EBCO,SDFI-80,False,Invisible (including upper Kg SL Set,,,,,,22578.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,49,SDFI-80 MRP 22578.0 /SPU 
+ebco,EBCO,HL1-SPS,False,Sliding Partition System - BL Set,,,,,,2244.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,HL1-SPS MRP 2244.0 /SPU 
+ebco,EBCO,TST-2,False,Aluminium Track AB 25m,,,,,,2962.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,TST-2 MRP 2962.0 /SPU 
+ebco,EBCO,TST-3,False,(for Sliding Door/Partition Aluminium Track AB 366m,,,,,,4764.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,TST-3 MRP 4764.0 /SPU 
+ebco,EBCO,TST-5,False,Aluminium Track AB 5m,,,,,,5922.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,TST-5 MRP 5922.0 /SPU 
+ebco,EBCO,BGT-2,False,Aluminium Track AB 25m,,,,,,714.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,BGT-2 MRP 714.0 /SPU 
+ebco,EBCO,BGT-3,False,Length: 366m AB 366m,,,,,,1124.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,BGT-3 MRP 1124.0 /SPU 
+ebco,EBCO,TTCP-2,False,Aluminium Track AB 25m,,,,,,1158.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,TTCP-2 MRP 1158.0 /SPU 
+ebco,EBCO,TTCP-3,False,(for Sliding Door/Partition Aluminium Track AB 366m,,,,,,1870.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,TTCP-3 MRP 1870.0 /SPU 
+ebco,EBCO,TTCP-5,False,Aluminium Track AB 5m,,,,,,2316.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,50,TTCP-5 MRP 2316.0 /SPU 
+ebco,EBCO,ADP2-V,False,Vertical with sleeve (for Length:3m AB 3m,,,,,,2360.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,51,ADP2-V MRP 2360.0 /SPU 
+ebco,EBCO,ADP2-P,False,Partition with sleeve (for Length:3m AB 3m,,,,,,2270.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,51,ADP2-P MRP 2270.0 /SPU 
+ebco,EBCO,ADP2-S,False,Sliding Door/Partition Length:3m AB 3m,,,,,,804.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,51,ADP2-S MRP 804.0 /SPU 
+ebco,EBCO,SPS-FDBW1,False,Wood mm ZW Kit,,,,,,912.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,51,SPS-FDBW1 MRP 912.0 /SPU 
+ebco,EBCO,SPS-FDBA1,False,Aluminium (for Sliding mm ZW Kit,,,,,,912.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,51,SPS-FDBA1 MRP 912.0 /SPU 
+ebco,EBCO,GSFF1-BT2,False,- AS 244m,,,,,,738.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,52,GSFF1-BT2 MRP 738.0 /SPU 
+ebco,EBCO,GSFF1-BT3,False,- AS 366m,,,,,,1106.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,52,GSFF1-BT3 MRP 1106.0 /SPU 
+ebco,EBCO,BKPL1,False,Presto Door Knob Lock -,,,,,42,856.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,52,BKPL1 MRP 856.0 /SPU 42
+ebco,EBCO,BH-W312,False,,,,,,2,266.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,53,BH-W312 MRP 266.0 /SPU 2
+ebco,EBCO,BH-W412,False,Welded (without Bearing),,,,,2,400.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,53,BH-W412 MRP 400.0 /SPU 2
+ebco,EBCO,BH-W512,False,,,,,,2,492.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,53,BH-W512 MRP 492.0 /SPU 2
+ebco,EBCO,DV1,False,Door Viewer Hole Dia,,,,,12,276.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,53,DV1 MRP 276.0 /SPU 12
+ebco,EBCO,SDL1,False,Security Door Latch,,,,,56,338.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,53,SDL1 MRP 338.0 /SPU 56
+ebco,EBCO,DL1,False,Door Latch - SS 304 - SS,,,,,15,106.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DL1 MRP 106.0 /SPU 15
+ebco,EBCO,TL1,False,Turn Latch 55x41mm NS Each,,,,,20,198.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,TL1 MRP 198.0 /SPU 20
+ebco,EBCO,DCP-80,False,Door Closer - Pelmet Arm Load Adjustment 30kg SL Each,,,,,,3652.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DCP-80 MRP 3652.0 /SPU 
+ebco,EBCO,DC101,False,Door Closer 101 - With Hold,,,,,1,1732.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DC101 MRP 1732.0 /SPU 1
+ebco,EBCO,DC201,False,Door Closer 201 - With Hold,,,,,1,2336.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DC201 MRP 2336.0 /SPU 1
+ebco,EBCO,DC201C,False,Door Closer 201 - Without Hold,,,,,1,2418.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DC201C MRP 2418.0 /SPU 1
+ebco,EBCO,DC301,False,Door Closer 301 - With Hold,,,,,1,2778.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DC301 MRP 2778.0 /SPU 1
+ebco,EBCO,DC1001,False,,,,,,1,5040.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DC1001 MRP 5040.0 /SPU 1
+ebco,EBCO,DC1002,False,,,,,,1,5680.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DC1002 MRP 5680.0 /SPU 1
+ebco,EBCO,DFS60,False,Floor Spring - 60,,,,,1,3306.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DFS60 MRP 3306.0 /SPU 1
+ebco,EBCO,DFS90,False,Floor Spring - 90,,,,,1,4024.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DFS90 MRP 4024.0 /SPU 1
+ebco,EBCO,DFS-75V,False,Floor Spring 75V,,,,,1,8848.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DFS-75V MRP 8848.0 /SPU 1
+ebco,EBCO,DFS-250,False,Floor Spring - 250,,,,,1,6508.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DFS-250 MRP 6508.0 /SPU 1
+ebco,EBCO,DFS-A1,False,Floor Spring Door - Plated Set,,,,,1,456.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DFS-A1 MRP 456.0 /SPU 1
+ebco,EBCO,DFS-A2,False,Floor Spring Door - Plated Set,,,,,1,534.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DFS-A2 MRP 534.0 /SPU 1
+ebco,EBCO,DPF4-01,False,Bottom Pivot - BS Each,,,,,1,982.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DPF4-01 MRP 982.0 /SPU 1
+ebco,EBCO,DPF4-02,False,Top Pivot - BS Each,,,,,1,208.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,54,DPF4-02 MRP 208.0 /SPU 1
+ebco,EBCO,DPF1-01,False,BS Each,,,,,1,864.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF1-01 MRP 864.0 /SPU 1
+ebco,EBCO,DPF1-02,False,BS Each,,,,,1,864.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF1-02 MRP 864.0 /SPU 1
+ebco,EBCO,DPF1-04,False,BS Each,,,,,1,1466.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF1-04 MRP 1466.0 /SPU 1
+ebco,EBCO,DPF2-01,False,BS Each,,,,,1,1734.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF2-01 MRP 1734.0 /SPU 1
+ebco,EBCO,DPF2-02,False,Strike patch for centre Glass Thickness,,,,,1,928.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF2-02 MRP 928.0 /SPU 1
+ebco,EBCO,DPF3-01,False,BS Each,,,,,1,502.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF3-01 MRP 502.0 /SPU 1
+ebco,EBCO,DPF3-02,False,BS Each,,,,,1,1022.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF3-02 MRP 1022.0 /SPU 1
+ebco,EBCO,DPF1-03,False,Over panel Patch with Glass Thickness,,,,,1,1138.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF1-03 MRP 1138.0 /SPU 1
+ebco,EBCO,DPF3-03,False,Quad Connector Patch Glass Thickness,,,,,1,1706.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF3-03 MRP 1706.0 /SPU 1
+ebco,EBCO,DPF3-04,False,BS Each,,,,,1,914.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DPF3-04 MRP 914.0 /SPU 1
+ebco,EBCO,DACP1-100,False,(with Top Patch + Top Load capacity: 100kg BS Set,,,,,,8384.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,55,DACP1-100 MRP 8384.0 /SPU 
+ebco,EBCO,OGDL1-GW,False,Openable Glass Door Lock 10-12mm BS Set,,,,,1,1350.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,57,OGDL1-GW MRP 1350.0 /SPU 1
+ebco,EBCO,OGDL1-GG,False,Openable Glass Door Lock 10-12mm BS Set,,,,,1,1560.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,57,OGDL1-GG MRP 1560.0 /SPU 1
+ebco,EBCO,OGDL2-GG,False,- Glass to Glass-SS304 10-12mm BS Set,,,,,1,1920.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,57,OGDL2-GG MRP 1920.0 /SPU 1
+ebco,EBCO,SGDL1-GW,False,Sliding Glass Door Lock - 10-12mm BS Set,,,,,1,1110.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,57,SGDL1-GW MRP 1110.0 /SPU 1
+ebco,EBCO,SGDL1-GG,False,Sliding Glass Door Lock - 10-12mm BS Set,,,,,1,1446.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,57,SGDL1-GG MRP 1446.0 /SPU 1
+ebco,EBCO,DS-2,False,Door Stopper - BS Each,,,,,20,172.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,57,DS-2 MRP 172.0 /SPU 20
+ebco,EBCO,SGD1-BS,False,Sliding Glass Door Handle - 8-12mm BS Each,,,,,1,1138.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,SGD1-BS MRP 1138.0 /SPU 1
+ebco,EBCO,SGD1-PS,False,8-12mm PS Each,,,,,1,1226.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,SGD1-PS MRP 1226.0 /SPU 1
+ebco,EBCO,SGD2-AP,False,Sliding Glass Door Handle - 8-12mm AP Each,,,,,1,708.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,SGD2-AP MRP 708.0 /SPU 1
+ebco,EBCO,SGD3-AP,False,8-12mm AP Each,,,,,1,708.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,SGD3-AP MRP 708.0 /SPU 1
+ebco,EBCO,BSC-119,False,BSC-119-BS - BS Each,,,,,1,536.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,BSC-119 MRP 536.0 /SPU 1
+ebco,EBCO,BSC-219,False,BSC-219-BS - BS Each,,,,,1,610.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,BSC-219 MRP 610.0 /SPU 1
+ebco,EBCO,BSR-1,False,Shower Rod Ø32 x,,,,,1,2648.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,BSR-1 MRP 2648.0 /SPU 1
+ebco,EBCO,BDK-1,False,Shower Door Knob - BS/PS Each,,,,,1,874.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,BDK-1 MRP 874.0 /SPU 1
+ebco,EBCO,BDH-1,False,,,,,,,150.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,BDH-1 MRP 150.0 /SPU 
+ebco,EBCO,PS2-10,False,PVC Seals for 10mm Glass,,,,,25,206.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,PS2-10 MRP 206.0 /SPU 25
+ebco,EBCO,PS2-12,False,PVC Seals for 12mm Glass,,,,,25,224.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,PS2-12 MRP 224.0 /SPU 25
+ebco,EBCO,PS3-12,False,Bottom PVC Seals for,,,,,25,224.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,PS3-12 MRP 224.0 /SPU 25
+ebco,EBCO,BPS3-12,False,Bottom PVC Seals for,,,,,30,216.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,BPS3-12 MRP 216.0 /SPU 30
+ebco,EBCO,PS7-S10,False,PVC Seals for 10mm Glass,,,,,25,206.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,PS7-S10 MRP 206.0 /SPU 25
+ebco,EBCO,PS7-S12,False,PVC Seals for 12mm Glass,,,,,25,224.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,PS7-S12 MRP 224.0 /SPU 25
+ebco,EBCO,BPS7-S12,False,PVC Seals for 12mm Glass,,,,,30,216.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,58,BPS7-S12 MRP 216.0 /SPU 30
+ebco,EBCO,S3,False,"System 90 - PMDS1-50-S3 90x500mm, 50Kg WH/AT/BR/ Set",,,,,,3118.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,65,S3 MRP 3118.0 /SPU 
+ebco,EBCO,PMDS3,False,Panel for 'S3' PMDS3-S3-FP (W) BL* Each,,,,,,3630.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,65,PMDS3 MRP 3630.0 /SPU 
+ebco,EBCO,PMDS2,False,'S3' Series PMDS2-S3-FC BL* Set,,,,,,606.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,66,PMDS2 MRP 606.0 /SPU 
+ebco,EBCO,SLIM3,False,"System 90 - PMDS1G-50-S3 90x500mm, 50Kg WH/AT Set",,,,,,3898.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,66,SLIM3 MRP 3898.0 /SPU 
+ebco,EBCO,SLIM2,False,"System 90 - PMDS1-45-S2 90x450mm, 50Kg WH/AT Set",,,,,1,3078.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,67,SLIM2 MRP 3078.0 /SPU 1
+ebco,EBCO,PMDS3-FR,False,Aluminium Fascia Rail 2000mm WH/AT Each,,,,,1,1276.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,67,PMDS3-FR MRP 1276.0 /SPU 1
+ebco,EBCO,PMDS4,False,'S2' Series for PMDS4-S2-FC1-GP WH/AT Set,,,,,,522.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,67,PMDS4 MRP 522.0 /SPU 
+ebco,EBCO,PMDS1G,False,'S2' Series -,,,,,,45.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,68,PMDS1G MRP 45.0 /SPU 
+ebco,EBCO,PMDS2G,False,'S2' Series -,,,,,,45.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,68,PMDS2G MRP 45.0 /SPU 
+ebco,EBCO,PMDS3G,False,'S2' Series -,,,,,,45.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,68,PMDS3G MRP 45.0 /SPU 
+ebco,EBCO,PMDS3-FAP,False,Facia-Side Partition SG/AT Each,,,,,1,3554.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,69,PMDS3-FAP MRP 3554.0 /SPU 1
+ebco,EBCO,MCT-KB2,False,Modular Cutlery WD Each,,,,,,2876.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,70,MCT-KB2 MRP 2876.0 /SPU 
+ebco,EBCO,MCT-CB2,False,Tray - Cutting 85x 395x10mm WD Each,,,,,,2288.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,70,MCT-CB2 MRP 2288.0 /SPU 
+ebco,EBCO,DPO1-610,False,Drawer Plate Length:,,,,,205,802.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,71,DPO1-610 MRP 802.0 /SPU 205
+ebco,EBCO,DPO1-EC,False,Drawer Plate GR/WH Pcs.,,,,,,442.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,71,DPO1-EC MRP 442.0 /SPU 
+ebco,EBCO,KDR-18P,False,Kitchen Drawer 464x128mm SS Each,,,,,1,1048.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,72,KDR-18P MRP 1048.0 /SPU 1
+ebco,EBCO,KDR-18T,False,Kitchen Drawer 464x159mm SS Each,,,,,1,1287.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,72,KDR-18T MRP 1287.0 /SPU 1
+ebco,EBCO,KDR-20P,False,Kitchen Drawer 514x128 mm SS Each,,,,,1,1128.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,72,KDR-20P MRP 1128.0 /SPU 1
+ebco,EBCO,KDR-20T,False,Kitchen Drawer 514x159 mm SS Each,,,,,1,1386.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,72,KDR-20T MRP 1386.0 /SPU 1
+ebco,EBCO,BCCS1,False,Concealed Slide 75x34x27mm GR Set of,,,,,,4.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,73,BCCS1 MRP 4.0 /SPU 
+ebco,EBCO,BCCS1-C,False,Concealed Slide (For 75x34x27mm GR Set of,,,,,4,148.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,73,BCCS1-C MRP 148.0 /SPU 4
+ebco,EBCO,D420,False,Pull Out Grain POGD-15-WH W262-268 x x WH Each,,,,,,4940.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,D420 MRP 4940.0 /SPU 
+ebco,EBCO,KBS-1,False,Shims Polypropylene,,,,,1000,124.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,KBS-1 MRP 124.0 /SPU 1000
+ebco,EBCO,KBS-5,False,Kitchen Basket Ø15x5mmthk WH Each,,,,,500,900.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,KBS-5 MRP 900.0 /SPU 500
+ebco,EBCO,KBS2-2,False,Ø22x2mm CL Each,,,,,500,1000.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,KBS2-2 MRP 1000.0 /SPU 500
+ebco,EBCO,KBS2-3,False,Kitchen Basket Ø22x3mm CL Each,,,,,500,1200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,KBS2-3 MRP 1200.0 /SPU 500
+ebco,EBCO,KBS2,False,KBS2-5 Ø22x5mm CL Each,,,,,500,1300.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,KBS2 MRP 1300.0 /SPU 500
+ebco,EBCO,KBCT1,False,U. Clamp Set,,,,,100,17.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,KBCT1 MRP 17.0 /SPU 100
+ebco,EBCO,KBCS130,False,EP Set of,,,,,50,72.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,KBCS130 MRP 72.0 /SPU 50
+ebco,EBCO,KBCS144,False,Basket Clamp EP Set of 4pcs.,,,,,50,82.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,KBCS144 MRP 82.0 /SPU 50
+ebco,EBCO,ASM5-ATC,False,Anti Skid Mat 5 -,,,,,1,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,ASM5-ATC MRP 490.0 /SPU 1
+ebco,EBCO,ASM6-ATL,False,Anti Skid Mat 6 -,,,,,1,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,ASM6-ATL MRP 490.0 /SPU 1
+ebco,EBCO,ASM6-BEL,False,Anti Skid Mat 6 -,,,,,1,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,ASM6-BEL MRP 490.0 /SPU 1
+ebco,EBCO,ASM7-AT,False,Anti Skid Mat 7 510mmx20mx1.2 AT,,,,,1,1190.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,ASM7-AT MRP 1190.0 /SPU 1
+ebco,EBCO,ASM8-AT,False,510mmx20mx1.2 AT,,,,,1,1190.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,ASM8-AT MRP 1190.0 /SPU 1
+ebco,EBCO,ASM8-BL,False,510mmx20mx1.2 BL,,,,,1,1190.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,76,ASM8-BL MRP 1190.0 /SPU 1
+ebco,EBCO,MCDP90,False,Magic Corner 680x470x580 AT Set,,,,,,29925.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,MCDP90 MRP 29925.0 /SPU 
+ebco,EBCO,MCDP90G,False,Double Pullout - 680x470x580 AT Set,,,,,,33926.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,MCDP90G MRP 33926.0 /SPU 
+ebco,EBCO,DCPOP2-450R,False,Pullout Polymer - (Clear Opening Width - WH /AT Set,,,,,,18407.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,DCPOP2-450R MRP 18407.0 /SPU 
+ebco,EBCO,DCPOP2-450L,False,Pullout Polymer - (Clear Opening Width - WH/AT Set,,,,,,18407.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,DCPOP2-450L MRP 18407.0 /SPU 
+ebco,EBCO,CC2-P28,False,Corner Carrousel- Ø710x(535-635) WH / AT Set,,,,,1,10395.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,CC2-P28 MRP 10395.0 /SPU 1
+ebco,EBCO,KCN26W,False,Kitchen Carrousel 650mmDia. EP Set,,,,,1,12411.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,KCN26W MRP 12411.0 /SPU 1
+ebco,EBCO,KCN30W,False,Kitchen Carrousel 750mmDia. EP Set,,,,,1,13442.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,KCN30W MRP 13442.0 /SPU 1
+ebco,EBCO,KDC26W,False,Kitchen D Carrousel 650mm EP Set,,,,,1,9960.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,KDC26W MRP 9960.0 /SPU 1
+ebco,EBCO,KDT-30,False,Kitchen 'D' Tray,,,,,1,4263.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,77,KDT-30 MRP 4263.0 /SPU 1
+ebco,EBCO,KPUSC1-45,False,450mm - Soft Close 410x500x1820 AT Set,,,,,,30618.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,78,KPUSC1-45 MRP 30618.0 /SPU 
+ebco,EBCO,KPUSC1-60,False,600mm - Soft Close 560x500x1820 AT Set,,,,,,35543.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,78,KPUSC1-60 MRP 35543.0 /SPU 
+ebco,EBCO,KPUSC1-45M,False,450mm-Mechanism- mm AT Set,,,,,,16527.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,78,KPUSC1-45M MRP 16527.0 /SPU 
+ebco,EBCO,KPUSC1-60M,False,600mm-Mechanism- mm AT Set,,,,,,17231.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,78,KPUSC1-60M MRP 17231.0 /SPU 
+ebco,EBCO,RTGV-60140,False,Vertical (with 600mm(W) x WH/BL/FG Set,,,,,,37170.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,79,RTGV-60140 MRP 37170.0 /SPU 
+ebco,EBCO,BPO1-45,False,Base Pullout Max 45 Cabinet width: Set,,,,,,13598.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,80,BPO1-45 MRP 13598.0 /SPU 
+ebco,EBCO,BPOSC2-100,False,dim : 150x530x700 SS,,,,,304,5126.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,80,BPOSC2-100 MRP 5126.0 /SPU 304
+ebco,EBCO,BPOSC2-150,False,with Basket/ dim : 200x530x700 SS,,,,,304,5456.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,80,BPOSC2-150 MRP 5456.0 /SPU 304
+ebco,EBCO,BPOSC2-200,False,dim : 250x530x700 SS,,,,,304,5949.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,80,BPOSC2-200 MRP 5949.0 /SPU 304
+ebco,EBCO,SP-5020,False,Slim Pull-Out - Soft 500mm AT/WH Set,,,,,,5880.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,81,SP-5020 MRP 5880.0 /SPU 
+ebco,EBCO,SP-5520,False,slides) 550mm AT/WH Set,,,,,,6090.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,81,SP-5520 MRP 6090.0 /SPU 
+ebco,EBCO,SPO2,False,Side Pullout 138x506x334 AT Set,,,,,1,15267.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,81,SPO2 MRP 15267.0 /SPU 1
+ebco,EBCO,DTC-35,False,Detergent Caddie 350mm SS Set,,,,,,6038.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,81,DTC-35 MRP 6038.0 /SPU 
+ebco,EBCO,CDTS1-5474,False,Concealed Dining 540-745mm CG Set,,,,,,20530.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,82,CDTS1-5474 MRP 20530.0 /SPU 
+ebco,EBCO,EFD1-L,False,"System - Left with mm, Max.",,,,,900,2798.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,83,EFD1-L MRP 2798.0 /SPU 900
+ebco,EBCO,EFD1-R,False,System - Right with AT Set,,,,,,2798.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,83,EFD1-R MRP 2798.0 /SPU 
+ebco,EBCO,SLH1,False,Shutter Lift Heavy,,,,,960,950.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,83,SLH1 MRP 950.0 /SPU 960
+ebco,EBCO,VSF1-60,False,Vertical Split Fitting Height:600mm AS Set,,,,,1,8136.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,83,VSF1-60 MRP 8136.0 /SPU 1
+ebco,EBCO,KWA-S2,False,500x300x150 SS304 Each,,,,,1,2096.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,85,KWA-S2 MRP 2096.0 /SPU 1
+ebco,EBCO,WHRF1,False,Pipe Holder Fittings - ZW,,,,,20,403.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,85,WHRF1 MRP 403.0 /SPU 20
+ebco,EBCO,WHRF2,False,SS Hook - ZW Each,,,,,1,55.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,85,WHRF2 MRP 55.0 /SPU 1
+ebco,EBCO,WHRF3,False,SS Pipe 610mm/1220mm/ ZW,,,,,1,659.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,85,WHRF3 MRP 659.0 /SPU 1
+ebco,EBCO,KMR-50,False,Kitchen Midway 500x100x365 AT Set,,,,,,8379.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,86,KMR-50 MRP 8379.0 /SPU 
+ebco,EBCO,CH-6,False,Cup Hanger 106x280x51 SS304 Each,,,,,1,380.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,87,CH-6 MRP 380.0 /SPU 1
+ebco,EBCO,KHP-7,False,Hot Plate Small Ø165 SS304 Each,,,,,1,223.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,87,KHP-7 MRP 223.0 /SPU 1
+ebco,EBCO,KHP-10,False,Hot Plate Large Ø240 SS304 Each,,,,,1,368.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,87,KHP-10 MRP 368.0 /SPU 1
+ebco,EBCO,ST288,False,Shelf Tray 350x108x92 mm WH/MC Set of,,,,,10,609.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,87,ST288 MRP 609.0 /SPU 10
+ebco,EBCO,SOWB2-13,False,Swing Out Waste 13litre WH/GR Each,,,,,1,1943.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,88,SOWB2-13 MRP 1943.0 /SPU 1
+ebco,EBCO,SOWBR-15S,False,Bin Rectangular 1x15litre GR Each,,,,,1,2079.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,88,SOWBR-15S MRP 2079.0 /SPU 1
+ebco,EBCO,SOWBR-15D,False,Bin Rectangular 2x7.5litre GR Each,,,,,1,2331.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,88,SOWBR-15D MRP 2331.0 /SPU 1
+ebco,EBCO,SOWBR-20D,False,Bin Rectangular 2x10litre GR Each,,,,,1,2436.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,88,SOWBR-20D MRP 2436.0 /SPU 1
+ebco,EBCO,APDWB-28,False,Double Waste Bin -,,,,,28,9954.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,88,APDWB-28 MRP 9954.0 /SPU 28
+ebco,EBCO,MB2-5,False,Micro Bin 2,,,,,1,2048.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,89,MB2-5 MRP 2048.0 /SPU 1
+ebco,EBCO,LBFT50,False,tilt 50 included with,,,,,1,9356.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,89,LBFT50 MRP 9356.0 /SPU 1
+ebco,EBCO,SKD-1,False,Sink Drip Mat 300x450 SS Each,,,,,,1103.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,89,SKD-1 MRP 1103.0 /SPU 
+ebco,EBCO,USDP2-AT,False,Under Sink Drawer,,,,,44,420.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,90,USDP2-AT MRP 420.0 /SPU 44
+ebco,EBCO,USDT1-AT,False,Under Sink Drawer 365x321x38 AT Pc,,,,,1,735.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,90,USDT1-AT MRP 735.0 /SPU 1
+ebco,EBCO,OG1,False,Oven Grill,,,,,124,850.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,90,OG1 MRP 850.0 /SPU 124
+ebco,EBCO,PFSC-1032,False,Plinth Screw with N10x32mm WH,,,,,1000,248.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,91,PFSC-1032 MRP 248.0 /SPU 1000
+ebco,EBCO,PFSCB1,False,Bracket (For Clip Ø,,,,,1000,1108.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,91,PFSCB1 MRP 1108.0 /SPU 1000
+ebco,EBCO,Q-PFSCB1,False,Skirting Clip for Q --- BL,,,,,100,848.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,93,Q-PFSCB1 MRP 848.0 /SPU 100
+ebco,EBCO,SL-1,False,(with Horizontal Condition: 466x465x53 AS Each,,,,,,4974.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,93,SL-1 MRP 4974.0 /SPU 
+ebco,EBCO,SL-2,False,(with Vertical Condition AS Each,,,,,,7632.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,93,SL-2 MRP 7632.0 /SPU 
+ebco,EBCO,GSPT1,False,for Glass Shutter 57.5x16x7 Each,,,,,,15.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,96,GSPT1 MRP 15.0 /SPU 
+ebco,EBCO,GSP-CBM2,False,76x76 ZW Set of,,,,,20,140.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,96,GSP-CBM2 MRP 140.0 /SPU 20
+ebco,EBCO,EP-C19,False,Corner for Edge 19mm BL/SF/SL/ Each,,,,,,521.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,96,EP-C19 MRP 521.0 /SPU 
+ebco,EBCO,HG3L,False,Horizontal Gola 3L H 58mm AS/AT/AB/,,,,,3,1880.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,97,HG3L MRP 1880.0 /SPU 3
+ebco,EBCO,HG3C,False,Horizontal Gola 3C H 71mm AS/AT/AB/ 3mtr. length 30/31,,,,,,2373.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,97,HG3C MRP 2373.0 /SPU 
+ebco,EBCO,HG3-MB,False,Horizontal Gola 3,,,,,,27.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,97,HG3-MB MRP 27.0 /SPU 
+ebco,EBCO,SH-1934,False,Type for ECF-1934-SF/GF,,,,,35,10.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,101,SH-1934 MRP 10.0 /SPU 35
+ebco,EBCO,SH1935,False,End Cap EC-1935-CP/CH 20x35 CP/CH Set of,,,,,2,34.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,101,SH1935 MRP 34.0 /SPU 2
+ebco,EBCO,CHH-32,False,Concealed Hook 32mm CP Each,,,,,25,496.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,102,CHH-32 MRP 496.0 /SPU 25
+ebco,EBCO,DHZ1,False,Zen 1,,,,,200,894.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ1 MRP 894.0 /SPU 200
+ebco,EBCO,DHZ2,False,Zen 2,,,,,30,996.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ2 MRP 996.0 /SPU 30
+ebco,EBCO,DHZ3-L,False,Zen 3 - Left,,,,,200,1094.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ3-L MRP 1094.0 /SPU 200
+ebco,EBCO,DHZ3-R,False,Zen 3 - Right,,,,,200,1094.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ3-R MRP 1094.0 /SPU 200
+ebco,EBCO,DHZ4-L,False,Zen 4 - Left,,,,,200,1044.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ4-L MRP 1044.0 /SPU 200
+ebco,EBCO,DHZ4-R,False,Zen 4 - Right,,,,,200,1044.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ4-R MRP 1044.0 /SPU 200
+ebco,EBCO,DHZ5,False,Zen 5,,,,,180,1194.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ5 MRP 1194.0 /SPU 180
+ebco,EBCO,DHZ6,False,Zen 6,,,,,100,1142.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ6 MRP 1142.0 /SPU 100
+ebco,EBCO,DHZ7,False,Zen 7,,,,,100,1244.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ7 MRP 1244.0 /SPU 100
+ebco,EBCO,DHZ8,False,Zen 8,,,,,120,1094.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,103,DHZ8 MRP 1094.0 /SPU 120
+ebco,EBCO,C4-2,False,Al. Handle C4AH2-96-AB,,,,,136,172.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,104,C4-2 MRP 172.0 /SPU 136
+ebco,EBCO,I1,False,IAH1-160-SF,,,,,160,170.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,104,I1 MRP 170.0 /SPU 160
+ebco,EBCO,RK2,False,RKAH2-160-AG 160mm AG Each,,,,,,330.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,105,RK2 MRP 330.0 /SPU 
+ebco,EBCO,TAH-96,False,96mm AB/AC Each,,,,,,176.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,105,TAH-96 MRP 176.0 /SPU 
+ebco,EBCO,TAH-160,False,Aluminium Handle - 160mm AB/AC Each,,,,,,270.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,105,TAH-160 MRP 270.0 /SPU 
+ebco,EBCO,TAH-224,False,T 224mm AB/AC Each,,,,,,366.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,105,TAH-224 MRP 366.0 /SPU 
+ebco,EBCO,TAH-1088,False,1088mm AB/AC Each,,,,,,1900.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,105,TAH-1088 MRP 1900.0 /SPU 
+ebco,EBCO,Y2,False,,,,,,120,144.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,105,Y2 MRP 144.0 /SPU 120
+ebco,EBCO,A1,False,Zinc Handle - AZH1-96,,,,,96,152.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,106,A1 MRP 152.0 /SPU 96
+ebco,EBCO,B1,False,Zinc Handle - BZHS1-96-NB,,,,,96,164.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,106,B1 MRP 164.0 /SPU 96
+ebco,EBCO,C1,False,Zinc Handle - CZH1-224-NB 224mm NB Each,,,,,,286.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,106,C1 MRP 286.0 /SPU 
+ebco,EBCO,E1,False,ZincHandle - EZH1-160-NB,,,,,160,210.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,106,E1 MRP 210.0 /SPU 160
+ebco,EBCO,M1,False,Zinc Handle - MZH1-128-CP,,,,,128,270.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,106,M1 MRP 270.0 /SPU 128
+ebco,EBCO,UZPH1-SQ,False,Zinc Pull Handle - U 64mm AQ Each,,,,,,436.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,107,UZPH1-SQ MRP 436.0 /SPU 
+ebco,EBCO,AZK1-BL,False,,,,,,29,110.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,AZK1-BL MRP 110.0 /SPU 29
+ebco,EBCO,AZK1-CP,False,Zinc Knob-A1,,,,,29,110.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,AZK1-CP MRP 110.0 /SPU 29
+ebco,EBCO,AZK1-NB,False,,,,,,29,116.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,AZK1-NB MRP 116.0 /SPU 29
+ebco,EBCO,BZK1-BL,False,,,,,,30,84.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,BZK1-BL MRP 84.0 /SPU 30
+ebco,EBCO,BZK1-CP,False,Zinc Knob-B1,,,,,30,84.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,BZK1-CP MRP 84.0 /SPU 30
+ebco,EBCO,BZK1-NB,False,,,,,,30,90.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,BZK1-NB MRP 90.0 /SPU 30
+ebco,EBCO,CZK1-CP,False,Zinc Knob-C1 S CP Each,,,,,50,198.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,CZK1-CP MRP 198.0 /SPU 50
+ebco,EBCO,DZK1-CP,False,Zinc Knob-D1 S CP Each,,,,,50,222.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,DZK1-CP MRP 222.0 /SPU 50
+ebco,EBCO,EZK1-NB,False,Zinc Knob - E Ø,,,,,28,268.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,EZK1-NB MRP 268.0 /SPU 28
+ebco,EBCO,UZK1-SQ,False,Zinc Knob - U Ø,,,,,30,302.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,UZK1-SQ MRP 302.0 /SPU 30
+ebco,EBCO,VZK1-GF,False,Zinc Knob - V,,,,,26,290.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,108,VZK1-GF MRP 290.0 /SPU 26
+ebco,EBCO,KH30,False,Kameleon Handle - 300mm BL Each,,,,,,220.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,109,KH30 MRP 220.0 /SPU 
+ebco,EBCO,KH40,False,Kameleon Handle - 400mm BL Each,,,,,,260.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,109,KH40 MRP 260.0 /SPU 
+ebco,EBCO,KH50,False,Kameleon Handle - 500mm BL Each,,,,,,300.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,109,KH50 MRP 300.0 /SPU 
+ebco,EBCO,KH60,False,Kameleon Handle - 600mm BL Each,,,,,,360.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,109,KH60 MRP 360.0 /SPU 
+ebco,EBCO,RH-90,False,90mm 90mm WH/AT Each,,,,,20,652.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,109,RH-90 MRP 652.0 /SPU 20
+ebco,EBCO,RHS-94,False,Steel Furniture BL/SL/WH Each,,,,,20,27.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,109,RHS-94 MRP 27.0 /SPU 20
+ebco,EBCO,HSWSS-BR1,False,Fitting (for single,,,,,2,332.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,110,HSWSS-BR1 MRP 332.0 /SPU 2
+ebco,EBCO,HSWSS-SL4,False,Walk-in Wardrobe 4,,,,,11.4,44.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,112,HSWSS-SL4 MRP 44.0 /SPU 11.4
+ebco,EBCO,HSWSS-ST640,False,Walk-in Sliding NP Each,,,,,100,496.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,112,HSWSS-ST640 MRP 496.0 /SPU 100
+ebco,EBCO,HSTC1,False,Attachment for 3 Door GR Set,,,,,1,2124.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,113,HSTC1 MRP 2124.0 /SPU 1
+ebco,EBCO,HSTC2,False,Attachment for 3 Door GR Set,,,,,1,2136.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,113,HSTC2 MRP 2136.0 /SPU 1
+ebco,EBCO,HS-T1,False,Hi SlideTwin Load ZW Set-Single,,,,,1,1082.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,114,HS-T1 MRP 1082.0 /SPU 1
+ebco,EBCO,HS-90,False,(for & HS-45) HSDT-TDT-3 AS 3.66m,,,,,30,1149.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,114,HS-90 MRP 1149.0 /SPU 30
+ebco,EBCO,HS50,False,PRT (set of top & HS50T2D-T2 2.44m AS Set,,,,,12,2247.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,115,HS50 MRP 2247.0 /SPU 12
+ebco,EBCO,HS-45,False,Al. Track / HS- HS-45-3M-AS AS 3m,,,,,,500.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,116,HS-45 MRP 500.0 /SPU 
+ebco,EBCO,HSSD-15,False,Hi Slide SD 15 Load 15kg/door ZW Set,,,,,1,1266.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,116,HSSD-15 MRP 1266.0 /SPU 1
+ebco,EBCO,HSSD-T2,False,Hi Slide SD 15 2.44m AS Each,,,,,8,1483.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,116,HSSD-T2 MRP 1483.0 /SPU 8
+ebco,EBCO,HSGD-15,False,(Single Door Fitting with Max. Thickness - GR Set,,,,,,2100.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,116,HSGD-15 MRP 2100.0 /SPU 
+ebco,EBCO,WLSM-12,False,Mount - 12 Width 764-1155 AT/ BR/ BL Each,,,,,,5000.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,118,WLSM-12 MRP 5000.0 /SPU 
+ebco,EBCO,WPTS-EH4,False,Extra Hangers for L=470 BR Set of,,,,,1,1226.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,119,WPTS-EH4 MRP 1226.0 /SPU 1
+ebco,EBCO,WDOM4-3212,False,ganiser- 316x117.5x50mm GR Each,,,,,1,2898.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,122,WDOM4-3212 MRP 2898.0 /SPU 1
+ebco,EBCO,WDOM3-3212,False,Organiser - Multi mm GR Each,,,,,1,2730.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,122,WDOM3-3212 MRP 2730.0 /SPU 1
+ebco,EBCO,WDO3-WB1,False,Organiser 3 - Watch / mm BR Each,,,,,,3560.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,122,WDO3-WB1 MRP 3560.0 /SPU 
+ebco,EBCO,WDO3-WB2,False,Organiser 3 - Watch / mm BR Each,,,,,,3950.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,122,WDO3-WB2 MRP 3950.0 /SPU 
+ebco,EBCO,WDO3-M41,False,Organiser 3 - mm BR Each,,,,,,2610.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,122,WDO3-M41 MRP 2610.0 /SPU 
+ebco,EBCO,WDO3-M42,False,Organiser 3 - mm BR Each,,,,,,2800.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,122,WDO3-M42 MRP 2800.0 /SPU 
+ebco,EBCO,WDO3-OR,False,Organiser 3 - mm BR Each,,,,,,3370.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,122,WDO3-OR MRP 3370.0 /SPU 
+ebco,EBCO,DPW-2042,False,Wardrobe MC Set,,,,,,1568.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,123,DPW-2042 MRP 1568.0 /SPU 
+ebco,EBCO,DPW-2047,False,Wardrobe MC Set,,,,,,1722.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,123,DPW-2047 MRP 1722.0 /SPU 
+ebco,EBCO,DPW-3042,False,Wardrobe MC Set,,,,,,1894.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,123,DPW-3042 MRP 1894.0 /SPU 
+ebco,EBCO,DPW-3047,False,Wardrobe MC Set,,,,,,2100.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,123,DPW-3047 MRP 2100.0 /SPU 
+ebco,EBCO,DPW-4042,False,Wardrobe MC Set,,,,,,2382.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,123,DPW-4042 MRP 2382.0 /SPU 
+ebco,EBCO,DPW-4047,False,Wardrobe MC Set,,,,,,2604.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,123,DPW-4047 MRP 2604.0 /SPU 
+ebco,EBCO,WRF-B1,False,Bracket NP Each,,,,,300,84.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,124,WRF-B1 MRP 84.0 /SPU 300
+ebco,EBCO,WRF-B2,False,Bracket-MS NP Setof2pc.,,,,,100,42.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,124,WRF-B2 MRP 42.0 /SPU 100
+ebco,EBCO,WRF-RS1,False,Rail Centre Support NP Each,,,,,100,64.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,124,WRF-RS1 MRP 64.0 /SPU 100
+ebco,EBCO,WRF-BR1,False,Wardrobe Rail 42x25xØ4 mm BR/AC Each,,,,,,70.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,124,WRF-BR1 MRP 70.0 /SPU 
+ebco,EBCO,WRF-BR2,False,Rectangular,,,,,12.5,23.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,124,WRF-BR2 MRP 23.0 /SPU 12.5
+ebco,EBCO,HPR-1,False,Hanger Peg - Ø10x80mm NP Each,,,,,,64.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,124,HPR-1 MRP 64.0 /SPU 
+ebco,EBCO,HPM1,False,Hanger Peg - MC/GR Each,,,,,,88.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,124,HPM1 MRP 88.0 /SPU 
+ebco,EBCO,TH12,False,Tie & Belt Holder 300x270x 30mm SS304 Each,,,,,1,690.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,124,TH12 MRP 690.0 /SPU 1
+ebco,EBCO,PLBF-45C,False,450N AT Pair,,,,,,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,125,PLBF-45C MRP 760.0 /SPU 
+ebco,EBCO,PLBF-50C,False,500N AT Pair,,,,,1,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,125,PLBF-50C MRP 760.0 /SPU 1
+ebco,EBCO,PLBF-75C,False,PRO-LIFT (for Bed 750N AT Pair,,,,,1,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,125,PLBF-75C MRP 760.0 /SPU 1
+ebco,EBCO,PLBF-120C,False,1200N AT Pair,,,,,1,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,125,PLBF-120C MRP 760.0 /SPU 1
+ebco,EBCO,PLBF-150C,False,1500N AT Pair,,,,,1,760.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,125,PLBF-150C MRP 760.0 /SPU 1
+ebco,EBCO,PLBFM30,False,Pro - Lift Bed Fitting- 300N (45° AT Set of,,,,,2,1630.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,125,PLBFM30 MRP 1630.0 /SPU 2
+ebco,EBCO,W-5,False,"Duty with Remote PLBF-EMR2-HD bed size: to 6ft, AT Set",,,,,1,20469.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,125,W-5 MRP 20469.0 /SPU 1
+ebco,EBCO,PLBSS1520,False,,,,,,1,15855.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,PLBSS1520 MRP 15855.0 /SPU 1
+ebco,EBCO,PLBSS1820,False,,,,,,1,17535.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,PLBSS1820 MRP 17535.0 /SPU 1
+ebco,EBCO,BFSS-820,False,,,,,,2000,9675.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,BFSS-820 MRP 9675.0 /SPU 2000
+ebco,EBCO,BFSS-1520,False,Slats (with Bed,,,,,2000,11624.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,BFSS-1520 MRP 11624.0 /SPU 2000
+ebco,EBCO,BFSS-1820,False,,,,,,2000,14051.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,BFSS-1820 MRP 14051.0 /SPU 2000
+ebco,EBCO,BC-S1,False,Support for PLBS (For,,,,,86,1220.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,BC-S1 MRP 1220.0 /SPU 86
+ebco,EBCO,BC-S2,False,Support for PLBS (For,,,,,86,1340.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,BC-S2 MRP 1340.0 /SPU 86
+ebco,EBCO,BC-BT1,False,850-1400 AT Each,,,,,,726.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,BC-BT1 MRP 726.0 /SPU 
+ebco,EBCO,BC-BT2,False,1400-1900 AT Each,,,,,,986.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,BC-BT2 MRP 986.0 /SPU 
+ebco,EBCO,PLBF-M6K,False,Mounting Screw Kit M6 ZY Set of,,,,,50,54.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,PLBF-M6K MRP 54.0 /SPU 50
+ebco,EBCO,PLBF-M8K,False,Nuts and Washers) M8 ZY Set of,,,,,50,82.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,126,PLBF-M8K MRP 82.0 /SPU 50
+ebco,EBCO,WBV120,False,Vertical (with,,,,,1,3870.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,127,WBV120 MRP 3870.0 /SPU 1
+ebco,EBCO,WBH75,False,(withcover & Gas AT Set,,,,,1,4290.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,127,WBH75 MRP 4290.0 /SPU 1
+ebco,EBCO,WBHD1,False,"Frame, Slats & Folding dim :",,,,,1670,29883.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,127,WBHD1 MRP 29883.0 /SPU 1670
+ebco,EBCO,WBHDP-140,False,Piston for Wall Bed- 1400N AT Set,,,,,,1240.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,127,WBHDP-140 MRP 1240.0 /SPU 
+ebco,EBCO,WBHDP-170,False,Piston for Wall Bed- 1700N AT Set,,,,,,1240.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,127,WBHDP-170 MRP 1240.0 /SPU 
+ebco,EBCO,SQB1,False,Sofa Quick Bed,,,,,270,6100.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,128,SQB1 MRP 6100.0 /SPU 270
+ebco,EBCO,SLMS1-WH,False,WH Each,,,,,,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,130,SLMS1-WH MRP 490.0 /SPU 
+ebco,EBCO,SLMS1-BL,False,motion sensor) CCT: 4000K BL Each,,,,,,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,130,SLMS1-BL MRP 490.0 /SPU 
+ebco,EBCO,SLMS1-AT,False,AT Each,,,,,,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,130,SLMS1-AT MRP 490.0 /SPU 
+ebco,EBCO,SLS1,False,switch) CCT: 4000K WH/BL/AT Each,,,,,,490.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,130,SLS1 MRP 490.0 /SPU 
+ebco,EBCO,CLPD1,False,Cove Light Profile,,,,,3000,3070.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,131,CLPD1 MRP 3070.0 /SPU 3000
+ebco,EBCO,CGSL2K,False,for Cabinet Glass,,,,,4,106.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,132,CGSL2K MRP 106.0 /SPU 4
+ebco,EBCO,LED-LCC2,False,Connector 8 mm -,,,,,1.5,236.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,133,LED-LCC2 MRP 236.0 /SPU 1.5
+ebco,EBCO,LED-LLC3,False,Connector 8 mm- 180° CL Each,,,,,,86.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,133,LED-LLC3 MRP 86.0 /SPU 
+ebco,EBCO,LED-LLC4,False,Connector 8 mm- 90° CL Each,,,,,,100.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,133,LED-LLC4 MRP 100.0 /SPU 
+ebco,EBCO,DTS2-2,False,(Surface or,,,,,60,1030.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,133,DTS2-2 MRP 1030.0 /SPU 60
+ebco,EBCO,DTS3-2,False,Door Trigger Sensor,,,,,60,1030.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,133,DTS3-2 MRP 1030.0 /SPU 60
+ebco,EBCO,DTS4S,False,Door Trigger Sensor,,,,,60,860.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,133,DTS4S MRP 860.0 /SPU 60
+ebco,EBCO,DTS4D,False,Door Trigger Sensor,,,,,60,1210.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,133,DTS4D MRP 1210.0 /SPU 60
+ebco,EBCO,TDS-2,False,Touch Dimmer,,,,,60,1050.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,133,TDS-2 MRP 1050.0 /SPU 60
+ebco,EBCO,ITDS-3,False,Dimmer Switch,,,,,60,998.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,ITDS-3 MRP 998.0 /SPU 60
+ebco,EBCO,L-D3,False,3 Way Distributor BL Each,,,,,,354.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,L-D3 MRP 354.0 /SPU 
+ebco,EBCO,L-D6,False,6 Way Distributor 24v/3.5A BL Each,,,,,,396.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,L-D6 MRP 396.0 /SPU 
+ebco,EBCO,L-D10,False,10 Way Distributor BL Each,,,,,,630.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,L-D10 MRP 630.0 /SPU 
+ebco,EBCO,PSU2-2424,False,24W/24V WH Each,,,,,,1560.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,PSU2-2424 MRP 1560.0 /SPU 
+ebco,EBCO,PSU2-2436,False,Unit - Series 2 36W/24V WH Each,,,,,,2050.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,PSU2-2436 MRP 2050.0 /SPU 
+ebco,EBCO,PSU2-2460,False,60W/24V WH Each,,,,,,2370.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,PSU2-2460 MRP 2370.0 /SPU 
+ebco,EBCO,PSU3-2436,False,36W/24V BL Each,,,,,,2960.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,PSU3-2436 MRP 2960.0 /SPU 
+ebco,EBCO,PSU3-2465,False,Unit - Series 3 65W/24V BL Each,,,,,,3340.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,PSU3-2465 MRP 3340.0 /SPU 
+ebco,EBCO,PSU3-24120,False,120W/24V BL Each,,,,,,5640.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,PSU3-24120 MRP 5640.0 /SPU 
+ebco,EBCO,L-EC2,False,for Light Series 2 2m BL Each,,,,,,218.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,L-EC2 MRP 218.0 /SPU 
+ebco,EBCO,SAC1,False,Cord,,,,,4,130.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,134,SAC1 MRP 130.0 /SPU 4
+ebco,EBCO,LUM2,False,Luminor,,,,,50,292.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM2 MRP 292.0 /SPU 50
+ebco,EBCO,LUM2-HP1,False,Luminor 2 Housing 21.4x10.4mm SL 3m,,,,,15,638.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM2-HP1 MRP 638.0 /SPU 15
+ebco,EBCO,LUM3,False,Luminor3 13.6x7mm OP 1rollof,,,,,50,256.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM3 MRP 256.0 /SPU 50
+ebco,EBCO,LUM3-HP1,False,Luminor 3 Housing 18.5x27.5mm WH 3m,,,,,15,396.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM3-HP1 MRP 396.0 /SPU 15
+ebco,EBCO,LUM3-HP2,False,Profile 2 16x10mm SL 3m,,,,,15,358.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM3-HP2 MRP 358.0 /SPU 15
+ebco,EBCO,LUM5,False,Luminor 5 18.4x6.7mm OP,,,,,50,402.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM5 MRP 402.0 /SPU 50
+ebco,EBCO,LUM6C1,False,Diffusor Profile with,,,,,10,1224.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM6C1 MRP 1224.0 /SPU 10
+ebco,EBCO,LUM8C1,False,Diffusor Profile with,,,,,1,1824.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM8C1 MRP 1824.0 /SPU 1
+ebco,EBCO,LUM10C1,False,Diffusor Profile with,,,,,7,2942.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM10C1 MRP 2942.0 /SPU 7
+ebco,EBCO,LUM11,False,Luminor 11,,,,,3,636.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,135,LUM11 MRP 636.0 /SPU 3
+ebco,EBCO,LUM12G,False,Luminor 12 - Glass,,,,,3,796.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,136,LUM12G MRP 796.0 /SPU 3
+ebco,EBCO,LUM13W,False,Luminor 13 - Wood,,,,,3,796.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,136,LUM13W MRP 796.0 /SPU 3
+ebco,EBCO,LUM14C,False,Luminor 14 Cove,,,,,3,1272.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,136,LUM14C MRP 1272.0 /SPU 3
+ebco,EBCO,LUM16,False,Luminor 16,,,,,3,634.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,136,LUM16 MRP 634.0 /SPU 3
+ebco,EBCO,CCP1,False,Cable Cover Profile GR/WH m,,,,,30,244.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,136,CCP1 MRP 244.0 /SPU 30
+ebco,EBCO,SLTLP2-E,False,"stage, Anti-Collision, 3 Stroke : 650mm AT Set",,,,,1,52764.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,145,SLTLP2-E MRP 52764.0 /SPU 1
+ebco,EBCO,SLTLB2-E,False,"Basic 2 (2 stage, Single Stroke: 450mm AT Set",,,,,1,31060.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,145,SLTLB2-E MRP 31060.0 /SPU 1
+ebco,EBCO,SLTL2-E,False,height memory Stroke: 460mm AT Set,,,,,1,47292.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,145,SLTL2-E MRP 47292.0 /SPU 1
+ebco,EBCO,SLTL2-120G,False,1200 - Gas Lift Stroke: 380mm AT Set,,,,,1,28950.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,145,SLTL2-120G MRP 28950.0 /SPU 1
+ebco,EBCO,SLDT-120G,False,Table - Gas Lift (With Dynamic 5-8kg WH Set,,,,,1,40792.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,145,SLDT-120G MRP 40792.0 /SPU 1
+ebco,EBCO,CP2,False,Table Top) - Centre Dynamic -,,,,,1,13158.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,146,CP2 MRP 13158.0 /SPU 1
+ebco,EBCO,CP3,False,Gas Lift Centre Pole 3 Speed: 200mm/sec WH/AT Set,,,,,1,13816.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,146,CP3 MRP 13816.0 /SPU 1
+ebco,EBCO,CMA-EAEM3,False,Arm Edge Mount 3 Up and down Range: 105- AT Each,,,,,1,2480.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,148,CMA-EAEM3 MRP 2480.0 /SPU 1
+ebco,EBCO,KBTM35,False,with Mouse Tray Extension: 200mm BL Each,,,,,1,1508.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,149,KBTM35 MRP 1508.0 /SPU 1
+ebco,EBCO,KBT35,False,w/o Mouse Tray Extension: 200mm BL Each,,,,,1,1092.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,149,KBT35 MRP 1092.0 /SPU 1
+ebco,EBCO,KTSM35,False,(with Mouse Tray) Extension: 200mm BL Each,,,,,1,1804.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,149,KTSM35 MRP 1804.0 /SPU 1
+ebco,EBCO,KTS35,False,(w/o Mouse Tray) Extension: 200mm BL Each,,,,,1,1346.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,149,KTS35 MRP 1346.0 /SPU 1
+ebco,EBCO,KBTC35,False,(W/o Mouse Tray) Extension: 240mm BL Each,,,,,1,1032.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,149,KBTC35 MRP 1032.0 /SPU 1
+ebco,EBCO,KBTJ1,False,Soft Pad (w/o Mouse Height adjustment: 54- BL Each,,,,,1,1910.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,149,KBTJ1 MRP 1910.0 /SPU 1
+ebco,EBCO,PPK1,False,( w/o Mouse Tray),,,,,1,418.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,149,PPK1 MRP 418.0 /SPU 1
+ebco,EBCO,PPKM2,False,(with Sliding Mouse,,,,,10,744.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,149,PPKM2 MRP 744.0 /SPU 10
+ebco,EBCO,CPUS1,False,with Twin Wheel 230mm BL/AT Each,,,,,,790.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,150,CPUS1 MRP 790.0 /SPU 
+ebco,EBCO,CPUS-E1,False,CPU Stand - ECO 205mm BL Each,,,,,1,688.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,150,CPUS-E1 MRP 688.0 /SPU 1
+ebco,EBCO,CPUST1,False,Telescopic CPU Stand Width adjustment: 145- BL Each,,,,,4,1116.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,150,CPUST1 MRP 1116.0 /SPU 4
+ebco,EBCO,PT1,False,Pencil Tray,,,,,1,120.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,151,PT1 MRP 120.0 /SPU 1
+ebco,EBCO,TM-6035,False,Table Mat Dimensions: BL/BN/BR Each,,,,,,1470.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,TM-6035 MRP 1470.0 /SPU 
+ebco,EBCO,LTS1,False,Laptop Stand,,,,,1,480.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,LTS1 MRP 480.0 /SPU 1
+ebco,EBCO,FR2,False,Foot Rest,,,,,5,1512.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,FR2 MRP 1512.0 /SPU 5
+ebco,EBCO,TPCS8,False,Partition thickness: 4- WT/SL/ Each,,,,,25,152.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,TPCS8 MRP 152.0 /SPU 25
+ebco,EBCO,TPCS16,False,20mm AT/BL Each,,,,,25,160.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,TPCS16 MRP 160.0 /SPU 25
+ebco,EBCO,TPCS-8EM,False,Partition thickness:,,,,,25,166.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,TPCS-8EM MRP 166.0 /SPU 25
+ebco,EBCO,TPCS-16EM,False,Partition thickness: 12- SL/WT/ Each,,,,,25,176.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,TPCS-16EM MRP 176.0 /SPU 25
+ebco,EBCO,TPC2-620EM,False,Table Partition Clamp Partition thickness: 6- SL/WT/ Each,,,,,25,192.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,TPC2-620EM MRP 192.0 /SPU 25
+ebco,EBCO,TPC3-412,False,4mm to 12mm SL/AT/BL/ Each,,,,,40,106.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,TPC3-412 MRP 106.0 /SPU 40
+ebco,EBCO,TPC3-1220,False,12mm to 20mm WT Each,,,,,40,110.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,152,TPC3-1220 MRP 110.0 /SPU 40
+ebco,EBCO,EBS-SO2,False,Power Sockets + 2 USB Dimension: SL Each,,,,,,11920.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,153,EBS-SO2 MRP 11920.0 /SPU 
+ebco,EBCO,EBS-EM2,False,Mount (with 2 Universal 117mm BL Each,,,,,,6260.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,153,EBS-EM2 MRP 6260.0 /SPU 
+ebco,EBCO,EBS-CM1,False,Mount (with 2 Universal 46mm BL Each,,,,,1,4570.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,153,EBS-CM1 MRP 4570.0 /SPU 1
+ebco,EBCO,EBS-FU3,False,Sockets + 2 USB Fast 228x158x50mm Desktop BL Each,,,,,,7200.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,153,EBS-FU3 MRP 7200.0 /SPU 
+ebco,EBCO,EBCM3,False,"Universal Power Socket, (Cut out: 176mm) WH/BL Each",,,,,,1354.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,153,EBCM3 MRP 1354.0 /SPU 
+ebco,EBCO,EB5-F,False,"USBC + 1 USBA, switch",,,,,1,1530.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,153,EB5-F MRP 1530.0 /SPU 1
+ebco,EBCO,EB6-TM,False,Top Mount (2 Power +1,,,,,1,2480.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,154,EB6-TM MRP 2480.0 /SPU 1
+ebco,EBCO,EB6-CM,False,Ceiling Mount (2 Power,,,,,1,2500.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,154,EB6-CM MRP 2500.0 /SPU 1
+ebco,EBCO,EB6-EM,False,Edge Mount (2 Power,,,,,1,2520.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,154,EB6-EM MRP 2520.0 /SPU 1
+ebco,EBCO,CAT6,False,Switch + 1 +,,,,,1,3870.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,CAT6 MRP 3870.0 /SPU 1
+ebco,EBCO,EB-8M,False,8 Module w/o Soft Each,,,,,2,1348.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EB-8M MRP 1348.0 /SPU 2
+ebco,EBCO,EB-8MSC,False,Close & w/o Shield AT Each,,,,,2,1486.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EB-8MSC MRP 1486.0 /SPU 2
+ebco,EBCO,EB-8MSCS,False,Close & Shield AT Each,,,,,1,1698.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EB-8MSCS MRP 1698.0 /SPU 1
+ebco,EBCO,EB-10MSC,False,Close & w/o Shield AT Each,,,,,2,1644.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EB-10MSC MRP 1644.0 /SPU 2
+ebco,EBCO,EB-10MSCS,False,Close & Shield AT Each,,,,,1,1890.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EB-10MSCS MRP 1890.0 /SPU 1
+ebco,EBCO,EBW30,False,Electric Box Wide 30,,,,,1,1280.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EBW30 MRP 1280.0 /SPU 1
+ebco,EBCO,EBW35,False,Electric Box Wide 35,,,,,1,1450.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EBW35 MRP 1450.0 /SPU 1
+ebco,EBCO,EBW40,False,Electric Box Wide 40,,,,,1,1620.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EBW40 MRP 1620.0 /SPU 1
+ebco,EBCO,EBW45,False,Electric Box Wide 45,,,,,1,1790.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EBW45 MRP 1790.0 /SPU 1
+ebco,EBCO,EB2W45,False,Electric Box 2 Way 45,,,,,1,2898.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EB2W45 MRP 2898.0 /SPU 1
+ebco,EBCO,EB2W50,False,Electric Box 2 Way 50,,,,,1,3164.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EB2W50 MRP 3164.0 /SPU 1
+ebco,EBCO,EB2W60,False,Electric Box 2 Way 60,,,,,1,3680.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,155,EB2W60 MRP 3680.0 /SPU 1
+ebco,EBCO,EBS11,False,Cutting Dimension: /BT Each,,,,,1,550.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,156,EBS11 MRP 550.0 /SPU 1
+ebco,EBCO,EBS20,False,Cutting Dimension: /BT Each,,,,,1,822.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,156,EBS20 MRP 822.0 /SPU 1
+ebco,EBCO,EBS25,False,Cutting Dimension: /BT Each,,,,,1,974.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,156,EBS25 MRP 974.0 /SPU 1
+ebco,EBCO,EBS30,False,Cutting Dimension: /BT Each,,,,,1,1140.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,156,EBS30 MRP 1140.0 /SPU 1
+ebco,EBCO,EBS35,False,Cutting Dimension: WT/AT/BT Each,,,,,1,1294.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,156,EBS35 MRP 1294.0 /SPU 1
+ebco,EBCO,EBS40,False,Cutting Dimension: /BT Each,,,,,1,1456.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,156,EBS40 MRP 1456.0 /SPU 1
+ebco,EBCO,EBS45,False,Cutting Dimension: /BT Each,,,,,1,1612.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,156,EBS45 MRP 1612.0 /SPU 1
+ebco,EBCO,EBS230,False,Electric Box Slim 2,,,,,120,624.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,156,EBS230 MRP 624.0 /SPU 120
+ebco,EBCO,CO60,False,Cable Organiser - 60 Cutout: Ø 60mm WH/GR/ Each,,,,,200,37.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,CO60 MRP 37.0 /SPU 200
+ebco,EBCO,CO60ZN1,False,Ø 60mm ZW Each,,,,,20,208.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,CO60ZN1 MRP 208.0 /SPU 20
+ebco,EBCO,CO80ZN1,False,Ø 80mm ZW Each,,,,,20,274.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,CO80ZN1 MRP 274.0 /SPU 20
+ebco,EBCO,CT30,False,300mm SS Each,,,,,2,228.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,CT30 MRP 228.0 /SPU 2
+ebco,EBCO,CT50,False,500mm SS Each,,,,,2,364.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,CT50 MRP 364.0 /SPU 2
+ebco,EBCO,CTF-1,False,Cable Tray Fixed,,,,,2,432.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,CTF-1 MRP 432.0 /SPU 2
+ebco,EBCO,UCT-551,False,,,,,,89,706.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,UCT-551 MRP 706.0 /SPU 89
+ebco,EBCO,UCT-552,False,,,,,,180,878.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,UCT-552 MRP 878.0 /SPU 180
+ebco,EBCO,TCO2,False,Tool for Cable Organiser 20mm EB Each,,,,,,44.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,TCO2 MRP 44.0 /SPU 
+ebco,EBCO,TCO3,False,Tool for Cable Organiser 30mm EB Each,,,,,,48.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,TCO3 MRP 48.0 /SPU 
+ebco,EBCO,VO2,False,Vertebrae (Oval) L - 780mm WH/GR/ Each,,,,,20,846.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,VO2 MRP 846.0 /SPU 20
+ebco,EBCO,VO13,False,Vertebrae Oval WH/GR/ Each,,,,,,1320.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,VO13 MRP 1320.0 /SPU 
+ebco,EBCO,VR2,False,Vertebrae Rectangular L - 790mm WH/GR/ Each,,,,,20,514.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,VR2 MRP 514.0 /SPU 20
+ebco,EBCO,VR13,False,Vertebrae Rectangular WH/GR/ Each,,,,,,676.0,INR,True,,2025-01-27,Pricelist -2026/EBCO MRP dt. 27th January 2025.pdf,157,VR13 MRP 676.0 /SPU 

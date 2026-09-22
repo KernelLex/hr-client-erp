@@ -48,21 +48,32 @@ Cross-vendor rules baked in from the analysis:
 - One row per `item_code` in the written CSV/JSON (first wins); raw multi-row
   counts kept in `_summary.json`.
 
-## Parser archetypes (three built, cover all layouts)
+## Parser archetypes (five built, cover every layout class)
 
 | Vendor | Parser | Archetype | Unique SKUs | HSN | Notes |
 |--------|--------|-----------|------------:|:---:|-------|
 | Häfele | `hafele` | line-ordered blocks | 2,801 | — | cleanest |
-| Tataria | `tataria` | blocks + sibling inheritance | 996 | — | `₹NNNN/-`, inherits desc/finish |
 | Hettich | `hettich` | **coordinate** (word x/y) | 1,460 | ✅ 62 | column-shredded text |
+| Tataria | `tataria` | blocks + sibling inheritance | 996 | — | `₹NNNN/-`, inherits desc/finish |
+| EBCO | `ebco` | **positional** (rightmost-number MRP) | 912 | — | GST-inclusive; MRP per SPU pack; varying table width |
+| KSF | `ksf` | line triplets colour/article/MRP | 161 | — | Häfele `NNN.NN.NNN` namespace |
+
+**Total: 6,330 unique SKUs, 0 null MRP.**
 
 ## Parsers pending (Phase 1 continuation)
 
-`ebco` (variable-column, GST-inclusive), `kesseboehmer` (BOM sets + colour
-grids), `bosch` / `siemens` / `reginox` / `luxury` / `ksf` (brochure layouts;
-Reginox has no codes → synthesize; Häfele/KSF/Luxury share the `NNN.NN.NNN`
-namespace → dedupe on load). **`blum` is ~80 % scanned (322 MB)** — request
-Blum's source Excel; do **not** blind-OCR.
+`kesseboehmer` (BOM sets + positional colour grids), `bosch` / `siemens` /
+`reginox` / `luxury` (brochure layouts — Bosch's text is exploded to single
+chars, Reginox has no codes → synthesize). Häfele/KSF/Luxury share the
+`NNN.NN.NNN` namespace → dedupe on load. **`blum` is ~80 % scanned (322 MB)** —
+request Blum's source Excel; do **not** blind-OCR.
+
+## Images in the drop (analysed, non-pricelist)
+
+The three `.jpeg`s are **not** catalog data: two are Tally financial-summary
+screenshots (Vera ₹56.5 Cr sales; Hagan Modular ₹6.1 Cr — multi-company /
+dashboard signal) and one is the **Vera Enterprises logo** (serif "V"
+wordmark) — the letterhead asset for quotation print formats (Phase 4).
 
 ## Not committed
 

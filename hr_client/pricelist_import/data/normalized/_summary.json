@@ -21,8 +21,13 @@
   },
   {
     "vendor": "ebco",
-    "status": "parser pending",
-    "note": "~2.4k SKUs, MRP GST-INCLUSIVE, verify still current; variable-column table, parser pending (Phase 1 cont.)"
+    "status": "ok",
+    "raw_rows": 1002,
+    "unique_skus": 912,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": true,
+    "valid_from": "2025-01-27"
   },
   {
     "vendor": "hettich",
@@ -61,8 +66,13 @@
   },
   {
     "vendor": "ksf",
-    "status": "parser pending",
-    "note": "sinks & faucets, H\u00e4fele article namespace, colour variants"
+    "status": "ok",
+    "raw_rows": 162,
+    "unique_skus": 161,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": false,
+    "valid_from": ""
   },
   {
     "vendor": "blum",
