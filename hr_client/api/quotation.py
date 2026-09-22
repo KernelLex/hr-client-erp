@@ -593,6 +593,15 @@ _FORMATS = {
 # Customer-facing formats must never show cost, GP, or supplier data (§4.9).
 _CUSTOMER_FORMATS = {"summary", "detailed", "technical"}
 
+# Standard payment stages (print spec §28). Derived on the print against the
+# grand total; a configurable per-quotation schedule is a later refinement.
+_PAYMENT_STAGES = (
+    ("Booking / Confirmation", 10),
+    ("Order Confirmation", 40),
+    ("Before Dispatch", 40),
+    ("Before Handover", 10),
+)
+
 
 @frappe.whitelist()
 @handle_api_error
@@ -659,6 +668,13 @@ def get_quotation_print(name: str, fmt: str = "summary"):
             "cgst_percent": round(_flt(doc.gst_percent) / 2.0, 2), "cgst_amount": half,
             "sgst_percent": round(_flt(doc.gst_percent) / 2.0, 2), "sgst_amount": round(_flt(doc.gst_amount) - half, 2),
             "amount_in_words": frappe.utils.money_in_words(doc.grand_total, "INR"),
+            # Payment schedule (§28) — derived from the grand total against the
+            # standard stage template, so it always tracks the current value.
+            "payment_schedule": [
+                {"stage": stage, "percent": pct,
+                 "amount": round(_flt(doc.grand_total) * pct / 100.0, 2)}
+                for stage, pct in _PAYMENT_STAGES
+            ],
         })
     # Internal Costing only — cost, GP, rate source. Marked confidential.
     if fmt == "internal":

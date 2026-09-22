@@ -20,6 +20,7 @@ interface PrintDoc {
   gross_total?: number; discount_percent?: number; discount_amount?: number; adjustment?: number
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
   cgst_percent?: number; cgst_amount?: number; sgst_percent?: number; sgst_amount?: number; amount_in_words?: string
+  payment_schedule?: { stage: string; percent: number; amount: number }[]
   confidential?: boolean; cost_basis?: number; gross_profit?: number; gp_percent?: number
   target_gp_percent?: number; min_gp_percent?: number; cost_sheet?: string; conditions?: string
   required_authority?: string; triggered_rules?: string
@@ -146,6 +147,29 @@ export function QuotationPrintPage() {
         )}
         {showPricing && d.amount_in_words && (
           <div className="mt-2 text-right text-xs italic" style={{ color: "var(--text-muted)" }}>{d.amount_in_words}</div>
+        )}
+
+        {/* Payment schedule (§28) — customer-facing, derived from the grand total. */}
+        {d.customer_facing && d.payment_schedule && d.payment_schedule.length > 0 && (
+          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Payment Terms</div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ color: "var(--text-muted)" }} className="text-left text-[11px] uppercase tracking-wide">
+                  <th className="py-1">Stage</th><th className="py-1 text-right">%</th><th className="py-1 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {d.payment_schedule.map((p, i) => (
+                  <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                    <td className="py-1">{p.stage}</td>
+                    <td className="py-1 text-right">{p.percent}%</td>
+                    <td className="py-1 text-right">{inr(p.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Internal Costing only (§4.9) */}
