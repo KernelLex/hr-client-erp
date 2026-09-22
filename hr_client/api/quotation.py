@@ -20,7 +20,10 @@ from hr_client.api.cost_sheet import gp_tone
 _HEADER_FIELDS = ("quotation_title", "opportunity", "company_name", "prepared_by",
                   "discount_percent", "adjustment", "gst_percent",
                   "credit_terms_standard", "credit_terms", "terms_template",
-                  "terms_and_conditions", "notes")
+                  "terms_and_conditions", "notes",
+                  # commercial concessions the approval matrix evaluates (§36-43)
+                  "advance_received", "foc_value", "installation_waiver",
+                  "transport_waiver", "price_override_percent")
 
 _LINE_FIELDS = ("line_type", "section", "specification", "measurement",
                 "source_boq_line", "stock_or_lead", "quantity", "uom", "rate")
@@ -63,32 +66,52 @@ def _apply_maths(doc):
     doc.gp_percent = round(doc.gross_profit / doc.net_before_gst * 100.0, 2) if doc.net_before_gst else 0.0
 
 
+_LINE_TYPE_CATEGORY = {"Trading": None, "Project / Modular": "Modular", "Services": "Services"}
+
+
 def compute_authority(doc):
-    """The §4.6 exception engine. Returns (required_authority, [rule dicts])."""
-    rules = []
-    disc = _flt(doc.discount_percent)
-    gp = _flt(doc.gp_percent)
-    target = _flt(doc.target_gp_percent)
-    minimum = _flt(doc.min_gp_percent)
+    """The §4.6 exception engine — delegates to the configurable commercial-
+    approval matrix (hr_client.api.commercial_approval), then adds the two
+    signals the band matrix doesn't cover (non-standard credit, negotiated
+    reduction). Returns (required_authority, [rule dicts]) — same contract as
+    before so the submit/decide/serialize workflow is unchanged."""
+    from hr_client.api import commercial_approval as ca
 
-    if disc > _DISC_CFO:
-        rules.append({"rule": f"Discount above {_DISC_CFO:.0f}%", "routes_to": "CFO", "rank": 2})
-    elif disc > _DISC_MGR:
-        rules.append({"rule": f"Discount above {_DISC_MGR:.0f}%", "routes_to": "Sales Manager", "rank": 1})
-
-    if minimum and gp < minimum:
-        rules.append({"rule": "Gross profit below minimum", "routes_to": "Director / CFO", "rank": 3})
-    elif target and gp < target:
-        rules.append({"rule": "Gross profit below target", "routes_to": "Sales Manager", "rank": 1})
+    cats = sorted({_LINE_TYPE_CATEGORY.get(ln.line_type) for ln in doc.lines},
+                  key=lambda c: (c is None, c)) or [None]
+    metrics = {
+        "discount_pct": _flt(doc.discount_percent),
+        "categories": list(cats),
+        "value": _flt(doc.grand_total) or _flt(doc.net_before_gst),
+        "gp_pct": _flt(doc.gp_percent),
+        "target_gp": _flt(doc.target_gp_percent) or 30,
+        "min_gp": _flt(doc.min_gp_percent) or 22,
+        "advance_pct": _flt(getattr(doc, "advance_received", 0)) or None,
+        "foc": _flt(getattr(doc, "foc_value", 0)),
+        "installation_waiver": _flt(getattr(doc, "installation_waiver", 0)),
+        "transport_waiver": _flt(getattr(doc, "transport_waiver", 0)),
+        "price_override_pct": _flt(getattr(doc, "price_override_percent", 0)),
+        "cost": _flt(doc.cost_basis),
+        "selling": _flt(doc.net_before_gst),
+    }
+    try:
+        res = ca.evaluate(metrics)
+        rules = [{"rule": e["detail"], "routes_to": ca.role_of(e["required_level"]),
+                  "rank": ca._rank(e["required_level"]), "severity": e["severity"]}
+                 for e in res["exceptions"]]
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "compute_authority engine")
+        rules = []
 
     if not doc.credit_terms_standard:
-        rules.append({"rule": "Non-standard credit terms", "routes_to": "CFO", "rank": 2})
-
+        rules.append({"rule": "Non-standard credit terms", "routes_to": "CFO", "rank": 3})
     if _flt(doc.adjustment) < 0:
-        rules.append({"rule": "Negative adjustment (negotiated reduction)", "routes_to": "Sales Manager", "rank": 1})
+        rules.append({"rule": "Negotiated reduction (negative adjustment)",
+                      "routes_to": "Sales Manager", "rank": 1})
 
     top = max((r["rank"] for r in rules), default=0)
-    return _RANK_LABEL[top], rules
+    authority = ca.role_of(ca.LEVELS[min(top, len(ca.LEVELS) - 1)])
+    return authority, rules
 
 
 def _refresh_engine(doc):
