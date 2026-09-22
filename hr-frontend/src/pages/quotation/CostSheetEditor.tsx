@@ -39,13 +39,32 @@ interface CostSheet {
   lines: GridRow[]
 }
 
+// The estimator edits the identity + cost inputs; total_cost, suggested selling
+// price and per-line GP % are computed server-side (§2.2/§60, milestone 17).
 const LINE_COLS: GridCol[] = [
-  { key: "area", label: "Area", width: 90 },
-  { key: "unit_name", label: "Unit", width: 160 },
-  { key: "item_code", label: "Item Code", width: 110 },
-  { key: "calc_qty", label: "Calc Qty", width: 90 },
-  { key: "cost_rate", label: "Cost Rate", width: 100 },
-  { key: "cost_amount", label: "Cost Amount", width: 110 },
+  { key: "area", label: "Area", width: 80 },
+  { key: "unit_name", label: "Unit", width: 150 },
+  { key: "item_code", label: "Item Code", width: 100 },
+  { key: "calc_qty", label: "Qty", type: "number", width: 60 },
+  { key: "cost_rate", label: "Cost Rate", type: "number", width: 90 },
+  { key: "material_cost", label: "Material", type: "number", width: 85 },
+  { key: "finish_cost", label: "Finish", type: "number", width: 80 },
+  { key: "hardware_cost", label: "Hardware", type: "number", width: 85 },
+  { key: "glass_cost", label: "Glass", type: "number", width: 75 },
+  { key: "aluminium_cost", label: "Alum.", type: "number", width: 75 },
+  { key: "manufacturing_cost", label: "Mfg.", type: "number", width: 75 },
+  { key: "labour_cost", label: "Labour", type: "number", width: 80 },
+  { key: "installation_cost", label: "Install", type: "number", width: 80 },
+  { key: "transportation_cost", label: "Transport", type: "number", width: 85 },
+  { key: "site_cost", label: "Site", type: "number", width: 70 },
+  { key: "outsourcing_cost", label: "Outsrc", type: "number", width: 80 },
+  { key: "overhead", label: "O/H", type: "number", width: 70 },
+  { key: "other_cost", label: "Other", type: "number", width: 75 },
+  { key: "total_cost", label: "Total Cost", readOnly: true, width: 100 },
+  { key: "proposed_selling_price", label: "Proposed SP", type: "number", width: 100 },
+  { key: "discount_percent", label: "Disc %", type: "number", width: 70 },
+  { key: "suggested_selling_price", label: "Suggested SP", readOnly: true, width: 100 },
+  { key: "gp_percent", label: "GP %", readOnly: true, width: 70 },
 ]
 
 const inr = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0)
@@ -90,6 +109,10 @@ export function CostSheetEditor() {
     } finally {
       setBusy(null)
     }
+  }
+  async function saveLines(rows: GridRow[]) {
+    await costSheetPost("save_cost_lines", { name, lines: rows })
+    refresh()
   }
   async function action(endpoint: string, label: string, then?: (res: { name?: string }) => void) {
     setBusy(endpoint)
@@ -211,8 +234,12 @@ export function CostSheetEditor() {
         </div>
       </div>
 
-      <RegisterGrid title="Cost Lines (from BOQ)" columns={LINE_COLS} rows={c.lines} editable={false}
-        onSave={async () => {}} emptyLabel="No cost lines." />
+      <RegisterGrid title="Cost Lines — per-line component breakdown (§2.2/§60)" columns={LINE_COLS} rows={c.lines} editable={!locked}
+        onSave={saveLines} emptyLabel="No cost lines. Build on an approved BOQ to seed them, or add lines here." />
+      <p className="mt-1.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
+        Enter the cost components for each line — Total Cost is their sum, or falls back to Cost Rate × Qty when no components are filled.
+        Suggested SP is derived from the Target GP %; enter a Proposed SP (and optional discount) to see the realised per-line GP %.
+      </p>
     </div>
   )
 }

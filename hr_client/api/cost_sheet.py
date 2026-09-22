@@ -30,6 +30,12 @@ def _clean(payload, allowed):
     return {k: payload.get(k) for k in allowed if payload.get(k) is not None}
 
 
+def _rows_of(payload, key):
+    if isinstance(payload, str):
+        payload = frappe.parse_json(payload)
+    return payload if isinstance(payload, list) else payload.get(key, [])
+
+
 def _flt(v):
     return frappe.utils.flt(v)
 
@@ -250,6 +256,33 @@ def update_cost_sheet(name: str, payload):
     frappe.db.commit()
     return {"success": True, "name": doc.name, "total_cost": doc.total_cost,
             "projected_gp_percent": doc.projected_gp_percent}
+
+
+# Line fields an estimator may edit — the snapshot identity columns plus the cost
+# inputs the compute engine (_line_maths) consumes. calc_qty/cost_rate give the
+# simple fallback; the 13 components give the detailed breakdown; proposed price +
+# discount drive the per-line GP.
+_LINE_FIELDS = ("area", "unit_name", "item_code", "calc_qty", "cost_rate",
+                "proposed_selling_price", "discount_percent") + _COST_COMPONENTS
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def save_cost_lines(name: str, lines):
+    """Replace the cost-sheet lines with the edited set and recompute (§2.2/§60).
+    Each line's total cost is the sum of its filled cost components, or
+    cost_rate × calc_qty when none are given. Draft-only."""
+    require_login()
+    doc = frappe.get_doc("Vera Cost Sheet", name)
+    _assert_editable(doc)
+    doc.set("lines", [])
+    for r in _rows_of(lines, "lines"):
+        doc.append("lines", {k: r.get(k) for k in _LINE_FIELDS if r.get(k) not in (None, "")})
+    _apply_maths(doc)
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "count": len(doc.lines), "base_cost": doc.base_cost,
+            "total_cost": doc.total_cost, "projected_gp_percent": doc.projected_gp_percent}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
