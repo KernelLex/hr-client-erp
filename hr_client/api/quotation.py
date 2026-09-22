@@ -619,6 +619,19 @@ def get_quotation_print(name: str, fmt: str = "summary"):
             row["gross_amount"] = ln.gross_amount
         lines.append(row)
 
+    # Group lines into sections with subtotals — the customer-facing hierarchy
+    # the print spec mandates (§15/§25). Order is preserved as first-seen.
+    sections, _idx = [], {}
+    for row in lines:
+        sec = row.get("section") or "Items"
+        if sec not in _idx:
+            _idx[sec] = len(sections)
+            sections.append({"section": sec, "lines": [], "subtotal": 0.0})
+        s = sections[_idx[sec]]
+        s["lines"].append(row)
+        if fmt != "technical":
+            s["subtotal"] = round(s["subtotal"] + _flt(row.get("gross_amount")), 2)
+
     out = {
         "format": fmt,
         "format_label": _FORMATS[fmt],
@@ -630,15 +643,22 @@ def get_quotation_print(name: str, fmt: str = "summary"):
         "company_name": doc.company_name,
         "status": doc.status,
         "lines": lines,
+        "sections": sections,
         "terms_and_conditions": doc.terms_and_conditions,
     }
     # Commercial totals — shown on all except the pricing-free technical BOQ.
     if fmt != "technical":
+        # Intra-state default: CGST + SGST each half the GST (§27/§68). Place-of-
+        # supply-driven IGST is a later refinement; the sample quotes are intra-state.
+        half = round(_flt(doc.gst_amount) / 2.0, 2)
         out.update({
             "gross_total": doc.gross_total, "discount_percent": doc.discount_percent,
             "discount_amount": doc.discount_amount, "adjustment": doc.adjustment,
             "net_before_gst": doc.net_before_gst, "gst_percent": doc.gst_percent,
             "gst_amount": doc.gst_amount, "grand_total": doc.grand_total,
+            "cgst_percent": round(_flt(doc.gst_percent) / 2.0, 2), "cgst_amount": half,
+            "sgst_percent": round(_flt(doc.gst_percent) / 2.0, 2), "sgst_amount": round(_flt(doc.gst_amount) - half, 2),
+            "amount_in_words": frappe.utils.money_in_words(doc.grand_total, "INR"),
         })
     # Internal Costing only — cost, GP, rate source. Marked confidential.
     if fmt == "internal":

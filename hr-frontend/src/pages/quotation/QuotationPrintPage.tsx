@@ -12,12 +12,14 @@ interface PrintLine {
   line_type?: string; section?: string; specification?: string; measurement?: string
   quantity?: number; uom?: string; rate?: number; gross_amount?: number
 }
+interface PrintSection { section: string; subtotal: number; lines: PrintLine[] }
 interface PrintDoc {
   format: string; format_label: string; customer_facing: boolean; watermark: string | null
   name: string; revision: number; title: string; company_name: string | null; status: string
-  lines: PrintLine[]; terms_and_conditions: string | null
+  lines: PrintLine[]; sections?: PrintSection[]; terms_and_conditions: string | null
   gross_total?: number; discount_percent?: number; discount_amount?: number; adjustment?: number
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
+  cgst_percent?: number; cgst_amount?: number; sgst_percent?: number; sgst_amount?: number; amount_in_words?: string
   confidential?: boolean; cost_basis?: number; gross_profit?: number; gp_percent?: number
   target_gp_percent?: number; min_gp_percent?: number; cost_sheet?: string; conditions?: string
   required_authority?: string; triggered_rules?: string
@@ -71,47 +73,79 @@ export function QuotationPrintPage() {
           </div>
         </div>
 
-        <table className="w-full text-sm">
-          <thead>
-            <tr style={{ color: "var(--text-muted)" }} className="text-left text-[11px] uppercase tracking-wide">
-              <th className="py-1.5">Section</th>
-              <th className="py-1.5">Specification</th>
-              <th className="py-1.5">Measurement</th>
-              <th className="py-1.5 text-right">Qty</th>
-              <th className="py-1.5">UOM</th>
-              {showPricing && <th className="py-1.5 text-right">Rate</th>}
-              {showPricing && <th className="py-1.5 text-right">Amount</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {d.lines.map((ln, i) => (
-              <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
-                <td className="py-1.5">{ln.section || "—"}</td>
-                <td className="py-1.5">{ln.specification || "—"}</td>
-                <td className="py-1.5">{ln.measurement || "—"}</td>
-                <td className="py-1.5 text-right">{ln.quantity ?? "—"}</td>
-                <td className="py-1.5">{ln.uom || "—"}</td>
-                {showPricing && <td className="py-1.5 text-right">{inr(ln.rate)}</td>}
-                {showPricing && <td className="py-1.5 text-right">{inr(ln.gross_amount)}</td>}
+        {d.format === "summary" ? (
+          /* Summary — section totals only (§9/§10), no line detail. */
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ color: "var(--text-muted)" }} className="text-left text-[11px] uppercase tracking-wide">
+                <th className="py-1.5">Sl.</th><th className="py-1.5">Scope</th><th className="py-1.5 text-right">Amount</th>
               </tr>
-            ))}
-            {d.lines.length === 0 && <tr><td colSpan={7} className="py-3 text-center" style={{ color: "var(--text-muted)" }}>No lines.</td></tr>}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(d.sections ?? []).map((s, i) => (
+                <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                  <td className="py-1.5">{i + 1}</td><td className="py-1.5">{s.section}</td>
+                  <td className="py-1.5 text-right">{inr(s.subtotal)}</td>
+                </tr>
+              ))}
+              {(!d.sections || d.sections.length === 0) && <tr><td colSpan={3} className="py-3 text-center" style={{ color: "var(--text-muted)" }}>No lines.</td></tr>}
+            </tbody>
+          </table>
+        ) : (
+          /* Detailed / Technical — lines grouped under section headers with a subtotal (§15/§25). */
+          (d.sections ?? []).map((s, si) => (
+            <div key={si} className="mb-4">
+              <div className="mb-1 mt-2 text-[12px] font-semibold uppercase tracking-wide" style={{ color: "var(--brand-primary)" }}>{s.section}</div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ color: "var(--text-muted)" }} className="text-left text-[11px] uppercase tracking-wide">
+                    <th className="py-1">Specification</th><th className="py-1">Measurement</th>
+                    <th className="py-1 text-right">Qty</th><th className="py-1">UOM</th>
+                    {showPricing && <th className="py-1 text-right">Rate</th>}
+                    {showPricing && <th className="py-1 text-right">Amount</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.lines.map((ln, i) => (
+                    <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                      <td className="py-1">{ln.specification || "—"}</td>
+                      <td className="py-1">{ln.measurement || "—"}</td>
+                      <td className="py-1 text-right">{ln.quantity ?? "—"}</td>
+                      <td className="py-1">{ln.uom || "—"}</td>
+                      {showPricing && <td className="py-1 text-right">{inr(ln.rate)}</td>}
+                      {showPricing && <td className="py-1 text-right">{inr(ln.gross_amount)}</td>}
+                    </tr>
+                  ))}
+                  {showPricing && (
+                    <tr className="border-t font-semibold" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                      <td className="py-1" colSpan={5}>Section Total — {s.section}</td>
+                      <td className="py-1 text-right">{inr(s.subtotal)}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ))
+        )}
+        {(!d.sections || d.sections.length === 0) && d.format !== "summary" && <div className="py-3 text-center text-sm" style={{ color: "var(--text-muted)" }}>No lines.</div>}
 
         {showPricing && (
           <div className="mt-4 flex justify-end">
-            <div className="w-64 space-y-1 text-sm">
-              <Row label="Gross" value={inr(d.gross_total)} />
+            <div className="w-72 space-y-1 text-sm">
+              <Row label="Subtotal" value={inr(d.gross_total)} />
               <Row label={`Discount (${d.discount_percent}%)`} value={`− ${inr(d.discount_amount)}`} />
               {!!d.adjustment && <Row label="Adjustment" value={inr(d.adjustment)} />}
-              <Row label="Net before GST" value={inr(d.net_before_gst)} />
-              <Row label={`GST (${d.gst_percent}%)`} value={inr(d.gst_amount)} />
+              <Row label="Taxable Value" value={inr(d.net_before_gst)} />
+              <Row label={`CGST (${d.cgst_percent}%)`} value={inr(d.cgst_amount)} />
+              <Row label={`SGST (${d.sgst_percent}%)`} value={inr(d.sgst_amount)} />
               <div className="border-t pt-1" style={{ borderColor: "var(--border, #e0d9cb)" }}>
                 <Row label="Grand Total" value={inr(d.grand_total)} strong />
               </div>
             </div>
           </div>
+        )}
+        {showPricing && d.amount_in_words && (
+          <div className="mt-2 text-right text-xs italic" style={{ color: "var(--text-muted)" }}>{d.amount_in_words}</div>
         )}
 
         {/* Internal Costing only (§4.9) */}
