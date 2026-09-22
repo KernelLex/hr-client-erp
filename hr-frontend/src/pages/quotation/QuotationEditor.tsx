@@ -27,6 +27,7 @@ interface Quotation {
   approved_by: string | null; approved_on: string | null
   approved_with_conditions: number; conditions: string | null
   customer_acceptance: number; advance_received: number
+  foc_value: number; installation_waiver: number; transport_waiver: number; price_override_percent: number
   terms_template: string | null; terms_and_conditions: string | null
   editable: boolean; lines: GridRow[]; approval_log: GridRow[]; conversion_gate: Check[]
 }
@@ -59,8 +60,9 @@ export function QuotationEditor() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [busy, setBusy] = useState<string | null>(null)
-  const [form, setForm] = useState({ discount_percent: "", adjustment: "", gst_percent: "", credit_terms_standard: true, credit_terms: "" })
+  const [form, setForm] = useState({ discount_percent: "", adjustment: "", gst_percent: "", credit_terms_standard: true, credit_terms: "", foc_value: "", installation_waiver: "", transport_waiver: "", price_override_percent: "" })
   const [dirty, setDirty] = useState(false)
+  const [negotiated, setNegotiated] = useState("")
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["q_quotation", name],
@@ -81,8 +83,12 @@ export function QuotationEditor() {
       gst_percent: String(q.gst_percent ?? ""),
       credit_terms_standard: !!q.credit_terms_standard,
       credit_terms: q.credit_terms ?? "",
+      foc_value: String(q.foc_value ?? ""),
+      installation_waiver: String(q.installation_waiver ?? ""),
+      transport_waiver: String(q.transport_waiver ?? ""),
+      price_override_percent: String(q.price_override_percent ?? ""),
     })
-  }, [q?.name, q?.discount_percent, q?.adjustment, q?.gst_percent, q?.credit_terms_standard, q?.credit_terms])
+  }, [q?.name, q?.discount_percent, q?.adjustment, q?.gst_percent, q?.credit_terms_standard, q?.credit_terms, q?.foc_value, q?.installation_waiver, q?.transport_waiver, q?.price_override_percent])
 
   function refresh() { qc.invalidateQueries({ queryKey: ["q_quotation", name] }) }
   function setField(k: string, v: string | boolean) { setForm((p) => ({ ...p, [k]: v })); setDirty(true) }
@@ -93,9 +99,22 @@ export function QuotationEditor() {
       await quotationPost("update_quotation", { name, payload: {
         discount_percent: form.discount_percent, adjustment: form.adjustment, gst_percent: form.gst_percent,
         credit_terms_standard: form.credit_terms_standard ? 1 : 0, credit_terms: form.credit_terms,
+        foc_value: form.foc_value || 0, installation_waiver: form.installation_waiver || 0,
+        transport_waiver: form.transport_waiver || 0, price_override_percent: form.price_override_percent || 0,
       } })
       toast.success("Commercials updated"); setDirty(false); refresh()
     } catch (e) { toast.error((e as Error)?.message ?? "Could not save") } finally { setBusy(null) }
+  }
+
+  async function applyNegotiated() {
+    const v = parseFloat(negotiated)
+    if (!v || v <= 0) { toast.error("Enter a negotiated grand total"); return }
+    setBusy("negotiate")
+    try {
+      const res = await quotationPost<{ success: boolean; error?: string; adjustment?: number }>("set_negotiated_total", { name, final_total: v })
+      if (res.success === false) toast.error(res.error ?? "Could not apply")
+      else { toast.success("Negotiated total applied"); setNegotiated(""); refresh() }
+    } catch (e) { toast.error((e as Error)?.message ?? "Could not apply") } finally { setBusy(null) }
   }
   async function saveLines(rows: GridRow[]) { await quotationPost("save_lines", { name, lines: rows }); refresh() }
 
@@ -191,6 +210,27 @@ export function QuotationEditor() {
                 </button>
               )}
             </div>
+            {/* Commercial concessions — feed the approval matrix (§36-43) */}
+            <div className="mt-3 grid grid-cols-4 gap-3">
+              {num("foc_value", "FOC ₹")}
+              {num("installation_waiver", "Instal. waiver ₹")}
+              {num("transport_waiver", "Transport waiver ₹")}
+              {num("price_override_percent", "Price override %")}
+            </div>
+            {/* Negotiated final total (§66) — back-computes the adjustment */}
+            {!locked && (
+              <div className="mt-3 flex items-end gap-2">
+                <div className="flex-1">
+                  <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Negotiated grand total</div>
+                  <input type="number" value={negotiated} onChange={(e) => setNegotiated(e.target.value)} placeholder={String(q.grand_total || "")}
+                    className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+                </div>
+                <button onClick={applyNegotiated} disabled={busy === "negotiate" || !negotiated}
+                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #c8a24a)" }}>
+                  Apply
+                </button>
+              </div>
+            )}
           </div>
 
           <div>

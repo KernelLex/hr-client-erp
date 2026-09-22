@@ -236,6 +236,11 @@ def _serialize(doc):
         "conditions": doc.conditions,
         "customer_acceptance": doc.customer_acceptance,
         "advance_received": doc.advance_received,
+        # Commercial concessions the approval matrix evaluates (§36-43)
+        "foc_value": doc.foc_value,
+        "installation_waiver": doc.installation_waiver,
+        "transport_waiver": doc.transport_waiver,
+        "price_override_percent": doc.price_override_percent,
         "terms_template": doc.terms_template,
         "terms_and_conditions": doc.terms_and_conditions,
         "notes": doc.notes,
