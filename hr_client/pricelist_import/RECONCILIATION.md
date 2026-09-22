@@ -103,3 +103,26 @@ Leben sells) rules. See `project-phase2-spec` + `project-quotation-module` P0.
 **Sequence:** taxonomy masters → priced Item/Price-List load (MRP) → extend the 4
 core docs' children + trace fields → costing/approval engine (P0-gated) → print
 formats → UI port.
+
+---
+
+## E. Build log
+
+**2026-09-22 — 29 NET-NEW taxonomy masters BUILT** (scaffolded by
+`pricelist_import/_scaffold_masters.py`, house-style DocType JSON+controller in
+`hr_client/hr_client/doctype/vera_*`, seeded by `api/quotation_taxonomy.seed_all`,
+235 enumeration rows from §3): Product Group (hierarchical), Product Category,
+Component, Scope Type, Installation Type, Delivery Term, Thickness, Finish
+Category/Type, Edge Band, Glass, Aluminium Profile, Hardware Category/Brand/Series,
+Appliance Category/Brand, Stone Type/Brand/Edge Profile, Area, Obstruction Type,
+Margin Class, Wastage, Cost Type, Cost Source, Warranty Template, Inclusion,
+Exclusion. Deploy: `bench migrate` (creates tables) → `bench execute
+hr_client.api.quotation_taxonomy.seed_all`. **Then** run `load_items.run` (owner
+chose masters-first so items get proper item_group on first insert).
+
+**Still to build (next increments):** (1) EXTEND vera_quotation_material/finish/
+hardware with rate/hierarchy/effective-date fields (Custom Fields or JSON edits).
+(2) NET-NEW that are items not taxonomy — Appliance / Stone / Sink / Faucet as
+native Items via the loader, not masters. (3) Rule engines (Commercial Approval,
+Product Configuration, Validation) — P0-gated, belong to the costing phase.
+(4) Extend the 4 core docs' children + `source_*_line_id` trace fields.
