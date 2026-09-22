@@ -63,11 +63,14 @@ def _setup_static() -> None:
         pl.currency = "INR"
         pl.insert(ignore_permissions=True)
     if not frappe.db.exists("Item Group", PARENT_GROUP):
-        root = frappe.db.get_value("Item Group", {"is_group": 1, "parent_item_group": ["in", ["", None]]}, "name") \
-            or "All Item Groups"
+        # This site may have no ERPNext item masters at all — then create the
+        # Vendor Catalog as a ROOT group (no parent) rather than assuming one.
+        root = frappe.db.get_value(
+            "Item Group", {"is_group": 1, "parent_item_group": ["in", ["", None]]}, "name")
         g = frappe.new_doc("Item Group")
         g.item_group_name = PARENT_GROUP
-        g.parent_item_group = root
+        if root:
+            g.parent_item_group = root
         g.is_group = 1
         g.insert(ignore_permissions=True)
 
@@ -88,11 +91,13 @@ def _supplier_for(vendor: str, brand: str) -> str | None:
     if not name:
         return None
     if not frappe.db.exists("Supplier", name):
+        group = frappe.db.get_value("Supplier Group", {"is_group": 0}, "name")
+        if not group:
+            return None                      # no supplier masters on this site — skip gracefully
         try:
             s = frappe.new_doc("Supplier")
             s.supplier_name = name
-            s.supplier_group = frappe.db.get_value("Supplier Group", {"is_group": 0}, "name") \
-                or "All Supplier Groups"
+            s.supplier_group = group
             s.insert(ignore_permissions=True)
         except Exception:
             frappe.log_error(frappe.get_traceback(), "pricelist supplier")

@@ -108,6 +108,24 @@ formats → UI port.
 
 ## E. Build log
 
+**2026-09-22 — DEPLOYED LIVE to `vera.local`** (server 192.168.1.16, bench user
+frappe). Sequence run: DB backup → copied 29 masters + taxonomy seed +
+pricelist_import + line-field additions to the bench app → `bench migrate` (clean,
+created 29 master tables + line columns) → `seed_all` (235 rows) → `load_items.run`
+→ **6,655 Items + 6,632 Item Prices** on "Vendor MRP" list, Item Group "Vendor
+Catalog" + 9 brand children, 9 Brands. Suppliers skipped (site has no Supplier
+Group masters — loader degrades gracefully). Site verified HTTP 200 after restart.
+Loader fix needed live: this site had ZERO Item Groups/Items/Price Lists, so
+`_setup_static` now creates "Vendor Catalog" as a ROOT group when no root exists.
+
+⚠ **KNOWN BUG (Hettich parser):** 22 Hettich rows had garbage MRPs (up to ₹1.3
+*trillion* — the coordinate parser concatenated the HSN column into the MRP;
+Hettich is the only HSN vendor, which is the tell). 1 errored on insert, 21
+loaded absurd; all 22 bad Item Prices were scrubbed from production (kept the
+Items). FOLLOW-UP: fix `parsers/hettich.py` to not bleed HSN digits into `mrp`,
+re-normalize, reload those 22.
+
+
 **2026-09-22 — 29 NET-NEW taxonomy masters BUILT** (scaffolded by
 `pricelist_import/_scaffold_masters.py`, house-style DocType JSON+controller in
 `hr_client/hr_client/doctype/vera_*`, seeded by `api/quotation_taxonomy.seed_all`,
