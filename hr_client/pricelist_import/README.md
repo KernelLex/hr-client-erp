@@ -11,11 +11,31 @@ class, text-vs-scanned): the six-agent analysis reports in
 
 ```
 PDF (source folder)  ──extract.py──▶  data/raw/<vendor>/pNNNN.txt  (+ manifest.json)
+PDF (brochure)       ──render.py───▶  data/images/<vendor>/pNNNN.png ──vision──▶ vision_ingest.py
 data/raw/…           ──parsers/*──▶  PriceRow stream
 PriceRow stream      ──run.py────▶  data/normalized/<vendor>.csv / .json
                                      data/normalized/_all_vendors.csv
                                      data/normalized/_summary.json
+data/normalized/…    ──load_items.py (bench)──▶  ERPNext Item + Item Price ("Vendor MRP")
 ```
+
+## Stage 3 — load into ERPNext (`load_items.py`, runs on the server)
+
+Turns `_all_vendors.csv` into the shared global `Item` namespace + an `Item Price`
+per SKU on a **"Vendor MRP"** price list (matches the platform design: Items are
+global, per-company pricing lives in Item Price). Idempotent per `item_code`.
+
+```bash
+bench --site vera.local execute hr_client.pricelist_import.load_items.run
+# one vendor / preview:
+bench --site vera.local execute hr_client.pricelist_import.load_items.run --kwargs "{'only':'bosch','dry_run':True}"
+```
+
+**MRP-only, by design** — the catalogs print no dealer/cost price, so the loader
+writes MRP as the item *list* rate + records the vendor as a `Supplier`; it does
+**not** write a purchase/cost rate (open P0 owner input). GST-inclusive vendors
+(EBCO, Luxury) are flagged in the item description so costing can net the tax.
+See `RECONCILIATION.md` for how this fits the ~40-master plan.
 
 Run from the repo root:
 
