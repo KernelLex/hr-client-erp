@@ -49,6 +49,7 @@ const OpportunitiesPage = lazy(() => import("@/pages/crm/OpportunitiesPage").the
 const ContactsPage = lazy(() => import("@/pages/crm/ContactsPage").then(m => ({ default: m.ContactsPage })))
 const SalesTeamPage = lazy(() => import("@/pages/crm/SalesTeamPage").then(m => ({ default: m.SalesTeamPage })))
 const FollowupsPage = lazy(() => import("@/pages/crm/FollowupsPage").then(m => ({ default: m.FollowupsPage })))
+const PreQuotePage = lazy(() => import("@/pages/prequote/PreQuotePage"))
 const MeasurementsPage = lazy(() => import("@/pages/quotation/MeasurementsPage").then(m => ({ default: m.MeasurementsPage })))
 const MeasurementEditor = lazy(() => import("@/pages/quotation/MeasurementEditor").then(m => ({ default: m.MeasurementEditor })))
 const BoqPage = lazy(() => import("@/pages/quotation/BoqPage").then(m => ({ default: m.BoqPage })))
@@ -154,6 +155,8 @@ function App() {
                 <Route path="/crm/team" element={<SalesTeamPage />} />
                 <Route path="/crm/followups" element={<FollowupsPage />} />
                 <Route path="/crm/:id" element={<LeadDetail />} />
+                {/* Quotation Studio — Pre-Quote (requirement capture → Opportunity) */}
+                <Route path="/quotation/prequote" element={<PreQuotePage />} />
                 {/* Quotation Studio — Measurement Sheets (§4.2) */}
                 <Route path="/quotation/measurements" element={<MeasurementsPage />} />
                 <Route path="/quotation/measurements/:name" element={<MeasurementEditor />} />

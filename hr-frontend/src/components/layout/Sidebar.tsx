@@ -383,7 +383,8 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         {showQuotation && (
           <>
             <GroupHeader label="Quotation Studio" glyph="◆" open={quotationOpen} active={isQuotationGroupActive} onToggle={toggleQuotation} />
-            <GroupBody open={quotationOpen} maxHeight={560}>
+            <GroupBody open={quotationOpen} maxHeight={600}>
+              <SubItem to="/quotation/prequote" label="Pre-Quote" isActive={path === "/quotation/prequote"} onClick={close} />
               <SubItem to="/quotation/measurements" label="Measurement Sheets" isActive={path.startsWith("/quotation/measurements")} onClick={close} />
               <SubItem to="/quotation/boqs" label="BOQ / Configuration" isActive={path.startsWith("/quotation/boqs")} onClick={close} />
               <SubItem to="/quotation/cost-sheets" label="Cost Sheets" isActive={path.startsWith("/quotation/cost-sheets")} onClick={close} />
