@@ -45,9 +45,9 @@ while i < len(lines):
 TRADING = {"GEN","SCP","PRC","TAX","VAL","PAY","CRD","DLV","TRN","STO","DMG","DLY",
            "HDW","APP","SNK","STN","WAR","CAN","LGL"}
 templates = [
-    {"code":"TMPL-TRD","name":"Trading Standard","category":"Trading",
+    {"code":"TMPL-TRD","name":"Trading Standard","category":"Trading and Supply",
      "clauses":[c["code"] for c in clauses if c["prefix"] in TRADING]},
-    {"code":"TMPL-PRJ","name":"Project / Modular Standard","category":"Project",
+    {"code":"TMPL-PRJ","name":"Project / Modular Standard","category":"Complete Interior Project",
      "clauses":[c["code"] for c in clauses]},
 ]
 

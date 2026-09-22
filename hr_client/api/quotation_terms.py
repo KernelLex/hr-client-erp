@@ -765,7 +765,7 @@ TEMPLATES = [
  {
   "code": "TMPL-TRD",
   "name": "Trading Standard",
-  "category": "Trading",
+  "category": "Trading and Supply",
   "clauses": [
    "TC-GEN-001",
    "TC-SCP-001",
@@ -830,7 +830,7 @@ TEMPLATES = [
  {
   "code": "TMPL-PRJ",
   "name": "Project / Modular Standard",
-  "category": "Project",
+  "category": "Complete Interior Project",
   "clauses": [
    "TC-GEN-001",
    "TC-SCP-001",
