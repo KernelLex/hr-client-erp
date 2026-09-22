@@ -1,0 +1,72 @@
+[
+  {
+    "vendor": "hafele",
+    "status": "ok",
+    "raw_rows": 3018,
+    "unique_skus": 2801,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": false,
+    "valid_from": "2026-02-01"
+  },
+  {
+    "vendor": "tataria",
+    "status": "ok",
+    "raw_rows": 1182,
+    "unique_skus": 996,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": false,
+    "valid_from": "2026-09-01"
+  },
+  {
+    "vendor": "ebco",
+    "status": "parser pending",
+    "note": "~2.4k SKUs, MRP GST-INCLUSIVE, verify still current; variable-column table, parser pending (Phase 1 cont.)"
+  },
+  {
+    "vendor": "hettich",
+    "status": "ok",
+    "raw_rows": 2919,
+    "unique_skus": 1460,
+    "null_mrp": 0,
+    "with_hsn": 1434,
+    "gst_inclusive": false,
+    "valid_from": "2026-02-01"
+  },
+  {
+    "vendor": "kesseboehmer",
+    "status": "parser pending",
+    "note": "BOM sets + positional colour grids; hard"
+  },
+  {
+    "vendor": "bosch",
+    "status": "parser pending",
+    "note": "brochure layout, ~55-75 appliances"
+  },
+  {
+    "vendor": "siemens",
+    "status": "parser pending",
+    "note": "brochure, freestanding 2026-08-01 / built-in 2026-09-01 split"
+  },
+  {
+    "vendor": "reginox",
+    "status": "parser pending",
+    "note": "sinks, NO article codes -> synthesize"
+  },
+  {
+    "vendor": "luxury",
+    "status": "parser pending",
+    "note": "uses H\u00e4fele article namespace"
+  },
+  {
+    "vendor": "ksf",
+    "status": "parser pending",
+    "note": "sinks & faucets, H\u00e4fele article namespace, colour variants"
+  },
+  {
+    "vendor": "blum",
+    "status": "parser pending",
+    "note": "322MB, ~80% scanned -> request Blum source Excel, do NOT OCR blind"
+  }
+]

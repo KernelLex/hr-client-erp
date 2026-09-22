@@ -1,0 +1,3 @@
+# Raw per-page text dumps are large and regenerable from source PDFs — don't commit.
+raw/
+# Normalized outputs ARE committed (small, the actual deliverable) — see normalized/
