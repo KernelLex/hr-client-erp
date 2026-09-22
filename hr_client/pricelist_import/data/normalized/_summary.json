@@ -32,10 +32,10 @@
   {
     "vendor": "hettich",
     "status": "ok",
-    "raw_rows": 2919,
-    "unique_skus": 1460,
+    "raw_rows": 2915,
+    "unique_skus": 1456,
     "null_mrp": 0,
-    "with_hsn": 1434,
+    "with_hsn": 1453,
     "gst_inclusive": false,
     "valid_from": "2026-02-01"
   },

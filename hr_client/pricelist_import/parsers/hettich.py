@@ -32,7 +32,21 @@ def parse(v: Vendor) -> list[PriceRow]:
         cur: PriceRow | None = None
         for _, cols in band_words(doc[pno].get_text("words"), COLS):
             article = " ".join(cols["article"]).strip()
-            mrp = parse_price(" ".join(cols["mrp"]))
+            # MRP is a SINGLE ≤6-digit number. When a right-aligned HSN spills
+            # into the MRP column the bucket holds extra tokens; joining them
+            # concatenates MRP+HSN into garbage. Take the first token that is a
+            # plausible price (not an 8-digit HSN, not > ₹20 lakh) as MRP; route
+            # every other token to HSN. If only an HSN is present, MRP stays None
+            # (row is dropped — no valid price rather than a wrong one).
+            mrp, hsn_spill = None, []
+            for t in cols["mrp"]:
+                val = parse_price(t)
+                digits = re.sub(r"\D", "", t)
+                if mrp is None and val is not None and len(digits) != 8 and val <= 2_000_000:
+                    mrp = val
+                else:
+                    hsn_spill.append(t)
+            hsn = " ".join(hsn_spill + cols["hsn"]).strip()
             is_anchor = bool(ARTICLE_RE.match(article)) and mrp is not None
             if is_anchor:
                 cur = PriceRow(
@@ -40,7 +54,7 @@ def parse(v: Vendor) -> list[PriceRow]:
                     description=" ".join(cols["desc"]).strip(), mrp=mrp,
                     uom=" ".join(cols["unit"]).strip(),
                     pack_qty=" ".join(cols["pu"]).strip(),
-                    hsn=" ".join(cols["hsn"]).strip(),
+                    hsn=hsn,
                     gst_inclusive=v.gst_inclusive, price_valid_from=v.valid_from,
                     source_file=v.filename, source_page=pno + 1, raw_line=article,
                 )
