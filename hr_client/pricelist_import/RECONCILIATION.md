@@ -120,9 +120,25 @@ Exclusion. Deploy: `bench migrate` (creates tables) → `bench execute
 hr_client.api.quotation_taxonomy.seed_all`. **Then** run `load_items.run` (owner
 chose masters-first so items get proper item_group on first insert).
 
-**Still to build (next increments):** (1) EXTEND vera_quotation_material/finish/
-hardware with rate/hierarchy/effective-date fields (Custom Fields or JSON edits).
-(2) NET-NEW that are items not taxonomy — Appliance / Stone / Sink / Faucet as
-native Items via the loader, not masters. (3) Rule engines (Commercial Approval,
-Product Configuration, Validation) — P0-gated, belong to the costing phase.
-(4) Extend the 4 core docs' children + `source_*_line_id` trace fields.
+**2026-09-22 — TRACEABILITY SPINE + costing/GP fields BUILT** on the 3 core line
+child-tables (JSON field additions, purely additive):
+- `vera_boq_line` +`source_measurement_line_id`.
+- `vera_cost_sheet_line` +`source_boq_line_id` + 13 cost components (material/
+  finish/hardware/glass/aluminium/manufacturing/labour/installation/transport/
+  site/outsourcing/overhead/other) + `total_cost` + GP engine fields (`target_gp`,
+  `suggested_selling_price`, `proposed_selling_price`, `discount_percent`,
+  `final_selling_price`, `gp_amount`, `gp_percent`).
+- `vera_sales_quotation_line` +`source_cost_sheet_line` + customer discount/net
+  (`discount_percent/amount`, `net_amount`) + HIDDEN internal (`estimated_cost`,
+  `minimum_rate`, `gross_profit`, `gp_percent`, `margin_status`).
+- Full chain now: Quotation Line → Cost Sheet Line → BOQ Line → Measurement row.
+  (`source_boq_line` on the quotation line already existed from Phase-2.)
+
+**Still to build (next increments):** (1) NET-NEW child tables — BOQ Hardware/
+Appliance/Stone/Service; Quotation Payment Schedule / Inclusion / Exclusion /
+Section Summary; Measurement dynamic Attribute (k/v). (2) Parent-level Quotation
+total/tax block (taxable_value/cgst/sgst/igst/round_off/grand_total) if absent.
+(3) Costing-engine controller logic to COMPUTE the new cost/GP fields (fields
+exist; math is P3, thresholds P0-gated). (4) Appliance/Stone/Sink/Faucet as
+native Items via the loader (not masters). (5) NOT extending material/finish/
+hardware with rate fields — pricing lives only in Item Price (see §C).

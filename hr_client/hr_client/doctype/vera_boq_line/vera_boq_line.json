@@ -28,33 +28,157 @@
   "cost_rate",
   "selling_amount",
   "cost_amount",
-  "line_status"
+  "line_status",
+  "source_measurement_line_id"
  ],
  "fields": [
-  {"fieldname": "area", "fieldtype": "Data", "label": "Area", "in_list_view": 1, "columns": 1},
-  {"fieldname": "category", "fieldtype": "Data", "label": "Category"},
-  {"fieldname": "unit_name", "fieldtype": "Data", "label": "Unit", "in_list_view": 1, "columns": 2},
-  {"fieldname": "item_code", "fieldtype": "Data", "label": "Item Code"},
-  {"fieldname": "width", "fieldtype": "Float", "label": "Width (mm)", "in_list_view": 1, "columns": 1},
-  {"fieldname": "height", "fieldtype": "Float", "label": "Height (mm)", "in_list_view": 1, "columns": 1},
-  {"fieldname": "depth", "fieldtype": "Float", "label": "Depth (mm)"},
-  {"fieldname": "quantity", "fieldtype": "Float", "label": "Qty", "default": "1", "in_list_view": 1, "columns": 1},
-  {"fieldname": "pricing_method", "fieldtype": "Data", "label": "Pricing Method", "in_list_view": 1, "columns": 1},
-  {"fieldname": "uom", "fieldtype": "Data", "label": "UOM"},
-  {"fieldname": "calc_qty", "fieldtype": "Float", "label": "Calc Qty", "read_only": 1, "precision": "3"},
-  {"fieldname": "carcass_material", "fieldtype": "Data", "label": "Carcass Material"},
-  {"fieldname": "carcass_thickness", "fieldtype": "Data", "label": "Carcass Thickness"},
-  {"fieldname": "internal_finish", "fieldtype": "Data", "label": "Internal Finish"},
-  {"fieldname": "shutter_material", "fieldtype": "Data", "label": "Shutter Material"},
-  {"fieldname": "shutter_thickness", "fieldtype": "Data", "label": "Shutter Thickness"},
-  {"fieldname": "external_finish", "fieldtype": "Data", "label": "External Finish"},
-  {"fieldname": "edge_banding", "fieldtype": "Data", "label": "Edge Banding"},
-  {"fieldname": "hardware_package", "fieldtype": "Data", "label": "Hardware Package"},
-  {"fieldname": "selling_rate", "fieldtype": "Currency", "label": "Selling Rate"},
-  {"fieldname": "cost_rate", "fieldtype": "Currency", "label": "Cost Rate"},
-  {"fieldname": "selling_amount", "fieldtype": "Currency", "label": "Selling Amount", "read_only": 1},
-  {"fieldname": "cost_amount", "fieldtype": "Currency", "label": "Cost Amount", "read_only": 1},
-  {"fieldname": "line_status", "fieldtype": "Select", "label": "Line Status", "options": "Draft\nComplete", "default": "Draft", "in_list_view": 1, "columns": 1}
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "label": "Area",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category"
+  },
+  {
+   "fieldname": "unit_name",
+   "fieldtype": "Data",
+   "label": "Unit",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "label": "Item Code"
+  },
+  {
+   "fieldname": "width",
+   "fieldtype": "Float",
+   "label": "Width (mm)",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "height",
+   "fieldtype": "Float",
+   "label": "Height (mm)",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "depth",
+   "fieldtype": "Float",
+   "label": "Depth (mm)"
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "Qty",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "pricing_method",
+   "fieldtype": "Data",
+   "label": "Pricing Method",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Data",
+   "label": "UOM"
+  },
+  {
+   "fieldname": "calc_qty",
+   "fieldtype": "Float",
+   "label": "Calc Qty",
+   "read_only": 1,
+   "precision": "3"
+  },
+  {
+   "fieldname": "carcass_material",
+   "fieldtype": "Data",
+   "label": "Carcass Material"
+  },
+  {
+   "fieldname": "carcass_thickness",
+   "fieldtype": "Data",
+   "label": "Carcass Thickness"
+  },
+  {
+   "fieldname": "internal_finish",
+   "fieldtype": "Data",
+   "label": "Internal Finish"
+  },
+  {
+   "fieldname": "shutter_material",
+   "fieldtype": "Data",
+   "label": "Shutter Material"
+  },
+  {
+   "fieldname": "shutter_thickness",
+   "fieldtype": "Data",
+   "label": "Shutter Thickness"
+  },
+  {
+   "fieldname": "external_finish",
+   "fieldtype": "Data",
+   "label": "External Finish"
+  },
+  {
+   "fieldname": "edge_banding",
+   "fieldtype": "Data",
+   "label": "Edge Banding"
+  },
+  {
+   "fieldname": "hardware_package",
+   "fieldtype": "Data",
+   "label": "Hardware Package"
+  },
+  {
+   "fieldname": "selling_rate",
+   "fieldtype": "Currency",
+   "label": "Selling Rate"
+  },
+  {
+   "fieldname": "cost_rate",
+   "fieldtype": "Currency",
+   "label": "Cost Rate"
+  },
+  {
+   "fieldname": "selling_amount",
+   "fieldtype": "Currency",
+   "label": "Selling Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cost_amount",
+   "fieldtype": "Currency",
+   "label": "Cost Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "line_status",
+   "fieldtype": "Select",
+   "label": "Line Status",
+   "options": "Draft\nComplete",
+   "default": "Draft",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "source_measurement_line_id",
+   "fieldtype": "Data",
+   "label": "Source Measurement Line",
+   "read_only": 1
+  }
  ],
  "modified": "2026-09-10 00:00:00.000000",
  "modified_by": "Administrator",

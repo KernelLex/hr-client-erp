@@ -10,15 +10,190 @@
   "item_code",
   "calc_qty",
   "cost_rate",
-  "cost_amount"
+  "cost_amount",
+  "source_boq_line_id",
+  "material_cost",
+  "finish_cost",
+  "hardware_cost",
+  "glass_cost",
+  "aluminium_cost",
+  "manufacturing_cost",
+  "labour_cost",
+  "installation_cost",
+  "transportation_cost",
+  "site_cost",
+  "outsourcing_cost",
+  "overhead",
+  "other_cost",
+  "total_cost",
+  "target_gp",
+  "suggested_selling_price",
+  "proposed_selling_price",
+  "discount_percent",
+  "final_selling_price",
+  "gp_amount",
+  "gp_percent"
  ],
  "fields": [
-  {"fieldname": "area", "fieldtype": "Data", "label": "Area", "in_list_view": 1, "columns": 2},
-  {"fieldname": "unit_name", "fieldtype": "Data", "label": "Unit", "in_list_view": 1, "columns": 3},
-  {"fieldname": "item_code", "fieldtype": "Data", "label": "Item Code", "in_list_view": 1, "columns": 2},
-  {"fieldname": "calc_qty", "fieldtype": "Float", "label": "Calc Qty", "precision": "3", "in_list_view": 1, "columns": 1},
-  {"fieldname": "cost_rate", "fieldtype": "Currency", "label": "Cost Rate", "in_list_view": 1, "columns": 2},
-  {"fieldname": "cost_amount", "fieldtype": "Currency", "label": "Cost Amount", "in_list_view": 1, "columns": 2}
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "label": "Area",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "unit_name",
+   "fieldtype": "Data",
+   "label": "Unit",
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "label": "Item Code",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "calc_qty",
+   "fieldtype": "Float",
+   "label": "Calc Qty",
+   "precision": "3",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "cost_rate",
+   "fieldtype": "Currency",
+   "label": "Cost Rate",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "cost_amount",
+   "fieldtype": "Currency",
+   "label": "Cost Amount",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "source_boq_line_id",
+   "fieldtype": "Data",
+   "label": "Source BOQ Line",
+   "read_only": 1
+  },
+  {
+   "fieldname": "material_cost",
+   "fieldtype": "Currency",
+   "label": "Material Cost"
+  },
+  {
+   "fieldname": "finish_cost",
+   "fieldtype": "Currency",
+   "label": "Finish Cost"
+  },
+  {
+   "fieldname": "hardware_cost",
+   "fieldtype": "Currency",
+   "label": "Hardware Cost"
+  },
+  {
+   "fieldname": "glass_cost",
+   "fieldtype": "Currency",
+   "label": "Glass Cost"
+  },
+  {
+   "fieldname": "aluminium_cost",
+   "fieldtype": "Currency",
+   "label": "Aluminium Cost"
+  },
+  {
+   "fieldname": "manufacturing_cost",
+   "fieldtype": "Currency",
+   "label": "Manufacturing Cost"
+  },
+  {
+   "fieldname": "labour_cost",
+   "fieldtype": "Currency",
+   "label": "Labour Cost"
+  },
+  {
+   "fieldname": "installation_cost",
+   "fieldtype": "Currency",
+   "label": "Installation Cost"
+  },
+  {
+   "fieldname": "transportation_cost",
+   "fieldtype": "Currency",
+   "label": "Transportation Cost"
+  },
+  {
+   "fieldname": "site_cost",
+   "fieldtype": "Currency",
+   "label": "Site Cost"
+  },
+  {
+   "fieldname": "outsourcing_cost",
+   "fieldtype": "Currency",
+   "label": "Outsourcing Cost"
+  },
+  {
+   "fieldname": "overhead",
+   "fieldtype": "Currency",
+   "label": "Overhead"
+  },
+  {
+   "fieldname": "other_cost",
+   "fieldtype": "Currency",
+   "label": "Other Cost"
+  },
+  {
+   "fieldname": "total_cost",
+   "fieldtype": "Currency",
+   "label": "Total Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "target_gp",
+   "fieldtype": "Percent",
+   "label": "Target GP %"
+  },
+  {
+   "fieldname": "suggested_selling_price",
+   "fieldtype": "Currency",
+   "label": "Suggested Selling Price",
+   "read_only": 1
+  },
+  {
+   "fieldname": "proposed_selling_price",
+   "fieldtype": "Currency",
+   "label": "Proposed Selling Price"
+  },
+  {
+   "fieldname": "discount_percent",
+   "fieldtype": "Percent",
+   "label": "Discount %"
+  },
+  {
+   "fieldname": "final_selling_price",
+   "fieldtype": "Currency",
+   "label": "Final Selling Price",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gp_amount",
+   "fieldtype": "Currency",
+   "label": "GP Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gp_percent",
+   "fieldtype": "Percent",
+   "label": "GP %",
+   "read_only": 1
+  }
  ],
  "modified": "2026-09-10 00:00:00.000000",
  "modified_by": "Administrator",

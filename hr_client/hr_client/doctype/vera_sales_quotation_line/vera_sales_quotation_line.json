@@ -14,19 +14,139 @@
   "quantity",
   "uom",
   "rate",
-  "gross_amount"
+  "gross_amount",
+  "source_cost_sheet_line",
+  "discount_percent",
+  "discount_amount",
+  "net_amount",
+  "estimated_cost",
+  "minimum_rate",
+  "gross_profit",
+  "gp_percent",
+  "margin_status"
  ],
  "fields": [
-  {"fieldname": "line_type", "fieldtype": "Select", "label": "Type", "options": "Project / Modular\nTrading\nServices", "default": "Project / Modular", "in_list_view": 1, "columns": 2},
-  {"fieldname": "section", "fieldtype": "Data", "label": "Section / Area", "in_list_view": 1, "columns": 1},
-  {"fieldname": "specification", "fieldtype": "Small Text", "label": "Specification", "in_list_view": 1, "columns": 3},
-  {"fieldname": "measurement", "fieldtype": "Data", "label": "Measurement"},
-  {"fieldname": "source_boq_line", "fieldtype": "Data", "label": "Source BOQ Line", "read_only": 1},
-  {"fieldname": "stock_or_lead", "fieldtype": "Data", "label": "Stock / Lead"},
-  {"fieldname": "quantity", "fieldtype": "Float", "label": "Qty", "default": "1", "in_list_view": 1, "columns": 1},
-  {"fieldname": "uom", "fieldtype": "Data", "label": "UOM"},
-  {"fieldname": "rate", "fieldtype": "Currency", "label": "Rate", "in_list_view": 1, "columns": 1},
-  {"fieldname": "gross_amount", "fieldtype": "Currency", "label": "Gross Amount", "read_only": 1, "in_list_view": 1, "columns": 1}
+  {
+   "fieldname": "line_type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Project / Modular\nTrading\nServices",
+   "default": "Project / Modular",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "section",
+   "fieldtype": "Data",
+   "label": "Section / Area",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "specification",
+   "fieldtype": "Small Text",
+   "label": "Specification",
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "measurement",
+   "fieldtype": "Data",
+   "label": "Measurement"
+  },
+  {
+   "fieldname": "source_boq_line",
+   "fieldtype": "Data",
+   "label": "Source BOQ Line",
+   "read_only": 1
+  },
+  {
+   "fieldname": "stock_or_lead",
+   "fieldtype": "Data",
+   "label": "Stock / Lead"
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "Qty",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Data",
+   "label": "UOM"
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "label": "Rate",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "gross_amount",
+   "fieldtype": "Currency",
+   "label": "Gross Amount",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "source_cost_sheet_line",
+   "fieldtype": "Data",
+   "label": "Source Cost Sheet Line",
+   "read_only": 1
+  },
+  {
+   "fieldname": "discount_percent",
+   "fieldtype": "Percent",
+   "label": "Discount %"
+  },
+  {
+   "fieldname": "discount_amount",
+   "fieldtype": "Currency",
+   "label": "Discount Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "net_amount",
+   "fieldtype": "Currency",
+   "label": "Net Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "estimated_cost",
+   "fieldtype": "Currency",
+   "label": "Estimated Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "minimum_rate",
+   "fieldtype": "Currency",
+   "label": "Minimum Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gross_profit",
+   "fieldtype": "Currency",
+   "label": "Gross Profit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gp_percent",
+   "fieldtype": "Percent",
+   "label": "GP %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "margin_status",
+   "fieldtype": "Select",
+   "label": "Margin Status",
+   "options": "OK\nBelow Min\nLoss",
+   "read_only": 1
+  }
  ],
  "modified": "2026-09-10 00:00:00.000000",
  "modified_by": "Administrator",
