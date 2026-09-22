@@ -603,6 +603,39 @@ _PAYMENT_STAGES = (
 )
 
 
+def _company_info(company):
+    """Letterhead details for a customer-facing print (§3). Read live from the
+    ERPNext Company + its primary Address; every field is optional and defaults
+    to None so a sparsely-configured Company simply prints fewer header lines."""
+    if not company:
+        return {}
+    vals = frappe.db.get_value(
+        "Company", company, ["company_name", "tax_id", "phone_no", "email", "website"],
+        as_dict=True) or {}
+    address = None
+    try:
+        links = frappe.get_all(
+            "Dynamic Link",
+            filters={"link_doctype": "Company", "link_name": company, "parenttype": "Address"},
+            pluck="parent")
+        if links:
+            a = frappe.db.get_value(
+                "Address", links[0],
+                ["address_line1", "address_line2", "city", "state", "pincode"], as_dict=True) or {}
+            address = ", ".join(x for x in [a.get("address_line1"), a.get("address_line2"),
+                                            a.get("city"), a.get("state"), a.get("pincode")] if x)
+    except Exception:
+        pass
+    return {
+        "name": vals.get("company_name") or company,
+        "gstin": vals.get("tax_id"),
+        "phone": vals.get("phone_no"),
+        "email": vals.get("email"),
+        "website": vals.get("website"),
+        "address": address,
+    }
+
+
 @frappe.whitelist()
 @handle_api_error
 def get_quotation_print(name: str, fmt: str = "summary"):
@@ -654,6 +687,8 @@ def get_quotation_print(name: str, fmt: str = "summary"):
         "lines": lines,
         "sections": sections,
         "terms_and_conditions": doc.terms_and_conditions,
+        # Letterhead (§3) — only on customer-facing formats.
+        "company_info": _company_info(doc.get("company")) if customer_facing else {},
     }
     # Commercial totals — shown on all except the pricing-free technical BOQ.
     if fmt != "technical":

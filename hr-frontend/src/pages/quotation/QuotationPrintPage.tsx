@@ -21,6 +21,7 @@ interface PrintDoc {
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
   cgst_percent?: number; cgst_amount?: number; sgst_percent?: number; sgst_amount?: number; amount_in_words?: string
   payment_schedule?: { stage: string; percent: number; amount: number }[]
+  company_info?: { name?: string; gstin?: string; phone?: string; email?: string; website?: string; address?: string }
   confidential?: boolean; cost_basis?: number; gross_profit?: number; gp_percent?: number
   target_gp_percent?: number; min_gp_percent?: number; cost_sheet?: string; conditions?: string
   required_authority?: string; triggered_rules?: string
@@ -60,6 +61,18 @@ export function QuotationPrintPage() {
 
       <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
         {d.watermark && <div className="mb-4 text-center text-sm font-bold tracking-widest" style={{ color: "#dc2626" }}>{d.watermark}</div>}
+
+        {/* Letterhead (§3) — customer-facing formats only. */}
+        {d.company_info?.name && (
+          <div className="mb-4 border-b pb-3 text-center" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            <div className="font-heading text-lg font-bold tracking-wide" style={{ color: "var(--brand-primary)" }}>{d.company_info.name}</div>
+            {d.company_info.address && <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>{d.company_info.address}</div>}
+            <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+              {[d.company_info.phone && `Ph: ${d.company_info.phone}`, d.company_info.email, d.company_info.website].filter(Boolean).join("  ·  ")}
+            </div>
+            {d.company_info.gstin && <div className="text-[11px] font-medium" style={{ color: "var(--text-muted)" }}>GSTIN: {d.company_info.gstin}</div>}
+          </div>
+        )}
 
         <div className="mb-6 flex items-start justify-between border-b pb-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
           <div>
