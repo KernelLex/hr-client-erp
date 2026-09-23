@@ -143,3 +143,81 @@ def search_items(query: str = "", limit: int = 20):
         """,
         {"like": like, "limit": int(limit)}, as_dict=True)
     return {"items": rows}
+
+
+# ------------------------------------------------------------------ starter seed
+
+# Representative hardware types every modular kitchen/wardrobe needs, matched
+# against the live catalogue by keyword. Tier picks a different brand preference
+# so Standard/Premium/Luxury differ in price. Owner refines afterwards.
+_STARTER_ITEMS = ["hinge", "drawer", "channel", "runner", "handle", "basket", "lift"]
+_TIER_BRANDS = {
+    "Standard": ["EBCO", "Tataria", "Hafele"],
+    "Premium": ["Hettich", "Hafele"],
+    "Luxury": ["Blum"],
+}
+
+
+def _pick_item(keyword, brands):
+    """Best catalogue match for a keyword, preferring the tier's brands, with an
+    MRP so the package has a real price."""
+    for brand in brands + [None]:
+        cond = "AND i.brand = %(brand)s" if brand else ""
+        rows = frappe.db.sql(
+            f"""
+            SELECT i.name AS item_code, i.item_name, i.brand, i.stock_uom AS uom,
+                   ip.price_list_rate AS rate
+            FROM `tabItem` i
+            JOIN `tabItem Price` ip ON ip.item_code = i.name AND ip.price_list = 'Vendor MRP'
+            WHERE (i.item_name LIKE %(kw)s OR i.name LIKE %(kw)s) {cond}
+              AND ip.price_list_rate > 0
+            ORDER BY ip.price_list_rate ASC
+            LIMIT 1
+            """, {"kw": f"%{keyword}%", "brand": brand}, as_dict=True)
+        if rows:
+            return rows[0]
+    return None
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def seed_starter_packages():
+    """Create Standard / Premium / Luxury starter kitchen hardware bundles from the
+    live catalogue (idempotent per package_name+company). Owner then tunes them."""
+    require_admin()
+    company = current_company()
+    created = []
+    for tier, brands in _TIER_BRANDS.items():
+        pkg_name = f"Kitchen Hardware — {tier}"
+        if frappe.db.exists(_DT, {"package_name": pkg_name, "company": company}):
+            continue
+        items = []
+        for kw in _STARTER_ITEMS:
+            it = _pick_item(kw, brands)
+            if it:
+                items.append({"item_code": it["item_code"], "item_name": it["item_name"],
+                              "brand": it["brand"], "qty": 1, "uom": it["uom"] or "PC",
+                              "rate": frappe.utils.flt(it["rate"])})
+        if not items:
+            continue
+        doc = frappe.new_doc(_DT)
+        base = f"KIT-{tier}".upper()
+        code = base
+        n = 2
+        while frappe.db.exists(_DT, code):
+            code = f"{base}-{n}"; n += 1
+        doc.code = code
+        doc.package_name = pkg_name
+        doc.tier = tier
+        doc.status = "Active"
+        doc.company = company
+        doc.product_scope = "Kitchen"
+        doc.auto_price = 1
+        doc.description = f"Starter {tier.lower()} kitchen hardware bundle (auto-generated; adjust items/qty)."
+        for it in items:
+            doc.append("items", it)
+        doc.flags.ignore_permissions = True
+        doc.insert()
+        created.append({"name": doc.name, "tier": tier, "items": len(items)})
+    frappe.db.commit()
+    return {"created": created, "count": len(created)}

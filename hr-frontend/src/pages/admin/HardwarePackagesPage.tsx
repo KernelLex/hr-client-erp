@@ -38,6 +38,10 @@ export function HardwarePackagesPage() {
     mutationFn: (name: string) => hardwarePackagePost("delete_package", { name }),
     onSuccess: () => { setSel(null); qc.invalidateQueries({ queryKey: ["hw_packages"] }) },
   })
+  const seed = useMutation({
+    mutationFn: () => hardwarePackagePost<{ count: number }>("seed_starter_packages"),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hw_packages"] }),
+  })
 
   const total = (p: Pkg) => (p.items || []).reduce((s, it) => s + (it.qty || 0) * (it.rate || 0), 0)
 
@@ -50,6 +54,11 @@ export function HardwarePackagesPage() {
         {/* list */}
         <div className="lg:col-span-2 space-y-3">
           <button onClick={() => open()} className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">+ New Package</button>
+          {!(list.data?.packages || []).length && (
+            <button onClick={() => seed.mutate()} disabled={seed.isPending} className="w-full rounded-md border border-emerald-200 text-emerald-700 px-4 py-2 text-sm hover:bg-emerald-50 disabled:opacity-40">
+              {seed.isPending ? "Seeding…" : "✨ Seed starter packages"}
+            </button>
+          )}
           {TIERS.map((t) => {
             const rows = (list.data?.packages || []).filter((p) => p.tier === t)
             if (!rows.length) return null

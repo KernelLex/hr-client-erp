@@ -10,6 +10,10 @@ type MR = { exists: boolean; name?: string; mr_title?: string; status?: string; 
 type VOQ = { vendors: { vendor: string; lines: number; value: number }[]; unassigned: number }
 type PO = { name: string; vendor: string; status: string; total?: number; is_intercompany?: number; supplying_company?: string; po_date?: string }
 type POList = { pos: PO[]; kpis: Record<string, number> }
+type GRNLine = { item_description: string; spec?: string; item_code?: string; uom?: string; ordered_qty?: number; received_qty?: number; rate?: number; amount?: number; source_po_line?: string }
+type GRN = { name: string; grn_title?: string; vendor?: string; purchase_order?: string; status?: string; receipt_date?: string; total?: number; lines?: GRNLine[] }
+type GRNList = { grns: GRN[] }
+type SiteInv = { items: { item_description: string; spec?: string; uom?: string; qty: number; value: number }[]; total_value: number; line_count: number }
 
 const inr = (n?: number) => "₹" + (n || 0).toLocaleString("en-IN")
 const CAT_COLORS: Record<string, string> = { Carcass: "bg-amber-50 text-amber-700", Shutter: "bg-orange-50 text-orange-700", Finish: "bg-purple-50 text-purple-700", "Edge Band": "bg-teal-50 text-teal-700", Hardware: "bg-blue-50 text-blue-700" }
@@ -25,16 +29,26 @@ export function ProcurementPage() {
   const mrName = mr.data?.name
   const voq = useQuery({ queryKey: ["voq", mrName], queryFn: () => procurementGet<VOQ>("get_voq", { name: mrName! }), enabled: !!mrName })
 
+  const [grn, setGrn] = useState<GRN | null>(null)
+
   const rows = lines ?? mr.data?.lines ?? []
+  const grns = useQuery({ queryKey: ["grns", name], queryFn: () => procurementGet<GRNList>("list_grns", { project: name! }), enabled: !!name })
+  const siteInv = useQuery({ queryKey: ["siteinv", name], queryFn: () => procurementGet<SiteInv>("get_site_inventory", { project: name! }), enabled: !!name })
   const refresh = () => { qc.invalidateQueries({ queryKey: ["mrs", name] }); qc.invalidateQueries({ queryKey: ["voq", mrName] }); qc.invalidateQueries({ queryKey: ["pos", name] }); setLines(null) }
+  const refreshGrn = () => { qc.invalidateQueries({ queryKey: ["grns", name] }); qc.invalidateQueries({ queryKey: ["siteinv", name] }); qc.invalidateQueries({ queryKey: ["pos", name] }) }
 
   const build = useMutation({ mutationFn: () => procurementPost("build_requirement", { project: name }), onSuccess: () => refresh() })
   const save = useMutation({ mutationFn: () => procurementPost("save_requirement_lines", { name: mrName, lines: rows }), onSuccess: () => refresh() })
+  const suggest = useMutation({ mutationFn: () => procurementPost<{ assigned: number }>("suggest_vendors", { name: mrName }), onSuccess: () => refresh() })
   const genPOs = useMutation({ mutationFn: () => procurementPost<{ count: number }>("generate_pos", { name: mrName }), onSuccess: () => refresh() })
   const poStatus = useMutation({ mutationFn: (b: { name: string; status: string }) => procurementPost("update_po_status", b), onSuccess: () => qc.invalidateQueries({ queryKey: ["pos", name] }) })
+  const openGrn = useMutation({ mutationFn: (po: string) => procurementPost<GRN>("create_grn_from_po", { po }), onSuccess: (d) => { setGrn(d); refreshGrn() } })
+  const saveGrn = useMutation({ mutationFn: () => procurementPost<GRN>("save_grn_lines", { name: grn!.name, lines: grn!.lines }), onSuccess: (d) => { setGrn(d); refreshGrn() } })
+  const confirmGrn = useMutation({ mutationFn: () => procurementPost("confirm_grn", { name: grn!.name }), onSuccess: () => { setGrn(null); refreshGrn() } })
 
   const setVendor = (idx: number, v: string) => setLines(rows.map((r) => r.idx === idx ? { ...r, assigned_vendor: v } : r))
   const setRate = (idx: number, v: number) => setLines(rows.map((r) => r.idx === idx ? { ...r, est_rate: v, est_amount: (r.qty || 0) * v } : r))
+  const setGrnQty = (i: number, v: number) => setGrn(grn ? { ...grn, lines: (grn.lines || []).map((l, j) => j === i ? { ...l, received_qty: v } : l) } : grn)
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -52,7 +66,12 @@ export function ProcurementPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex justify-between items-center mb-3">
             <div><h2 className="font-semibold text-slate-700">Material Requirement Sheet</h2><div className="text-xs text-gray-400">{mr.data.name} · from {mr.data.source_boqs} · {mr.data.status}</div></div>
-            <button onClick={() => save.mutate()} disabled={!lines || save.isPending} className="rounded-md border border-indigo-200 text-indigo-700 px-3 py-1.5 text-sm hover:bg-indigo-50 disabled:opacity-40">Save vendors/rates</button>
+            <div className="flex gap-2">
+              <button onClick={() => suggest.mutate()} disabled={suggest.isPending} className="rounded-md border border-emerald-200 text-emerald-700 px-3 py-1.5 text-sm hover:bg-emerald-50 disabled:opacity-40" title="Assign the standard vendor (item brand) to lines with no vendor yet">
+                {suggest.isPending ? "…" : "⚡ Auto-assign vendors"}
+              </button>
+              <button onClick={() => save.mutate()} disabled={!lines || save.isPending} className="rounded-md border border-indigo-200 text-indigo-700 px-3 py-1.5 text-sm hover:bg-indigo-50 disabled:opacity-40">Save vendors/rates</button>
+            </div>
           </div>
           <table className="w-full text-sm">
             <thead><tr className="text-xs text-gray-400 border-b"><th className="text-left py-1">Item</th><th className="w-20">Cat</th><th className="text-right w-16">Qty</th><th className="w-14">UoM</th><th className="text-right w-24">Rate</th><th className="text-right w-24">Amount</th><th className="w-40 text-left">Vendor</th></tr></thead>
@@ -97,12 +116,72 @@ export function ProcurementPage() {
         {(pos.data?.pos || []).map((po) => (
           <div key={po.name} className="flex justify-between items-center border-b border-gray-50 py-1.5 text-sm">
             <div><span className="text-slate-700">{po.vendor}</span> <span className="text-xs text-gray-400">· {po.name} · {inr(po.total)}</span>{po.is_intercompany ? <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600">intercompany → {po.supplying_company}</span> : null}</div>
-            <select className="text-xs border border-gray-200 rounded px-1 py-0.5" value={po.status} onChange={(e) => poStatus.mutate({ name: po.name, status: e.target.value })}>
-              <option>Draft</option><option>Sent</option><option>Received</option><option>Cancelled</option>
-            </select>
+            <div className="flex items-center gap-2">
+              {po.status !== "Cancelled" && (
+                <button onClick={() => openGrn.mutate(po.name)} disabled={openGrn.isPending} className="text-xs text-emerald-700 border border-emerald-200 rounded px-2 py-0.5 hover:bg-emerald-50 disabled:opacity-40">📦 Receive</button>
+              )}
+              <select className="text-xs border border-gray-200 rounded px-1 py-0.5" value={po.status} onChange={(e) => poStatus.mutate({ name: po.name, status: e.target.value })}>
+                <option>Draft</option><option>Sent</option><option>Received</option><option>Cancelled</option>
+              </select>
+            </div>
           </div>
         ))}
         {!(pos.data?.pos || []).length && <div className="text-xs text-gray-300">No purchase orders yet.</div>}
+      </div>
+
+      {/* Goods Receipt editor (open when a PO is being received) */}
+      {grn && (
+        <div className="bg-white rounded-xl shadow-sm border border-emerald-200 p-5">
+          <div className="flex justify-between items-center mb-3">
+            <div><h2 className="font-semibold text-slate-700">Goods Receipt — {grn.vendor}</h2><div className="text-xs text-gray-400">{grn.name} · PO {grn.purchase_order} · {grn.status}</div></div>
+            <div className="flex gap-2">
+              <button onClick={() => setGrn(null)} className="rounded-md border border-gray-200 text-gray-500 px-3 py-1.5 text-sm hover:bg-gray-50">Close</button>
+              <button onClick={() => saveGrn.mutate()} disabled={saveGrn.isPending} className="rounded-md border border-indigo-200 text-indigo-700 px-3 py-1.5 text-sm hover:bg-indigo-50 disabled:opacity-40">Save</button>
+              <button onClick={() => confirmGrn.mutate()} disabled={confirmGrn.isPending || grn.status === "Received"} className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-40">{grn.status === "Received" ? "Received ✓" : "Confirm receipt"}</button>
+            </div>
+          </div>
+          <table className="w-full text-sm">
+            <thead><tr className="text-xs text-gray-400 border-b"><th className="text-left py-1">Item</th><th className="w-14">UoM</th><th className="text-right w-16">Ordered</th><th className="text-right w-20">Received</th><th className="text-right w-24">Rate</th><th className="text-right w-24">Amount</th></tr></thead>
+            <tbody>
+              {(grn.lines || []).map((l, i) => (
+                <tr key={i} className="border-b border-gray-50">
+                  <td className="py-1.5"><div className="text-slate-700">{l.item_description}</div>{l.spec && <div className="text-xs text-gray-400">{l.spec}</div>}</td>
+                  <td className="text-center text-xs text-gray-500">{l.uom}</td>
+                  <td className="text-right text-gray-500">{l.ordered_qty}</td>
+                  <td className="text-right"><input className="w-16 text-right border border-gray-200 rounded px-1 py-0.5" type="number" value={l.received_qty ?? 0} disabled={grn.status === "Received"} onChange={(e) => setGrnQty(i, parseFloat(e.target.value) || 0)} /></td>
+                  <td className="text-right text-gray-500">{inr(l.rate)}</td>
+                  <td className="text-right text-slate-600">{inr((l.received_qty || 0) * (l.rate || 0))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-xs text-gray-400 mt-2">Edit received quantities for partial deliveries, then Confirm. Confirmed receipts flow into Site Inventory and mark the PO Received.</p>
+        </div>
+      )}
+
+      {/* Goods receipts history */}
+      {(grns.data?.grns || []).length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <h2 className="font-semibold text-slate-700 mb-3">Goods Receipts</h2>
+          {(grns.data?.grns || []).map((g) => (
+            <div key={g.name} className="flex justify-between items-center border-b border-gray-50 py-1.5 text-sm">
+              <div><span className="text-slate-700">{g.vendor}</span> <span className="text-xs text-gray-400">· {g.name} · {g.receipt_date} · {inr(g.total)}</span></div>
+              <span className={`text-xs px-1.5 py-0.5 rounded ${g.status === "Received" ? "bg-emerald-50 text-emerald-700" : "bg-gray-50 text-gray-500"}`}>{g.status}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Site inventory */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 className="font-semibold text-slate-700 mb-3">Site Inventory {siteInv.data ? <span className="text-xs text-gray-400 font-normal">· {siteInv.data.line_count} items · {inr(siteInv.data.total_value)} received</span> : null}</h2>
+        {(siteInv.data?.items || []).map((it, i) => (
+          <div key={i} className="flex justify-between border-b border-gray-50 py-1.5 text-sm">
+            <span className="text-slate-700">{it.item_description}{it.spec ? <span className="text-xs text-gray-400"> · {it.spec}</span> : null}</span>
+            <span className="text-gray-500">{it.qty} {it.uom} · {inr(it.value)}</span>
+          </div>
+        ))}
+        {!(siteInv.data?.items || []).length && <div className="text-xs text-gray-300">Nothing received on site yet. Confirm a goods receipt above.</div>}
       </div>
     </div>
   )

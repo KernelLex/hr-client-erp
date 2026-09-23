@@ -322,3 +322,162 @@ def update_po_status(name: str, status: str):
     doc.save()
     frappe.db.commit()
     return {"name": doc.name, "status": doc.status}
+
+
+# ------------------------------------------------------------------ vendor auto-suggest
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def suggest_vendors(name: str):
+    """Auto-assign a standard vendor to every unassigned MR line.
+
+    Rule (brief §VOQ): "standard vendor per material unless the customer specifies
+    a brand". In our catalogue an Item's Brand IS the vendor (Suppliers weren't
+    seeded), so item-linked lines get their brand. Non-catalogue lines (finishes,
+    sheet goods) have no brand → they stay unassigned for manual choice. Only fills
+    blanks — never overwrites a vendor already chosen.
+    """
+    require_login()
+    doc = frappe.get_doc(MR, name)
+    assigned = 0
+    for r in doc.get("lines") or []:
+        if (r.assigned_vendor or "").strip():
+            continue
+        vendor = None
+        if r.item_code:
+            vendor = frappe.db.get_value("Item", r.item_code, "brand")
+        if vendor:
+            r.assigned_vendor = vendor
+            assigned += 1
+    doc.flags.ignore_permissions = True
+    doc.save()
+    frappe.db.commit()
+    return {"assigned": assigned, **_serialize_mr(doc)}
+
+
+# ------------------------------------------------------------------ goods receipt
+
+GRN = "Vera Goods Receipt"
+
+
+def _serialize_grn(doc):
+    return {
+        "name": doc.name, "grn_title": doc.grn_title, "project": doc.project,
+        "purchase_order": doc.purchase_order, "vendor": doc.vendor, "company": doc.company,
+        "status": doc.status, "total": doc.total, "notes": doc.notes,
+        "receipt_date": str(doc.receipt_date) if doc.receipt_date else None,
+        "lines": [{"item_description": r.item_description, "spec": r.spec, "item_code": r.item_code,
+                   "uom": r.uom, "ordered_qty": r.ordered_qty, "received_qty": r.received_qty,
+                   "rate": r.rate, "amount": r.amount, "source_po_line": r.source_po_line}
+                  for r in doc.get("lines") or []],
+    }
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def create_grn_from_po(po: str):
+    """Draft a Goods Receipt pre-filled from a PO's lines (received_qty defaults to
+    ordered qty; the receiver edits down for partial deliveries). Reuses an existing
+    Draft GRN for the same PO if one is open."""
+    require_login()
+    po_doc = frappe.get_doc(PO, po)
+    existing = frappe.db.get_value(GRN, {"purchase_order": po, "status": "Draft"}, "name")
+    doc = frappe.get_doc(GRN, existing) if existing else frappe.new_doc(GRN)
+    doc.grn_title = f"GRN — {po_doc.vendor}"
+    doc.project = po_doc.project
+    doc.purchase_order = po
+    doc.vendor = po_doc.vendor
+    doc.company = po_doc.company or current_company()
+    doc.receipt_date = frappe.utils.today()
+    doc.status = "Draft"
+    doc.set("lines", [])
+    for i, r in enumerate(po_doc.get("lines") or []):
+        doc.append("lines", {
+            "item_description": r.item_description, "spec": r.spec, "uom": r.uom,
+            "ordered_qty": r.qty, "received_qty": r.qty, "rate": r.rate,
+            "source_po_line": f"{po}#{i}",
+        })
+    doc.flags.ignore_permissions = True
+    doc.save()
+    frappe.db.commit()
+    return _serialize_grn(doc)
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def save_grn_lines(name: str, lines: str = None, receipt_date: str = None, notes: str = None):
+    require_login()
+    doc = frappe.get_doc(GRN, name)
+    if doc.status != "Draft":
+        frappe.throw("Only a Draft goods receipt can be edited.")
+    rows = frappe.parse_json(lines) if lines else None
+    if rows is not None:
+        doc.set("lines", [])
+        for r in rows:
+            doc.append("lines", {
+                "item_description": r.get("item_description"), "spec": r.get("spec"),
+                "item_code": r.get("item_code"), "uom": r.get("uom"),
+                "ordered_qty": _flt(r.get("ordered_qty")), "received_qty": _flt(r.get("received_qty")),
+                "rate": _flt(r.get("rate")), "source_po_line": r.get("source_po_line"),
+            })
+    if receipt_date:
+        doc.receipt_date = receipt_date
+    if notes is not None:
+        doc.notes = notes
+    doc.flags.ignore_permissions = True
+    doc.save()
+    frappe.db.commit()
+    return _serialize_grn(doc)
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def confirm_grn(name: str):
+    """Mark a goods receipt Received; flip the linked PO to Received. Received items
+    then show up in the project's site inventory."""
+    require_login()
+    doc = frappe.get_doc(GRN, name)
+    doc.status = "Received"
+    doc.flags.ignore_permissions = True
+    doc.save()
+    if doc.purchase_order and frappe.db.exists(PO, doc.purchase_order):
+        frappe.db.set_value(PO, doc.purchase_order, "status", "Received")
+    frappe.db.commit()
+    return _serialize_grn(doc)
+
+
+@frappe.whitelist()
+@handle_api_error
+def get_grn(name: str):
+    require_login()
+    return _serialize_grn(frappe.get_doc(GRN, name))
+
+
+@frappe.whitelist()
+@handle_api_error
+def list_grns(project: str):
+    require_login()
+    rows = frappe.get_all(GRN, filters={"project": project},
+                          fields=["name", "vendor", "purchase_order", "status", "receipt_date", "total"],
+                          order_by="creation desc")
+    return {"grns": rows}
+
+
+@frappe.whitelist()
+@handle_api_error
+def get_site_inventory(project: str):
+    """Materials received on site for a project — aggregated from confirmed
+    (Received) goods receipts, grouped by item + spec + unit."""
+    require_login()
+    rows = frappe.db.sql(
+        """
+        SELECT l.item_description, l.spec, l.uom,
+               SUM(l.received_qty) AS qty, SUM(l.amount) AS value
+        FROM `tabVera Goods Receipt Line` l
+        JOIN `tabVera Goods Receipt` g ON l.parent = g.name
+        WHERE g.project = %(project)s AND g.status = 'Received' AND l.received_qty > 0
+        GROUP BY l.item_description, l.spec, l.uom
+        ORDER BY value DESC
+        """, {"project": project}, as_dict=True)
+    total_value = round(sum(_flt(r["value"]) for r in rows))
+    return {"items": rows, "total_value": total_value, "line_count": len(rows)}
