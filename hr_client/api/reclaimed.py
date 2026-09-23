@@ -300,6 +300,8 @@ def list_reclaimed(status: str = None):
     avail = sum(1 for r in allrows if r.status == "Available")
     reserved = sum(1 for r in allrows if r.status == "Reserved")
     reusable_value = sum(_flt(r.salvage_value) for r in allrows if r.status in ("Available", "Reserved"))
+    # Waste avoided = salvage value of pieces already put back into a project.
+    reused_value = sum(_flt(r.salvage_value) for r in allrows if r.status == "Reused")
 
     def dims(r):
         d = "×".join(f"{_flt(x):.0f}" for x in (r.width, r.height, r.depth) if _flt(x))
@@ -320,8 +322,8 @@ def list_reclaimed(status: str = None):
         "kpis": [
             {"label": "Available", "value": str(avail), "tone": "good"},
             {"label": "Reserved", "value": str(reserved)},
-            {"label": "Total Pieces", "value": str(len(allrows))},
             {"label": "Reusable Value", "value": "₹" + frappe.utils.fmt_money(reusable_value, currency="INR"), "tone": "good"},
+            {"label": "Waste Avoided", "value": "₹" + frappe.utils.fmt_money(reused_value, currency="INR"), "tone": "good"},
         ],
         "columns": [
             {"key": "material_title", "header": "Material"},
