@@ -51,6 +51,7 @@ export function QuotationPrintPage() {
   const [showRates, setShowRates] = useState(true)
   const [showDiscount, setShowDiscount] = useState(true)
   const [showCover, setShowCover] = useState(false)
+  const [showPrices, setShowPrices] = useState(true)
 
   // PDF auto file-naming (§77) — drive the browser "Save as PDF" default filename
   // via the document title while this page is mounted, then restore it.
@@ -65,7 +66,8 @@ export function QuotationPrintPage() {
   if (isLoading) return <div className="p-6" style={{ color: "var(--text-muted)" }}>Loading…</div>
   if (isError || !d) return <div className="p-6" style={{ color: "#dc2626" }}>Could not load: {(error as Error)?.message ?? "not found"}</div>
 
-  const showPricing = d.grand_total != null // technical BOQ omits all pricing
+  const hasPricing = d.grand_total != null // technical BOQ omits all pricing
+  const showPricing = hasPricing && showPrices // §46 — hide all prices (scope-only doc)
   const rates = showPricing && showRates
   // Columns preceding the Amount column in the detailed grid (for the Section Total colSpan).
   const preAmountCols = 1 /* Specification */ + (showDimensions ? 1 : 0) + 1 /* Qty */ + 1 /* UOM */ + (rates ? 1 : 0)
@@ -82,6 +84,7 @@ export function QuotationPrintPage() {
             <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
               <Toggle label="Cover page" checked={showCover} onChange={setShowCover} />
               <Toggle label="Dimensions" checked={showDimensions} onChange={setShowDimensions} />
+              {hasPricing && <Toggle label="Prices" checked={showPrices} onChange={setShowPrices} />}
               {showPricing && <Toggle label="Rates" checked={showRates} onChange={setShowRates} />}
               {showPricing && <Toggle label="Discount" checked={showDiscount} onChange={setShowDiscount} />}
             </div>
