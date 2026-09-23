@@ -52,6 +52,8 @@ const FollowupsPage = lazy(() => import("@/pages/crm/FollowupsPage").then(m => (
 const PreQuotePage = lazy(() => import("@/pages/prequote/PreQuotePage"))
 const ProjectsPage = lazy(() => import("@/pages/quotation/ProjectsPage").then(m => ({ default: m.ProjectsPage })))
 const ProjectControlPage = lazy(() => import("@/pages/quotation/ProjectControlPage").then(m => ({ default: m.ProjectControlPage })))
+const ReclaimedPage = lazy(() => import("@/pages/quotation/ReclaimedPage").then(m => ({ default: m.ReclaimedPage })))
+const ReclaimedDetail = lazy(() => import("@/pages/quotation/ReclaimedDetail").then(m => ({ default: m.ReclaimedDetail })))
 const MeasurementsPage = lazy(() => import("@/pages/quotation/MeasurementsPage").then(m => ({ default: m.MeasurementsPage })))
 const MeasurementEditor = lazy(() => import("@/pages/quotation/MeasurementEditor").then(m => ({ default: m.MeasurementEditor })))
 const BoqPage = lazy(() => import("@/pages/quotation/BoqPage").then(m => ({ default: m.BoqPage })))
@@ -162,6 +164,9 @@ function App() {
                 {/* Quotation Studio — Project Control Screen (§5) */}
                 <Route path="/quotation/projects" element={<ProjectsPage />} />
                 <Route path="/quotation/projects/:name" element={<ProjectControlPage />} />
+                {/* Reclaimed / returned materials inventory */}
+                <Route path="/quotation/reclaimed" element={<ReclaimedPage />} />
+                <Route path="/quotation/reclaimed/:name" element={<ReclaimedDetail />} />
                 {/* Quotation Studio — Measurement Sheets (§4.2) */}
                 <Route path="/quotation/measurements" element={<MeasurementsPage />} />
                 <Route path="/quotation/measurements/:name" element={<MeasurementEditor />} />

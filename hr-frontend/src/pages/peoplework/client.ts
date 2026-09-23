@@ -111,6 +111,9 @@ export const quotationPost = apiPostFactory("quotation")
 
 export const projectGet = apiGetFactory("project_overview")
 
+export const reclaimedGet = apiGetFactory("reclaimed")
+export const reclaimedPost = apiPostFactory("reclaimed")
+
 export const termsGet = apiGetFactory("terms")
 export const termsPost = apiPostFactory("terms")
 

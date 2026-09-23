@@ -391,6 +391,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <SubItem to="/quotation/cost-sheets" label="Cost Sheets" isActive={path.startsWith("/quotation/cost-sheets")} onClick={close} />
               <SubItem to="/quotation/quotations" label="Customer Quotations" isActive={path.startsWith("/quotation/quotations")} onClick={close} />
               <SubItem to="/quotation/sales-orders" label="Sales Orders" isActive={path.startsWith("/quotation/sales-orders")} onClick={close} />
+              <SubItem to="/quotation/reclaimed" label="Reclaimed Materials" isActive={path.startsWith("/quotation/reclaimed")} onClick={close} />
               <SubItem to="/quotation/terms-clauses" label="Terms — Clauses" isActive={path === "/quotation/terms-clauses"} onClick={close} />
               <SubItem to="/quotation/terms-templates" label="Terms — Templates" isActive={path === "/quotation/terms-templates"} onClick={close} />
               <SubItem to="/quotation/units" label="Units" isActive={path === "/quotation/units"} onClick={close} />

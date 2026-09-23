@@ -33,7 +33,7 @@ interface PrintDoc {
   foc_value?: number; installation_waiver?: number; transport_waiver?: number; price_override_percent?: number
 }
 
-const inr = (n?: number) => (n == null ? "—" : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n))
+const inr = (n?: number | null) => (n == null ? "—" : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n))
 
 export function QuotationPrintPage() {
   const { name = "", fmt = "summary" } = useParams()
