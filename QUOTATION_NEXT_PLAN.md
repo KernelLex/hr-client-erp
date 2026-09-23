@@ -168,9 +168,11 @@ Per owner instruction "give the admin the ability to input these in the system",
 owner-data gaps now have self-serve admin UI (no more waiting on a dev):
 - **Dealer / cost prices** → `/admin/cost-prices` (`vendor_cost.py` + `Vera Vendor Cost Rule`): enter a
   dealer discount% per brand → "Apply discounts" derives cost = MRP×(1−%) onto a **"Vendor Cost"** buying
-  price list; also a per-item cost override + coverage KPI. Costing can then read real cost via
-  `vendor_cost.get_item_cost()` (wiring the cost sheet to auto-pull this = a small follow-up). Still: do
-  NOT invent cost — the owner types it. (selling_rate = MRP; purchase_rate now owner-supplied.)
+  price list; also a per-item cost override + coverage KPI. **✅ COST SHEET NOW AUTO-PULLS this cost +
+  LIVE** (commit `8da5ebb`): item-linked cost-sheet lines auto-fill `cost_rate` from Vendor Cost on save
+  (`cost_sheet._catalogue_cost`) + a `pull_catalogue_costs` endpoint / "↧ Pull catalogue costs" editor
+  button (fill-only, never invents cost). E2E verified live (cost 90.75 → line total 181.5 @ qty 2). So
+  true GP now flows the moment the owner enters dealer prices. Still: do NOT invent cost — owner types it.
 - **GSTIN + letterhead** → `/admin/company-settings` (`company_profile.py`): owner enters GSTIN
   (Company.tax_id) + address/phone/email/website per company → feeds the M30 print letterhead directly.
   **GSTIN CONFIRMED not in the materials** (checked every PDF incl. `Ledger Formate.pdf` — only addresses).
