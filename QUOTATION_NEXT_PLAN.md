@@ -96,8 +96,12 @@ Sliding; TV Unit; Vanity; Crockery/Storage; Study/Office), each row annotated; a
 to the template row child + carried through `apply_template` so a survey starts pre-annotated. Schema →
 needs migrate + `seed_default_templates` on deploy. Note: the Measurement Sheet already has structured
 `obstructions` + `services` child tables (site conditions handled there).
-REMAINING (later): per-area photo capture (§11); verify calc formulas per pricing method
-(RFT/SFT/SQM/UNIT/LS) against §12; owner refinement of the seed templates.
+✅ **PHOTO CAPTURE DONE (M51, deployed 2026-09-23):** `Vera Measurement Photo` child (image/area/caption)
+on the Measurement Sheet, routed through the existing `save_register` machinery (new `photos` register,
+draft-only gate) + a Site Photos gallery in MeasurementEditor (multi-upload via the shared Frappe upload
+helper, per-photo area+caption save-on-blur, remove; read-only once locked). Migrate clean, live, site 200.
+REMAINING (later): verify calc formulas per pricing method (RFT/SFT/SQM/UNIT/LS) against §12; owner
+refinement of the seed templates.
 
 ### C. Master-data build-out (PRD §5–§26) — data + dropdowns — ✅ SEED DONE (M49, NOT deployed; data-only)
 The 29 taxonomy masters exist (M5) and `quotation_taxonomy.seed_all()` seeds ~26 of them. M39 wired the
