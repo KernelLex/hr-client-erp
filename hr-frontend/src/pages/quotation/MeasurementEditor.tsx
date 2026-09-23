@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
-import { measurementGet, measurementPost } from "../peoplework/client"
+import { measurementGet, measurementPost, measurementTemplateGet, measurementTemplatePost } from "../peoplework/client"
 import { StatusPill } from "../peoplework/components/Pills"
 import { StageBar } from "./components/StageBar"
 import { DocumentLinkBar } from "./components/DocumentLinkBar"
@@ -71,6 +71,7 @@ export function MeasurementEditor() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [busy, setBusy] = useState<string | null>(null)
+  const [tpl, setTpl] = useState("")
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["q_measurement", name],
@@ -79,6 +80,20 @@ export function MeasurementEditor() {
     refetchOnMount: "always",
   })
   const m = data?.measurement
+
+  const { data: templates } = useQuery({
+    queryKey: ["measurement_templates"],
+    queryFn: () => measurementTemplateGet<{ templates: { name: string; label: string }[] }>("list_templates"),
+    staleTime: 5 * 60 * 1000,
+  })
+  async function applyTemplate() {
+    if (!tpl) { toast.error("Pick a template"); return }
+    setBusy("tpl")
+    try {
+      await measurementTemplatePost("apply_template", { measurement: name, template: tpl, mode: "append" })
+      toast.success("Template rows added"); setTpl(""); refresh()
+    } catch (e) { toast.error((e as Error)?.message ?? "Could not apply") } finally { setBusy(null) }
+  }
 
   function refresh() {
     qc.invalidateQueries({ queryKey: ["q_measurement", name] })
@@ -192,6 +207,16 @@ export function MeasurementEditor() {
       </div>
 
       {/* Registers */}
+      {!locked && (templates?.templates.length ?? 0) > 0 && (
+        <div className="mb-2 flex items-center justify-end gap-2">
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>Start from a template:</span>
+          <select value={tpl} onChange={(e) => setTpl(e.target.value)} className="rounded px-2 py-1 text-xs" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }}>
+            <option value="">Choose product type…</option>
+            {templates!.templates.map((t) => <option key={t.name} value={t.name}>{t.label}</option>)}
+          </select>
+          <button onClick={applyTemplate} disabled={busy === "tpl" || !tpl} className="rounded-lg px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-60" style={{ background: "var(--brand-primary)" }}>Apply</button>
+        </div>
+      )}
       <RegisterGrid title="Measurement Rows" columns={ROW_COLS} rows={m.rows} editable={!locked}
         onSave={(rows) => saveRegister("rows", rows)} emptyLabel="No measurement rows yet." />
       <RegisterGrid title="Obstruction Register" columns={OBSTRUCTION_COLS} rows={m.obstructions} editable={!locked}
