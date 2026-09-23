@@ -102,8 +102,8 @@
   {
     "vendor": "blum",
     "status": "ok (vision)",
-    "raw_rows": 30,
-    "unique_skus": 30,
+    "raw_rows": 421,
+    "unique_skus": 421,
     "null_mrp": 0,
     "with_hsn": 0,
     "gst_inclusive": false,
