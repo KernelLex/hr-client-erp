@@ -27,6 +27,8 @@
   "gst_percent",
   "gst_amount",
   "grand_total",
+  "place_of_supply",
+  "is_interstate",
   "credit_terms_standard",
   "credit_terms",
   "gp_section",
@@ -206,6 +208,17 @@
    "fieldtype": "Currency",
    "label": "Grand Total",
    "read_only": 1
+  },
+  {
+   "fieldname": "place_of_supply",
+   "fieldtype": "Data",
+   "label": "Place of Supply (State)"
+  },
+  {
+   "fieldname": "is_interstate",
+   "fieldtype": "Check",
+   "label": "Inter-state (IGST)",
+   "default": "0"
   },
   {
    "fieldname": "credit_terms_standard",

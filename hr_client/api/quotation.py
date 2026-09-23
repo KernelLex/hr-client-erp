@@ -19,6 +19,7 @@ from hr_client.api.cost_sheet import gp_tone
 
 _HEADER_FIELDS = ("quotation_title", "opportunity", "company_name", "prepared_by",
                   "discount_percent", "adjustment", "gst_percent",
+                  "place_of_supply", "is_interstate",
                   "credit_terms_standard", "credit_terms", "terms_template",
                   "terms_and_conditions", "assumptions", "notes",
                   # delivery & execution terms shown on the customer print (§29/§30/§35)
@@ -222,6 +223,8 @@ def _serialize(doc):
         "gst_percent": doc.gst_percent,
         "gst_amount": doc.gst_amount,
         "grand_total": doc.grand_total,
+        "place_of_supply": doc.place_of_supply,
+        "is_interstate": doc.is_interstate,
         "credit_terms_standard": doc.credit_terms_standard,
         "credit_terms": doc.credit_terms,
         "cost_basis": doc.cost_basis,
@@ -761,16 +764,23 @@ def get_quotation_print(name: str, fmt: str = "summary"):
     }
     # Commercial totals — shown on all except the pricing-free technical BOQ.
     if fmt != "technical":
-        # Intra-state default: CGST + SGST each half the GST (§27/§68). Place-of-
-        # supply-driven IGST is a later refinement; the sample quotes are intra-state.
+        # §27/§68 — inter-state supply is taxed as a single IGST; intra-state
+        # splits the GST into CGST + SGST (each half). Driven by is_interstate,
+        # which the user sets alongside the place of supply.
+        interstate = bool(doc.is_interstate)
         half = round(_flt(doc.gst_amount) / 2.0, 2)
         out.update({
             "gross_total": doc.gross_total, "discount_percent": doc.discount_percent,
             "discount_amount": doc.discount_amount, "adjustment": doc.adjustment,
             "net_before_gst": doc.net_before_gst, "gst_percent": doc.gst_percent,
             "gst_amount": doc.gst_amount, "grand_total": doc.grand_total,
-            "cgst_percent": round(_flt(doc.gst_percent) / 2.0, 2), "cgst_amount": half,
-            "sgst_percent": round(_flt(doc.gst_percent) / 2.0, 2), "sgst_amount": round(_flt(doc.gst_amount) - half, 2),
+            "place_of_supply": doc.place_of_supply, "interstate": interstate,
+            "cgst_percent": None if interstate else round(_flt(doc.gst_percent) / 2.0, 2),
+            "cgst_amount": None if interstate else half,
+            "sgst_percent": None if interstate else round(_flt(doc.gst_percent) / 2.0, 2),
+            "sgst_amount": None if interstate else round(_flt(doc.gst_amount) - half, 2),
+            "igst_percent": _flt(doc.gst_percent) if interstate else None,
+            "igst_amount": _flt(doc.gst_amount) if interstate else None,
             "amount_in_words": frappe.utils.money_in_words(doc.grand_total, "INR"),
             # Payment schedule (§28) — a per-quotation stored schedule when the
             # user has set one, else the standard stage template. Either way the

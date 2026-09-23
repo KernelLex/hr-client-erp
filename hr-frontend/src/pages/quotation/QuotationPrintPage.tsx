@@ -21,6 +21,7 @@ interface PrintDoc {
   gross_total?: number; discount_percent?: number; discount_amount?: number; adjustment?: number
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
   cgst_percent?: number; cgst_amount?: number; sgst_percent?: number; sgst_amount?: number; amount_in_words?: string
+  interstate?: boolean; place_of_supply?: string | null; igst_percent?: number | null; igst_amount?: number | null
   payment_schedule?: { stage: string; percent: number; amount: number }[]
   validity_days?: number | null; delivery_period?: string | null; installation_period?: string | null; warranty_terms?: string | null
   inclusions?: string[]; exclusions?: string[]
@@ -180,8 +181,14 @@ export function QuotationPrintPage() {
               {showDiscount && <Row label={`Discount (${d.discount_percent}%)`} value={`− ${inr(d.discount_amount)}`} />}
               {!!d.adjustment && <Row label="Adjustment" value={inr(d.adjustment)} />}
               <Row label="Taxable Value" value={inr(d.net_before_gst)} />
-              <Row label={`CGST (${d.cgst_percent}%)`} value={inr(d.cgst_amount)} />
-              <Row label={`SGST (${d.sgst_percent}%)`} value={inr(d.sgst_amount)} />
+              {d.interstate ? (
+                <Row label={`IGST (${d.igst_percent}%)`} value={inr(d.igst_amount)} />
+              ) : (
+                <>
+                  <Row label={`CGST (${d.cgst_percent}%)`} value={inr(d.cgst_amount)} />
+                  <Row label={`SGST (${d.sgst_percent}%)`} value={inr(d.sgst_amount)} />
+                </>
+              )}
               <div className="border-t pt-1" style={{ borderColor: "var(--border, #e0d9cb)" }}>
                 <Row label="Grand Total" value={inr(d.grand_total)} strong />
               </div>

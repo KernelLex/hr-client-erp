@@ -22,6 +22,7 @@ interface Quotation {
   gross_total: number; discount_percent: number; discount_amount: number; adjustment: number
   net_before_gst: number; gst_percent: number; gst_amount: number; grand_total: number
   credit_terms_standard: number; credit_terms: string | null
+  place_of_supply: string | null; is_interstate: number
   cost_basis: number; gross_profit: number; gp_percent: number
   target_gp_percent: number; min_gp_percent: number; gp_tone: "red" | "amber" | "green"
   required_authority: string; triggered_rules_list: Rule[]
@@ -68,7 +69,7 @@ export function QuotationEditor() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [busy, setBusy] = useState<string | null>(null)
-  const [form, setForm] = useState({ discount_percent: "", adjustment: "", gst_percent: "", credit_terms_standard: true, credit_terms: "", foc_value: "", installation_waiver: "", transport_waiver: "", price_override_percent: "", validity_days: "", delivery_period: "", installation_period: "", warranty_terms: "", assumptions: "" })
+  const [form, setForm] = useState({ discount_percent: "", adjustment: "", gst_percent: "", credit_terms_standard: true, credit_terms: "", foc_value: "", installation_waiver: "", transport_waiver: "", price_override_percent: "", validity_days: "", delivery_period: "", installation_period: "", warranty_terms: "", assumptions: "", place_of_supply: "", is_interstate: false })
   const [dirty, setDirty] = useState(false)
   const [negotiated, setNegotiated] = useState("")
 
@@ -107,8 +108,10 @@ export function QuotationEditor() {
       installation_period: q.installation_period ?? "",
       warranty_terms: q.warranty_terms ?? "",
       assumptions: q.assumptions ?? "",
+      place_of_supply: q.place_of_supply ?? "",
+      is_interstate: !!q.is_interstate,
     })
-  }, [q?.name, q?.discount_percent, q?.adjustment, q?.gst_percent, q?.credit_terms_standard, q?.credit_terms, q?.foc_value, q?.installation_waiver, q?.transport_waiver, q?.price_override_percent, q?.validity_days, q?.delivery_period, q?.installation_period, q?.warranty_terms, q?.assumptions])
+  }, [q?.name, q?.discount_percent, q?.adjustment, q?.gst_percent, q?.credit_terms_standard, q?.credit_terms, q?.foc_value, q?.installation_waiver, q?.transport_waiver, q?.price_override_percent, q?.validity_days, q?.delivery_period, q?.installation_period, q?.warranty_terms, q?.assumptions, q?.place_of_supply, q?.is_interstate])
 
   function refresh() { qc.invalidateQueries({ queryKey: ["q_quotation", name] }) }
   function setField(k: string, v: string | boolean) { setForm((p) => ({ ...p, [k]: v })); setDirty(true) }
@@ -124,6 +127,7 @@ export function QuotationEditor() {
         validity_days: form.validity_days || 0, delivery_period: form.delivery_period,
         installation_period: form.installation_period, warranty_terms: form.warranty_terms,
         assumptions: form.assumptions,
+        place_of_supply: form.place_of_supply, is_interstate: form.is_interstate ? 1 : 0,
       } })
       toast.success("Commercials updated"); setDirty(false); refresh()
     } catch (e) { toast.error((e as Error)?.message ?? "Could not save") } finally { setBusy(null) }
@@ -294,6 +298,12 @@ export function QuotationEditor() {
           {txt("delivery_period", "Delivery Period")}
           {txt("installation_period", "Installation Period")}
           {txt("warranty_terms", "Warranty")}
+          {txt("place_of_supply", "Place of Supply (State)")}
+          <label className="flex items-center gap-2 text-sm" style={{ color: "var(--text-primary)" }}>
+            <input type="checkbox" checked={form.is_interstate} disabled={locked}
+              onChange={(e) => setField("is_interstate", e.target.checked)} />
+            Inter-state (IGST)
+          </label>
           <div className="md:col-span-4">{txt("assumptions", "Assumptions (shown on customer quote)")}</div>
         </div>
 
