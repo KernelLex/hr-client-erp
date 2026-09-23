@@ -45,9 +45,11 @@ print → convert** flow, verified end-to-end on prod (12/12 E2E). Shipped M22�
   + row child doctypes + `measurement_template.py` API + MeasurementEditor wiring. Built. SCHEMA. See §B.
 - **M48 — Enriched measurement templates (item B).** Realistic 7-template seed set + `description` on the
   template row child (carried through `apply_template`). Built. SCHEMA (added field to template row child). See §B.
+- **M49 — Studio master catalogue seed (item C).** `quotation_masters.seed_studio_masters()` — 87 generic
+  rows (materials/finishes/hardware/units, no prices) so the BOQ spec dropdowns work. Data-only, no schema. See §C.
 
 **DEPLOYED THIS SESSION:** M35, M36, M37, M38, M39 (all LIVE).
-**PENDING DEPLOY (batched):** M40–M46, Item J, M47, M48. Migrate needed for M40/M41/M42/M43 (new fields on
+**PENDING DEPLOY (batched):** M40–M46, Item J, M47, M48. M49 is code+seed (run the seed after deploy). Migrate needed for M40/M41/M42/M43 (new fields on
 quotation, quotation line, opportunity), Item J (`Vera Reclaimed Material` + child), and M47 (`Vera
 Measurement Template` + row child). M44/M45/M46 are code-only. Deploy = rsync changed py + doctype dirs +
 migrate + supervisor restart + frontend rebuild/rsync; verify site 200. **Prod deploy is classifier-gated
@@ -83,15 +85,20 @@ needs migrate + `seed_default_templates` on deploy. Note: the Measurement Sheet 
 REMAINING (later): per-area photo capture (§11); verify calc formulas per pricing method
 (RFT/SFT/SQM/UNIT/LS) against §12; owner refinement of the seed templates.
 
-### C. Master-data build-out (PRD §5–§26) — data + dropdowns
-The 29 taxonomy masters exist (M5). Still needed as **operational masters with the fields the
-BOQ/costing consume**, plus seed data and wiring into BOQ config dropdowns:
-- Core Material, Thickness, Carcass/Internal Finish, Shutter/External Finish, Edge Band, Glass,
-  Aluminium Finish (PRD §14–§21).
-- Kitchen Unit Master + Wardrobe Unit Master (standard units with default dims + pricing) (§22–§23).
-- Hardware structure + Hardware Packages A/B/C (Standard/Premium/Luxury) (§24–§25).
-- Pricing Methods master already has a page; confirm coverage (§26).
-- Wire these as the dropdown sources in the BOQ line editor (currently free-text fields).
+### C. Master-data build-out (PRD §5–§26) — data + dropdowns — ✅ SEED DONE (M49, NOT deployed; data-only)
+The 29 taxonomy masters exist (M5) and `quotation_taxonomy.seed_all()` seeds ~26 of them. M39 wired the
+BOQ line spec dropdowns to masters via `boq.get_boq_options` → `_master_names` (company-safe: only scopes
+where the master has a company column — the studio masters don't, so they're global).
+GAP FIXED (M49): the four **operational** masters the BOQ dropdowns actually read
+(`Vera Quotation Material/Finish/Hardware/Unit`) shipped EMPTY. Added
+`quotation_masters.seed_studio_masters()` — a generic industry-standard catalogue (13 core materials,
+27 carcass+shutter finishes, 20 hardware items, 27 units) drawn from spec §14-§26 + `initiation.txt`
+§IV-§IX, with each unit's default pricing method (§48). **NO prices/brands** — rates are owner data (cost
+sheet / price list). Data-only (no schema) → after deploy run
+`bench execute hr_client.api.quotation_masters.seed_studio_masters` + `quotation_taxonomy.seed_all`.
+REMAINING (later): Edge Band / Glass / Aluminium finish already have taxonomy masters + seed (via
+`seed_all`); Hardware Packages A/B/C (Standard/Premium/Luxury) as bundles (§24-§25, needs owner tiers);
+owner refinement of the catalogue + real rates.
 
 ### D. Configurable payment schedule (spec print §28) — ✅ DONE (M35, commit eafa35b, NOT yet deployed)
 ~~Currently derived on the print from a fixed template.~~ BUILT: `Vera Quotation Payment Stage`
@@ -120,7 +127,14 @@ derived from the grand total at render time. **Schema change → needs `bench mi
 - **Dealer / cost prices** — catalogs are MRP-only; costing purchase_rate is unknown until owner
   supplies. Do NOT invent cost. (selling_rate = MRP; purchase_rate blank.)
 - Confirm the Company record (Vera Enterprises) has address + GSTIN populated so the print
-  letterhead (M30) shows full details.
+  letterhead (M30) shows full details. **Address FOUND** (2026-09-23, from `Ledger Formate.pdf` in the
+  spec folder): _Vera Enterprises — No. 535/3, Ground Floor, 3rd Main, 'A' Block, Rajajinagar 2nd Stage,
+  Bengaluru – 560010_ (Schönes Leben = 2nd Floor, same building). GSTIN still needed from owner. To apply:
+  set the Company doc's address (prod DB write → needs deploy auth); not yet done.
+- **Real quote format reference** (spec folder `Mr. Venkatesh Adiga Quote -20022024.pdf`): area-grouped
+  (A/B/C… per room), description = `PRODUCT — <Finish> FINISH  W*D*H` mm, columns `Sr | Item Description |
+  Qty | Rates (Rs) | Total (Rs)`; Kitchen shows Internal + External finish lines. Matches current customer
+  print (M28-M30); use to validate.
 
 ### H. Phase-7 intercompany (see `project-multicompany` memory)
 - `supplying_company` on BOQ lines → internal PO to the sibling company on Sales Order confirm.

@@ -332,3 +332,164 @@ def get_master_options():
         "pricing_methods": opts("Vera Quotation Pricing Method", "method", ["formula", "uom"]),
         "templates": opts("Vera Quotation Template", "template_name", ["applies_to", "dynamic_fields"]),
     }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SEED — standard studio catalogue (Materials / Finishes / Hardware / Units)
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# These four masters ship EMPTY, so the BOQ line spec dropdowns (§4.7, wired via
+# boq.get_boq_options → _master_names) render nothing until data exists. This
+# plants a generic, industry-standard catalogue derived from the owner spec
+# ("ERP Master Data & Dropdown Database Structure" §14-§26) and the founding
+# brief (initiation.txt §IV-§IX). NO prices/brands — rates are owner data and
+# live in the cost sheet / price list, never invented here (§G). The masters
+# carry no company column, so seeded rows are global — exactly what _master_names
+# reads. Idempotent by code; safe to re-run.
+
+# Core substrates (spec §14.2 + initiation §V). Thickness left blank — a material
+# ships in many thicknesses; the BOQ line picks the thickness per line.
+_SEED_MATERIALS = [
+    ("MAT-PLY-CMR", "Commercial Plywood", "Plywood"),
+    ("MAT-PLY-BWR", "BWR Plywood", "Plywood"),
+    ("MAT-PLY-BWP", "BWP Plywood", "Plywood"),
+    ("MAT-PLY-MRN", "Marine Plywood", "Plywood"),
+    ("MAT-PLY-BIR", "Birch Plywood", "Plywood"),
+    ("MAT-MDF", "MDF", "MDF"),
+    ("MAT-HDF", "HDF", "HDF"),
+    ("MAT-HDHMR", "HDHMR", "HDHMR"),
+    ("MAT-PB", "Particle Board", "Particle Board"),
+    ("MAT-BLK", "Block Board", "Block Board"),
+    ("MAT-WPC", "WPC Board", "WPC"),
+    ("MAT-PVC", "PVC Board", "PVC"),
+    ("MAT-SW", "Solid Wood", "Solid Wood"),
+]
+
+# Carcass + shutter finishes (initiation §A/§B, spec §17). rate_uom SFT — finishes
+# are priced per square foot (projects idea: "each finish has a standard SFT rate").
+_SEED_FINISHES = [
+    ("FIN-LAM-SOL", "Solid Laminate", "Laminate", "Solid"),
+    ("FIN-LAM-WDG", "Woodgrain Laminate", "Laminate", "Woodgrain"),
+    ("FIN-LAM-SYN", "Synchronised Laminate", "Laminate", "Synchronised"),
+    ("FIN-LAM-TEX", "Textured Laminate", "Laminate", "Textured"),
+    ("FIN-LAM-MAT", "Matt Laminate", "Laminate", "Matt"),
+    ("FIN-LAM-GLS", "Gloss Laminate", "Laminate", "Gloss"),
+    ("FIN-LAM-FAB", "Fabric Finish Laminate", "Laminate", "Fabric"),
+    ("FIN-LAM-LIN", "Linen Finish Laminate", "Laminate", "Linen"),
+    ("FIN-ACL-GLS", "Acrylic Gloss", "Acrylic", "Gloss"),
+    ("FIN-ACL-MAT", "Acrylic Matt", "Acrylic", "Matt"),
+    ("FIN-ACL-FEN", "Fenix Soft Matt", "Acrylic", "Soft Matt"),
+    ("FIN-ACL-ZEN", "Zenith Soft Matt", "Acrylic", "Soft Matt"),
+    ("FIN-ACL-GLA", "Glass Acrylic", "Acrylic", "Glass"),
+    ("FIN-PU-MAT", "PU Matt", "PU", "Matt"),
+    ("FIN-PU-GLS", "PU Gloss", "PU", "Gloss"),
+    ("FIN-PU-MET", "PU Metallic", "PU", "Metallic"),
+    ("FIN-PU-TEX", "PU Textured", "PU", "Textured"),
+    ("FIN-VEN", "Veneer", "Veneer", "Natural"),
+    ("FIN-VEN-PU", "Veneer + PU", "Veneer", "PU Coated"),
+    ("FIN-MEM", "Membrane", "Membrane", "Standard"),
+    ("FIN-MEL", "Melamine", "Melamine", "Standard"),
+    ("FIN-GLS-LAC", "Lacquered Glass", "Glass", "Lacquered"),
+    ("FIN-GLS-FRO", "Frosted Glass", "Glass", "Frosted"),
+    ("FIN-GLS-FLU", "Fluted Glass", "Glass", "Fluted"),
+    ("FIN-MIR", "Mirror", "Mirror", "Standard"),
+    ("FIN-FAB", "Leather / Fabric", "Fabric", "Standard"),
+    ("FIN-ALU-SHT", "Aluminium Profile Shutter", "Aluminium", "Profile"),
+]
+
+# Generic hardware items by category (spec §23/§26). Brand/series blank — the owner
+# picks brand (Blum/Hafele/Hettich…) per project; MRP lives in the vendor price list.
+_SEED_HARDWARE = [
+    ("HW-HNG-STD", "Standard Hinge", "Hinges", "Nos"),
+    ("HW-HNG-SC", "Soft-close Hinge", "Hinges", "Nos"),
+    ("HW-DRW-STD", "Standard Drawer", "Drawer Systems", "Set"),
+    ("HW-DRW-TAN", "Tandem Drawer", "Drawer Systems", "Set"),
+    ("HW-DRW-LGB", "Legrabox Drawer", "Drawer Systems", "Set"),
+    ("HW-CHL-TEL", "Telescopic Channel", "Drawer Systems", "Pair"),
+    ("HW-LFT-STD", "Lift-up System", "Lift-up", "Set"),
+    ("HW-SLD-STD", "Sliding System", "Sliding", "Set"),
+    ("HW-BSK-CUT", "Cutlery Basket", "Kitchen Accessories", "Nos"),
+    ("HW-BSK-PLT", "Plate Basket", "Kitchen Accessories", "Nos"),
+    ("HW-PUL-BTL", "Bottle Pull-out", "Kitchen Accessories", "Nos"),
+    ("HW-PUL-CRN", "Corner Pull-out", "Kitchen Accessories", "Nos"),
+    ("HW-BIN-DST", "Dustbin Unit", "Kitchen Accessories", "Nos"),
+    ("HW-HND-PRO", "Profile Handle", "Handles", "RFT"),
+    ("HW-HND-STD", "Cabinet Handle", "Handles", "Nos"),
+    ("HW-LEG-ABS", "ABS Leg", "Legs", "Nos"),
+    ("HW-ROD-HNG", "Hanging Rod", "Wardrobe Accessories", "Nos"),
+    ("HW-TRS-RCK", "Trouser Rack", "Wardrobe Accessories", "Nos"),
+    ("HW-SHO-RCK", "Shoe Rack", "Wardrobe Accessories", "Nos"),
+    ("HW-LGT-LED", "LED Profile Light", "Furniture Lighting", "RFT"),
+]
+
+# Standard units (spec §7.1-§7.3/§8-§11, initiation §VIII/§IX) with the default
+# pricing method from spec §48 (Kitchen base/wall RFT, tall/island UNIT, wardrobe SFT).
+_SEED_UNITS = [
+    ("KIT-BAS-SNK", "Sink Base", "Kitchen", "Base Units", "RFT"),
+    ("KIT-BAS-HOB", "Hob Base", "Kitchen", "Base Units", "RFT"),
+    ("KIT-BAS-DRW", "Drawer Base", "Kitchen", "Base Units", "RFT"),
+    ("KIT-BAS-SHL", "Shelf Base", "Kitchen", "Base Units", "RFT"),
+    ("KIT-BAS-CRN", "Corner Base", "Kitchen", "Base Units", "RFT"),
+    ("KIT-BAS-BTL", "Bottle Pull-out Base", "Kitchen", "Base Units", "RFT"),
+    ("KIT-BAS-TDM", "Tandem Base", "Kitchen", "Base Units", "RFT"),
+    ("KIT-BAS-DST", "Dustbin Base", "Kitchen", "Base Units", "UNIT"),
+    ("KIT-WAL-STD", "Standard Wall", "Kitchen", "Wall Units", "RFT"),
+    ("KIT-WAL-LFT", "Lift-up Wall", "Kitchen", "Wall Units", "RFT"),
+    ("KIT-WAL-GLS", "Glass Wall", "Kitchen", "Wall Units", "RFT"),
+    ("KIT-WAL-CRN", "Corner Wall", "Kitchen", "Wall Units", "RFT"),
+    ("KIT-WAL-OPN", "Open Shelf", "Kitchen", "Wall Units", "RFT"),
+    ("KIT-TAL-OVN", "Oven Tall", "Kitchen", "Tall Units", "UNIT"),
+    ("KIT-TAL-PAN", "Pantry Tall", "Kitchen", "Tall Units", "UNIT"),
+    ("KIT-TAL-REF", "Refrigerator Tall", "Kitchen", "Tall Units", "UNIT"),
+    ("KIT-TAL-CRK", "Crockery Tall", "Kitchen", "Tall Units", "UNIT"),
+    ("KIT-LOF", "Loft", "Kitchen", "Loft", "RFT"),
+    ("KIT-ISL", "Island", "Kitchen", "Island", "UNIT"),
+    ("WRD-HNG", "Hinged Wardrobe", "Wardrobe", "Hinged", "SFT"),
+    ("WRD-SLD", "Sliding Wardrobe", "Wardrobe", "Sliding", "SFT"),
+    ("WRD-LOF", "Wardrobe Loft", "Wardrobe", "Loft", "SFT"),
+    ("VAN-STD", "Vanity Unit", "Vanity", "Standard", "UNIT"),
+    ("TVU-PNL", "TV Back Panel", "TV Unit", "Panel", "SFT"),
+    ("TVU-CON", "TV Console", "TV Unit", "Console", "RFT"),
+    ("CRK-STD", "Crockery Unit", "Crockery", "Standard", "SFT"),
+    ("STU-TBL", "Study Table", "Study", "Standard", "RFT"),
+]
+
+
+def _seed_rows(doctype, rows_as_dicts):
+    n = 0
+    for data in rows_as_dicts:
+        if frappe.db.exists(doctype, data["code"]):
+            continue
+        doc = frappe.new_doc(doctype)
+        doc.update(data)
+        doc.status = "Active"
+        doc.source = "ERP"
+        doc.insert(ignore_permissions=True)
+        n += 1
+    return n
+
+
+@frappe.whitelist()
+@handle_api_error
+def seed_studio_masters():
+    """Idempotently plant the standard Materials/Finishes/Hardware/Units catalogue
+    so the BOQ spec dropdowns are usable out of the box. Run once after deploy:
+        bench --site vera.local execute hr_client.api.quotation_masters.seed_studio_masters
+    """
+    require_login()
+    made = {
+        "materials": _seed_rows("Vera Quotation Material", [
+            {"code": c, "material_name": n, "category": cat, "uom": "Sheet"}
+            for c, n, cat in _SEED_MATERIALS]),
+        "finishes": _seed_rows("Vera Quotation Finish", [
+            {"code": c, "finish_name": n, "category": cat, "finish_type": ft, "rate_uom": "SFT"}
+            for c, n, cat, ft in _SEED_FINISHES]),
+        "hardware": _seed_rows("Vera Quotation Hardware", [
+            {"code": c, "hardware_item": n, "category": cat, "uom": uom}
+            for c, n, cat, uom in _SEED_HARDWARE]),
+        "units": _seed_rows("Vera Quotation Unit", [
+            {"code": c, "unit_name": n, "product_group": pg, "category": cat, "pricing_method": pm}
+            for c, n, pg, cat, pm in _SEED_UNITS]),
+    }
+    frappe.db.commit()
+    return {"success": True, "created": made}
