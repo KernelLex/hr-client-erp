@@ -46,7 +46,8 @@ def get_rate(item_name, scope=None, company=None):
     if not name:
         return 0.0
     # Safe before the DocType table is migrated onto a server (returns 0, as before).
-    if not frappe.db.table_exists("tabVera Finish Rate"):
+    # NB: frappe.db.table_exists takes the DocType name and adds the "tab" prefix itself.
+    if not frappe.db.table_exists(_DT):
         return 0.0
     rows = frappe.get_all(
         _DT,
