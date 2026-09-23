@@ -93,9 +93,12 @@ VENDORS: dict[str, Vendor] = {v.key: v for v in [
     Vendor("hettich", "Hettich", "Pricelist -2026/Hettich Price List February 2026.pdf",
            parser="hettich", valid_from="2026-02-01",
            note="~2.5k SKUs, ONLY vendor with HSN, column-shredded text"),
-    # --- registered but parser pending (Phase 1 continuation) ---
     Vendor("kesseboehmer", "Kesseböhmer", "Pricelist -2026/New pricelist_kesseboehmer.pdf",
-           parser="", valid_from="2026-05-01", note="BOM sets + positional colour grids; hard"),
+           parser="kesseboehmer", valid_from="2026-05-01",
+           note="BOM-set pricing; MRP is in the text layer as bare integers (no rupee/comma, "
+                "so earlier scans missed it) — coordinate parser anchors BOM Article to its "
+                "aligned MRP. 261 sellable sets, child components not separately priced."),
+    # --- registered but parser pending (Phase 1 continuation) ---
     Vendor("bosch", "Bosch", "Bosch_BI_Pricelist_BI_Distribution.pdf",
            parser="vision", text_extractable=False,
            note="brochure, text exploded to single chars -> vision-extracted (render.py + vision_ingest.py)"),
