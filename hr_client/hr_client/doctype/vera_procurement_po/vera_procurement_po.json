@@ -1,0 +1,35 @@
+{
+ "actions": [],
+ "autoname": "VE/PO/.YYYY./.#####",
+ "creation": "2026-09-23 12:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["vendor", "project", "company", "status", "po_date", "is_intercompany", "supplying_company", "material_requirement", "total", "notes", "lines_section", "lines", "source"],
+ "fields": [
+  {"fieldname": "vendor", "fieldtype": "Data", "label": "Vendor", "in_list_view": 1},
+  {"fieldname": "project", "fieldtype": "Link", "label": "Project", "options": "Vera Project", "in_list_view": 1},
+  {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company"},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nSent\nReceived\nCancelled", "default": "Draft", "in_list_view": 1},
+  {"fieldname": "po_date", "fieldtype": "Date", "label": "PO Date"},
+  {"fieldname": "is_intercompany", "fieldtype": "Check", "label": "Intercompany"},
+  {"fieldname": "supplying_company", "fieldtype": "Link", "label": "Supplying Company", "options": "Company"},
+  {"fieldname": "material_requirement", "fieldtype": "Link", "label": "Material Requirement", "options": "Vera Material Requirement"},
+  {"fieldname": "total", "fieldtype": "Currency", "label": "Total", "read_only": 1, "in_list_view": 1},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"},
+  {"fieldname": "lines_section", "fieldtype": "Section Break", "label": "Items"},
+  {"fieldname": "lines", "fieldtype": "Table", "label": "Lines", "options": "Vera Procurement PO Line"},
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source", "read_only": 1, "hidden": 1}
+ ],
+ "links": [],
+ "modified": "2026-09-23 12:00:00",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Procurement PO",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "Employee", "read": 1, "write": 1, "create": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

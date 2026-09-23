@@ -27,6 +27,7 @@ const HardwarePackagesPage = lazy(() => import("@/pages/admin/HardwarePackagesPa
 const ProjectDeliveryPage = lazy(() => import("@/pages/projects/ProjectDeliveryPage").then(m => ({ default: m.ProjectDeliveryPage })))
 const ProjectDeliveryDetail = lazy(() => import("@/pages/projects/ProjectDeliveryDetail").then(m => ({ default: m.ProjectDeliveryDetail })))
 const WorkSchedulePage = lazy(() => import("@/pages/projects/WorkSchedulePage").then(m => ({ default: m.WorkSchedulePage })))
+const ProcurementPage = lazy(() => import("@/pages/projects/ProcurementPage").then(m => ({ default: m.ProcurementPage })))
 const EmployeeProfilePage = lazy(() => import("@/pages/profile/EmployeeProfilePage").then(m => ({ default: m.EmployeeProfilePage })))
 const AdminEmployeesPage = lazy(() => import("@/pages/admin/employees/AdminEmployeesPage").then(m => ({ default: m.AdminEmployeesPage })))
 const AdminEmployeeDetailPage = lazy(() => import("@/pages/admin/employees/AdminEmployeeDetailPage").then(m => ({ default: m.AdminEmployeeDetailPage })))
@@ -160,6 +161,7 @@ function App() {
                 {/* Project Delivery (execution) */}
                 <Route path="/projects" element={<ProjectDeliveryPage />} />
                 <Route path="/projects/schedule" element={<WorkSchedulePage />} />
+                <Route path="/projects/:name/procurement" element={<ProcurementPage />} />
                 <Route path="/projects/:name" element={<ProjectDeliveryDetail />} />
                 <Route path="/admin/attendance" element={<AttendancePage />} />
                 <Route path="/leave" element={<LeavePage />} />

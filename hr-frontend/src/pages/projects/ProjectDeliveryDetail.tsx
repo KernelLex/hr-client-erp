@@ -60,6 +60,7 @@ export function ProjectDeliveryDetail() {
           <div className="text-right">
             <span className="inline-block px-3 py-1 rounded-full bg-indigo-600 text-white text-sm">{p.stage}</span>
             <div className="text-xs text-gray-400 mt-1">{p.status} · {p.percent_complete || 0}% complete</div>
+            <button onClick={() => nav(`/projects/${p.name}/procurement`)} className="mt-2 rounded-md border border-indigo-200 text-indigo-700 px-2.5 py-1 text-xs hover:bg-indigo-50">⛓ Procurement</button>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4 mt-4 text-center">

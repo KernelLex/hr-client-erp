@@ -126,6 +126,9 @@ export const hardwarePackagePost = apiPostFactory("hardware_package")
 export const projectExecGet = apiGetFactory("project_execution")
 export const projectExecPost = apiPostFactory("project_execution")
 
+export const procurementGet = apiGetFactory("project_procurement")
+export const procurementPost = apiPostFactory("project_procurement")
+
 export const measurementTemplateGet = apiGetFactory("measurement_template")
 export const measurementTemplatePost = apiPostFactory("measurement_template")
 
