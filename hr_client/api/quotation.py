@@ -736,6 +736,56 @@ def get_quotation_print(name: str, fmt: str = "summary"):
 
 @frappe.whitelist()
 @handle_api_error
+def get_document_chain(doctype: str, name: str):
+    """Resolve the full six-stage document chain (§4 Document Link Bar) from any
+    entry point: Opportunity → Measurement → BOQ → Cost Sheet → Quotation →
+    Sales Order. Walks the back-links upward; returns the doc name at each stage
+    (or None). Each stage is a link the UI renders as a clickable chip."""
+    require_login()
+
+    def gv(dt, nm, field):
+        return frappe.db.get_value(dt, nm, field) if nm else None
+
+    c = {"opportunity": None, "measurement": None, "boq": None,
+         "cost_sheet": None, "quotation": None, "sales_order": None}
+
+    if doctype == "Vera Measurement Sheet":
+        c["measurement"] = name
+        c["opportunity"] = gv(doctype, name, "opportunity")
+    elif doctype == "Vera BOQ":
+        c["boq"] = name
+        c["measurement"] = gv(doctype, name, "measurement_sheet")
+        c["opportunity"] = gv(doctype, name, "opportunity")
+    elif doctype == "Vera Cost Sheet":
+        c["cost_sheet"] = name
+        c["boq"] = gv(doctype, name, "boq")
+        c["opportunity"] = gv(doctype, name, "opportunity")
+    elif doctype == "Vera Sales Quotation":
+        c["quotation"] = name
+        c["cost_sheet"] = gv(doctype, name, "cost_sheet")
+        c["boq"] = gv(doctype, name, "boq")
+        c["sales_order"] = gv(doctype, name, "sales_order")
+        c["opportunity"] = gv(doctype, name, "opportunity")
+    elif doctype == "Vera Sales Order":
+        c["sales_order"] = name
+        c["quotation"] = gv(doctype, name, "quotation")
+        c["boq"] = gv(doctype, name, "boq")
+        c["cost_sheet"] = gv(doctype, name, "cost_sheet")
+        c["opportunity"] = gv(doctype, name, "opportunity")
+
+    # Backfill gaps upward so the whole chain shows from any starting doc.
+    if not c["boq"] and c["cost_sheet"]:
+        c["boq"] = gv("Vera Cost Sheet", c["cost_sheet"], "boq")
+    if not c["measurement"] and c["boq"]:
+        c["measurement"] = gv("Vera BOQ", c["boq"], "measurement_sheet")
+    if not c["opportunity"]:
+        c["opportunity"] = (gv("Vera BOQ", c["boq"], "opportunity")
+                            or gv("Vera Measurement Sheet", c["measurement"], "opportunity"))
+    return c
+
+
+@frappe.whitelist()
+@handle_api_error
 def get_approved_quotations():
     require_login()
     return frappe.get_all(

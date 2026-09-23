@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { salesOrderGet, salesOrderPost } from "../peoplework/client"
 import { StatusPill } from "../peoplework/components/Pills"
 import { StageBar } from "./components/StageBar"
+import { DocumentLinkBar } from "./components/DocumentLinkBar"
 import { RegisterGrid, type GridCol, type GridRow } from "./components/RegisterGrid"
 
 interface SalesOrder {
@@ -77,6 +78,7 @@ export function SalesOrderEditor() {
       </button>
 
       <StageBar current="Sales Order" />
+      <DocumentLinkBar doctype="Vera Sales Order" name={name} />
 
       <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
         <div className="mb-3 flex items-start justify-between">

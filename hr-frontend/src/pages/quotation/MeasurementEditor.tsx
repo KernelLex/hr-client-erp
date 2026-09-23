@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { measurementGet, measurementPost } from "../peoplework/client"
 import { StatusPill } from "../peoplework/components/Pills"
 import { StageBar } from "./components/StageBar"
+import { DocumentLinkBar } from "./components/DocumentLinkBar"
 import { RegisterGrid, type GridCol, type GridRow } from "./components/RegisterGrid"
 
 interface Measurement {
@@ -124,6 +125,7 @@ export function MeasurementEditor() {
       </button>
 
       <StageBar current="Measurement" />
+      <DocumentLinkBar doctype="Vera Measurement Sheet" name={name} />
 
       {/* Header card */}
       <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>

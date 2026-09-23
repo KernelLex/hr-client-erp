@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { quotationGet, quotationPost, termsGet } from "../peoplework/client"
 import { StatusPill } from "../peoplework/components/Pills"
 import { StageBar } from "./components/StageBar"
+import { DocumentLinkBar } from "./components/DocumentLinkBar"
 import { RegisterGrid, type GridCol, type GridRow } from "./components/RegisterGrid"
 
 interface Rule { rule: string; routes_to: string; rank: number }
@@ -166,6 +167,7 @@ export function QuotationEditor() {
       </button>
 
       <StageBar current="Quotation" />
+      <DocumentLinkBar doctype="Vera Sales Quotation" name={name} />
 
       {/* Header */}
       <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
