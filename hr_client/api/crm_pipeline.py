@@ -25,6 +25,9 @@ _OPPORTUNITY_FIELDS = (
     "opportunity_title", "company_name", "contact_person", "phone", "email",
     "stage", "estimated_value", "probability", "expected_close", "competitor",
     "assigned_to", "notes", "quotation",
+    # Project details surfaced on the Project Control Screen (§5)
+    "site_address", "architect", "designer", "salesperson", "project_manager",
+    "target_completion",
 )
 
 _OPP_STAGES = ["Qualification", "Proposal", "Negotiation", "Won", "Lost"]
@@ -216,6 +219,21 @@ def create_opportunity(payload):
     if not doc.stage:
         doc.stage = "Qualification"
     doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "name": doc.name}
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def update_opportunity(name: str, payload):
+    """Update an opportunity's editable fields — including the project details
+    (site address, architect, designer, salesperson, PM, target completion)
+    shown on the Project Control Screen (§5)."""
+    require_login()
+    doc = frappe.get_doc("Vera CRM Opportunity", name)
+    assert_doc_company(doc)
+    doc.update(_clean(payload, _OPPORTUNITY_FIELDS))
+    doc.save(ignore_permissions=True)
     frappe.db.commit()
     return {"success": True, "name": doc.name}
 

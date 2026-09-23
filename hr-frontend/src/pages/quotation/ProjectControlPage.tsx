@@ -2,12 +2,12 @@
 // that ties a customer project together: the opportunity header + a rollup of
 // the latest revision, status and value of each document in the six-stage chain,
 // with a jump into whichever stage exists. Read-only aggregation (no schema).
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
-import { ArrowLeft, ArrowRight, Plus, Lock } from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { ArrowLeft, ArrowRight, Plus, Lock, Pencil } from "lucide-react"
 import { toast } from "sonner"
-import { projectGet, measurementPost, boqPost, costSheetPost, quotationPost } from "../peoplework/client"
+import { projectGet, measurementPost, boqPost, costSheetPost, quotationPost, crmPipelinePost } from "../peoplework/client"
 
 interface Stage {
   name: string; status?: string | null; revision?: number | null
@@ -20,6 +20,8 @@ interface Overview {
     name: string; title: string; customer?: string | null; contact_person?: string | null
     phone?: string | null; email?: string | null; stage?: string | null
     estimated_value: number; assigned_to?: string | null
+    site_address?: string | null; architect?: string | null; designer?: string | null
+    salesperson?: string | null; project_manager?: string | null; target_completion?: string | null
   }
   stages: {
     measurement: Stage | null; boq: Stage | null; cost_sheet: Stage | null
@@ -50,16 +52,46 @@ const STAGE_ROUTE: Record<string, string> = {
   quotation: "quotations", sales_order: "sales-orders",
 }
 
+const DETAIL_FIELDS: { key: string; label: string }[] = [
+  { key: "site_address", label: "Site Address" },
+  { key: "architect", label: "Architect" },
+  { key: "designer", label: "Designer" },
+  { key: "salesperson", label: "Salesperson" },
+  { key: "project_manager", label: "Project Manager" },
+  { key: "target_completion", label: "Target Completion" },
+]
+
 export function ProjectControlPage() {
   const { name = "" } = useParams()
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState<Record<string, string>>({})
 
   const { data: d, isLoading, isError, error } = useQuery({
     queryKey: ["project_overview", name],
     queryFn: () => projectGet<Overview>("get_project_overview", { opportunity: name }),
     staleTime: 0, refetchOnMount: "always",
   })
+
+  useEffect(() => {
+    if (!d) return
+    const o = d.opportunity as Record<string, unknown>
+    setForm(Object.fromEntries(DETAIL_FIELDS.map((f) => [f.key, String(o[f.key] ?? "")])))
+  }, [d])
+
+  async function saveDetails() {
+    setBusy(true)
+    try {
+      await crmPipelinePost("update_opportunity", { name, payload: form })
+      toast.success("Project details saved")
+      setEditing(false)
+      qc.invalidateQueries({ queryKey: ["project_overview", name] })
+    } catch (e) {
+      toast.error((e as Error)?.message ?? "Could not save")
+    } finally { setBusy(false) }
+  }
 
   // §5 action buttons — create the next stage from here, then open it. Each create
   // endpoint enforces its own approval gate; a thrown message surfaces as a toast.
@@ -109,6 +141,43 @@ export function ProjectControlPage() {
           <Metric label="Estimated Value" value={inr(o.estimated_value)} />
           <Metric label="Quoted Value" value={inr(d.quoted_value)} />
           <Metric label="Confirmed Value" value={inr(d.confirmed_value)} tone={d.confirmed_value ? "good" : undefined} />
+        </div>
+        <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="mb-1.5 flex items-center justify-between">
+            <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Project Details</div>
+            {editing ? (
+              <div className="flex gap-2">
+                <button onClick={saveDetails} disabled={busy} className="rounded-md px-2 py-1 text-xs font-semibold text-white disabled:opacity-60" style={{ background: "var(--brand-primary)" }}>Save</button>
+                <button onClick={() => setEditing(false)} className="rounded-md px-2 py-1 text-xs font-medium" style={{ border: "1px solid var(--border, #e0d9cb)", color: "var(--text-muted)" }}>Cancel</button>
+              </div>
+            ) : (
+              <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--brand-primary)" }}><Pencil size={12} /> Edit</button>
+            )}
+          </div>
+          {editing ? (
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+              {DETAIL_FIELDS.map((f) => (
+                <div key={f.key}>
+                  <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{f.label}</div>
+                  <input type={f.key === "target_completion" ? "date" : "text"} value={form[f.key] ?? ""}
+                    onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                    className="mt-0.5 w-full rounded px-2 py-1 text-sm"
+                    style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+                </div>
+              ))}
+            </div>
+          ) : (o.site_address || o.architect || o.designer || o.salesperson || o.project_manager || o.target_completion) ? (
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 md:grid-cols-3">
+              <Detail label="Site Address" value={o.site_address} />
+              <Detail label="Architect" value={o.architect} />
+              <Detail label="Designer" value={o.designer} />
+              <Detail label="Salesperson" value={o.salesperson} />
+              <Detail label="Project Manager" value={o.project_manager} />
+              <Detail label="Target Completion" value={o.target_completion} />
+            </div>
+          ) : (
+            <div className="text-xs italic" style={{ color: "var(--text-muted)" }}>No project details yet — click Edit to add the site, architect, PM and target date.</div>
+          )}
         </div>
       </div>
 
@@ -167,6 +236,16 @@ export function ProjectControlPage() {
           ✓ {na.label}
         </div>
       )}
+    </div>
+  )
+}
+
+function Detail({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null
+  return (
+    <div>
+      <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}: </span>
+      <span className="text-sm" style={{ color: "var(--text-primary)" }}>{value}</span>
     </div>
   )
 }
