@@ -31,6 +31,7 @@ interface Quotation {
   foc_value: number; installation_waiver: number; transport_waiver: number; price_override_percent: number
   validity_days: number | null; delivery_period: string | null; installation_period: string | null; warranty_terms: string | null
   inclusions: GridRow[]; exclusions: GridRow[]
+  payment_schedule: GridRow[]
   terms_template: string | null; terms_and_conditions: string | null
   editable: boolean; lines: GridRow[]; approval_log: GridRow[]; conversion_gate: Check[]
 }
@@ -139,6 +140,7 @@ export function QuotationEditor() {
   async function saveLines(rows: GridRow[]) { await quotationPost("save_lines", { name, lines: rows }); refresh() }
   async function saveInclusions(rows: GridRow[]) { await quotationPost("save_scope", { name, inclusions: rows }); refresh() }
   async function saveExclusions(rows: GridRow[]) { await quotationPost("save_scope", { name, exclusions: rows }); refresh() }
+  async function savePaymentSchedule(rows: GridRow[]) { await quotationPost("save_payment_schedule", { name, stages: rows }); refresh() }
 
   async function post(endpoint: string, body: Record<string, unknown>, ok: string, then?: (r: { name?: string; sales_order?: string }) => void) {
     setBusy(endpoint)
@@ -341,6 +343,14 @@ export function QuotationEditor() {
         <RegisterGrid title="Exclusions" columns={[{ key: "text", label: "Excluded", width: 320 }]} rows={q.exclusions} editable={!locked}
           onSave={saveExclusions} emptyLabel="No exclusions. Add what is not covered." />
       </div>
+
+      {/* Payment schedule (§28) — stored per-quotation; empty falls back to the
+          standard stage template on the customer print. Amounts derive from the
+          grand total at print time. */}
+      <RegisterGrid title="Payment Schedule"
+        columns={[{ key: "stage", label: "Stage", width: 280 }, { key: "percent", label: "%", type: "number", width: 100 }]}
+        rows={q.payment_schedule} editable={!locked} onSave={savePaymentSchedule}
+        emptyLabel="No custom schedule. The print uses the standard 10/40/40/10 stages until you set one." />
 
       {/* Revision comparison (print spec §52) */}
       {comparison && comparison.revisions.length > 1 && (() => {

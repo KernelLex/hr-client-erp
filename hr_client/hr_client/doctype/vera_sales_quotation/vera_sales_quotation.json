@@ -58,6 +58,8 @@
   "scope_section",
   "inclusions",
   "exclusions",
+  "payment_section",
+  "payment_schedule",
   "terms_section",
   "terms_template",
   "terms_and_conditions",
@@ -257,6 +259,17 @@
    "fieldtype": "Table",
    "label": "Exclusions",
    "options": "Vera Quotation Exclusion"
+  },
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Schedule"
+  },
+  {
+   "fieldname": "payment_schedule",
+   "fieldtype": "Table",
+   "label": "Payment Schedule",
+   "options": "Vera Quotation Payment Stage"
   },
   {
    "fieldname": "gp_section",

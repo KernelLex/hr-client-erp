@@ -251,6 +251,7 @@ def _serialize(doc):
         "warranty_terms": doc.warranty_terms,
         "inclusions": [{"inclusion": r.inclusion, "text": r.text} for r in doc.inclusions],
         "exclusions": [{"exclusion": r.exclusion, "text": r.text} for r in doc.exclusions],
+        "payment_schedule": [{"stage": r.stage, "percent": r.percent} for r in doc.payment_schedule],
         "notes": doc.notes,
         "source": doc.source,
         "editable": doc.status in _EDITABLE_STATUSES,
@@ -380,6 +381,28 @@ def save_scope(name: str, inclusions=None, exclusions=None):
     doc.save(ignore_permissions=True)
     frappe.db.commit()
     return {"success": True, "inclusions": len(doc.inclusions), "exclusions": len(doc.exclusions)}
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def save_payment_schedule(name: str, stages=None):
+    """Replace the quotation's stored payment schedule (§28). Each row is a
+    {stage, percent} pair; the print derives the amount against the grand total
+    at render time so it always tracks the current value. Passing an empty list
+    clears the override → the print falls back to the standard stage template.
+    Draft/Returned only."""
+    require_login()
+    doc = frappe.get_doc("Vera Sales Quotation", name)
+    _assert_editable(doc)
+    doc.set("payment_schedule", [])
+    for r in _rows_of(stages, "stages"):
+        stage = (r.get("stage") or "").strip()
+        pct = _flt(r.get("percent"))
+        if stage or pct:
+            doc.append("payment_schedule", {"stage": stage, "percent": pct})
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "count": len(doc.payment_schedule)}
 
 
 @frappe.whitelist(methods=["POST"])
@@ -747,12 +770,16 @@ def get_quotation_print(name: str, fmt: str = "summary"):
             "cgst_percent": round(_flt(doc.gst_percent) / 2.0, 2), "cgst_amount": half,
             "sgst_percent": round(_flt(doc.gst_percent) / 2.0, 2), "sgst_amount": round(_flt(doc.gst_amount) - half, 2),
             "amount_in_words": frappe.utils.money_in_words(doc.grand_total, "INR"),
-            # Payment schedule (§28) — derived from the grand total against the
-            # standard stage template, so it always tracks the current value.
+            # Payment schedule (§28) — a per-quotation stored schedule when the
+            # user has set one, else the standard stage template. Either way the
+            # amount is derived from the grand total so it tracks the value.
             "payment_schedule": [
                 {"stage": stage, "percent": pct,
-                 "amount": round(_flt(doc.grand_total) * pct / 100.0, 2)}
-                for stage, pct in _PAYMENT_STAGES
+                 "amount": round(_flt(doc.grand_total) * _flt(pct) / 100.0, 2)}
+                for stage, pct in (
+                    [(r.stage, r.percent) for r in doc.payment_schedule]
+                    if doc.payment_schedule else _PAYMENT_STAGES
+                )
             ],
         })
     # Internal Costing only — cost, GP, rate source. Marked confidential.
