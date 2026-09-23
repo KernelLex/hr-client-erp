@@ -13,33 +13,75 @@ import frappe
 
 from hr_client.api.utils import require_login, handle_api_error
 
-# Seed content — reasonable defaults the owner can refine (spec §9-§10).
+# Seed content — realistic modular-interior defaults the owner can refine
+# (spec §9-§10). Generic industry-standard product breakdowns, no owner data or
+# pricing. `description` pre-fills the measurement row so a survey starts already
+# annotated. UOM matches the pricing methods (RFT/SFT/SQM/UNIT/LS).
 _DEFAULTS = {
     "Kitchen — Standard": {
         "product_type": "Kitchen",
         "rows": [
-            {"area": "Kitchen", "product": "Base Units", "uom": "RFT"},
-            {"area": "Kitchen", "product": "Wall Units", "uom": "RFT"},
-            {"area": "Kitchen", "product": "Tall Unit", "uom": "UNIT", "quantity": 1},
-            {"area": "Kitchen", "product": "Loft", "uom": "RFT"},
-            {"area": "Kitchen", "product": "Countertop", "uom": "RFT"},
+            {"area": "Kitchen", "product": "Base Units", "uom": "RFT", "description": "Floor units incl. carcass + shutter, excl. countertop"},
+            {"area": "Kitchen", "product": "Wall Units", "uom": "RFT", "description": "Overhead units up to 700mm height"},
+            {"area": "Kitchen", "product": "Tall / Larder Unit", "uom": "UNIT", "quantity": 1, "description": "Full-height pull-out or shelf tower"},
+            {"area": "Kitchen", "product": "Loft Units", "uom": "RFT", "description": "Above wall units, up to ceiling"},
+            {"area": "Kitchen", "product": "Countertop", "uom": "RFT", "description": "Stone / quartz, measured separately"},
+            {"area": "Kitchen", "product": "Skirting", "uom": "RFT", "description": "PVC / SS toe-kick"},
+            {"area": "Kitchen", "product": "Cornice & Pelmet", "uom": "RFT", "description": "Top & bottom trims on wall units"},
+            {"area": "Kitchen", "product": "Gola / Handle Profile", "uom": "RFT", "description": "Continuous J/G profile (optional)"},
         ],
     },
-    "Wardrobe — Standard": {
+    "Wardrobe — Hinged": {
         "product_type": "Wardrobe",
         "rows": [
-            {"area": "Bedroom", "product": "Wardrobe Shutters", "uom": "SFT"},
-            {"area": "Bedroom", "product": "Loft", "uom": "SFT"},
-            {"area": "Bedroom", "product": "Internal Drawers", "uom": "UNIT", "quantity": 3},
-            {"area": "Bedroom", "product": "Internal Shelves", "uom": "UNIT", "quantity": 4},
+            {"area": "Bedroom", "product": "Hinged Shutters", "uom": "SFT", "description": "Full-height shutters on hinges"},
+            {"area": "Bedroom", "product": "Loft", "uom": "SFT", "description": "Above wardrobe, separate shutters"},
+            {"area": "Bedroom", "product": "Internal Drawers", "uom": "UNIT", "quantity": 3, "description": "Soft-close drawer sets"},
+            {"area": "Bedroom", "product": "Internal Shelves", "uom": "UNIT", "quantity": 4, "description": "Adjustable shelves"},
+            {"area": "Bedroom", "product": "Hanging Rod", "uom": "UNIT", "quantity": 1, "description": "SS rod incl. brackets"},
+        ],
+    },
+    "Wardrobe — Sliding": {
+        "product_type": "Wardrobe",
+        "rows": [
+            {"area": "Bedroom", "product": "Sliding Shutters", "uom": "SFT", "description": "2/3-track sliding, measured as elevation"},
+            {"area": "Bedroom", "product": "Loft", "uom": "SFT", "description": "Above wardrobe (hinged)"},
+            {"area": "Bedroom", "product": "Internal Drawers", "uom": "UNIT", "quantity": 3, "description": "Soft-close drawer sets"},
+            {"area": "Bedroom", "product": "Internal Shelves", "uom": "UNIT", "quantity": 4, "description": "Adjustable shelves"},
+            {"area": "Bedroom", "product": "Hanging Rod", "uom": "UNIT", "quantity": 1, "description": "SS rod incl. brackets"},
         ],
     },
     "TV Unit — Standard": {
         "product_type": "TV Unit",
         "rows": [
-            {"area": "Living", "product": "TV Panel", "uom": "SFT"},
-            {"area": "Living", "product": "Base Storage", "uom": "RFT"},
-            {"area": "Living", "product": "Wall Shelves", "uom": "RFT"},
+            {"area": "Living", "product": "TV Back Panel", "uom": "SFT", "description": "Feature / laminate / veneer panel"},
+            {"area": "Living", "product": "Base Storage", "uom": "RFT", "description": "Below-TV drawer + shutter run"},
+            {"area": "Living", "product": "Wall Shelves", "uom": "RFT", "description": "Open / closed display shelves"},
+            {"area": "Living", "product": "Top Storage", "uom": "RFT", "description": "Overhead cabinets (optional)"},
+        ],
+    },
+    "Vanity — Standard": {
+        "product_type": "Vanity",
+        "rows": [
+            {"area": "Bathroom", "product": "Vanity Base Cabinet", "uom": "RFT", "description": "Under-counter storage, wall-hung / floor"},
+            {"area": "Bathroom", "product": "Mirror Cabinet", "uom": "SFT", "description": "Mirror with storage back"},
+            {"area": "Bathroom", "product": "Countertop", "uom": "RFT", "description": "Stone / quartz with basin cutout"},
+        ],
+    },
+    "Crockery / Storage Unit": {
+        "product_type": "Storage",
+        "rows": [
+            {"area": "Dining", "product": "Base Storage", "uom": "RFT", "description": "Floor storage run"},
+            {"area": "Dining", "product": "Wall Storage", "uom": "RFT", "description": "Overhead display / storage"},
+            {"area": "Dining", "product": "Tall Storage", "uom": "UNIT", "quantity": 1, "description": "Full-height utility / crockery tower"},
+        ],
+    },
+    "Study / Office Table": {
+        "product_type": "Other",
+        "rows": [
+            {"area": "Study", "product": "Table Top", "uom": "SFT", "description": "Work surface incl. edge banding"},
+            {"area": "Study", "product": "Under-table Storage", "uom": "RFT", "description": "Drawer / CPU / keyboard unit"},
+            {"area": "Study", "product": "Overhead Storage", "uom": "RFT", "description": "Wall cabinets (optional)"},
         ],
     },
 }
@@ -94,7 +136,8 @@ def apply_template(measurement: str, template: str, mode: str = "append"):
         doc.append("rows", {
             "area": r.area, "product": r.product, "template": tpl.template_name,
             "width": r.width, "height": r.height, "depth": r.depth,
-            "quantity": r.quantity or 1, "uom": r.uom, "note": r.note,
+            "quantity": r.quantity or 1, "uom": r.uom,
+            "description": getattr(r, "description", None), "note": r.note,
         })
     doc.save(ignore_permissions=True)
     frappe.db.commit()

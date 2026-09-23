@@ -38,11 +38,20 @@ print → convert** flow, verified end-to-end on prod (12/12 E2E). Shipped M22�
 - **M44 (`246af28`) — Optional cover page on customer print (§5).** Built. code-only.
 - **M45 (`5cf8ba3`) — "Hide all prices" print toggle / BOQ without price (§46).** Built. frontend-only.
 - **M46 (`a315fef`) — Payment rollup on Project Control (§5).** Built. code-only (uses advance_received).
+- **Item J (`c362197`+`a2e25b2`+`130c258`+`562de64`+`e8450ae`) — reclaimed / returned materials
+  inventory** (doctypes + reuse matcher + BOQ-editor "reusable stock" panel + one-click return-to-inventory
+  + "Waste Avoided" KPI). Built. SCHEMA (`Vera Reclaimed Material` + image child). See §J.
+- **M47 (`57dd895`) — Measurement product-type templates (§8–§10, item B).** `Vera Measurement Template`
+  + row child doctypes + `measurement_template.py` API + MeasurementEditor wiring. Built. SCHEMA. See §B.
+- **M48 — Enriched measurement templates (item B).** Realistic 7-template seed set + `description` on the
+  template row child (carried through `apply_template`). Built. SCHEMA (added field to template row child). See §B.
 
 **DEPLOYED THIS SESSION:** M35, M36, M37, M38, M39 (all LIVE).
-**PENDING DEPLOY (batched):** M40–M46. Migrate needed for M40/M41/M42/M43 (new fields on quotation,
-quotation line, opportunity). M44/M45/M46 are code-only. Deploy = rsync changed py + migrate +
-supervisor restart + frontend rebuild/rsync; verify site 200.
+**PENDING DEPLOY (batched):** M40–M46, Item J, M47, M48. Migrate needed for M40/M41/M42/M43 (new fields on
+quotation, quotation line, opportunity), Item J (`Vera Reclaimed Material` + child), and M47 (`Vera
+Measurement Template` + row child). M44/M45/M46 are code-only. Deploy = rsync changed py + doctype dirs +
+migrate + supervisor restart + frontend rebuild/rsync; verify site 200. **Prod deploy is classifier-gated
++ irreversible → needs explicit owner authorization this session before running.**
 
 Everything below is built except where marked NOT yet built (owner-data or large separate phases).
 
@@ -62,12 +71,17 @@ REMAINING (later, needs schema/owner design): site address / architect / designe
 Payment received/outstanding card; action buttons to CREATE the next stage from this screen;
 Create-Variation / Upload-Drawing / activity feed.
 
-### B. Measurement product-type templates (spec UI §8–§10, PRD §10–§13, "Measurement & BOQ Masters by Product Type")
-- Product-type-specific measurement UIs (Kitchen: base/wall/tall unit dims, site conditions,
-  services, obstructions; Wardrobe: hinged/sliding, loft, internals).
-- `Measurement Template` master driving which fields show per Product Group/Category.
-- Photo capture per area (§11).
-- Calc formulas per pricing method already exist (RFT/SFT/SQM/UNIT/LS) — verify against §12.
+### B. Measurement product-type templates (spec UI §8–§10, PRD §10–§13) — ✅ DONE (M47+M48, NOT deployed; SCHEMA)
+BUILT (M47 `57dd895`): `Vera Measurement Template` + `Vera Measurement Template Row` doctypes,
+`measurement_template.py` API (`seed_default_templates` / `list_templates` / `apply_template` — seeds a
+draft measurement's rows, append or replace), MeasurementEditor "Start from a template" picker.
+ENRICHED (M48): realistic 7-template seed set (Kitchen — Standard 8 rows; Wardrobe — Hinged; Wardrobe —
+Sliding; TV Unit; Vanity; Crockery/Storage; Study/Office), each row annotated; added `description` field
+to the template row child + carried through `apply_template` so a survey starts pre-annotated. Schema →
+needs migrate + `seed_default_templates` on deploy. Note: the Measurement Sheet already has structured
+`obstructions` + `services` child tables (site conditions handled there).
+REMAINING (later): per-area photo capture (§11); verify calc formulas per pricing method
+(RFT/SFT/SQM/UNIT/LS) against §12; owner refinement of the seed templates.
 
 ### C. Master-data build-out (PRD §5–§26) — data + dropdowns
 The 29 taxonomy masters exist (M5). Still needed as **operational masters with the fields the
