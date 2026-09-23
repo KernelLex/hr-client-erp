@@ -101,7 +101,12 @@
   },
   {
     "vendor": "blum",
-    "status": "parser pending",
-    "note": "322MB, ~80% scanned -> request Blum source Excel, do NOT OCR blind"
+    "status": "ok (vision)",
+    "raw_rows": 30,
+    "unique_skus": 30,
+    "null_mrp": 0,
+    "with_hsn": 0,
+    "gst_inclusive": false,
+    "valid_from": ""
   }
 ]

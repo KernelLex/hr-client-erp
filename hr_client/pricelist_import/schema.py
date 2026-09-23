@@ -114,6 +114,9 @@ VENDORS: dict[str, Vendor] = {v.key: v for v in [
     Vendor("ksf", "KSF", "Pricelist -2026/KSF Price List_2026.pdf",
            parser="ksf", note="sinks & faucets, Häfele article namespace, colour variants"),
     Vendor("blum", "Blum", "Pricelist -2026/Blum India Pricelist 2025 V7.pdf",
-           parser="", text_extractable=False,
-           note="322MB, ~80% scanned -> request Blum source Excel, do NOT OCR blind"),
+           parser="vision", text_extractable=False,
+           note="338MB, fully scanned (0 text) BUT a CLEAN tabular pricelist — Article ID / "
+                "Material Desc / Information / UoM / MOQ / MRP — legible at 220dpi, so vision-"
+                "extractable (not blind OCR). ~28 price pages; batch in progress (pages 5,6,15 "
+                "done). Continue via render.py halves + vision, or owner source Excel for the rest."),
 ]}
