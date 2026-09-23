@@ -21,6 +21,9 @@ const EmployeesPage = lazy(() => import("@/pages/employees/EmployeesPage").then(
 const EmployeeDetailPage = lazy(() => import("@/pages/employees/EmployeeDetailPage").then(m => ({ default: m.EmployeeDetailPage })))
 const PermissionsPage = lazy(() => import("@/pages/admin/permissions/PermissionsPage").then(m => ({ default: m.PermissionsPage })))
 const UserManagement = lazy(() => import("@/pages/admin/UserManagement").then(m => ({ default: m.UserManagement })))
+const CompanySettingsPage = lazy(() => import("@/pages/admin/CompanySettingsPage").then(m => ({ default: m.CompanySettingsPage })))
+const CostPricesPage = lazy(() => import("@/pages/admin/CostPricesPage").then(m => ({ default: m.CostPricesPage })))
+const HardwarePackagesPage = lazy(() => import("@/pages/admin/HardwarePackagesPage").then(m => ({ default: m.HardwarePackagesPage })))
 const EmployeeProfilePage = lazy(() => import("@/pages/profile/EmployeeProfilePage").then(m => ({ default: m.EmployeeProfilePage })))
 const AdminEmployeesPage = lazy(() => import("@/pages/admin/employees/AdminEmployeesPage").then(m => ({ default: m.AdminEmployeesPage })))
 const AdminEmployeeDetailPage = lazy(() => import("@/pages/admin/employees/AdminEmployeeDetailPage").then(m => ({ default: m.AdminEmployeeDetailPage })))
@@ -148,6 +151,9 @@ function App() {
                 <Route path="/admin/employees/:email" element={<AdminEmployeeDetailPage />} />
                 <Route path="/admin/permissions" element={<PermissionsPage />} />
                 <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/company-settings" element={<CompanySettingsPage />} />
+                <Route path="/admin/cost-prices" element={<CostPricesPage />} />
+                <Route path="/quotation/hardware-packages" element={<HardwarePackagesPage />} />
                 <Route path="/admin/attendance" element={<AttendancePage />} />
                 <Route path="/leave" element={<LeavePage />} />
                 {/* CRM routes */}

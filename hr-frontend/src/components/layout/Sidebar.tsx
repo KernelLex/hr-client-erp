@@ -229,7 +229,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
     ) setHrOpen(true)
     if (p.startsWith("/todo/")) setTodoOpen(true)
     if (p === "/drive" || p.startsWith("/accounts") || p === "/verify" || p === "/ai-insights" || p === "/graphs") setDocsOpen(true)
-    if (p === "/admin/users" || p === "/admin/permissions") setAdminOpen(true)
+    if (p === "/admin/users" || p === "/admin/permissions" || p === "/admin/company-settings" || p === "/admin/cost-prices") setAdminOpen(true)
   }, [location.pathname])
 
   function makeToggle(setter: React.Dispatch<React.SetStateAction<boolean>>, key: string) {
@@ -398,6 +398,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <SubItem to="/quotation/materials" label="Materials" isActive={path === "/quotation/materials"} onClick={close} />
               <SubItem to="/quotation/finishes" label="Finishes" isActive={path === "/quotation/finishes"} onClick={close} />
               <SubItem to="/quotation/hardware" label="Hardware" isActive={path === "/quotation/hardware"} onClick={close} />
+              <SubItem to="/quotation/hardware-packages" label="Hardware Packages" isActive={path === "/quotation/hardware-packages"} onClick={close} />
               <SubItem to="/quotation/pricing" label="Pricing Methods" isActive={path === "/quotation/pricing"} onClick={close} />
               <SubItem to="/quotation/templates" label="Templates" isActive={path === "/quotation/templates"} onClick={close} />
             </GroupBody>
@@ -511,9 +512,11 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         {isAdmin && (
           <>
             <GroupHeader label="Administration" glyph="◈" open={adminOpen} active={isAdminGroupActive} onToggle={toggleAdmin} />
-            <GroupBody open={adminOpen} maxHeight={200}>
+            <GroupBody open={adminOpen} maxHeight={260}>
               <SubItem to="/admin/users" label="User Management" isActive={isUsersActive} adminBadge onClick={close} />
               <SubItem to="/admin/permissions" label="Permissions" isActive={isPermsActive} adminBadge onClick={close} />
+              <SubItem to="/admin/company-settings" label="Company Settings" isActive={path === "/admin/company-settings"} adminBadge onClick={close} />
+              <SubItem to="/admin/cost-prices" label="Cost / Dealer Prices" isActive={path === "/admin/cost-prices"} adminBadge onClick={close} />
             </GroupBody>
           </>
         )}

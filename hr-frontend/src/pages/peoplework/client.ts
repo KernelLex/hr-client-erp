@@ -114,6 +114,15 @@ export const projectGet = apiGetFactory("project_overview")
 export const reclaimedGet = apiGetFactory("reclaimed")
 export const reclaimedPost = apiPostFactory("reclaimed")
 
+export const companyProfileGet = apiGetFactory("company_profile")
+export const companyProfilePost = apiPostFactory("company_profile")
+
+export const vendorCostGet = apiGetFactory("vendor_cost")
+export const vendorCostPost = apiPostFactory("vendor_cost")
+
+export const hardwarePackageGet = apiGetFactory("hardware_package")
+export const hardwarePackagePost = apiPostFactory("hardware_package")
+
 export const measurementTemplateGet = apiGetFactory("measurement_template")
 export const measurementTemplatePost = apiPostFactory("measurement_template")
 
