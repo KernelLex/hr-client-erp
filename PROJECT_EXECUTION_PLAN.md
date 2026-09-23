@@ -99,13 +99,23 @@ derived from contract_value; the template is overridable per project (some jobs 
 ## 6. Build order
 
 1. ✅ Spec (this file).
-2. `Vera Project` + 3 child tables + `Vera Project Work Card` doctypes.
-3. `hr_client/api/project_execution.py` — create-from-quotation, get/list, advance
-   stage, record payment, variation, work-card CRUD, schedule query, dashboards.
-4. Frontend: Projects (execution) list + Project detail (stage tracker, payment
-   milestones, site log, work cards) + a work-card schedule board.
-5. Deploy (migrate) + verify. Then: intercompany hand-off, procurement/PO depth,
-   material-requirement-sheet auto-build from BOQ (phase 2 of this module).
+2. ✅ `Vera Project` + 3 child tables + `Vera Project Work Card` doctypes. **LIVE.**
+3. ✅ `hr_client/api/project_execution.py` — create-from-quotation, get/list, advance
+   stage, record payment, variation, work-card CRUD, schedule query. **LIVE.**
+4. ✅ Frontend: Project Delivery list + detail (stage tracker, payment milestones,
+   site log, work cards) + Work Schedule board. **LIVE.**
+5. ✅ Deploy (migrate) + verify — DONE 2026-09-23 (8 tables, E2E passed).
+6. ✅ **PHASE 2 — PROCUREMENT (LIVE 2026-09-23, commit `63d0865`):** `Vera Material
+   Requirement` (+line) + `Vera Procurement PO` (+line) + `project_procurement.py` —
+   `build_requirement` aggregates the project's latest BOQ (carcass/shutter/finish/
+   edge-band + **hardware-package expansion** into component items, est cost from
+   Vendor Cost→MRP, full BOQ-line traceability) → vendor assignment → VOQ grouping →
+   `generate_pos` (one PO per vendor, **intercompany-flagged** when vendor is a sibling
+   Company). Frontend `/projects/:name/procurement`.
+
+**PHASE 3+ (not built):** VOQ vendor auto-suggest (standard vendor per material);
+PO → goods-receipt → site inventory; 3D/production-drawing attachments; material/
+finish est-rate from a per-SFT finish-price master.
 
 Owner-configurable inputs (build admin toggles as we go): payment-template presets,
 work-card templates per stage, standard finishes price-per-SFT (ties to the SFT pricing
