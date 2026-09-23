@@ -57,6 +57,21 @@ _COST_COMPONENTS = ("material_cost", "finish_cost", "hardware_cost", "glass_cost
                     "installation_cost", "transportation_cost", "site_cost",
                     "outsourcing_cost", "overhead", "other_cost")
 
+# The buying price list the owner fills via /admin/cost-prices (vendor_cost.py).
+_COST_PRICE_LIST = "Vendor Cost"
+
+
+def _catalogue_cost(item_code):
+    """Owner-supplied dealer cost for a catalogue item, or None if not set.
+    Never falls back to MRP — cost must be real (see vendor_cost.py / feedback:
+    do NOT invent cost)."""
+    if not item_code:
+        return None
+    return frappe.db.get_value(
+        "Item Price",
+        {"item_code": item_code, "price_list": _COST_PRICE_LIST, "buying": 1},
+        "price_list_rate")
+
 
 def _line_maths(ln, target_gp):
     """Compute a cost-sheet line's total_cost (from components or rate×qty), a
@@ -276,13 +291,52 @@ def save_cost_lines(name: str, lines):
     doc = frappe.get_doc("Vera Cost Sheet", name)
     _assert_editable(doc)
     doc.set("lines", [])
+    pulled = 0
     for r in _rows_of(lines, "lines"):
-        doc.append("lines", {k: r.get(k) for k in _LINE_FIELDS if r.get(k) not in (None, "")})
+        row = {k: r.get(k) for k in _LINE_FIELDS if r.get(k) not in (None, "")}
+        # Auto-fill cost from the owner's Vendor Cost list when the estimator
+        # linked an item but left both cost_rate and the cost components blank.
+        if row.get("item_code") and not row.get("cost_rate") and \
+                not any(row.get(c) for c in _COST_COMPONENTS):
+            c = _catalogue_cost(row["item_code"])
+            if c:
+                row["cost_rate"] = c
+                pulled += 1
+        doc.append("lines", row)
     _apply_maths(doc)
     doc.save(ignore_permissions=True)
     frappe.db.commit()
-    return {"success": True, "count": len(doc.lines), "base_cost": doc.base_cost,
-            "total_cost": doc.total_cost, "projected_gp_percent": doc.projected_gp_percent}
+    return {"success": True, "count": len(doc.lines), "cost_pulled": pulled,
+            "base_cost": doc.base_cost, "total_cost": doc.total_cost,
+            "projected_gp_percent": doc.projected_gp_percent}
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def pull_catalogue_costs(name: str, overwrite: int = 0):
+    """Refresh cost_rate from the owner's Vendor Cost list for every line linked
+    to a catalogue item. By default only fills lines with no cost yet; pass
+    overwrite=1 to replace existing cost_rate too. Draft-only."""
+    require_login()
+    doc = frappe.get_doc("Vera Cost Sheet", name)
+    _assert_editable(doc)
+    pulled, missing = 0, 0
+    for ln in doc.lines:
+        if not ln.item_code:
+            continue
+        cost = _catalogue_cost(ln.item_code)
+        if cost is None:
+            missing += 1
+            continue
+        if overwrite or not _flt(ln.cost_rate):
+            ln.cost_rate = cost
+            pulled += 1
+    _apply_maths(doc)
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "pulled": pulled, "missing_cost": missing,
+            "base_cost": doc.base_cost, "total_cost": doc.total_cost,
+            "projected_gp_percent": doc.projected_gp_percent}
 
 
 # ══════════════════════════════════════════════════════════════════════════════

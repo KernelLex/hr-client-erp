@@ -115,6 +115,18 @@ export function CostSheetEditor() {
     await costSheetPost("save_cost_lines", { name, lines: rows })
     refresh()
   }
+  async function pullCosts() {
+    setBusy("pull")
+    try {
+      const res = await costSheetPost<{ pulled: number; missing_cost: number }>("pull_catalogue_costs", { name })
+      toast.success(`Cost pulled for ${res.pulled} line(s)${res.missing_cost ? ` · ${res.missing_cost} item(s) have no cost set` : ""}`)
+      refresh()
+    } catch (e) {
+      toast.error((e as Error)?.message ?? "Could not pull costs")
+    } finally {
+      setBusy(null)
+    }
+  }
   async function action(endpoint: string, label: string, then?: (res: { name?: string }) => void) {
     setBusy(endpoint)
     try {
@@ -202,6 +214,12 @@ export function CostSheetEditor() {
 
         {/* Workflow */}
         <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          {!locked && (
+            <button onClick={pullCosts} disabled={!!busy} title="Fill cost from the owner's Vendor Cost list for item-linked lines"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+              {busy === "pull" ? "Pulling…" : "↧ Pull catalogue costs"}
+            </button>
+          )}
           {c.status === "Draft" && (
             <button onClick={() => action("submit_cost_sheet", "Submitted for review")} disabled={!!busy}
               className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--brand-primary)" }}>
