@@ -1,0 +1,37 @@
+{
+ "actions": [],
+ "autoname": "VE/WC/.YYYY./.#####",
+ "creation": "2026-09-23 12:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title", "project", "stage", "assigned_to", "scheduled_date", "priority",
+  "status", "instructions", "completed_on", "update_notes", "company", "source"
+ ],
+ "fields": [
+  {"fieldname": "title", "fieldtype": "Data", "label": "Task", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "project", "fieldtype": "Link", "label": "Project", "options": "Vera Project", "in_list_view": 1},
+  {"fieldname": "stage", "fieldtype": "Data", "label": "Stage", "in_list_view": 1},
+  {"fieldname": "assigned_to", "fieldtype": "Data", "label": "Assigned To", "in_list_view": 1},
+  {"fieldname": "scheduled_date", "fieldtype": "Date", "label": "Scheduled", "in_list_view": 1},
+  {"fieldname": "priority", "fieldtype": "Select", "label": "Priority", "options": "Low\nNormal\nHigh", "default": "Normal"},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "To Do\nIn Progress\nDone\nBlocked", "default": "To Do", "in_list_view": 1},
+  {"fieldname": "instructions", "fieldtype": "Small Text", "label": "Instructions"},
+  {"fieldname": "completed_on", "fieldtype": "Date", "label": "Completed On"},
+  {"fieldname": "update_notes", "fieldtype": "Small Text", "label": "Update Notes"},
+  {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company"},
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source", "read_only": 1, "hidden": 1}
+ ],
+ "links": [],
+ "modified": "2026-09-23 12:00:00",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "Vera Project Work Card",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "Employee", "read": 1, "write": 1, "create": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

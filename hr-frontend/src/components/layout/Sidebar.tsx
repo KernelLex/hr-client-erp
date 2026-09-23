@@ -405,6 +405,14 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
           </>
         )}
 
+        {/* Project Delivery — execution lifecycle after a quote is accepted. */}
+        {showQuotation && (
+          <>
+            <NavItem to="/projects" label="Project Delivery" glyph="◈" onClick={close} />
+            <NavItem to="/projects/schedule" label="Work Schedule" glyph="▦" onClick={close} />
+          </>
+        )}
+
         {/* ERP Entries — ERP-native records + request/approve queue (Phase 2 §2). */}
         {/* Visible to all: admins create/approve; everyone else requests. */}
         <NavItem to="/erp-entries" label="ERP Entries" glyph="⊞" onClick={close} />

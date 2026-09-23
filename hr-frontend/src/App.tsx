@@ -24,6 +24,9 @@ const UserManagement = lazy(() => import("@/pages/admin/UserManagement").then(m 
 const CompanySettingsPage = lazy(() => import("@/pages/admin/CompanySettingsPage").then(m => ({ default: m.CompanySettingsPage })))
 const CostPricesPage = lazy(() => import("@/pages/admin/CostPricesPage").then(m => ({ default: m.CostPricesPage })))
 const HardwarePackagesPage = lazy(() => import("@/pages/admin/HardwarePackagesPage").then(m => ({ default: m.HardwarePackagesPage })))
+const ProjectDeliveryPage = lazy(() => import("@/pages/projects/ProjectDeliveryPage").then(m => ({ default: m.ProjectDeliveryPage })))
+const ProjectDeliveryDetail = lazy(() => import("@/pages/projects/ProjectDeliveryDetail").then(m => ({ default: m.ProjectDeliveryDetail })))
+const WorkSchedulePage = lazy(() => import("@/pages/projects/WorkSchedulePage").then(m => ({ default: m.WorkSchedulePage })))
 const EmployeeProfilePage = lazy(() => import("@/pages/profile/EmployeeProfilePage").then(m => ({ default: m.EmployeeProfilePage })))
 const AdminEmployeesPage = lazy(() => import("@/pages/admin/employees/AdminEmployeesPage").then(m => ({ default: m.AdminEmployeesPage })))
 const AdminEmployeeDetailPage = lazy(() => import("@/pages/admin/employees/AdminEmployeeDetailPage").then(m => ({ default: m.AdminEmployeeDetailPage })))
@@ -154,6 +157,10 @@ function App() {
                 <Route path="/admin/company-settings" element={<CompanySettingsPage />} />
                 <Route path="/admin/cost-prices" element={<CostPricesPage />} />
                 <Route path="/quotation/hardware-packages" element={<HardwarePackagesPage />} />
+                {/* Project Delivery (execution) */}
+                <Route path="/projects" element={<ProjectDeliveryPage />} />
+                <Route path="/projects/schedule" element={<WorkSchedulePage />} />
+                <Route path="/projects/:name" element={<ProjectDeliveryDetail />} />
                 <Route path="/admin/attendance" element={<AttendancePage />} />
                 <Route path="/leave" element={<LeavePage />} />
                 {/* CRM routes */}
