@@ -63,6 +63,7 @@
   "terms_section",
   "terms_template",
   "terms_and_conditions",
+  "assumptions",
   "notes_section",
   "notes",
   "source",
@@ -405,6 +406,11 @@
    "fieldname": "terms_and_conditions",
    "fieldtype": "Text",
    "label": "Terms & Conditions"
+  },
+  {
+   "fieldname": "assumptions",
+   "fieldtype": "Small Text",
+   "label": "Assumptions"
   },
   {
    "fieldname": "notes_section",

@@ -29,7 +29,7 @@ interface Quotation {
   approved_with_conditions: number; conditions: string | null
   customer_acceptance: number; advance_received: number
   foc_value: number; installation_waiver: number; transport_waiver: number; price_override_percent: number
-  validity_days: number | null; delivery_period: string | null; installation_period: string | null; warranty_terms: string | null
+  validity_days: number | null; delivery_period: string | null; installation_period: string | null; warranty_terms: string | null; assumptions: string | null
   inclusions: GridRow[]; exclusions: GridRow[]
   payment_schedule: GridRow[]
   terms_template: string | null; terms_and_conditions: string | null
@@ -68,7 +68,7 @@ export function QuotationEditor() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [busy, setBusy] = useState<string | null>(null)
-  const [form, setForm] = useState({ discount_percent: "", adjustment: "", gst_percent: "", credit_terms_standard: true, credit_terms: "", foc_value: "", installation_waiver: "", transport_waiver: "", price_override_percent: "", validity_days: "", delivery_period: "", installation_period: "", warranty_terms: "" })
+  const [form, setForm] = useState({ discount_percent: "", adjustment: "", gst_percent: "", credit_terms_standard: true, credit_terms: "", foc_value: "", installation_waiver: "", transport_waiver: "", price_override_percent: "", validity_days: "", delivery_period: "", installation_period: "", warranty_terms: "", assumptions: "" })
   const [dirty, setDirty] = useState(false)
   const [negotiated, setNegotiated] = useState("")
 
@@ -106,8 +106,9 @@ export function QuotationEditor() {
       delivery_period: q.delivery_period ?? "",
       installation_period: q.installation_period ?? "",
       warranty_terms: q.warranty_terms ?? "",
+      assumptions: q.assumptions ?? "",
     })
-  }, [q?.name, q?.discount_percent, q?.adjustment, q?.gst_percent, q?.credit_terms_standard, q?.credit_terms, q?.foc_value, q?.installation_waiver, q?.transport_waiver, q?.price_override_percent, q?.validity_days, q?.delivery_period, q?.installation_period, q?.warranty_terms])
+  }, [q?.name, q?.discount_percent, q?.adjustment, q?.gst_percent, q?.credit_terms_standard, q?.credit_terms, q?.foc_value, q?.installation_waiver, q?.transport_waiver, q?.price_override_percent, q?.validity_days, q?.delivery_period, q?.installation_period, q?.warranty_terms, q?.assumptions])
 
   function refresh() { qc.invalidateQueries({ queryKey: ["q_quotation", name] }) }
   function setField(k: string, v: string | boolean) { setForm((p) => ({ ...p, [k]: v })); setDirty(true) }
@@ -122,6 +123,7 @@ export function QuotationEditor() {
         transport_waiver: form.transport_waiver || 0, price_override_percent: form.price_override_percent || 0,
         validity_days: form.validity_days || 0, delivery_period: form.delivery_period,
         installation_period: form.installation_period, warranty_terms: form.warranty_terms,
+        assumptions: form.assumptions,
       } })
       toast.success("Commercials updated"); setDirty(false); refresh()
     } catch (e) { toast.error((e as Error)?.message ?? "Could not save") } finally { setBusy(null) }
@@ -292,6 +294,7 @@ export function QuotationEditor() {
           {txt("delivery_period", "Delivery Period")}
           {txt("installation_period", "Installation Period")}
           {txt("warranty_terms", "Warranty")}
+          <div className="md:col-span-4">{txt("assumptions", "Assumptions (shown on customer quote)")}</div>
         </div>
 
         {/* Workflow */}

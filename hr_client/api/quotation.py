@@ -20,7 +20,7 @@ from hr_client.api.cost_sheet import gp_tone
 _HEADER_FIELDS = ("quotation_title", "opportunity", "company_name", "prepared_by",
                   "discount_percent", "adjustment", "gst_percent",
                   "credit_terms_standard", "credit_terms", "terms_template",
-                  "terms_and_conditions", "notes",
+                  "terms_and_conditions", "assumptions", "notes",
                   # delivery & execution terms shown on the customer print (§29/§30/§35)
                   "validity_days", "delivery_period", "installation_period", "warranty_terms",
                   # commercial concessions the approval matrix evaluates (§36-43)
@@ -245,6 +245,7 @@ def _serialize(doc):
         "price_override_percent": doc.price_override_percent,
         "terms_template": doc.terms_template,
         "terms_and_conditions": doc.terms_and_conditions,
+        "assumptions": doc.assumptions,
         "validity_days": doc.validity_days,
         "delivery_period": doc.delivery_period,
         "installation_period": doc.installation_period,
@@ -747,6 +748,7 @@ def get_quotation_print(name: str, fmt: str = "summary"):
         "lines": lines,
         "sections": sections,
         "terms_and_conditions": doc.terms_and_conditions,
+        "assumptions": doc.assumptions if customer_facing else None,
         # Letterhead (§3) — only on customer-facing formats.
         "company_info": _company_info(doc.get("company")) if customer_facing else {},
         # Delivery & execution terms (§12/§29/§30/§35) — customer-facing.

@@ -17,7 +17,7 @@ interface PrintSection { section: string; subtotal: number; lines: PrintLine[] }
 interface PrintDoc {
   format: string; format_label: string; customer_facing: boolean; watermark: string | null
   name: string; revision: number; title: string; company_name: string | null; status: string
-  lines: PrintLine[]; sections?: PrintSection[]; terms_and_conditions: string | null
+  lines: PrintLine[]; sections?: PrintSection[]; terms_and_conditions: string | null; assumptions?: string | null
   gross_total?: number; discount_percent?: number; discount_amount?: number; adjustment?: number
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
   cgst_percent?: number; cgst_amount?: number; sgst_percent?: number; sgst_amount?: number; amount_in_words?: string
@@ -274,6 +274,13 @@ export function QuotationPrintPage() {
                 </ul>
               </div>
             )}
+          </div>
+        )}
+
+        {d.customer_facing && d.assumptions && (
+          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Assumptions</div>
+            <pre className="whitespace-pre-wrap text-xs" style={{ color: "var(--text-primary)", fontFamily: "inherit" }}>{d.assumptions}</pre>
           </div>
         )}
 
