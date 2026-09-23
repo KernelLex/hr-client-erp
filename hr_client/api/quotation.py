@@ -249,6 +249,8 @@ def _serialize(doc):
         "delivery_period": doc.delivery_period,
         "installation_period": doc.installation_period,
         "warranty_terms": doc.warranty_terms,
+        "inclusions": [{"inclusion": r.inclusion, "text": r.text} for r in doc.inclusions],
+        "exclusions": [{"exclusion": r.exclusion, "text": r.text} for r in doc.exclusions],
         "notes": doc.notes,
         "source": doc.source,
         "editable": doc.status in _EDITABLE_STATUSES,
@@ -349,6 +351,35 @@ def save_lines(name: str, lines):
     frappe.db.commit()
     return {"success": True, "count": len(doc.lines), "grand_total": doc.grand_total,
             "gp_percent": doc.gp_percent, "required_authority": doc.required_authority}
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def save_scope(name: str, inclusions=None, exclusions=None):
+    """Replace the quotation's Inclusions / Exclusions (§31/§32). Each row may
+    carry free text and/or a link to the Inclusion/Exclusion master (whose text
+    is pulled in when the row has no text of its own). Draft/Returned only."""
+    require_login()
+    doc = frappe.get_doc("Vera Sales Quotation", name)
+    _assert_editable(doc)
+
+    def _fill(child_field, rows_key, rows, master_dt, link_field, text_field):
+        doc.set(child_field, [])
+        for r in _rows_of(rows, rows_key):
+            link = r.get(link_field)
+            txt = r.get("text")
+            if link and not txt:
+                txt = frappe.db.get_value(master_dt, link, text_field)
+            if txt or link:
+                doc.append(child_field, {link_field: link, "text": txt})
+
+    if inclusions is not None:
+        _fill("inclusions", "inclusions", inclusions, "Vera Inclusion", "inclusion", "inclusion_text")
+    if exclusions is not None:
+        _fill("exclusions", "exclusions", exclusions, "Vera Exclusion", "exclusion", "exclusion_text")
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "inclusions": len(doc.inclusions), "exclusions": len(doc.exclusions)}
 
 
 @frappe.whitelist(methods=["POST"])
@@ -700,6 +731,8 @@ def get_quotation_print(name: str, fmt: str = "summary"):
         "delivery_period": doc.delivery_period if customer_facing else None,
         "installation_period": doc.installation_period if customer_facing else None,
         "warranty_terms": doc.warranty_terms if customer_facing else None,
+        "inclusions": [r.text for r in doc.inclusions if r.text] if customer_facing else [],
+        "exclusions": [r.text for r in doc.exclusions if r.text] if customer_facing else [],
     }
     # Commercial totals — shown on all except the pricing-free technical BOQ.
     if fmt != "technical":

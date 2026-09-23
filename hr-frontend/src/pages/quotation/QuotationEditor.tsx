@@ -30,6 +30,7 @@ interface Quotation {
   customer_acceptance: number; advance_received: number
   foc_value: number; installation_waiver: number; transport_waiver: number; price_override_percent: number
   validity_days: number | null; delivery_period: string | null; installation_period: string | null; warranty_terms: string | null
+  inclusions: GridRow[]; exclusions: GridRow[]
   terms_template: string | null; terms_and_conditions: string | null
   editable: boolean; lines: GridRow[]; approval_log: GridRow[]; conversion_gate: Check[]
 }
@@ -136,6 +137,8 @@ export function QuotationEditor() {
     } catch (e) { toast.error((e as Error)?.message ?? "Could not apply") } finally { setBusy(null) }
   }
   async function saveLines(rows: GridRow[]) { await quotationPost("save_lines", { name, lines: rows }); refresh() }
+  async function saveInclusions(rows: GridRow[]) { await quotationPost("save_scope", { name, inclusions: rows }); refresh() }
+  async function saveExclusions(rows: GridRow[]) { await quotationPost("save_scope", { name, exclusions: rows }); refresh() }
 
   async function post(endpoint: string, body: Record<string, unknown>, ok: string, then?: (r: { name?: string; sales_order?: string }) => void) {
     setBusy(endpoint)
@@ -330,6 +333,14 @@ export function QuotationEditor() {
       {/* Lines */}
       <RegisterGrid title="Quotation Lines" columns={LINE_COLS} rows={q.lines} editable={!locked}
         onSave={saveLines} emptyLabel="No lines. Build on a cost sheet to seed Project/Modular lines." />
+
+      {/* Scope — Inclusions / Exclusions (§31/§32) */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <RegisterGrid title="Inclusions" columns={[{ key: "text", label: "Included", width: 320 }]} rows={q.inclusions} editable={!locked}
+          onSave={saveInclusions} emptyLabel="No inclusions. Add what this quotation covers." />
+        <RegisterGrid title="Exclusions" columns={[{ key: "text", label: "Excluded", width: 320 }]} rows={q.exclusions} editable={!locked}
+          onSave={saveExclusions} emptyLabel="No exclusions. Add what is not covered." />
+      </div>
 
       {/* Revision comparison (print spec §52) */}
       {comparison && comparison.revisions.length > 1 && (() => {

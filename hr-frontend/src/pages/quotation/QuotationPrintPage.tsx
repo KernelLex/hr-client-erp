@@ -22,6 +22,7 @@ interface PrintDoc {
   cgst_percent?: number; cgst_amount?: number; sgst_percent?: number; sgst_amount?: number; amount_in_words?: string
   payment_schedule?: { stage: string; percent: number; amount: number }[]
   validity_days?: number | null; delivery_period?: string | null; installation_period?: string | null; warranty_terms?: string | null
+  inclusions?: string[]; exclusions?: string[]
   company_info?: { name?: string; gstin?: string; phone?: string; email?: string; website?: string; address?: string }
   confidential?: boolean; cost_basis?: number; gross_profit?: number; gp_percent?: number
   target_gp_percent?: number; min_gp_percent?: number; cost_sheet?: string; conditions?: string
@@ -221,6 +222,28 @@ export function QuotationPrintPage() {
               <div className="md:col-span-2">
                 <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Warranty</div>
                 <div className="text-sm" style={{ color: "var(--text-primary)" }}>{d.warranty_terms}</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Inclusions / Exclusions (§31/§32) — customer-facing. */}
+        {d.customer_facing && ((d.inclusions?.length ?? 0) > 0 || (d.exclusions?.length ?? 0) > 0) && (
+          <div className="mt-6 grid gap-4 border-t pt-4 md:grid-cols-2" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            {(d.inclusions?.length ?? 0) > 0 && (
+              <div>
+                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#15803d" }}>Included</div>
+                <ul className="list-disc pl-5 text-sm" style={{ color: "var(--text-primary)" }}>
+                  {d.inclusions!.map((x, i) => <li key={i}>{x}</li>)}
+                </ul>
+              </div>
+            )}
+            {(d.exclusions?.length ?? 0) > 0 && (
+              <div>
+                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#dc2626" }}>Excluded</div>
+                <ul className="list-disc pl-5 text-sm" style={{ color: "var(--text-primary)" }}>
+                  {d.exclusions!.map((x, i) => <li key={i}>{x}</li>)}
+                </ul>
               </div>
             )}
           </div>

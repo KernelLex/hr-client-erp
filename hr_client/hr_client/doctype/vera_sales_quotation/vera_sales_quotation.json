@@ -55,6 +55,9 @@
   "delivery_period",
   "installation_period",
   "warranty_terms",
+  "scope_section",
+  "inclusions",
+  "exclusions",
   "terms_section",
   "terms_template",
   "terms_and_conditions",
@@ -237,6 +240,23 @@
    "fieldname": "warranty_terms",
    "fieldtype": "Small Text",
    "label": "Warranty"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope — Inclusions & Exclusions"
+  },
+  {
+   "fieldname": "inclusions",
+   "fieldtype": "Table",
+   "label": "Inclusions",
+   "options": "Vera Quotation Inclusion"
+  },
+  {
+   "fieldname": "exclusions",
+   "fieldtype": "Table",
+   "label": "Exclusions",
+   "options": "Vera Quotation Exclusion"
   },
   {
    "fieldname": "gp_section",
