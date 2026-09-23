@@ -46,10 +46,24 @@ print → convert** flow, verified end-to-end on prod (12/12 E2E). Shipped M22�
 - **M48 — Enriched measurement templates (item B).** Realistic 7-template seed set + `description` on the
   template row child (carried through `apply_template`). Built. SCHEMA (added field to template row child). See §B.
 - **M49 — Studio master catalogue seed (item C).** `quotation_masters.seed_studio_masters()` — 87 generic
-  rows (materials/finishes/hardware/units, no prices) so the BOQ spec dropdowns work. Data-only, no schema. See §C.
+  rows (materials/finishes/hardware/units, no prices) so the BOQ spec dropdowns work. Data-only. See §C.
+- **M50 — Material-reuse feature completed (item J).** `reclaimed.get_reuse_savings()` cost-savings
+  dashboard + BOQ-editor one-click Reserve on reuse suggestions + "Reuse impact" panel on Reclaimed page.
 
-**DEPLOYED THIS SESSION:** M35, M36, M37, M38, M39 (all LIVE).
-**PENDING DEPLOY (batched):** M40–M46, Item J, M47, M48. M49 is code+seed (run the seed after deploy). Migrate needed for M40/M41/M42/M43 (new fields on
+**✅ WHOLE BATCH DEPLOYED LIVE + VERIFIED 2026-09-23 (M40–M50 + Item J).** rsync backend (6 API files +
+boq.py + 4 new doctype dirs + 3 modified doctype JSONs) → DB backup → `bench migrate` (clean; 4 new tables:
+Vera Measurement Template/Row, Vera Reclaimed Material/Image; new columns assumptions/place_of_supply on
+quotation, is_optional on line, site_address+ on opportunity) → supervisor restart → seeds
+(`quotation_taxonomy.seed_all` idempotent-0, `quotation_masters.seed_studio_masters` = 13/27/20/27,
+`measurement_template.seed_default_templates` = 7) → frontend rebuild+rsync → site 200.
+VERIFIED live: `get_boq_options` returns 13 materials / 27 finishes / 20 hardware / 27 units / 11 cats /
+11 areas; reuse dashboard + templates respond; served bundle has the reuse UI.
+⚠ **DISCOVERY:** M39's backend (`boq.get_boq_options`/`_master_names`) was NEVER actually on prod (server
+`boq.py` was 47 lines short — the frontend dropdown call had been 404-ing). Deployed boq.py this pass; the
+only diff vs repo was exactly the M39 block (no server-only changes clobbered).
+GOTCHA logged: the studio masters are **company-scoped on the live server** (mandatory `company` field)
+though the repo doctype JSON is company-less → `seed_studio_masters._seed_rows` now sets company when the
+field exists (fix commit after M49). Migrate needed for M40/M41/M42/M43 (new fields on
 quotation, quotation line, opportunity), Item J (`Vera Reclaimed Material` + child), and M47 (`Vera
 Measurement Template` + row child). M44/M45/M46 are code-only. Deploy = rsync changed py + doctype dirs +
 migrate + supervisor restart + frontend rebuild/rsync; verify site 200. **Prod deploy is classifier-gated
@@ -140,16 +154,19 @@ derived from the grand total at render time. **Schema change → needs `bench mi
 - `supplying_company` on BOQ lines → internal PO to the sibling company on Sales Order confirm.
 - Seed ~6 `Intercompany Ledger Map` rows; call `intercompany.tag_intercompany()` post-import.
 
-### J. Reclaimed / returned materials inventory — ✅ BUILT (commits c362197+a2e25b2, NOT deployed)
+### J. Reclaimed / returned materials inventory — ✅ COMPLETE & LIVE (M50, deployed 2026-09-23)
 User-requested waste-reduction feature. `Vera Reclaimed Material` (+ image child) logs returned/
 rejected/surplus stock with full spec (material/finish/colour/thickness/edge, W×H×D, qty, condition,
 salvage value), storage location (warehouse/rack/bin), multiple photos, and an Available→Reserved→
 Reused→Scrapped lifecycle. `reclaimed.py` reuse matcher scans open BOQ lines and scores material/
 finish/thickness + dimension-fit (a piece can be cut down, not up) so a returned piece surfaces the
 current jobs it can be reused on, each reservable in a click. Frontend: list + detail (spec form,
-image gallery, "Where it can be used" panel). Schema → needs migrate. REMAINING ideas: QR/barcode
-labels, a Storage Location master, cost-savings dashboard (total salvage reused), auto-suggest
-reclaimed stock inside the BOQ editor when a line's spec matches available inventory.
+image gallery, "Where it can be used" panel). **M50 completed the loop:** `get_reuse_savings()`
+cost-savings dashboard (waste avoided = Σ salvage of Reused pieces, reusable-on-hand value, per-material
+breakdown, recent reused) surfaced as a "♻ Reuse impact" panel on the Reclaimed list; BOQ editor already
+auto-suggests reclaimed stock per line (`suggest_for_boq`) and now each suggestion has a one-click
+**Reserve** (reserves the piece for the BOQ's opportunity in place). All LIVE. REMAINING (nice-to-have):
+QR/barcode labels, a Storage Location master, mark-reused straight from the BOQ once a line is built.
 
 ### I. Project execution lifecycle (owner "projects idea.txt") — whole new phase
 Beyond quotation: 3D/2D design stage + 10% advance, material requirement sheet, VOQ + vendor
