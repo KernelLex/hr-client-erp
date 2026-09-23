@@ -229,7 +229,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
     ) setHrOpen(true)
     if (p.startsWith("/todo/")) setTodoOpen(true)
     if (p === "/drive" || p.startsWith("/accounts") || p === "/verify" || p === "/ai-insights" || p === "/graphs") setDocsOpen(true)
-    if (p === "/admin/users" || p === "/admin/permissions" || p === "/admin/company-settings" || p === "/admin/cost-prices" || p === "/admin/finish-rates") setAdminOpen(true)
+    if (p === "/admin/users" || p === "/admin/permissions" || p === "/admin/company-settings" || p === "/admin/cost-prices" || p === "/admin/finish-rates" || p === "/admin/group-dashboard" || p === "/admin/vendor-payments") setAdminOpen(true)
   }, [location.pathname])
 
   function makeToggle(setter: React.Dispatch<React.SetStateAction<boolean>>, key: string) {
@@ -410,6 +410,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
           <>
             <NavItem to="/projects" label="Project Delivery" glyph="◈" onClick={close} />
             <NavItem to="/projects/schedule" label="Work Schedule" glyph="▦" onClick={close} />
+            <NavItem to="/service" label="Service & Warranty" glyph="✚" onClick={close} />
           </>
         )}
 
@@ -520,12 +521,14 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         {isAdmin && (
           <>
             <GroupHeader label="Administration" glyph="◈" open={adminOpen} active={isAdminGroupActive} onToggle={toggleAdmin} />
-            <GroupBody open={adminOpen} maxHeight={260}>
+            <GroupBody open={adminOpen} maxHeight={420}>
+              <SubItem to="/admin/group-dashboard" label="Group Dashboard" isActive={path === "/admin/group-dashboard"} adminBadge onClick={close} />
               <SubItem to="/admin/users" label="User Management" isActive={isUsersActive} adminBadge onClick={close} />
               <SubItem to="/admin/permissions" label="Permissions" isActive={isPermsActive} adminBadge onClick={close} />
               <SubItem to="/admin/company-settings" label="Company Settings" isActive={path === "/admin/company-settings"} adminBadge onClick={close} />
               <SubItem to="/admin/cost-prices" label="Cost / Dealer Prices" isActive={path === "/admin/cost-prices"} adminBadge onClick={close} />
               <SubItem to="/admin/finish-rates" label="Finish / Material Rates" isActive={path === "/admin/finish-rates"} adminBadge onClick={close} />
+              <SubItem to="/admin/vendor-payments" label="Vendor Payments" isActive={path === "/admin/vendor-payments"} adminBadge onClick={close} />
             </GroupBody>
           </>
         )}

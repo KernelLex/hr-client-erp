@@ -25,6 +25,9 @@ const CompanySettingsPage = lazy(() => import("@/pages/admin/CompanySettingsPage
 const CostPricesPage = lazy(() => import("@/pages/admin/CostPricesPage").then(m => ({ default: m.CostPricesPage })))
 const HardwarePackagesPage = lazy(() => import("@/pages/admin/HardwarePackagesPage").then(m => ({ default: m.HardwarePackagesPage })))
 const FinishRatesPage = lazy(() => import("@/pages/admin/FinishRatesPage").then(m => ({ default: m.FinishRatesPage })))
+const ServicePage = lazy(() => import("@/pages/service/ServicePage").then(m => ({ default: m.ServicePage })))
+const VendorPaymentsPage = lazy(() => import("@/pages/admin/VendorPaymentsPage").then(m => ({ default: m.VendorPaymentsPage })))
+const GroupDashboardPage = lazy(() => import("@/pages/admin/GroupDashboardPage").then(m => ({ default: m.GroupDashboardPage })))
 const ProjectDeliveryPage = lazy(() => import("@/pages/projects/ProjectDeliveryPage").then(m => ({ default: m.ProjectDeliveryPage })))
 const ProjectDeliveryDetail = lazy(() => import("@/pages/projects/ProjectDeliveryDetail").then(m => ({ default: m.ProjectDeliveryDetail })))
 const WorkSchedulePage = lazy(() => import("@/pages/projects/WorkSchedulePage").then(m => ({ default: m.WorkSchedulePage })))
@@ -159,6 +162,9 @@ function App() {
                 <Route path="/admin/company-settings" element={<CompanySettingsPage />} />
                 <Route path="/admin/cost-prices" element={<CostPricesPage />} />
                 <Route path="/admin/finish-rates" element={<FinishRatesPage />} />
+                <Route path="/admin/group-dashboard" element={<GroupDashboardPage />} />
+                <Route path="/admin/vendor-payments" element={<VendorPaymentsPage />} />
+                <Route path="/service" element={<ServicePage />} />
                 <Route path="/quotation/hardware-packages" element={<HardwarePackagesPage />} />
                 {/* Project Delivery (execution) */}
                 <Route path="/projects" element={<ProjectDeliveryPage />} />
