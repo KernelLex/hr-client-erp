@@ -786,6 +786,44 @@ def get_document_chain(doctype: str, name: str):
 
 @frappe.whitelist()
 @handle_api_error
+def get_revision_comparison(name: str):
+    """Revision comparison (print spec §52) — walk this quotation's revision chain
+    (via `supersedes`) and return each revision's per-section subtotals + grand
+    total, so the UI can show R01 vs R02 vs … with the differences."""
+    require_login()
+    doc = frappe.get_doc("Vera Sales Quotation", name)
+    assert_doc_company(doc)
+
+    # Walk back to the root revision, then forward through the chain.
+    root, seen = doc, set()
+    while root.supersedes and root.supersedes not in seen:
+        seen.add(root.name)
+        root = frappe.get_doc("Vera Sales Quotation", root.supersedes)
+    order, cur = [root], root
+    while True:
+        nxt = frappe.get_all("Vera Sales Quotation", filters={"supersedes": cur.name}, pluck="name")
+        if not nxt:
+            break
+        cur = frappe.get_doc("Vera Sales Quotation", nxt[0])
+        order.append(cur)
+
+    section_order, revisions = [], []
+    for d in order:
+        secs = {}
+        for ln in d.lines:
+            sec = ln.section or "Items"
+            secs[sec] = round(secs.get(sec, 0.0) + _flt(ln.gross_amount), 2)
+            if sec not in section_order:
+                section_order.append(sec)
+        revisions.append({
+            "name": d.name, "revision": d.revision, "status": d.status,
+            "grand_total": _flt(d.grand_total), "sections": secs,
+        })
+    return {"revisions": revisions, "section_order": section_order}
+
+
+@frappe.whitelist()
+@handle_api_error
 def get_approved_quotations():
     require_login()
     return frappe.get_all(

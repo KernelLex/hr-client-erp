@@ -33,6 +33,10 @@ interface Quotation {
   editable: boolean; lines: GridRow[]; approval_log: GridRow[]; conversion_gate: Check[]
 }
 interface ActiveTemplate { name: string; template_name: string; category: string; version: number }
+interface RevComparison {
+  revisions: { name: string; revision: number; status: string; grand_total: number; sections: Record<string, number> }[]
+  section_order: string[]
+}
 
 const LINE_COLS: GridCol[] = [
   { key: "line_type", label: "Type", type: "select", options: ["Project / Modular", "Trading", "Services"], width: 130 },
@@ -75,6 +79,13 @@ export function QuotationEditor() {
   const { data: templates } = useQuery({
     queryKey: ["q_active_terms"],
     queryFn: () => termsGet<ActiveTemplate[]>("get_active_templates"),
+  })
+
+  const { data: comparison } = useQuery({
+    queryKey: ["q_rev_compare", name],
+    queryFn: () => quotationGet<RevComparison>("get_revision_comparison", { name }),
+    staleTime: 30_000,
+    enabled: !!q && ((q.revision ?? 1) > 1 || !!q.supersedes),
   })
 
   useEffect(() => {
@@ -296,6 +307,47 @@ export function QuotationEditor() {
       {/* Lines */}
       <RegisterGrid title="Quotation Lines" columns={LINE_COLS} rows={q.lines} editable={!locked}
         onSave={saveLines} emptyLabel="No lines. Build on a cost sheet to seed Project/Modular lines." />
+
+      {/* Revision comparison (print spec §52) */}
+      {comparison && comparison.revisions.length > 1 && (() => {
+        const revs = comparison.revisions
+        const last = revs[revs.length - 1]
+        const prev = revs[revs.length - 2]
+        const delta = (a?: number, b?: number) => (a ?? 0) - (b ?? 0)
+        const fmtD = (n: number) => (n === 0 ? "—" : (n > 0 ? "+" : "") + inr(n))
+        return (
+          <div className="mb-6 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+            <div className="mb-2 font-heading text-sm font-semibold" style={{ color: "var(--brand-primary)" }}>Revision Comparison</div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+                    <th className="py-1.5">Section</th>
+                    {revs.map((r) => <th key={r.name} className="py-1.5 text-right">R{String(r.revision).padStart(2, "0")}</th>)}
+                    <th className="py-1.5 text-right">Δ latest</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparison.section_order.map((sec) => (
+                    <tr key={sec} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                      <td className="py-1.5">{sec}</td>
+                      {revs.map((r) => <td key={r.name} className="py-1.5 text-right">{inr(r.sections[sec] || 0)}</td>)}
+                      <td className="py-1.5 text-right" style={{ color: delta(last.sections[sec], prev.sections[sec]) ? "var(--brand-primary)" : "var(--text-muted)" }}>
+                        {fmtD(delta(last.sections[sec], prev.sections[sec]))}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t font-semibold" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                    <td className="py-1.5">Grand Total</td>
+                    {revs.map((r) => <td key={r.name} className="py-1.5 text-right">{inr(r.grand_total)}</td>)}
+                    <td className="py-1.5 text-right" style={{ color: "var(--brand-primary)" }}>{fmtD(delta(last.grand_total, prev.grand_total))}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Conversion gate (§4.11) */}
       {(q.status === "Approved" || q.status === "Converted") && (
