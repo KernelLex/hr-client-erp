@@ -756,6 +756,8 @@ def get_quotation_print(name: str, fmt: str = "summary"):
         "title": doc.quotation_title,
         "company_name": doc.company_name,
         "status": doc.status,
+        "prepared_by": doc.prepared_by,
+        "date": frappe.utils.formatdate(doc.get("transaction_date") or doc.creation, "d MMM yyyy"),
         "lines": lines,
         "sections": sections,
         "optional_lines": optional_lines,

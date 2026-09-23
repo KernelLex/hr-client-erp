@@ -17,6 +17,7 @@ interface PrintSection { section: string; subtotal: number; lines: PrintLine[] }
 interface PrintDoc {
   format: string; format_label: string; customer_facing: boolean; watermark: string | null
   name: string; revision: number; title: string; company_name: string | null; status: string
+  prepared_by?: string | null; date?: string | null
   lines: PrintLine[]; sections?: PrintSection[]; optional_lines?: PrintLine[]; terms_and_conditions: string | null; assumptions?: string | null
   gross_total?: number; discount_percent?: number; discount_amount?: number; adjustment?: number
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
@@ -49,6 +50,7 @@ export function QuotationPrintPage() {
   const [showDimensions, setShowDimensions] = useState(true)
   const [showRates, setShowRates] = useState(true)
   const [showDiscount, setShowDiscount] = useState(true)
+  const [showCover, setShowCover] = useState(false)
 
   // PDF auto file-naming (§77) — drive the browser "Save as PDF" default filename
   // via the document title while this page is mounted, then restore it.
@@ -78,6 +80,7 @@ export function QuotationPrintPage() {
           {/* Print-setting toggles (§2/§26) — customer formats with pricing only. */}
           {d.customer_facing && d.format !== "summary" && (
             <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
+              <Toggle label="Cover page" checked={showCover} onChange={setShowCover} />
               <Toggle label="Dimensions" checked={showDimensions} onChange={setShowDimensions} />
               {showPricing && <Toggle label="Rates" checked={showRates} onChange={setShowRates} />}
               {showPricing && <Toggle label="Discount" checked={showDiscount} onChange={setShowDiscount} />}
@@ -89,6 +92,24 @@ export function QuotationPrintPage() {
           </button>
         </div>
       </div>
+
+      {/* Cover page (§5) — optional lead page for project quotes; own print page. */}
+      {showCover && d.customer_facing && (
+        <div className="mx-auto mb-6 flex max-w-3xl flex-col items-center justify-center rounded-xl bg-white p-12 text-center shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", minHeight: "60vh", breakAfter: "page" }}>
+          {d.company_info?.name && <div className="font-heading text-2xl font-bold tracking-wide" style={{ color: "var(--brand-primary)" }}>{d.company_info.name}</div>}
+          {d.company_info?.address && <div className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>{d.company_info.address}</div>}
+          <div className="mt-16 text-[11px] uppercase tracking-[0.3em]" style={{ color: "var(--text-muted)" }}>Quotation</div>
+          <h1 className="mt-2 font-heading text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>{d.title}</h1>
+          {d.company_name && <div className="mt-2 text-lg" style={{ color: "var(--text-primary)" }}>Prepared for {d.company_name}</div>}
+          <div className="mt-16 grid grid-cols-2 gap-x-10 gap-y-1 text-sm" style={{ color: "var(--text-muted)" }}>
+            <div className="text-right">Quotation No</div><div className="text-left" style={{ color: "var(--text-primary)" }}>{d.name}</div>
+            <div className="text-right">Revision</div><div className="text-left" style={{ color: "var(--text-primary)" }}>Rev {String(d.revision).padStart(2, "0")}</div>
+            {d.date && <><div className="text-right">Date</div><div className="text-left" style={{ color: "var(--text-primary)" }}>{d.date}</div></>}
+            {d.prepared_by && <><div className="text-right">Prepared By</div><div className="text-left" style={{ color: "var(--text-primary)" }}>{d.prepared_by}</div></>}
+          </div>
+          {d.company_info?.gstin && <div className="mt-16 text-[11px]" style={{ color: "var(--text-muted)" }}>GSTIN: {d.company_info.gstin}</div>}
+        </div>
+      )}
 
       <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
         {d.watermark && <div className="mb-4 text-center text-sm font-bold tracking-widest" style={{ color: "#dc2626" }}>{d.watermark}</div>}
