@@ -340,6 +340,46 @@ def list_reclaimed(status: str = None):
     }
 
 
+@frappe.whitelist()
+@handle_api_error
+def get_reuse_savings():
+    """Cost-savings dashboard (§ waste reduction): how much waste — measured by
+    salvage value — reuse has avoided, what's still reusable on hand, a per-material
+    breakdown of what was saved, and the most recently reused pieces."""
+    require_login()
+    rows = frappe.get_all(
+        "Vera Reclaimed Material", filters=scoped({}),
+        fields=["status", "core_material", "salvage_value", "material_title",
+                "reused_in"],
+        order_by="modified desc", limit_page_length=0)
+    reused = [r for r in rows if r.status == "Reused"]
+    on_hand = [r for r in rows if r.status in ("Available", "Reserved")]
+
+    by_mat = {}
+    for r in reused:
+        key = r.core_material or "Unspecified"
+        by_mat[key] = by_mat.get(key, 0) + _flt(r.salvage_value)
+    by_material = sorted(
+        ({"material": k, "value": round(v, 2)} for k, v in by_mat.items()),
+        key=lambda x: x["value"], reverse=True)
+
+    recent = [{
+        "material_title": r.material_title,
+        "value": _flt(r.salvage_value),
+        "project": _label("Vera CRM Opportunity", r.reused_in, "opportunity_title") or "—",
+    } for r in reused[:8]]
+
+    return {
+        "waste_avoided": sum(_flt(r.salvage_value) for r in reused),
+        "pieces_reused": len(reused),
+        "reusable_value": sum(_flt(r.salvage_value) for r in on_hand),
+        "available": sum(1 for r in on_hand if r.status == "Available"),
+        "reserved": sum(1 for r in on_hand if r.status == "Reserved"),
+        "by_material": by_material,
+        "recent_reused": recent,
+    }
+
+
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 @frappe.whitelist(methods=["POST"])

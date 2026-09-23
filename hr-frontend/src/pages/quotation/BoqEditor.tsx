@@ -119,6 +119,14 @@ export function BoqEditor() {
     await boqPost("save_lines", { name, lines: rows })
     refresh()
   }
+  async function reservePiece(pieceName: string) {
+    setBusy("reserve:" + pieceName)
+    try {
+      await reclaimedPost("reserve_reclaimed", { name: pieceName, opportunity: b?.opportunity ?? undefined })
+      toast.success("Reserved for this project")
+      qc.invalidateQueries({ queryKey: ["boq_reclaimed", name] })
+    } catch (e) { toast.error((e as Error)?.message ?? "Could not reserve") } finally { setBusy(null) }
+  }
   async function returnToInventory(values: DrawerValues) {
     setReturning(true)
     try {
@@ -251,15 +259,20 @@ export function BoqEditor() {
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {reuseHits.map((h) => (
-              <button key={h.name} onClick={() => navigate(`/quotation/reclaimed/${h.name}`)}
-                className="rounded-lg bg-white p-2.5 text-left" style={{ border: "0.5px solid #bbf7d0" }}>
+              <div key={h.name} className="rounded-lg bg-white p-2.5" style={{ border: "0.5px solid #bbf7d0" }}>
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{h.material_title}</div>
+                  <button onClick={() => navigate(`/quotation/reclaimed/${h.name}`)} className="text-left text-sm font-medium hover:underline" style={{ color: "var(--text-primary)" }}>{h.material_title}</button>
                   <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: h.score >= 70 ? "#dcfce7" : "#fef9c3", color: h.score >= 70 ? "#15803d" : "#854d0e" }}>{h.score}%</span>
                 </div>
                 <div className="text-xs" style={{ color: "var(--text-muted)" }}>{h.spec} · {h.dimensions}mm · fits {h.fits_unit}</div>
-                <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>📍 {h.location} · {h.why}</div>
-              </button>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>📍 {h.location} · {h.why}</div>
+                  <button onClick={() => reservePiece(h.name)} disabled={busy === "reserve:" + h.name}
+                    className="shrink-0 rounded px-2 py-0.5 text-[11px] font-semibold text-white disabled:opacity-60" style={{ background: "#15803d" }}>
+                    {busy === "reserve:" + h.name ? "…" : "Reserve"}
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </div>
