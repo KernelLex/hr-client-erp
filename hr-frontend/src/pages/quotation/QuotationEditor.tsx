@@ -29,6 +29,7 @@ interface Quotation {
   approved_with_conditions: number; conditions: string | null
   customer_acceptance: number; advance_received: number
   foc_value: number; installation_waiver: number; transport_waiver: number; price_override_percent: number
+  validity_days: number | null; delivery_period: string | null; installation_period: string | null; warranty_terms: string | null
   terms_template: string | null; terms_and_conditions: string | null
   editable: boolean; lines: GridRow[]; approval_log: GridRow[]; conversion_gate: Check[]
 }
@@ -65,7 +66,7 @@ export function QuotationEditor() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [busy, setBusy] = useState<string | null>(null)
-  const [form, setForm] = useState({ discount_percent: "", adjustment: "", gst_percent: "", credit_terms_standard: true, credit_terms: "", foc_value: "", installation_waiver: "", transport_waiver: "", price_override_percent: "" })
+  const [form, setForm] = useState({ discount_percent: "", adjustment: "", gst_percent: "", credit_terms_standard: true, credit_terms: "", foc_value: "", installation_waiver: "", transport_waiver: "", price_override_percent: "", validity_days: "", delivery_period: "", installation_period: "", warranty_terms: "" })
   const [dirty, setDirty] = useState(false)
   const [negotiated, setNegotiated] = useState("")
 
@@ -99,8 +100,12 @@ export function QuotationEditor() {
       installation_waiver: String(q.installation_waiver ?? ""),
       transport_waiver: String(q.transport_waiver ?? ""),
       price_override_percent: String(q.price_override_percent ?? ""),
+      validity_days: String(q.validity_days ?? ""),
+      delivery_period: q.delivery_period ?? "",
+      installation_period: q.installation_period ?? "",
+      warranty_terms: q.warranty_terms ?? "",
     })
-  }, [q?.name, q?.discount_percent, q?.adjustment, q?.gst_percent, q?.credit_terms_standard, q?.credit_terms, q?.foc_value, q?.installation_waiver, q?.transport_waiver, q?.price_override_percent])
+  }, [q?.name, q?.discount_percent, q?.adjustment, q?.gst_percent, q?.credit_terms_standard, q?.credit_terms, q?.foc_value, q?.installation_waiver, q?.transport_waiver, q?.price_override_percent, q?.validity_days, q?.delivery_period, q?.installation_period, q?.warranty_terms])
 
   function refresh() { qc.invalidateQueries({ queryKey: ["q_quotation", name] }) }
   function setField(k: string, v: string | boolean) { setForm((p) => ({ ...p, [k]: v })); setDirty(true) }
@@ -113,6 +118,8 @@ export function QuotationEditor() {
         credit_terms_standard: form.credit_terms_standard ? 1 : 0, credit_terms: form.credit_terms,
         foc_value: form.foc_value || 0, installation_waiver: form.installation_waiver || 0,
         transport_waiver: form.transport_waiver || 0, price_override_percent: form.price_override_percent || 0,
+        validity_days: form.validity_days || 0, delivery_period: form.delivery_period,
+        installation_period: form.installation_period, warranty_terms: form.warranty_terms,
       } })
       toast.success("Commercials updated"); setDirty(false); refresh()
     } catch (e) { toast.error((e as Error)?.message ?? "Could not save") } finally { setBusy(null) }
@@ -166,6 +173,14 @@ export function QuotationEditor() {
     <div>
       <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</div>
       <input type="number" value={form[k] as string} disabled={locked} onChange={(e) => setField(k, e.target.value)}
+        className="mt-0.5 w-full rounded px-2 py-1 text-sm disabled:opacity-60"
+        style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+    </div>
+  )
+  const txt = (k: keyof typeof form, label: string) => (
+    <div>
+      <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</div>
+      <input type="text" value={form[k] as string} disabled={locked} onChange={(e) => setField(k, e.target.value)}
         className="mt-0.5 w-full rounded px-2 py-1 text-sm disabled:opacity-60"
         style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
     </div>
@@ -264,6 +279,14 @@ export function QuotationEditor() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Delivery & execution terms (§29/§30/§35) */}
+        <div className="mt-4 grid grid-cols-2 gap-3 border-t pt-3 md:grid-cols-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          {num("validity_days", "Validity (days)")}
+          {txt("delivery_period", "Delivery Period")}
+          {txt("installation_period", "Installation Period")}
+          {txt("warranty_terms", "Warranty")}
         </div>
 
         {/* Workflow */}

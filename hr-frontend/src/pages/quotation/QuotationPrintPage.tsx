@@ -21,6 +21,7 @@ interface PrintDoc {
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
   cgst_percent?: number; cgst_amount?: number; sgst_percent?: number; sgst_amount?: number; amount_in_words?: string
   payment_schedule?: { stage: string; percent: number; amount: number }[]
+  validity_days?: number | null; delivery_period?: string | null; installation_period?: string | null; warranty_terms?: string | null
   company_info?: { name?: string; gstin?: string; phone?: string; email?: string; website?: string; address?: string }
   confidential?: boolean; cost_basis?: number; gross_profit?: number; gp_percent?: number
   target_gp_percent?: number; min_gp_percent?: number; cost_sheet?: string; conditions?: string
@@ -205,6 +206,21 @@ export function QuotationPrintPage() {
             {d.triggered_rules && (
               <div className="mt-2 text-[11px]" style={{ color: "#b91c1c" }}>
                 <span className="font-semibold">Triggered rules: </span>{d.triggered_rules}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Delivery & execution terms (§12/§29/§30/§35) — customer-facing. */}
+        {d.customer_facing && (d.validity_days || d.delivery_period || d.installation_period || d.warranty_terms) && (
+          <div className="mt-6 grid gap-3 border-t pt-4 md:grid-cols-2" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            {!!d.validity_days && <Row label="Quotation Validity" value={`${d.validity_days} days from date`} />}
+            {d.delivery_period && <Row label="Delivery Period" value={d.delivery_period} />}
+            {d.installation_period && <Row label="Installation Period" value={d.installation_period} />}
+            {d.warranty_terms && (
+              <div className="md:col-span-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Warranty</div>
+                <div className="text-sm" style={{ color: "var(--text-primary)" }}>{d.warranty_terms}</div>
               </div>
             )}
           </div>

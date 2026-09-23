@@ -50,6 +50,11 @@
   "lines",
   "approval_log_section",
   "approval_log",
+  "execution_section",
+  "validity_days",
+  "delivery_period",
+  "installation_period",
+  "warranty_terms",
   "terms_section",
   "terms_template",
   "terms_and_conditions",
@@ -206,6 +211,32 @@
    "fieldname": "credit_terms",
    "fieldtype": "Data",
    "label": "Credit Terms"
+  },
+  {
+   "fieldname": "execution_section",
+   "fieldtype": "Section Break",
+   "label": "Delivery & Execution"
+  },
+  {
+   "fieldname": "validity_days",
+   "fieldtype": "Int",
+   "label": "Validity (days)",
+   "default": "15"
+  },
+  {
+   "fieldname": "delivery_period",
+   "fieldtype": "Data",
+   "label": "Delivery Period"
+  },
+  {
+   "fieldname": "installation_period",
+   "fieldtype": "Data",
+   "label": "Installation Period"
+  },
+  {
+   "fieldname": "warranty_terms",
+   "fieldtype": "Small Text",
+   "label": "Warranty"
   },
   {
    "fieldname": "gp_section",

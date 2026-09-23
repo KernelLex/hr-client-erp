@@ -21,6 +21,8 @@ _HEADER_FIELDS = ("quotation_title", "opportunity", "company_name", "prepared_by
                   "discount_percent", "adjustment", "gst_percent",
                   "credit_terms_standard", "credit_terms", "terms_template",
                   "terms_and_conditions", "notes",
+                  # delivery & execution terms shown on the customer print (§29/§30/§35)
+                  "validity_days", "delivery_period", "installation_period", "warranty_terms",
                   # commercial concessions the approval matrix evaluates (§36-43)
                   "advance_received", "foc_value", "installation_waiver",
                   "transport_waiver", "price_override_percent")
@@ -243,6 +245,10 @@ def _serialize(doc):
         "price_override_percent": doc.price_override_percent,
         "terms_template": doc.terms_template,
         "terms_and_conditions": doc.terms_and_conditions,
+        "validity_days": doc.validity_days,
+        "delivery_period": doc.delivery_period,
+        "installation_period": doc.installation_period,
+        "warranty_terms": doc.warranty_terms,
         "notes": doc.notes,
         "source": doc.source,
         "editable": doc.status in _EDITABLE_STATUSES,
@@ -689,6 +695,11 @@ def get_quotation_print(name: str, fmt: str = "summary"):
         "terms_and_conditions": doc.terms_and_conditions,
         # Letterhead (§3) — only on customer-facing formats.
         "company_info": _company_info(doc.get("company")) if customer_facing else {},
+        # Delivery & execution terms (§12/§29/§30/§35) — customer-facing.
+        "validity_days": doc.validity_days if customer_facing else None,
+        "delivery_period": doc.delivery_period if customer_facing else None,
+        "installation_period": doc.installation_period if customer_facing else None,
+        "warranty_terms": doc.warranty_terms if customer_facing else None,
     }
     # Commercial totals — shown on all except the pricing-free technical BOQ.
     if fmt != "technical":
