@@ -161,7 +161,9 @@ derived from the grand total at render time. **Schema change → needs `bench mi
 - **Catalogue now 7,333 SKUs across 11 vendors LIVE** ("Vendor MRP" price list; MRP-only, purchase_rate
   blank per §G — do NOT invent cost). Blum pricelist fully done: extracted + loaded.
 
-### G. Owner-data blockers — ✅ NOW ADMIN-INPUTTABLE (built 2026-09-23, commit `d3713c6`, PENDING DEPLOY)
+### G. Owner-data blockers — ✅ NOW ADMIN-INPUTTABLE + LIVE (built+deployed 2026-09-23, commit `d3713c6`)
+_✅ DEPLOYED LIVE 2026-09-23: rsync + `bench migrate` (8 new tables incl. hardware-package/vendor-cost-rule)_
+_+ supervisor restart + frontend rebuild/rsync; verified live (3 companies, 7,333 items 0 cost yet, endpoints 200)._
 Per owner instruction "give the admin the ability to input these in the system", all three
 owner-data gaps now have self-serve admin UI (no more waiting on a dev):
 - **Dealer / cost prices** → `/admin/cost-prices` (`vendor_cost.py` + `Vera Vendor Cost Rule`): enter a
