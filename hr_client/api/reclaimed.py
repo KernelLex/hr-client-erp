@@ -182,6 +182,49 @@ def suggest_for_boq(boq: str):
 
 @frappe.whitelist(methods=["POST"])
 @handle_api_error
+def create_from_boq_line(boq: str, line: str, quantity=None, reason: str = "Rejected"):
+    """One-click "return to inventory" from a BOQ line — pre-fills the reclaimed
+    record's spec (material, finish, thickness, edge, W×H×D, area) from the line
+    so a returned/rejected piece is logged without retyping. Links it back to the
+    source BOQ + project."""
+    require_login()
+    doc = frappe.get_doc("Vera BOQ", boq)
+    assert_doc_company(doc)
+    ln = next((r for r in doc.lines if r.name == line), None)
+    if not ln:
+        frappe.throw("That BOQ line was not found on this BOQ.")
+    material = ln.carcass_material or ln.shutter_material
+    finish = ln.internal_finish or ln.external_finish
+    title = " — ".join(x for x in [ln.unit_name or ln.area, material] if x) or "Returned material"
+    rec = frappe.new_doc("Vera Reclaimed Material")
+    rec.update({
+        "material_title": title,
+        "status": "Available",
+        "company": doc.get("company") or current_company(),
+        "source_project": doc.opportunity,
+        "source_boq": doc.name,
+        "return_date": frappe.utils.today(),
+        "return_reason": reason if reason in (
+            "Rejected", "Surplus / Leftover", "Project Cancelled",
+            "Damaged (usable)", "Offcut", "Other") else "Rejected",
+        "category": ln.category,
+        "core_material": material,
+        "finish": finish,
+        "thickness": ln.carcass_thickness or ln.shutter_thickness,
+        "edge_banding": ln.edge_banding,
+        "width": _flt(ln.width),
+        "height": _flt(ln.height),
+        "depth": _flt(ln.depth),
+        "quantity": _flt(quantity) or _flt(ln.quantity) or 1,
+        "uom": ln.uom,
+    })
+    rec.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "name": rec.name}
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
 def create_reclaimed(payload):
     require_login()
     data = _clean(payload)

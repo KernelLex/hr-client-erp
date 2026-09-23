@@ -7,11 +7,12 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
-import { boqGet, boqPost, reclaimedGet } from "../peoplework/client"
+import { boqGet, boqPost, reclaimedGet, reclaimedPost } from "../peoplework/client"
 import { StatusPill } from "../peoplework/components/Pills"
 import { StageBar } from "./components/StageBar"
 import { DocumentLinkBar } from "./components/DocumentLinkBar"
 import { RegisterGrid, type GridCol, type GridRow } from "./components/RegisterGrid"
+import { RecordDrawer, type FieldSpec, type DrawerValues } from "../peoplework/components/RecordDrawer"
 
 interface BOQ {
   name: string
@@ -73,6 +74,8 @@ export function BoqEditor() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [busy, setBusy] = useState<string | null>(null)
+  const [returnOpen, setReturnOpen] = useState(false)
+  const [returning, setReturning] = useState(false)
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["q_boq", name],
@@ -115,6 +118,15 @@ export function BoqEditor() {
   async function saveLines(rows: GridRow[]) {
     await boqPost("save_lines", { name, lines: rows })
     refresh()
+  }
+  async function returnToInventory(values: DrawerValues) {
+    setReturning(true)
+    try {
+      const res = await reclaimedPost<{ name: string }>("create_from_boq_line", { boq: name, line: values.line, quantity: values.quantity, reason: values.reason })
+      toast.success("Logged to reclaimed inventory")
+      setReturnOpen(false)
+      navigate(`/quotation/reclaimed/${res.name}`)
+    } catch (e) { toast.error((e as Error)?.message ?? "Could not log return") } finally { setReturning(false) }
   }
   async function action(endpoint: string, label: string, then?: (res: { name?: string }) => void) {
     setBusy(endpoint)
@@ -253,6 +265,26 @@ export function BoqEditor() {
         </div>
       )}
 
+      <div className="mb-2 flex justify-end">
+        <button onClick={() => setReturnOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold" style={{ border: "1px solid #bbf7d0", color: "#15803d", background: "#f0fdf4" }}>
+          ♻ Return material to inventory
+        </button>
+      </div>
+      <RecordDrawer
+        open={returnOpen}
+        title="Return material to inventory"
+        subtitle="Log a returned / rejected piece from a line — its spec and size are pulled from the line."
+        fields={[
+          { name: "line", label: "Which line came back?", type: "select", required: true,
+            options: (b.lines ?? []).map((l) => ({ value: String(l.name), label: `${l.unit_name || l.area || "Line"}${l.carcass_material ? " · " + l.carcass_material : ""}${l.width ? ` · ${l.width}×${l.height}` : ""}` })) },
+          { name: "quantity", label: "Quantity returned", type: "text", placeholder: "leave blank for the full line qty" },
+          { name: "reason", label: "Reason", type: "select", options: ["Rejected", "Surplus / Leftover", "Project Cancelled", "Damaged (usable)", "Offcut", "Other"].map((v) => ({ value: v, label: v })) },
+        ] as FieldSpec[]}
+        submitLabel="Log & Open"
+        submitting={returning}
+        onClose={() => setReturnOpen(false)}
+        onSubmit={returnToInventory}
+      />
       <RegisterGrid title="BOQ Lines" columns={cols} rows={b.lines} editable={!locked}
         onSave={saveLines} emptyLabel="No lines yet. Add a line or build this BOQ on a measurement." />
     </div>
