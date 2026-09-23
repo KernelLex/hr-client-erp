@@ -2,10 +2,12 @@
 // that ties a customer project together: the opportunity header + a rollup of
 // the latest revision, status and value of each document in the six-stage chain,
 // with a jump into whichever stage exists. Read-only aggregation (no schema).
+import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
-import { ArrowLeft, ArrowRight } from "lucide-react"
-import { projectGet } from "../peoplework/client"
+import { ArrowLeft, ArrowRight, Plus, Lock } from "lucide-react"
+import { toast } from "sonner"
+import { projectGet, measurementPost, boqPost, costSheetPost, quotationPost } from "../peoplework/client"
 
 interface Stage {
   name: string; status?: string | null; revision?: number | null
@@ -25,6 +27,12 @@ interface Overview {
   }
   quoted_value?: number | null
   confirmed_value?: number | null
+  next_action?: NextAction
+}
+interface NextAction {
+  stage: "measurement" | "boq" | "cost_sheet" | "quotation" | "sales_order" | "done"
+  ready: boolean; label: string; reason?: string
+  parent?: string; open?: keyof Overview["stages"]; open_name?: string
 }
 
 const inr = (n?: number | null) => (n == null ? "—" : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n))
@@ -37,9 +45,15 @@ const STAGE_DEFS: { key: keyof Overview["stages"]; label: string; route: string 
   { key: "sales_order", label: "Sales Order", route: "sales-orders" },
 ]
 
+const STAGE_ROUTE: Record<string, string> = {
+  measurement: "measurements", boq: "boqs", cost_sheet: "cost-sheets",
+  quotation: "quotations", sales_order: "sales-orders",
+}
+
 export function ProjectControlPage() {
   const { name = "" } = useParams()
   const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
 
   const { data: d, isLoading, isError, error } = useQuery({
     queryKey: ["project_overview", name],
@@ -47,10 +61,29 @@ export function ProjectControlPage() {
     staleTime: 0, refetchOnMount: "always",
   })
 
+  // §5 action buttons — create the next stage from here, then open it. Each create
+  // endpoint enforces its own approval gate; a thrown message surfaces as a toast.
+  async function startNext(na: NextAction, title: string) {
+    setBusy(true)
+    try {
+      let res: { name: string }
+      if (na.stage === "measurement") res = await measurementPost("create_measurement", { payload: { measurement_title: `${title} — Measurement`, opportunity: name } })
+      else if (na.stage === "boq") res = await boqPost("create_boq", { payload: { boq_title: `${title} — BOQ`, measurement_sheet: na.parent } })
+      else if (na.stage === "cost_sheet") res = await costSheetPost("create_cost_sheet", { payload: { cost_title: `${title} — Cost Sheet`, boq: na.parent } })
+      else if (na.stage === "quotation") res = await quotationPost("create_quotation", { payload: { quotation_title: `${title} — Quotation`, cost_sheet: na.parent } })
+      else return
+      toast.success(`${na.label.replace("Start ", "")} created`)
+      navigate(`/quotation/${STAGE_ROUTE[na.stage]}/${res.name}`)
+    } catch (e) {
+      toast.error((e as Error)?.message ?? "Could not create")
+    } finally { setBusy(false) }
+  }
+
   if (isLoading) return <div className="p-6" style={{ color: "var(--text-muted)" }}>Loading…</div>
   if (isError || !d) return <div className="p-6" style={{ color: "#dc2626" }}>Could not load: {(error as Error)?.message ?? "not found"}</div>
 
   const o = d.opportunity
+  const na = d.next_action
   return (
     <div className="p-6">
       <button onClick={() => navigate("/quotation/projects")} className="mb-4 inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--text-muted)" }}>
@@ -105,6 +138,35 @@ export function ProjectControlPage() {
           )
         })}
       </div>
+
+      {/* Next action (§5) — the single step that moves the project forward. */}
+      {na && na.stage !== "done" && (
+        <div className="mt-5 flex items-center justify-between rounded-xl bg-white p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Next step</div>
+            <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{na.label}</div>
+            {!na.ready && na.reason && <div className="text-xs" style={{ color: "var(--text-muted)" }}>{na.reason}</div>}
+          </div>
+          {na.ready ? (
+            <button onClick={() => startNext(na, o.title)} disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              style={{ background: "var(--brand-primary)" }}>
+              <Plus size={16} /> {na.label}
+            </button>
+          ) : na.open && na.open_name ? (
+            <button onClick={() => navigate(`/quotation/${STAGE_ROUTE[na.open!]}/${na.open_name}`)}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold"
+              style={{ border: "1px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+              <Lock size={14} /> Open {na.open.replace("_", " ")}
+            </button>
+          ) : null}
+        </div>
+      )}
+      {na && na.stage === "done" && (
+        <div className="mt-5 rounded-xl p-4 text-sm font-medium" style={{ background: "#ecfdf5", color: "#15803d" }}>
+          ✓ {na.label}
+        </div>
+      )}
     </div>
   )
 }

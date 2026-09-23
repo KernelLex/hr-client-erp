@@ -54,6 +54,42 @@ def _latest(doctype: str, opp: str, extra_fields: list, value_field: str = None,
     return out
 
 
+def _next_action(stages: dict):
+    """The single next step that moves the project forward (§5 action buttons).
+    `create` steps are ready when the prior stage is Approved and the current one
+    doesn't exist yet; otherwise the user is pointed at the doc to approve/convert.
+    Each stage's `parent` is the link the create endpoint needs."""
+    ms, boq, cs = stages["measurement"], stages["boq"], stages["cost_sheet"]
+    q, so = stages["quotation"], stages["sales_order"]
+    st = lambda s: (s or {}).get("status")
+
+    if not ms:
+        return {"stage": "measurement", "ready": True, "label": "Start Measurement"}
+    if st(ms) != "Approved":
+        return {"stage": "boq", "ready": False, "label": "Start BOQ",
+                "reason": "Approve the measurement revision to start the BOQ.",
+                "open": "measurement", "open_name": ms["name"]}
+    if not boq:
+        return {"stage": "boq", "ready": True, "label": "Start BOQ", "parent": ms["name"]}
+    if st(boq) != "Approved":
+        return {"stage": "cost_sheet", "ready": False, "label": "Start Cost Sheet",
+                "reason": "Approve the BOQ to start the cost sheet.",
+                "open": "boq", "open_name": boq["name"]}
+    if not cs:
+        return {"stage": "cost_sheet", "ready": True, "label": "Start Cost Sheet", "parent": boq["name"]}
+    if st(cs) != "Approved":
+        return {"stage": "quotation", "ready": False, "label": "Start Quotation",
+                "reason": "Approve the cost sheet to start the quotation.",
+                "open": "cost_sheet", "open_name": cs["name"]}
+    if not q:
+        return {"stage": "quotation", "ready": True, "label": "Start Quotation", "parent": cs["name"]}
+    if not so:
+        return {"stage": "sales_order", "ready": False, "label": "Convert to Sales Order",
+                "reason": "Open the quotation to submit, approve, record acceptance, then convert.",
+                "open": "quotation", "open_name": q["name"]}
+    return {"stage": "done", "ready": False, "label": "Project quoted & confirmed"}
+
+
 @frappe.whitelist()
 @handle_api_error
 def get_project_overview(opportunity: str):
@@ -93,6 +129,7 @@ def get_project_overview(opportunity: str):
         "stages": stages,
         "quoted_value": quoted,
         "confirmed_value": confirmed,
+        "next_action": _next_action(stages),
     }
 
 
