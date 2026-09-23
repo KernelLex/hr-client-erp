@@ -7,7 +7,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
-import { boqGet, boqPost } from "../peoplework/client"
+import { boqGet, boqPost, reclaimedGet } from "../peoplework/client"
 import { StatusPill } from "../peoplework/components/Pills"
 import { StageBar } from "./components/StageBar"
 import { DocumentLinkBar } from "./components/DocumentLinkBar"
@@ -61,6 +61,11 @@ const LINE_COLS: GridCol[] = [
   { key: "line_status", label: "Status", type: "select", options: ["Draft", "Complete"], width: 90 },
 ]
 
+interface ReuseHit {
+  name: string; material_title: string; spec: string; dimensions: string
+  location: string; fits_unit: string; score: number; why: string; salvage_value: number
+}
+
 const inr = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0)
 
 export function BoqEditor() {
@@ -84,6 +89,14 @@ export function BoqEditor() {
     queryFn: () => boqGet<Record<string, string[]>>("get_boq_options"),
     staleTime: 5 * 60 * 1000,
   })
+
+  // Reclaimed stock that could be reused on this BOQ's lines (waste reduction).
+  const { data: reuse } = useQuery({
+    queryKey: ["boq_reclaimed", name],
+    queryFn: () => reclaimedGet<{ suggestions: ReuseHit[] }>("suggest_for_boq", { boq: name }),
+    staleTime: 60 * 1000,
+  })
+  const reuseHits = reuse?.suggestions ?? []
 
   // Turn the mapped free-text columns into selects; each option list is the
   // masters ∪ any value already on a line, so existing data is never dropped.
@@ -218,6 +231,27 @@ export function BoqEditor() {
           </ul>
         )}
       </div>
+
+      {reuseHits.length > 0 && (
+        <div className="mb-4 rounded-xl p-4 shadow-sm" style={{ border: "0.5px solid #bbf7d0", background: "#f0fdf4" }}>
+          <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wide" style={{ color: "#15803d" }}>
+            ♻ Reclaimed stock you can reuse ({reuseHits.length})
+          </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            {reuseHits.map((h) => (
+              <button key={h.name} onClick={() => navigate(`/quotation/reclaimed/${h.name}`)}
+                className="rounded-lg bg-white p-2.5 text-left" style={{ border: "0.5px solid #bbf7d0" }}>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{h.material_title}</div>
+                  <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: h.score >= 70 ? "#dcfce7" : "#fef9c3", color: h.score >= 70 ? "#15803d" : "#854d0e" }}>{h.score}%</span>
+                </div>
+                <div className="text-xs" style={{ color: "var(--text-muted)" }}>{h.spec} · {h.dimensions}mm · fits {h.fits_unit}</div>
+                <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>📍 {h.location} · {h.why}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <RegisterGrid title="BOQ Lines" columns={cols} rows={b.lines} editable={!locked}
         onSave={saveLines} emptyLabel="No lines yet. Add a line or build this BOQ on a measurement." />

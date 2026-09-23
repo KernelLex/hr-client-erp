@@ -95,22 +95,11 @@ def _match_open_boqs(doc):
 
     out = []
     for ln in lines:
-        score, reasons = 0, []
-        if material and material in (ln.carcass_material, ln.shutter_material):
-            score += 40; reasons.append(f"material {material}")
-        if finish and finish in (ln.internal_finish, ln.external_finish):
-            score += 25; reasons.append(f"finish {finish}")
-        if thickness and thickness in (ln.carcass_thickness, ln.shutter_thickness):
-            score += 15; reasons.append(f"thickness {thickness}")
+        score, why = _score(material, finish, thickness, rw, rh, ln)
         if score < 40:
             continue  # need at least a material match to be relevant
-        # dimension fit — reclaimed piece must cover the required size (cut down)
-        req_w, req_h = _flt(ln.width), _flt(ln.height)
-        if (rw or rh) and (req_w or req_h):
-            fits = (rw + tol >= req_w) and (rh + tol >= req_h)
-            score += 15 if fits else 0
-            reasons.append("fits the size" if fits else "piece is smaller — check")
         b = boq_by_name.get(ln.parent)
+        req_w, req_h = _flt(ln.width), _flt(ln.height)
         out.append({
             "boq": ln.parent,
             "boq_title": b.boq_title if b else ln.parent,
@@ -119,11 +108,74 @@ def _match_open_boqs(doc):
             "area": ln.area,
             "unit_name": ln.unit_name,
             "required": f"{req_w:.0f}×{req_h:.0f}" if (req_w or req_h) else "—",
-            "score": min(score, 100),
-            "why": ", ".join(reasons),
+            "score": score,
+            "why": why,
         })
     out.sort(key=lambda r: r["score"], reverse=True)
     return out[:20]
+
+
+def _score(material, finish, thickness, rw, rh, ln, tol=2.0):
+    """Score one reclaimed piece (material/finish/thickness display names + W/H mm)
+    against one BOQ line. Returns (0-100 score, reason string). A piece can be cut
+    DOWN to size but never enlarged, so it must cover the required dimensions."""
+    score, reasons = 0, []
+    if material and material in (ln.get("carcass_material"), ln.get("shutter_material")):
+        score += 40; reasons.append(f"material {material}")
+    if finish and finish in (ln.get("internal_finish"), ln.get("external_finish")):
+        score += 25; reasons.append(f"finish {finish}")
+    if thickness and thickness in (ln.get("carcass_thickness"), ln.get("shutter_thickness")):
+        score += 15; reasons.append(f"thickness {thickness}")
+    if score < 40:
+        return 0, ""
+    req_w, req_h = _flt(ln.get("width")), _flt(ln.get("height"))
+    if (rw or rh) and (req_w or req_h):
+        fits = (rw + tol >= req_w) and (rh + tol >= req_h)
+        score += 15 if fits else 0
+        reasons.append("fits the size" if fits else "piece is smaller — check")
+    return min(score, 100), ", ".join(reasons)
+
+
+@frappe.whitelist()
+@handle_api_error
+def suggest_for_boq(boq: str):
+    """Reverse matcher for the BOQ editor: available reclaimed pieces that could
+    be reused on this BOQ's lines, best match first (§ waste reduction)."""
+    require_login()
+    doc = frappe.get_doc("Vera BOQ", boq)
+    assert_doc_company(doc)
+    stock = frappe.get_all(
+        "Vera Reclaimed Material", filters=scoped({"status": "Available"}),
+        fields=["name", "material_title", "core_material", "finish", "thickness",
+                "colour", "width", "height", "depth", "quantity", "uom",
+                "warehouse", "rack", "salvage_value"], limit_page_length=500)
+    if not stock:
+        return {"suggestions": []}
+    out = []
+    for s in stock:
+        best, best_line = 0, None
+        for ln in doc.lines:
+            score, why = _score(s.core_material, s.finish, s.thickness,
+                                 _flt(s.width), _flt(s.height), ln)
+            if score > best:
+                best, best_line = score, (ln, why)
+        if best < 40 or not best_line:
+            continue
+        ln, why = best_line
+        dims = "×".join(f"{_flt(x):.0f}" for x in (s.width, s.height, s.depth) if _flt(x)) or "—"
+        out.append({
+            "name": s.name,
+            "material_title": s.material_title,
+            "spec": " · ".join(x for x in [s.core_material, s.finish, s.colour] if x) or "—",
+            "dimensions": dims,
+            "location": " / ".join(x for x in [s.warehouse, s.rack] if x) or "—",
+            "fits_unit": ln.get("unit_name") or ln.get("area") or "—",
+            "score": best,
+            "why": why,
+            "salvage_value": _flt(s.salvage_value),
+        })
+    out.sort(key=lambda r: r["score"], reverse=True)
+    return {"suggestions": out[:15]}
 
 
 # ── CRUD ──────────────────────────────────────────────────────────────────────
