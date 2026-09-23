@@ -136,10 +136,18 @@ derived from the grand total at render time. **Schema change → needs `bench mi
   from masters (§63–§64). Email subject (§78). IGST vs CGST/SGST by **place of supply** (§68 —
   currently intra-state split); needs a place-of-supply/customer-state field (schema).
 
-### F. Vendor pricelists — P1 tail (owner data)
-- **Blum** (322 MB, ~80% scanned) — request source Excel; do NOT blind-OCR.
-- **Kesseböhmer** — BOM sets, MRP not in extractable text; needs vision + BOM disentangling OR
-  owner price file. Currently 6,651 SKUs loaded from 9 vendors ("Vendor MRP" price list).
+### F. Vendor pricelists — P1 tail — ✅ Kesseböhmer DONE + LIVE, Blum in progress (2026-09-23)
+- **Kesseböhmer — ✅ DONE + LIVE (261 SKUs).** The MRP *is* in the PDF text layer (bare integers, no
+  ₹/comma — earlier scans looked for rupee/comma and missed it). `parsers/kesseboehmer.py` coordinate
+  parser anchors each BOM Article to its y-aligned MRP; child components aren't separately priced. Loaded
+  to prod ("Vendor MRP" list) — no vision needed.
+- **Blum — 🟡 IN PROGRESS (30 SKUs live, pages 5/6/15).** Fully scanned (0 text) BUT a clean tabular
+  pricelist (Article ID / Material Desc / Information / UoM / MOQ / MRP), legible at 220dpi → vision-
+  extractable (NOT blind OCR). Pipeline: `render.py` half-page crops → read → `vision_ingest.save_vision_rows`
+  → `run.py` folds → `load_items`. ~25 price pages remain — continue the vision batch (render halves of
+  pages ~3-30, transcribe, save, load) or drop in the owner's source Excel.
+- **Catalogue now 6,942 SKUs across 11 vendors** ("Vendor MRP" price list; MRP-only, purchase_rate blank
+  per §G — do NOT invent cost).
 
 ### G. Owner-data blockers
 - **Dealer / cost prices** — catalogs are MRP-only; costing purchase_rate is unknown until owner
