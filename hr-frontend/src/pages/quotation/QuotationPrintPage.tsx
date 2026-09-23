@@ -3,6 +3,7 @@
 // and Internal Costing (confidential — shows cost basis + GP). The backend
 // redacts cost/GP from the three customer formats; this page renders whatever it
 // is given and exposes the browser print dialog.
+import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft, Printer } from "lucide-react"
@@ -42,10 +43,29 @@ export function QuotationPrintPage() {
     staleTime: 0, refetchOnMount: "always",
   })
 
+  // Print-setting toggles (§2/§26) — customer prints can hide dimensions / per-line
+  // rates / the discount line to suit the audience. Default: show everything.
+  const [showDimensions, setShowDimensions] = useState(true)
+  const [showRates, setShowRates] = useState(true)
+  const [showDiscount, setShowDiscount] = useState(true)
+
+  // PDF auto file-naming (§77) — drive the browser "Save as PDF" default filename
+  // via the document title while this page is mounted, then restore it.
+  useEffect(() => {
+    if (!d) return
+    const prev = document.title
+    const fmtSlug = (d.format_label || d.format || "Quotation").replace(/[^A-Za-z0-9]+/g, "_")
+    document.title = `VE_QTN_${d.name}_Rev${String(d.revision).padStart(2, "0")}_${fmtSlug}`
+    return () => { document.title = prev }
+  }, [d])
+
   if (isLoading) return <div className="p-6" style={{ color: "var(--text-muted)" }}>Loading…</div>
   if (isError || !d) return <div className="p-6" style={{ color: "#dc2626" }}>Could not load: {(error as Error)?.message ?? "not found"}</div>
 
   const showPricing = d.grand_total != null // technical BOQ omits all pricing
+  const rates = showPricing && showRates
+  // Columns preceding the Amount column in the detailed grid (for the Section Total colSpan).
+  const preAmountCols = 1 /* Specification */ + (showDimensions ? 1 : 0) + 1 /* Qty */ + 1 /* UOM */ + (rates ? 1 : 0)
 
   return (
     <div className="p-6">
@@ -53,7 +73,15 @@ export function QuotationPrintPage() {
         <button onClick={() => navigate(`/quotation/quotations/${name}`)} className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--text-muted)" }}>
           <ArrowLeft size={14} /> Back to quotation
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Print-setting toggles (§2/§26) — customer formats with pricing only. */}
+          {d.customer_facing && d.format !== "summary" && (
+            <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
+              <Toggle label="Dimensions" checked={showDimensions} onChange={setShowDimensions} />
+              {showPricing && <Toggle label="Rates" checked={showRates} onChange={setShowRates} />}
+              {showPricing && <Toggle label="Discount" checked={showDiscount} onChange={setShowDiscount} />}
+            </div>
+          )}
           {d.confidential && <span className="rounded-md px-2 py-1 text-[11px] font-semibold" style={{ background: "#fdeaea", color: "#dc2626" }}>CONFIDENTIAL — Internal Only</span>}
           <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white" style={{ background: "var(--brand-primary)" }}>
             <Printer size={15} /> Print
@@ -115,9 +143,9 @@ export function QuotationPrintPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ color: "var(--text-muted)" }} className="text-left text-[11px] uppercase tracking-wide">
-                    <th className="py-1">Specification</th><th className="py-1">Measurement</th>
+                    <th className="py-1">Specification</th>{showDimensions && <th className="py-1">Measurement</th>}
                     <th className="py-1 text-right">Qty</th><th className="py-1">UOM</th>
-                    {showPricing && <th className="py-1 text-right">Rate</th>}
+                    {rates && <th className="py-1 text-right">Rate</th>}
                     {showPricing && <th className="py-1 text-right">Amount</th>}
                   </tr>
                 </thead>
@@ -125,16 +153,16 @@ export function QuotationPrintPage() {
                   {s.lines.map((ln, i) => (
                     <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
                       <td className="py-1">{ln.specification || "—"}</td>
-                      <td className="py-1">{ln.measurement || "—"}</td>
+                      {showDimensions && <td className="py-1">{ln.measurement || "—"}</td>}
                       <td className="py-1 text-right">{ln.quantity ?? "—"}</td>
                       <td className="py-1">{ln.uom || "—"}</td>
-                      {showPricing && <td className="py-1 text-right">{inr(ln.rate)}</td>}
+                      {rates && <td className="py-1 text-right">{inr(ln.rate)}</td>}
                       {showPricing && <td className="py-1 text-right">{inr(ln.gross_amount)}</td>}
                     </tr>
                   ))}
                   {showPricing && (
                     <tr className="border-t font-semibold" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
-                      <td className="py-1" colSpan={5}>Section Total — {s.section}</td>
+                      <td className="py-1" colSpan={preAmountCols}>Section Total — {s.section}</td>
                       <td className="py-1 text-right">{inr(s.subtotal)}</td>
                     </tr>
                   )}
@@ -149,7 +177,7 @@ export function QuotationPrintPage() {
           <div className="mt-4 flex justify-end">
             <div className="w-72 space-y-1 text-sm">
               <Row label="Subtotal" value={inr(d.gross_total)} />
-              <Row label={`Discount (${d.discount_percent}%)`} value={`− ${inr(d.discount_amount)}`} />
+              {showDiscount && <Row label={`Discount (${d.discount_percent}%)`} value={`− ${inr(d.discount_amount)}`} />}
               {!!d.adjustment && <Row label="Adjustment" value={inr(d.adjustment)} />}
               <Row label="Taxable Value" value={inr(d.net_before_gst)} />
               <Row label={`CGST (${d.cgst_percent}%)`} value={inr(d.cgst_amount)} />
@@ -257,6 +285,15 @@ export function QuotationPrintPage() {
         )}
       </div>
     </div>
+  )
+}
+
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="inline-flex cursor-pointer items-center gap-1 select-none">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
+    </label>
   )
 }
 
