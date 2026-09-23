@@ -156,9 +156,10 @@ derived from the grand total at render time. **Schema change → needs `bench mi
   **GOTCHA (corrected the plan):** the old plan flagged "pages 3 & 4 = graphic AVENTOS exploded-diagram,
   harder." WRONG — page 3 is the Table of Contents, page 4 is a *clean* AVENTOS HF price table. Non-price
   pages are 1 (cover), 2 (cover), 3 (TOC), 31 (marketing) — verified, no data lost. Extraction is DONE.
-  NOT yet loaded to prod (loading `load_items` is a classifier-gated prod DB write — needs owner auth).
-- **Catalogue was 6,942 SKUs across 11 vendors** ("Vendor MRP" price list; MRP-only, purchase_rate blank
-  per §G — do NOT invent cost). Loading Blum's 421 to prod is the next owner-gated step.
+  **✅ LOADED LIVE TO PROD 2026-09-23** — `load_items.run(only='blum')` = 421 Items + 421 Item Prices,
+  0 errors (max Blum MRP ₹82,595; sample 5952958 = ₹13,857). Vendor MRP list now **7,333 prices** live.
+- **Catalogue now 7,333 SKUs across 11 vendors LIVE** ("Vendor MRP" price list; MRP-only, purchase_rate
+  blank per §G — do NOT invent cost). Blum pricelist fully done: extracted + loaded.
 
 ### G. Owner-data blockers
 - **Dealer / cost prices** — catalogs are MRP-only; costing purchase_rate is unknown until owner
