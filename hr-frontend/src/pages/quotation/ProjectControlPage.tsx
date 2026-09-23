@@ -29,6 +29,7 @@ interface Overview {
   }
   quoted_value?: number | null
   confirmed_value?: number | null
+  payment?: { deal_value: number; received: number; outstanding: number | null }
   next_action?: NextAction
 }
 interface NextAction {
@@ -142,6 +143,12 @@ export function ProjectControlPage() {
           <Metric label="Quoted Value" value={inr(d.quoted_value)} />
           <Metric label="Confirmed Value" value={inr(d.confirmed_value)} tone={d.confirmed_value ? "good" : undefined} />
         </div>
+        {d.payment && (d.payment.received > 0 || d.payment.outstanding != null) && (
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <Metric label="Advance Received" value={inr(d.payment.received)} tone={d.payment.received > 0 ? "good" : undefined} />
+            <Metric label="Outstanding" value={inr(d.payment.outstanding)} />
+          </div>
+        )}
         <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
           <div className="mb-1.5 flex items-center justify-between">
             <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Project Details</div>

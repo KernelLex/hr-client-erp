@@ -107,13 +107,21 @@ def get_project_overview(opportunity: str):
         "cost_sheet": _latest("Vera Cost Sheet", opportunity,
                               ["projected_gp_percent"], "selling_total"),
         "quotation": _latest("Vera Sales Quotation", opportunity,
-                             ["required_authority", "sales_order"], "grand_total"),
+                             ["required_authority", "sales_order", "advance_received"], "grand_total"),
         "sales_order": _latest("Vera Sales Order", opportunity, [], "grand_total",
                                revisioned=False),
     }
     # Confirmed value = the sales order's grand total; else the latest quotation's.
     confirmed = (stages["sales_order"] or {}).get("value")
     quoted = (stages["quotation"] or {}).get("value")
+    # Payment rollup (§5) — advance recorded on the latest quotation vs the deal value.
+    deal_value = confirmed or quoted or 0.0
+    received = _flt((stages["quotation"] or {}).get("advance_received"))
+    payment = {
+        "deal_value": deal_value,
+        "received": received,
+        "outstanding": round(_flt(deal_value) - received, 2) if deal_value else None,
+    }
     return {
         "opportunity": {
             "name": opp.name,
@@ -135,6 +143,7 @@ def get_project_overview(opportunity: str):
         "stages": stages,
         "quoted_value": quoted,
         "confirmed_value": confirmed,
+        "payment": payment,
         "next_action": _next_action(stages),
     }
 
