@@ -1,6 +1,6 @@
 # Quotation Module — NEXT PLAN (what's left)
 
-_Resume file. Last updated 2026-09-23. Branch `feature/quotation-module`, repo `/home/vera/vera-erp/hr-client-erp`._
+_Resume file. Last updated 2026-09-23 (Blum pricelist extraction COMPLETE — 421 SKUs). Branch `feature/quotation-module`, repo `/home/vera/vera-erp/hr-client-erp`._
 
 > **How to resume:** read this file first, then the memory note `project-quotation-module.md`
 > (full milestone log M1–M34), then `HANDOFF_MULTICOMPANY.md` + `CLAUDE.md` for base context.
@@ -136,27 +136,29 @@ derived from the grand total at render time. **Schema change → needs `bench mi
   from masters (§63–§64). Email subject (§78). IGST vs CGST/SGST by **place of supply** (§68 —
   currently intra-state split); needs a place-of-supply/customer-state field (schema).
 
-### F. Vendor pricelists — P1 tail — ✅ Kesseböhmer DONE + LIVE, Blum in progress (2026-09-23)
+### F. Vendor pricelists — P1 tail — ✅ Kesseböhmer DONE + LIVE, Blum ✅ EXTRACTION COMPLETE (2026-09-23)
 - **Kesseböhmer — ✅ DONE + LIVE (261 SKUs).** The MRP *is* in the PDF text layer (bare integers, no
   ₹/comma — earlier scans looked for rupee/comma and missed it). `parsers/kesseboehmer.py` coordinate
   parser anchors each BOM Article to its y-aligned MRP; child components aren't separately priced. Loaded
   to prod ("Vendor MRP" list) — no vision needed.
-- **Blum — 🟡 IN PROGRESS (94 SKUs extracted, pages 5/6/7/8/9/10/15).** Fully scanned (0 text) BUT a clean
-  tabular pricelist (Article ID / Material Desc / Information / UoM / MOQ / MRP), legible at 220dpi → vision-
-  extractable (NOT blind OCR). Pipeline: `render.py` crops → read → `vision_ingest.save_vision_rows`
-  → `run.py` folds → `load_items`.
-  **2026-09-23 batch: transcribed pages 7-10 (30→94 SKUs, 0 null MRP).** New RESUMABLE accumulator at
-  `pricelist_import/data/vision/blum_rows.json` (seeded from prior output) — append each page's rows there,
+- **Blum — ✅ EXTRACTION COMPLETE (421 unique SKUs, 0 null MRP; ALL price pages 4–30 transcribed).**
+  32-page PDF, fully scanned (0 text) BUT a clean tabular pricelist (Article ID / Material Desc /
+  Information / UoM / MOQ / MRP), legible at 300dpi → vision-extractable (NOT blind OCR). Pipeline:
+  `render.py` crops → read → `vision_ingest.save_vision_rows` → `run.py` folds → `load_items`.
+  **RESUMABLE accumulator at `pricelist_import/data/vision/blum_rows.json`** — append each page's rows there,
   then `python3 -m hr_client.pricelist_import.vision_ingest blum <that file>` regenerates the normalized
   csv/json (it OVERWRITES, so always pass the full accumulator; item_code dedup is built in).
   **Method that works:** render 300dpi TOP+BOTTOM half-crops (`hpNNNN_t/_b.png`); if a row is cut at the
-  50% seam, render a mid strip (y 0.42–0.60, `hpNNNN_m.png`) to recover it. TIP-ON component blocks repeat
-  across hinge pages (8 vs 10) → dedup drops them, expected.
-  **~22 price pages remain: 3, 4, 11, 12, 13, 14, 16-31** (3 & 4 are the graphic AVENTOS exploded-diagram
-  pages — harder). Continue the vision batch or drop in the owner's source Excel. NOT yet loaded to prod
-  (loading `load_items` is a classifier-gated prod DB write — needs owner auth).
-- **Catalogue now 6,942 SKUs across 11 vendors** ("Vendor MRP" price list; MRP-only, purchase_rate blank
-  per §G — do NOT invent cost).
+  50% seam, render a mid strip (y 0.40–0.62, `hpNNNN_m.png`) to recover it. SERVO-DRIVE / TIP-ON component
+  blocks repeat across pages → dedup drops them, expected (14 of page-28's 17 rows were repeats).
+  **2026-09-23 FINAL batch: pages 28 (SERVO-DRIVE, mostly dups), 29 (AMBIA-LINE, 30 rows), 30 (Assembly
+  Devices/jigs, 12 rows), 4 (AVENTOS HF lift-up, 20 rows) → 356→421 SKUs.**
+  **GOTCHA (corrected the plan):** the old plan flagged "pages 3 & 4 = graphic AVENTOS exploded-diagram,
+  harder." WRONG — page 3 is the Table of Contents, page 4 is a *clean* AVENTOS HF price table. Non-price
+  pages are 1 (cover), 2 (cover), 3 (TOC), 31 (marketing) — verified, no data lost. Extraction is DONE.
+  NOT yet loaded to prod (loading `load_items` is a classifier-gated prod DB write — needs owner auth).
+- **Catalogue was 6,942 SKUs across 11 vendors** ("Vendor MRP" price list; MRP-only, purchase_rate blank
+  per §G — do NOT invent cost). Loading Blum's 421 to prod is the next owner-gated step.
 
 ### G. Owner-data blockers
 - **Dealer / cost prices** — catalogs are MRP-only; costing purchase_rate is unknown until owner
