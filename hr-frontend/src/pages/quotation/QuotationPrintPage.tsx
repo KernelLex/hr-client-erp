@@ -17,7 +17,7 @@ interface PrintSection { section: string; subtotal: number; lines: PrintLine[] }
 interface PrintDoc {
   format: string; format_label: string; customer_facing: boolean; watermark: string | null
   name: string; revision: number; title: string; company_name: string | null; status: string
-  lines: PrintLine[]; sections?: PrintSection[]; terms_and_conditions: string | null; assumptions?: string | null
+  lines: PrintLine[]; sections?: PrintSection[]; optional_lines?: PrintLine[]; terms_and_conditions: string | null; assumptions?: string | null
   gross_total?: number; discount_percent?: number; discount_amount?: number; adjustment?: number
   net_before_gst?: number; gst_percent?: number; gst_amount?: number; grand_total?: number
   cgst_percent?: number; cgst_amount?: number; sgst_percent?: number; sgst_amount?: number; amount_in_words?: string
@@ -197,6 +197,35 @@ export function QuotationPrintPage() {
         )}
         {showPricing && d.amount_in_words && (
           <div className="mt-2 text-right text-xs italic" style={{ color: "var(--text-muted)" }}>{d.amount_in_words}</div>
+        )}
+
+        {/* Optional / alternate items (§23/§24) — priced add-ons, not in the grand total. */}
+        {(d.optional_lines?.length ?? 0) > 0 && (
+          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Optional Items <span className="normal-case font-normal">(not included in the grand total)</span></div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ color: "var(--text-muted)" }} className="text-left text-[11px] uppercase tracking-wide">
+                  <th className="py-1">Specification</th>{showDimensions && <th className="py-1">Measurement</th>}
+                  <th className="py-1 text-right">Qty</th><th className="py-1">UOM</th>
+                  {rates && <th className="py-1 text-right">Rate</th>}
+                  {showPricing && <th className="py-1 text-right">Amount</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {d.optional_lines!.map((ln, i) => (
+                  <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                    <td className="py-1">{ln.specification || "—"}</td>
+                    {showDimensions && <td className="py-1">{ln.measurement || "—"}</td>}
+                    <td className="py-1 text-right">{ln.quantity ?? "—"}</td>
+                    <td className="py-1">{ln.uom || "—"}</td>
+                    {rates && <td className="py-1 text-right">{inr(ln.rate)}</td>}
+                    {showPricing && <td className="py-1 text-right">{inr(ln.gross_amount)}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Payment schedule (§28) — customer-facing, derived from the grand total. */}

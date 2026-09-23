@@ -59,7 +59,10 @@ def _apply_maths(doc):
     gross = 0.0
     for ln in doc.lines:
         ln.gross_amount = round(_flt(ln.quantity) * _flt(ln.rate), 2)
-        gross += ln.gross_amount
+        # Optional / alternate items (§23/§24) are priced but excluded from the
+        # grand total — the customer sees them as add-ons, not part of the deal.
+        if not ln.get("is_optional"):
+            gross += ln.gross_amount
     doc.gross_total = round(gross, 2)
     doc.discount_amount = round(gross * _flt(doc.discount_percent) / 100.0, 2)
     doc.net_before_gst = round(gross - doc.discount_amount + _flt(doc.adjustment), 2)
@@ -259,7 +262,8 @@ def _serialize(doc):
         "notes": doc.notes,
         "source": doc.source,
         "editable": doc.status in _EDITABLE_STATUSES,
-        "lines": [ln.as_dict() for ln in doc.lines],
+        "lines": [dict(ln.as_dict(), is_optional=("Optional" if ln.get("is_optional") else ""))
+                  for ln in doc.lines],
         "approval_log": [r.as_dict() for r in doc.approval_log],
         "conversion_gate": _conversion_checks(doc),
     }
@@ -350,7 +354,9 @@ def save_lines(name: str, lines):
     _assert_editable(doc)
     doc.set("lines", [])
     for r in _rows_of(lines, "lines"):
-        doc.append("lines", {k: r.get(k) for k in _LINE_FIELDS if r.get(k) is not None})
+        row = {k: r.get(k) for k in _LINE_FIELDS if r.get(k) is not None}
+        row["is_optional"] = 1 if str(r.get("is_optional") or "").strip().lower() in ("optional", "yes", "1", "true") else 0
+        doc.append("lines", row)
     _refresh_engine(doc)
     doc.save(ignore_permissions=True)
     frappe.db.commit()
@@ -710,7 +716,7 @@ def get_quotation_print(name: str, fmt: str = "summary"):
     assert_doc_company(doc)
     customer_facing = fmt in _CUSTOMER_FORMATS
 
-    lines = []
+    lines, optional_lines = [], []
     for ln in doc.lines:
         row = {
             "line_type": ln.line_type,
@@ -723,7 +729,9 @@ def get_quotation_print(name: str, fmt: str = "summary"):
         if fmt != "technical":  # technical BOQ has no pricing
             row["rate"] = ln.rate
             row["gross_amount"] = ln.gross_amount
-        lines.append(row)
+        # Optional / alternate items (§23/§24) print in their own table and never
+        # roll into the section subtotals or the grand total.
+        (optional_lines if ln.get("is_optional") else lines).append(row)
 
     # Group lines into sections with subtotals — the customer-facing hierarchy
     # the print spec mandates (§15/§25). Order is preserved as first-seen.
@@ -750,6 +758,7 @@ def get_quotation_print(name: str, fmt: str = "summary"):
         "status": doc.status,
         "lines": lines,
         "sections": sections,
+        "optional_lines": optional_lines,
         "terms_and_conditions": doc.terms_and_conditions,
         "assumptions": doc.assumptions if customer_facing else None,
         # Letterhead (§3) — only on customer-facing formats.

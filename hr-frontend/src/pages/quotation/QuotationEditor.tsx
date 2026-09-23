@@ -52,6 +52,7 @@ const LINE_COLS: GridCol[] = [
   { key: "uom", label: "UOM", width: 55 },
   { key: "rate", label: "Rate", type: "number", width: 90 },
   { key: "gross_amount", label: "Gross", readOnly: true, width: 100 },
+  { key: "is_optional", label: "Optional?", type: "select", options: ["", "Optional"], width: 90 },
 ]
 const LOG_COLS: GridCol[] = [
   { key: "action", label: "Action", width: 150 },
