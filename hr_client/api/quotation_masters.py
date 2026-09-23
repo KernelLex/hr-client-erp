@@ -456,6 +456,11 @@ _SEED_UNITS = [
 
 
 def _seed_rows(doctype, rows_as_dicts):
+    # These masters are company-scoped on some deployments (mandatory `company`
+    # field) and global on others — set company only when the field exists so the
+    # rows are visible to the same scoped reads the BOQ dropdowns use.
+    has_company = frappe.get_meta(doctype).has_field("company")
+    company = current_company() if has_company else None
     n = 0
     for data in rows_as_dicts:
         if frappe.db.exists(doctype, data["code"]):
@@ -464,6 +469,8 @@ def _seed_rows(doctype, rows_as_dicts):
         doc.update(data)
         doc.status = "Active"
         doc.source = "ERP"
+        if has_company:
+            doc.company = company
         doc.insert(ignore_permissions=True)
         n += 1
     return n
