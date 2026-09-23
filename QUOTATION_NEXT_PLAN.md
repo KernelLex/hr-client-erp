@@ -161,14 +161,22 @@ derived from the grand total at render time. **Schema change → needs `bench mi
 - **Catalogue now 7,333 SKUs across 11 vendors LIVE** ("Vendor MRP" price list; MRP-only, purchase_rate
   blank per §G — do NOT invent cost). Blum pricelist fully done: extracted + loaded.
 
-### G. Owner-data blockers
-- **Dealer / cost prices** — catalogs are MRP-only; costing purchase_rate is unknown until owner
-  supplies. Do NOT invent cost. (selling_rate = MRP; purchase_rate blank.)
-- Confirm the Company record (Vera Enterprises) has address + GSTIN populated so the print
-  letterhead (M30) shows full details. **Address FOUND** (2026-09-23, from `Ledger Formate.pdf` in the
-  spec folder): _Vera Enterprises — No. 535/3, Ground Floor, 3rd Main, 'A' Block, Rajajinagar 2nd Stage,
-  Bengaluru – 560010_ (Schönes Leben = 2nd Floor, same building). GSTIN still needed from owner. To apply:
-  set the Company doc's address (prod DB write → needs deploy auth); not yet done.
+### G. Owner-data blockers — ✅ NOW ADMIN-INPUTTABLE (built 2026-09-23, commit `d3713c6`, PENDING DEPLOY)
+Per owner instruction "give the admin the ability to input these in the system", all three
+owner-data gaps now have self-serve admin UI (no more waiting on a dev):
+- **Dealer / cost prices** → `/admin/cost-prices` (`vendor_cost.py` + `Vera Vendor Cost Rule`): enter a
+  dealer discount% per brand → "Apply discounts" derives cost = MRP×(1−%) onto a **"Vendor Cost"** buying
+  price list; also a per-item cost override + coverage KPI. Costing can then read real cost via
+  `vendor_cost.get_item_cost()` (wiring the cost sheet to auto-pull this = a small follow-up). Still: do
+  NOT invent cost — the owner types it. (selling_rate = MRP; purchase_rate now owner-supplied.)
+- **GSTIN + letterhead** → `/admin/company-settings` (`company_profile.py`): owner enters GSTIN
+  (Company.tax_id) + address/phone/email/website per company → feeds the M30 print letterhead directly.
+  **GSTIN CONFIRMED not in the materials** (checked every PDF incl. `Ledger Formate.pdf` — only addresses).
+  Both addresses captured: VE = No. 535/3, Ground Floor, 3rd Main, 'A' Block, Rajajinagar 2nd Stage,
+  Bengaluru 560010; Schönes Leben = 2nd Floor, same building; both Karnataka (GST state code 29).
+- **Hardware packages** → `/quotation/hardware-packages` (`hardware_package.py` + `Vera Hardware Package`
+  +item child): owner builds Standard/Premium/Luxury bundles from the live catalogue (item search
+  auto-fills MRP), sets qty + auto/manual package price (PRD §25).
 - **Real quote format reference** (spec folder `Mr. Venkatesh Adiga Quote -20022024.pdf`): area-grouped
   (A/B/C… per room), description = `PRODUCT — <Finish> FINISH  W*D*H` mm, columns `Sr | Item Description |
   Qty | Rates (Rs) | Total (Rs)`; Kitchen shows Internal + External finish lines. Matches current customer
