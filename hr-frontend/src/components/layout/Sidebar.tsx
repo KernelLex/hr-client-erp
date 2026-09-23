@@ -229,7 +229,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
     ) setHrOpen(true)
     if (p.startsWith("/todo/")) setTodoOpen(true)
     if (p === "/drive" || p.startsWith("/accounts") || p === "/verify" || p === "/ai-insights" || p === "/graphs") setDocsOpen(true)
-    if (p === "/admin/users" || p === "/admin/permissions" || p === "/admin/company-settings" || p === "/admin/cost-prices") setAdminOpen(true)
+    if (p === "/admin/users" || p === "/admin/permissions" || p === "/admin/company-settings" || p === "/admin/cost-prices" || p === "/admin/finish-rates") setAdminOpen(true)
   }, [location.pathname])
 
   function makeToggle(setter: React.Dispatch<React.SetStateAction<boolean>>, key: string) {
@@ -525,6 +525,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <SubItem to="/admin/permissions" label="Permissions" isActive={isPermsActive} adminBadge onClick={close} />
               <SubItem to="/admin/company-settings" label="Company Settings" isActive={path === "/admin/company-settings"} adminBadge onClick={close} />
               <SubItem to="/admin/cost-prices" label="Cost / Dealer Prices" isActive={path === "/admin/cost-prices"} adminBadge onClick={close} />
+              <SubItem to="/admin/finish-rates" label="Finish / Material Rates" isActive={path === "/admin/finish-rates"} adminBadge onClick={close} />
             </GroupBody>
           </>
         )}

@@ -19,6 +19,7 @@ import frappe
 from hr_client.api.utils import (
     require_login, require_admin, handle_api_error, current_company, allowed_companies,
 )
+from hr_client.api.finish_rate import get_rate as _finish_rate_lookup
 
 MR = "Vera Material Requirement"
 PO = "Vera Procurement PO"
@@ -54,6 +55,11 @@ def _rate_for(item_code, fallback=0.0):
         if m:
             return _flt(m)
     return _flt(fallback)
+
+
+def _finish_rate(item_name, scope, company):
+    """Owner-supplied per-SFT rate for a named material/finish/edge band (or 0)."""
+    return _finish_rate_lookup(item_name, scope, company)
 
 
 def _find_package(pkg_value):
@@ -104,21 +110,27 @@ def build_requirement(project: str):
     if not boq_name:
         frappe.throw("No BOQ found for this project's opportunity yet.")
     boq = frappe.get_doc("Vera BOQ", boq_name)
+    company = proj.company or current_company()
 
     bucket = {}
     for ln in boq.get("lines") or []:
         area_qty = _flt(ln.calc_qty) or _flt(ln.quantity)
         lid = ln.name
         if ln.carcass_material:
-            _add(bucket, "Carcass", ln.carcass_material, ln.carcass_thickness, area_qty, ln.uom, None, 0, boq_name, lid)
+            _add(bucket, "Carcass", ln.carcass_material, ln.carcass_thickness, area_qty, ln.uom, None,
+                 _finish_rate(ln.carcass_material, "Carcass", company), boq_name, lid)
         if ln.shutter_material:
-            _add(bucket, "Shutter", ln.shutter_material, ln.shutter_thickness, area_qty, ln.uom, None, 0, boq_name, lid)
+            _add(bucket, "Shutter", ln.shutter_material, ln.shutter_thickness, area_qty, ln.uom, None,
+                 _finish_rate(ln.shutter_material, "Shutter", company), boq_name, lid)
         if ln.internal_finish:
-            _add(bucket, "Finish", ln.internal_finish, "Internal", area_qty, ln.uom, None, 0, boq_name, lid)
+            _add(bucket, "Finish", ln.internal_finish, "Internal", area_qty, ln.uom, None,
+                 _finish_rate(ln.internal_finish, "Finish", company), boq_name, lid)
         if ln.external_finish:
-            _add(bucket, "Finish", ln.external_finish, "External", area_qty, ln.uom, None, 0, boq_name, lid)
+            _add(bucket, "Finish", ln.external_finish, "External", area_qty, ln.uom, None,
+                 _finish_rate(ln.external_finish, "Finish", company), boq_name, lid)
         if ln.edge_banding:
-            _add(bucket, "Edge Band", ln.edge_banding, "", area_qty, "RFT", None, 0, boq_name, lid)
+            _add(bucket, "Edge Band", ln.edge_banding, "", area_qty, "RFT", None,
+                 _finish_rate(ln.edge_banding, "Edge Band", company), boq_name, lid)
         if ln.hardware_package:
             _expand_hardware_package(ln.hardware_package, _flt(ln.quantity) or 1, bucket, boq_name, lid)
 

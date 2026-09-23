@@ -123,6 +123,9 @@ export const vendorCostPost = apiPostFactory("vendor_cost")
 export const hardwarePackageGet = apiGetFactory("hardware_package")
 export const hardwarePackagePost = apiPostFactory("hardware_package")
 
+export const finishRateGet = apiGetFactory("finish_rate")
+export const finishRatePost = apiPostFactory("finish_rate")
+
 export const projectExecGet = apiGetFactory("project_execution")
 export const projectExecPost = apiPostFactory("project_execution")
 
