@@ -2,7 +2,7 @@
 // with live totals, the line grid (quantities + amounts computed server-side on
 // save), a validation panel, and the workflow (submit → approve, gated on
 // validation; or create a revision once locked).
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, AlertTriangle, CheckCircle2 } from "lucide-react"
@@ -76,6 +76,27 @@ export function BoqEditor() {
     refetchOnMount: "always",
   })
   const b = data?.boq
+
+  // Spec dropdowns sourced from the studio masters (§4.7) — a line's material/
+  // finish/hardware then always resolves against what the validator checks.
+  const { data: options } = useQuery({
+    queryKey: ["q_boq_options"],
+    queryFn: () => boqGet<Record<string, string[]>>("get_boq_options"),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // Turn the mapped free-text columns into selects; each option list is the
+  // masters ∪ any value already on a line, so existing data is never dropped.
+  const cols = useMemo<GridCol[]>(() => {
+    if (!options) return LINE_COLS
+    return LINE_COLS.map((c) => {
+      const master = options[c.key]
+      if (!master) return c
+      const existing = (b?.lines ?? []).map((r) => String(r[c.key] ?? "").trim()).filter(Boolean)
+      const opts = Array.from(new Set([...master, ...existing]))
+      return { ...c, type: "select", options: opts } as GridCol
+    })
+  }, [options, b?.lines])
 
   function refresh() { qc.invalidateQueries({ queryKey: ["q_boq", name] }) }
   async function saveLines(rows: GridRow[]) {
@@ -198,7 +219,7 @@ export function BoqEditor() {
         )}
       </div>
 
-      <RegisterGrid title="BOQ Lines" columns={LINE_COLS} rows={b.lines} editable={!locked}
+      <RegisterGrid title="BOQ Lines" columns={cols} rows={b.lines} editable={!locked}
         onSave={saveLines} emptyLabel="No lines yet. Add a line or build this BOQ on a measurement." />
     </div>
   )

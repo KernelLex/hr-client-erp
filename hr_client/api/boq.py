@@ -144,6 +144,53 @@ def _validate_lines(doc):
     return issues
 
 
+# ── Dropdown option sources for the BOQ line editor (§4.7 masters) ────────────
+
+def _master_names(doctype, label_field):
+    """Distinct, sorted display names from a master — company-scoped only when the
+    doctype actually has a company column, and Active-only when it has a status."""
+    meta = frappe.get_meta(doctype)
+    filters = {}
+    if meta.has_field("status"):
+        filters["status"] = "Active"
+    if meta.has_field("company"):
+        filters = scoped(filters)
+    rows = frappe.get_all(doctype, filters=filters, fields=[label_field], order_by=label_field)
+    seen, out = set(), []
+    for r in rows:
+        v = (r.get(label_field) or "").strip()
+        if v and v not in seen:
+            seen.add(v)
+            out.append(v)
+    return out
+
+
+@frappe.whitelist()
+@handle_api_error
+def get_boq_options():
+    """Option lists that drive the BOQ line editor's spec dropdowns — sourced from
+    the studio masters so a line's material/finish/hardware always resolves against
+    the masters the validator checks (§4.3). Values are the masters' display names."""
+    require_login()
+    materials = _master_names("Vera Quotation Material", "material_name")
+    finishes = _master_names("Vera Quotation Finish", "finish_name")
+    thickness = _master_names("Vera Thickness", "thickness_name")
+    hardware = _master_names("Vera Quotation Hardware", "hardware_item")
+    return {
+        "category": _master_names("Vera Product Category", "category_name"),
+        "area": _master_names("Vera Area", "area_name"),
+        "unit_name": _master_names("Vera Quotation Unit", "unit_name"),
+        "carcass_material": materials,
+        "shutter_material": materials,
+        "carcass_thickness": thickness,
+        "shutter_thickness": thickness,
+        "internal_finish": finishes,
+        "external_finish": finishes,
+        "edge_banding": _master_names("Vera Edge Band", "edge_name"),
+        "hardware_package": hardware,
+    }
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # LIST / DETAIL
 # ══════════════════════════════════════════════════════════════════════════════
