@@ -112,6 +112,17 @@ derived from the grand total at render time. **Schema change → needs `bench mi
 - `supplying_company` on BOQ lines → internal PO to the sibling company on Sales Order confirm.
 - Seed ~6 `Intercompany Ledger Map` rows; call `intercompany.tag_intercompany()` post-import.
 
+### J. Reclaimed / returned materials inventory — ✅ BUILT (commits c362197+a2e25b2, NOT deployed)
+User-requested waste-reduction feature. `Vera Reclaimed Material` (+ image child) logs returned/
+rejected/surplus stock with full spec (material/finish/colour/thickness/edge, W×H×D, qty, condition,
+salvage value), storage location (warehouse/rack/bin), multiple photos, and an Available→Reserved→
+Reused→Scrapped lifecycle. `reclaimed.py` reuse matcher scans open BOQ lines and scores material/
+finish/thickness + dimension-fit (a piece can be cut down, not up) so a returned piece surfaces the
+current jobs it can be reused on, each reservable in a click. Frontend: list + detail (spec form,
+image gallery, "Where it can be used" panel). Schema → needs migrate. REMAINING ideas: QR/barcode
+labels, a Storage Location master, cost-savings dashboard (total salvage reused), auto-suggest
+reclaimed stock inside the BOQ editor when a line's spec matches available inventory.
+
 ### I. Project execution lifecycle (owner "projects idea.txt") — whole new phase
 Beyond quotation: 3D/2D design stage + 10% advance, material requirement sheet, VOQ + vendor
 selection, production drawings, dispatch → site → carpenter coordination, installation, alterations,
