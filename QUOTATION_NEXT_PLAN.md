@@ -22,26 +22,33 @@ print → convert** flow, verified end-to-end on prod (12/12 E2E). Shipped M22�
 - Document Link Bar (chain nav) + revision comparison
 - Math regression test `hr_client/tests/verify_quotation_math.py` (9/9)
 
-**M35 (2026-09-23, commit `eafa35b`) — configurable payment schedule (§28) built, NOT yet deployed
-(schema change → pending `bench migrate` authorization).** See §1.D.
+- **M35 (`eafa35b`) — configurable payment schedule (§28). ✅ DEPLOYED LIVE 2026-09-23** (bench migrate
+  clean, child table live, site 200). See §1.D.
+- **M36 (`b21bf8d`) — print-setting toggles + PDF auto file-naming (§2/§26/§77).** Frontend-only, built,
+  committed, **NOT yet deployed** (prod-deploy classifier gate — needs authorization). See §1.E.
+- **M37 (`2fc0ed8`) — Project Control Screen (§5) core.** Backend aggregator + 2 React pages, **no
+  schema**, built, committed, **NOT yet deployed** (same gate). See §1.A.
 
-Everything below is **NOT yet built** (except §1.D which is built, pending deploy).
+**PENDING DEPLOY (batched, no migrate needed):** M36 (frontend) + M37 (rsync `project_overview.py` +
+supervisor restart + frontend rebuild/rsync). Verify site 200 + bundle strings after.
+
+Everything below is **NOT yet built** except §1.D (deployed), §1.E-toggles (M36) and §1.A-core (M37).
 
 ---
 
 ## 1. Remaining work — prioritized
 
-### A. Project Control Screen (spec UI §5) — HIGH VALUE, larger build
-A single screen that ties a customer project together. Needs a **new doctype** (e.g. `Vera Project`)
-or reuse `Vera CRM Opportunity` as the anchor.
-- Header: project name, customer, opportunity, site address, architect, designer, salesperson,
-  PM, status, estimated value, confirmed value, target completion.
-- Summary cards: Measurement / BOQ / Cost Sheet / Quotation (latest rev + status + value),
-  Sales Order (confirmed value), Payment (received/outstanding), Project Margin (mgmt only).
-- Action buttons (enable only when prerequisites exist): Create Measurement / BOQ / Cost Sheet /
-  Quotation / Material Selection, Upload Drawing, Create Variation, View Activity.
-- Backend: an aggregator endpoint returning the latest revision + status of each chain doc for a
-  project/opportunity (reuse `get_document_chain` logic).
+### A. Project Control Screen (spec UI §5) — ✅ CORE DONE (M37, commit 2fc0ed8, NOT yet deployed; no schema)
+BUILT (anchored on `Vera CRM Opportunity`, no new doctype): `hr_client/api/project_overview.py` —
+`get_project_overview(opportunity)` rolls up the latest non-superseded revision + status + value of
+each chain doc (Measurement/BOQ/Cost Sheet/Quotation/Sales Order); `list_projects()` returns the
+ArchetypePage payload; company-scoped via the kernel. Frontend: `ProjectsPage` (list) +
+`ProjectControlPage` (header w/ estimated/quoted/confirmed value + 5 stage rollup cards, jump into
+each stage) + routes `/quotation/projects[/:name]` + sidebar "Projects". Read-only aggregation, **no
+migrate needed** — deploy = rsync `project_overview.py` + supervisor restart + frontend rebuild/rsync.
+REMAINING (later, needs schema/owner design): site address / architect / designer / PM header fields;
+Payment received/outstanding card; action buttons to CREATE the next stage from this screen;
+Create-Variation / Upload-Drawing / activity feed.
 
 ### B. Measurement product-type templates (spec UI §8–§10, PRD §10–§13, "Measurement & BOQ Masters by Product Type")
 - Product-type-specific measurement UIs (Kitchen: base/wall/tall unit dims, site conditions,
@@ -68,15 +75,15 @@ reads stored rows when set, else falls back to the standard 10/40/40/10 template
 derived from the grand total at render time. **Schema change → needs `bench migrate` on deploy**
 (deploy sequence in §2). Code-complete + committed on `feature/quotation-module`; tsc clean.
 
-### E. Print refinements (spec print format) — medium, mostly optional toggles
-- Cover page for large project quotes (§5).
-- "BOQ Without Price" format toggle (§46) — technical format already omits price; add explicit option.
-- Alternate options (§23) + Optional items not in grand total (§24).
-- Customer selection status table (§34), Assumptions section (§33).
-- Item/finish/appliance images from masters (§63–§64).
-- PDF auto file-naming `VE_QTN_..._Customer.pdf` (§77) + email subject (§78).
-- IGST vs CGST/SGST by **place of supply** (§68) — currently defaults to intra-state CGST/SGST split.
-- Print-setting toggles (§2/§26): show/hide images, dimensions, rates, discount, brand, model.
+### E. Print refinements (spec print format) — partly done (M36)
+- ✅ **DONE (M36, commit b21bf8d, NOT yet deployed; frontend-only):** Print-setting toggles (§2/§26 —
+  show/hide dimensions, per-line rates, discount line; Section-Total colSpan recomputes) + PDF auto
+  file-naming `VE_QTN_<name>_Rev<nn>_<Format>` via `document.title` (§77).
+- Remaining: Cover page for large project quotes (§5). "BOQ Without Price" (§46 — technical already
+  omits price; add explicit option). Alternate options (§23) + Optional items not in grand total (§24).
+  Customer selection status table (§34), Assumptions section (§33). Item/finish/appliance images
+  from masters (§63–§64). Email subject (§78). IGST vs CGST/SGST by **place of supply** (§68 —
+  currently intra-state split); needs a place-of-supply/customer-state field (schema).
 
 ### F. Vendor pricelists — P1 tail (owner data)
 - **Blum** (322 MB, ~80% scanned) — request source Excel; do NOT blind-OCR.
