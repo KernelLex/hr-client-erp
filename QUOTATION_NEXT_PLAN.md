@@ -141,11 +141,20 @@ derived from the grand total at render time. **Schema change → needs `bench mi
   ₹/comma — earlier scans looked for rupee/comma and missed it). `parsers/kesseboehmer.py` coordinate
   parser anchors each BOM Article to its y-aligned MRP; child components aren't separately priced. Loaded
   to prod ("Vendor MRP" list) — no vision needed.
-- **Blum — 🟡 IN PROGRESS (30 SKUs live, pages 5/6/15).** Fully scanned (0 text) BUT a clean tabular
-  pricelist (Article ID / Material Desc / Information / UoM / MOQ / MRP), legible at 220dpi → vision-
-  extractable (NOT blind OCR). Pipeline: `render.py` half-page crops → read → `vision_ingest.save_vision_rows`
-  → `run.py` folds → `load_items`. ~25 price pages remain — continue the vision batch (render halves of
-  pages ~3-30, transcribe, save, load) or drop in the owner's source Excel.
+- **Blum — 🟡 IN PROGRESS (94 SKUs extracted, pages 5/6/7/8/9/10/15).** Fully scanned (0 text) BUT a clean
+  tabular pricelist (Article ID / Material Desc / Information / UoM / MOQ / MRP), legible at 220dpi → vision-
+  extractable (NOT blind OCR). Pipeline: `render.py` crops → read → `vision_ingest.save_vision_rows`
+  → `run.py` folds → `load_items`.
+  **2026-09-23 batch: transcribed pages 7-10 (30→94 SKUs, 0 null MRP).** New RESUMABLE accumulator at
+  `pricelist_import/data/vision/blum_rows.json` (seeded from prior output) — append each page's rows there,
+  then `python3 -m hr_client.pricelist_import.vision_ingest blum <that file>` regenerates the normalized
+  csv/json (it OVERWRITES, so always pass the full accumulator; item_code dedup is built in).
+  **Method that works:** render 300dpi TOP+BOTTOM half-crops (`hpNNNN_t/_b.png`); if a row is cut at the
+  50% seam, render a mid strip (y 0.42–0.60, `hpNNNN_m.png`) to recover it. TIP-ON component blocks repeat
+  across hinge pages (8 vs 10) → dedup drops them, expected.
+  **~22 price pages remain: 3, 4, 11, 12, 13, 14, 16-31** (3 & 4 are the graphic AVENTOS exploded-diagram
+  pages — harder). Continue the vision batch or drop in the owner's source Excel. NOT yet loaded to prod
+  (loading `load_items` is a classifier-gated prod DB write — needs owner auth).
 - **Catalogue now 6,942 SKUs across 11 vendors** ("Vendor MRP" price list; MRP-only, purchase_rate blank
   per §G — do NOT invent cost).
 
