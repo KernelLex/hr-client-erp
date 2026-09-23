@@ -29,10 +29,22 @@ print → convert** flow, verified end-to-end on prod (12/12 E2E). Shipped M22�
 - **M37 (`2fc0ed8`) — Project Control Screen (§5) core.** Backend aggregator + 2 React pages, **no
   schema**, built, committed, **NOT yet deployed** (same gate). See §1.A.
 
-**PENDING DEPLOY (batched, no migrate needed):** M36 (frontend) + M37 (rsync `project_overview.py` +
-supervisor restart + frontend rebuild/rsync). Verify site 200 + bundle strings after.
+- **M38 (`f4a9460`) — Project Control next-stage action buttons (§5).** LIVE.
+- **M39 (`11e932f`) — BOQ line spec dropdowns from masters (§4.3/§4.7, item C core).** LIVE.
+- **M40 (`af10e03`) — Assumptions section (§33).** Built. SCHEMA.
+- **M41 (`8a1b5f3`) — IGST vs CGST/SGST by place of supply (§68).** Built. SCHEMA.
+- **M42 (`55e4d6a`) — Optional / alternate line items (§23/§24).** Built. SCHEMA (line field).
+- **M43 (`e74f018`) — Project header fields + inline edit (§5).** Built. SCHEMA (opportunity fields).
+- **M44 (`246af28`) — Optional cover page on customer print (§5).** Built. code-only.
+- **M45 (`5cf8ba3`) — "Hide all prices" print toggle / BOQ without price (§46).** Built. frontend-only.
+- **M46 (`a315fef`) — Payment rollup on Project Control (§5).** Built. code-only (uses advance_received).
 
-Everything below is **NOT yet built** except §1.D (deployed), §1.E-toggles (M36) and §1.A-core (M37).
+**DEPLOYED THIS SESSION:** M35, M36, M37, M38, M39 (all LIVE).
+**PENDING DEPLOY (batched):** M40–M46. Migrate needed for M40/M41/M42/M43 (new fields on quotation,
+quotation line, opportunity). M44/M45/M46 are code-only. Deploy = rsync changed py + migrate +
+supervisor restart + frontend rebuild/rsync; verify site 200.
+
+Everything below is built except where marked NOT yet built (owner-data or large separate phases).
 
 ---
 
