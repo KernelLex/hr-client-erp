@@ -22,7 +22,10 @@ print → convert** flow, verified end-to-end on prod (12/12 E2E). Shipped M22�
 - Document Link Bar (chain nav) + revision comparison
 - Math regression test `hr_client/tests/verify_quotation_math.py` (9/9)
 
-Everything below is **NOT yet built.**
+**M35 (2026-09-23, commit `eafa35b`) — configurable payment schedule (§28) built, NOT yet deployed
+(schema change → pending `bench migrate` authorization).** See §1.D.
+
+Everything below is **NOT yet built** (except §1.D which is built, pending deploy).
 
 ---
 
@@ -57,11 +60,13 @@ BOQ/costing consume**, plus seed data and wiring into BOQ config dropdowns:
 - Pricing Methods master already has a page; confirm coverage (§26).
 - Wire these as the dropdown sources in the BOQ line editor (currently free-text fields).
 
-### D. Configurable payment schedule (spec print §28) — small
-Currently derived on the print from a fixed template (Booking 10 / Order 40 / Dispatch 40 /
-Handover 10). Upgrade to a stored, editable child table on the quotation so stages/percentages
-can be set per quote (Trading vs Project differ). Child doctype + editor grid + print reads stored
-rows (fall back to the derived default when none set).
+### D. Configurable payment schedule (spec print §28) — ✅ DONE (M35, commit eafa35b, NOT yet deployed)
+~~Currently derived on the print from a fixed template.~~ BUILT: `Vera Quotation Payment Stage`
+child table (stage + percent) on Vera Sales Quotation + `save_payment_schedule` endpoint (empty
+clears the override) + editable Payment Schedule grid in the quotation editor + `get_quotation_print`
+reads stored rows when set, else falls back to the standard 10/40/40/10 template — amount always
+derived from the grand total at render time. **Schema change → needs `bench migrate` on deploy**
+(deploy sequence in §2). Code-complete + committed on `feature/quotation-module`; tsc clean.
 
 ### E. Print refinements (spec print format) — medium, mostly optional toggles
 - Cover page for large project quotes (§5).
