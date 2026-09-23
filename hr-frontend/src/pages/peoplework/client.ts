@@ -109,6 +109,8 @@ export const costSheetPost = apiPostFactory("cost_sheet")
 export const quotationGet = apiGetFactory("quotation")
 export const quotationPost = apiPostFactory("quotation")
 
+export const projectGet = apiGetFactory("project_overview")
+
 export const termsGet = apiGetFactory("terms")
 export const termsPost = apiPostFactory("terms")
 

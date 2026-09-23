@@ -50,6 +50,8 @@ const ContactsPage = lazy(() => import("@/pages/crm/ContactsPage").then(m => ({ 
 const SalesTeamPage = lazy(() => import("@/pages/crm/SalesTeamPage").then(m => ({ default: m.SalesTeamPage })))
 const FollowupsPage = lazy(() => import("@/pages/crm/FollowupsPage").then(m => ({ default: m.FollowupsPage })))
 const PreQuotePage = lazy(() => import("@/pages/prequote/PreQuotePage"))
+const ProjectsPage = lazy(() => import("@/pages/quotation/ProjectsPage").then(m => ({ default: m.ProjectsPage })))
+const ProjectControlPage = lazy(() => import("@/pages/quotation/ProjectControlPage").then(m => ({ default: m.ProjectControlPage })))
 const MeasurementsPage = lazy(() => import("@/pages/quotation/MeasurementsPage").then(m => ({ default: m.MeasurementsPage })))
 const MeasurementEditor = lazy(() => import("@/pages/quotation/MeasurementEditor").then(m => ({ default: m.MeasurementEditor })))
 const BoqPage = lazy(() => import("@/pages/quotation/BoqPage").then(m => ({ default: m.BoqPage })))
@@ -157,6 +159,9 @@ function App() {
                 <Route path="/crm/:id" element={<LeadDetail />} />
                 {/* Quotation Studio — Pre-Quote (requirement capture → Opportunity) */}
                 <Route path="/quotation/prequote" element={<PreQuotePage />} />
+                {/* Quotation Studio — Project Control Screen (§5) */}
+                <Route path="/quotation/projects" element={<ProjectsPage />} />
+                <Route path="/quotation/projects/:name" element={<ProjectControlPage />} />
                 {/* Quotation Studio — Measurement Sheets (§4.2) */}
                 <Route path="/quotation/measurements" element={<MeasurementsPage />} />
                 <Route path="/quotation/measurements/:name" element={<MeasurementEditor />} />
