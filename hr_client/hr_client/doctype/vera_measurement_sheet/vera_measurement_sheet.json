@@ -27,6 +27,8 @@
   "obstructions",
   "services_section",
   "services",
+  "photos_section",
+  "photos",
   "notes_section",
   "notes",
   "source"
@@ -54,6 +56,8 @@
   {"fieldname": "obstructions", "fieldtype": "Table", "label": "Obstructions", "options": "Vera Measurement Obstruction"},
   {"fieldname": "services_section", "fieldtype": "Section Break", "label": "Services Register"},
   {"fieldname": "services", "fieldtype": "Table", "label": "Services", "options": "Vera Measurement Service"},
+  {"fieldname": "photos_section", "fieldtype": "Section Break", "label": "Site Photos"},
+  {"fieldname": "photos", "fieldtype": "Table", "label": "Photos", "options": "Vera Measurement Photo"},
   {"fieldname": "notes_section", "fieldtype": "Section Break", "label": "Notes"},
   {"fieldname": "notes", "fieldtype": "Text", "label": "Notes"},
   {"fieldname": "source", "fieldtype": "Data", "label": "Source", "default": "ERP", "read_only": 1}

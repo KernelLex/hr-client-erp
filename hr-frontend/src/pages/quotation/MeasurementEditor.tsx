@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import { measurementGet, measurementPost, measurementTemplateGet, measurementTemplatePost } from "../peoplework/client"
+import { uploadChatFile } from "../../api/chat"
 import { StatusPill } from "../peoplework/components/Pills"
 import { StageBar } from "./components/StageBar"
 import { DocumentLinkBar } from "./components/DocumentLinkBar"
@@ -32,7 +33,10 @@ interface Measurement {
   rows: GridRow[]
   obstructions: GridRow[]
   services: GridRow[]
+  photos: PhotoRow[]
 }
+
+interface PhotoRow { image: string; area?: string | null; caption?: string | null }
 
 const ROW_COLS: GridCol[] = [
   { key: "area", label: "Area", width: 90 },
@@ -101,6 +105,27 @@ export function MeasurementEditor() {
   async function saveRegister(register: string, rows: GridRow[]) {
     await measurementPost("save_register", { name, register, rows })
     refresh()
+  }
+  async function savePhotos(rows: PhotoRow[]) {
+    await measurementPost("save_register", { name, register: "photos", rows })
+    refresh()
+  }
+  function updatePhotoField(i: number, field: "area" | "caption", value: string) {
+    if (!m || (m.photos[i]?.[field] ?? "") === value) return
+    savePhotos(m.photos.map((p, j) => (j === i ? { ...p, [field]: value } : p)))
+  }
+  async function onUploadPhotos(files: FileList | null) {
+    if (!files?.length || !m) return
+    setBusy("photo")
+    try {
+      const next = [...m.photos]
+      for (const f of Array.from(files)) {
+        const r = await uploadChatFile(f)
+        next.push({ image: r.file_url, area: "", caption: "" })
+      }
+      await savePhotos(next)
+      toast.success("Photos added")
+    } catch (e) { toast.error((e as Error)?.message ?? "Upload failed") } finally { setBusy(null) }
   }
   async function action(endpoint: string, label: string, then?: (res: { name?: string }) => void) {
     setBusy(endpoint)
@@ -223,6 +248,51 @@ export function MeasurementEditor() {
         onSave={(rows) => saveRegister("obstructions", rows)} emptyLabel="No obstructions recorded." />
       <RegisterGrid title="Services Register" columns={SERVICE_COLS} rows={m.services} editable={!locked}
         onSave={(rows) => saveRegister("services", rows)} emptyLabel="No services recorded." />
+
+      {/* Site photos (§11) — capture the site per area alongside the dimensions. */}
+      <div className="mt-4 rounded-xl p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+            Site Photos {m.photos.length > 0 && `(${m.photos.length})`}
+          </div>
+          {!locked && (
+            <label className="cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-60" style={{ background: "var(--brand-primary)" }}>
+              {busy === "photo" ? "Uploading…" : "+ Add photos"}
+              <input type="file" accept="image/*" multiple className="hidden" disabled={busy === "photo"}
+                onChange={(e) => { onUploadPhotos(e.target.files); e.target.value = "" }} />
+            </label>
+          )}
+        </div>
+        {m.photos.length === 0 ? (
+          <div className="py-4 text-center text-xs" style={{ color: "var(--text-muted)" }}>No site photos yet.</div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {m.photos.map((p, i) => (
+              <div key={i} className="overflow-hidden rounded-lg" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+                <a href={p.image} target="_blank" rel="noreferrer">
+                  <img src={p.image} alt={p.caption || `Site photo ${i + 1}`} className="h-32 w-full object-cover" />
+                </a>
+                <div className="space-y-1 p-1.5">
+                  {locked ? (
+                    <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>{[p.area, p.caption].filter(Boolean).join(" · ") || "—"}</div>
+                  ) : (
+                    <>
+                      <input defaultValue={p.area ?? ""} placeholder="Area" onBlur={(e) => updatePhotoField(i, "area", e.target.value)}
+                        className="w-full rounded px-1.5 py-0.5 text-[11px]" style={{ border: "0.5px solid var(--border, #e0d9cb)" }} />
+                      <div className="flex items-center gap-1">
+                        <input defaultValue={p.caption ?? ""} placeholder="Caption" onBlur={(e) => updatePhotoField(i, "caption", e.target.value)}
+                          className="w-full rounded px-1.5 py-0.5 text-[11px]" style={{ border: "0.5px solid var(--border, #e0d9cb)" }} />
+                        <button title="Remove" onClick={() => savePhotos(m.photos.filter((_, j) => j !== i))}
+                          className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold" style={{ color: "#dc2626", border: "0.5px solid #fecaca" }}>✕</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

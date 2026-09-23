@@ -30,12 +30,14 @@ _OBSTRUCTION_FIELDS = ("obstruction_type", "wall", "width", "height",
                        "distance_from_left", "distance_from_floor", "handling_note")
 _SERVICE_FIELDS = ("service_type", "sub_description", "wall", "x_coord", "y_coord",
                    "readiness_status")
+_PHOTO_FIELDS = ("image", "area", "caption")
 
 # register key -> (child fieldname on parent, allowed fields)
 _REGISTERS = {
     "rows": ("rows", _ROW_FIELDS),
     "obstructions": ("obstructions", _OBSTRUCTION_FIELDS),
     "services": ("services", _SERVICE_FIELDS),
+    "photos": ("photos", _PHOTO_FIELDS),
 }
 
 _EDITABLE_STATUSES = {"Draft"}
@@ -140,6 +142,7 @@ def _serialize(doc):
         "rows": [r.as_dict() for r in doc.rows],
         "obstructions": [r.as_dict() for r in doc.obstructions],
         "services": [r.as_dict() for r in doc.services],
+        "photos": [r.as_dict() for r in doc.photos],
     }
 
 
