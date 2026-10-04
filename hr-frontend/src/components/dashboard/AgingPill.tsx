@@ -1,15 +1,17 @@
+// Aging severity reads as an escalating ink ramp (light → dark), worst bucket in
+// the one sanctioned safety red. Monochrome but still intuitive at a glance.
 const DAY_BUCKETS: Array<{ max: number; color: string; label: string }> = [
-  { max: 30, color: "var(--color-success)", label: "0-30 days" },
-  { max: 60, color: "var(--color-warning)", label: "30-60 days" },
-  { max: 90, color: "var(--color-danger)", label: "60-90 days" },
-  { max: Infinity, color: "var(--color-maroon)", label: "90+ days" },
+  { max: 30, color: "#A8A8A8", label: "0-30 days" },
+  { max: 60, color: "#6B6B6B", label: "30-60 days" },
+  { max: 90, color: "#2E2E2E", label: "60-90 days" },
+  { max: Infinity, color: "var(--color-danger)", label: "90+ days" },
 ]
 
 const MONTH_BUCKETS: Array<{ max: number; color: string; label: string }> = [
-  { max: 6, color: "var(--color-success)", label: "0-6 months" },
-  { max: 12, color: "var(--color-warning)", label: "6-12 months" },
-  { max: 24, color: "var(--color-danger)", label: "12-24 months" },
-  { max: Infinity, color: "var(--color-maroon)", label: "24+ months" },
+  { max: 6, color: "#A8A8A8", label: "0-6 months" },
+  { max: 12, color: "#6B6B6B", label: "6-12 months" },
+  { max: 24, color: "#2E2E2E", label: "12-24 months" },
+  { max: Infinity, color: "var(--color-danger)", label: "24+ months" },
 ]
 
 function Pill({ text, color }: { text: string; color: string }) {

@@ -72,7 +72,7 @@ function JobOpeningItem({ job, isSelected, onClick }: { job: JobOpeningListItem;
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-lg transition-colors border-l-2",
         isSelected
-          ? "bg-blue-50 border-l-blue-500 text-blue-900"
+          ? "bg-[var(--bg-subtle)] border-l-blue-500 text-[var(--text-primary)]"
           : "border-l-transparent hover:bg-gray-50 text-gray-700"
       )}
     >
@@ -80,7 +80,7 @@ function JobOpeningItem({ job, isSelected, onClick }: { job: JobOpeningListItem;
         <p className="text-sm font-medium leading-tight line-clamp-2">{job.job_title}</p>
         <span className={cn(
           "text-[11px] font-bold rounded-full px-1.5 py-0.5 shrink-0 mt-0.5",
-          isSelected ? "bg-blue-200 text-blue-800" : "bg-gray-100 text-gray-600"
+          isSelected ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-gray-100 text-gray-600"
         )}>
           {job.applicant_counts.total}
         </span>

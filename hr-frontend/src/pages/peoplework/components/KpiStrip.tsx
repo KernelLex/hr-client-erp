@@ -3,8 +3,8 @@
 import type { Kpi } from "../types"
 
 const TONE_COLOR: Record<string, string> = {
-  good: "#16a34a",
-  warn: "#b8860b",
+  good: "#171717",
+  warn: "#171717",
   bad: "#dc2626",
   "": "var(--brand-primary)",
 }

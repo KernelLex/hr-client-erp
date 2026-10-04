@@ -12,8 +12,8 @@ interface BalanceCardProps {
 }
 
 const VARIANT_COLOR: Record<NonNullable<BalanceRow["variant"]>, string> = {
-  default: "var(--brand-primary)",
-  warn: "#b8860b",
+  default: "var(--text-primary)",
+  warn: "var(--text-primary)",
   danger: "var(--color-danger)",
 }
 

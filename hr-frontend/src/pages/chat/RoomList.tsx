@@ -96,24 +96,24 @@ export function RoomList({
         className={cn(
           "w-full text-left px-3 py-2.5 rounded-lg transition-all duration-150 group",
           isActive
-            ? "bg-forest-600 text-white"
-            : "text-[#94A3B8] hover:bg-white/5 hover:text-[#E2E8F0]"
+            ? "bg-[var(--bg-inverse)] text-white"
+            : "text-[#a6a6a6] hover:bg-white/5 hover:text-[#e9e9e9]"
         )}
       >
         <div className="flex items-center gap-2.5 min-w-0">
           {isGeneral ? (
-            <Hash size={14} className={cn("shrink-0", isActive ? "text-forest-200" : "text-[#475569]")} />
+            <Hash size={14} className={cn("shrink-0", isActive ? "text-[var(--text-tertiary)]" : "text-[#585858]")} />
           ) : isGroup ? (
             <div className={cn(
               "w-6 h-6 rounded-full shrink-0 flex items-center justify-center",
-              isActive ? "bg-forest-400" : "bg-[#1E293B]"
+              isActive ? "bg-[var(--bg-inverse)]" : "bg-[#2c2c2c]"
             )}>
-              <Users size={11} className={isActive ? "text-white" : "text-[#64748B]"} />
+              <Users size={11} className={isActive ? "text-white" : "text-[#787878]"} />
             </div>
           ) : (
             <div className={cn(
               "w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold",
-              isActive ? "bg-forest-400 text-white" : "bg-[#1E293B] text-[#94A3B8]"
+              isActive ? "bg-[var(--bg-inverse)] text-white" : "bg-[#2c2c2c] text-[#a6a6a6]"
             )}>
               {getInitials(room.display_name)}
             </div>
@@ -123,7 +123,7 @@ export function RoomList({
             <div className="flex items-center justify-between gap-1">
               <span className="text-[13px] font-medium truncate">{room.display_name}</span>
               {room.last_message && (
-                <span className={cn("text-[10px] shrink-0", isActive ? "text-forest-200" : "text-[#475569]")}>
+                <span className={cn("text-[10px] shrink-0", isActive ? "text-[var(--text-tertiary)]" : "text-[#585858]")}>
                   {formatTime(room.last_message.sent_at)}
                 </span>
               )}
@@ -131,7 +131,7 @@ export function RoomList({
             {room.last_message?.preview && (
               <p className={cn(
                 "text-[11px] truncate leading-tight mt-0.5",
-                isActive ? "text-forest-200" : "text-[#475569]"
+                isActive ? "text-[var(--text-tertiary)]" : "text-[#585858]"
               )}>
                 {room.last_message.preview}
               </p>
@@ -140,12 +140,12 @@ export function RoomList({
 
           <div className="flex items-center gap-1 shrink-0">
             {mentions > 0 && (
-              <span className="text-[10px] font-bold text-amber-300">✦{mentions}</span>
+              <span className="text-[10px] font-bold text-[var(--text-tertiary)]">◆{mentions}</span>
             )}
             {unread > 0 && (
               <span className={cn(
                 "min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold px-1",
-                isActive ? "bg-white text-forest-600" : "bg-forest-500 text-white"
+                isActive ? "bg-white text-[var(--text-primary)]" : "bg-[var(--bg-subtle)]0 text-white"
               )}>
                 {unread > 99 ? "99+" : unread}
               </span>
@@ -164,14 +164,14 @@ export function RoomList({
       {/* Header */}
       <div className="px-4 pt-4 pb-3 shrink-0">
         <p className="text-white font-bold text-[15px] tracking-tight">Company Chat</p>
-        <p className="text-[#475569] text-[11px] mt-0.5">{onlineUsers.length} online</p>
+        <p className="text-[#585858] text-[11px] mt-0.5">{onlineUsers.length} online</p>
       </div>
 
       {/* Search button */}
       <div className="px-3 pb-2 shrink-0">
         <button
           onClick={onSearch}
-          className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] text-[#475569] hover:text-[#94A3B8] hover:bg-white/5 transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] text-[#585858] hover:text-[#a6a6a6] hover:bg-white/5 transition-colors"
         >
           <Search size={13} />
           <span>Search messages…</span>
@@ -182,7 +182,7 @@ export function RoomList({
         {/* General channel */}
         {generalRoom && (
           <>
-            <p className="px-3 py-1 text-[10px] font-semibold text-[#334155] uppercase tracking-wider">
+            <p className="px-3 py-1 text-[10px] font-semibold text-[#444444] uppercase tracking-wider">
               Channels
             </p>
             <RoomItem room={generalRoom} />
@@ -192,12 +192,12 @@ export function RoomList({
         {/* Group chats */}
         <div className="pt-2">
           <div className="flex items-center justify-between px-3 py-1">
-            <p className="text-[10px] font-semibold text-[#334155] uppercase tracking-wider">
+            <p className="text-[10px] font-semibold text-[#444444] uppercase tracking-wider">
               Groups
             </p>
             <button
               onClick={() => { setShowNewGroup((v) => !v); setShowNewDM(false) }}
-              className="text-[#334155] hover:text-[#94A3B8] transition-colors"
+              className="text-[#444444] hover:text-[#a6a6a6] transition-colors"
               title="New Group"
             >
               <Plus size={13} />
@@ -206,10 +206,10 @@ export function RoomList({
 
           {/* New Group creator */}
           {showNewGroup && (
-            <div className="mx-2 mb-2 bg-[#1E293B] rounded-lg overflow-hidden">
+            <div className="mx-2 mb-2 bg-[#2c2c2c] rounded-lg overflow-hidden">
               <div className="px-3 py-2 flex items-center justify-between border-b border-white/5">
-                <span className="text-[11px] text-[#94A3B8]">Create a group</span>
-                <button onClick={() => { setShowNewGroup(false); setGroupName(""); setSelectedMembers([]) }} className="text-[#475569] hover:text-[#94A3B8]">
+                <span className="text-[11px] text-[#a6a6a6]">Create a group</span>
+                <button onClick={() => { setShowNewGroup(false); setGroupName(""); setSelectedMembers([]) }} className="text-[#585858] hover:text-[#a6a6a6]">
                   <X size={12} />
                 </button>
               </div>
@@ -220,11 +220,11 @@ export function RoomList({
                   onChange={(e) => setGroupName(e.target.value)}
                   placeholder="Group name…"
                   maxLength={60}
-                  className="w-full text-[12px] bg-[#0F172A] text-[#E2E8F0] placeholder-[#475569] rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-forest-500"
+                  className="w-full text-[12px] bg-[#1c1c1c] text-[#e9e9e9] placeholder-[#585858] rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[var(--border-strong)]"
                 />
               </div>
               <div className="px-3 py-1.5 max-h-40 overflow-y-auto">
-                <p className="text-[10px] text-[#475569] mb-1.5">Select members</p>
+                <p className="text-[10px] text-[#585858] mb-1.5">Select members</p>
                 {mentionUsers.map((u) => (
                   <button
                     key={u.user}
@@ -234,17 +234,17 @@ export function RoomList({
                     <div className={cn(
                       "w-4 h-4 rounded border flex items-center justify-center shrink-0",
                       selectedMembers.includes(u.user)
-                        ? "bg-forest-500 border-forest-500"
-                        : "border-[#334155]"
+                        ? "bg-[var(--bg-subtle)]0 border-[var(--border-subtle)]"
+                        : "border-[#444444]"
                     )}>
                       {selectedMembers.includes(u.user) && (
                         <span className="text-white text-[8px] font-bold">✓</span>
                       )}
                     </div>
-                    <div className="w-5 h-5 rounded-full bg-forest-700 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-[var(--bg-inverse)] flex items-center justify-center text-[9px] font-bold text-white shrink-0">
                       {getInitials(u.full_name)}
                     </div>
-                    <span className="text-[12px] text-[#CBD5E1] flex-1 truncate">{u.full_name}</span>
+                    <span className="text-[12px] text-[#d6d6d6] flex-1 truncate">{u.full_name}</span>
                   </button>
                 ))}
               </div>
@@ -252,7 +252,7 @@ export function RoomList({
                 <button
                   onClick={handleCreateGroup}
                   disabled={!groupName.trim() || groupPending}
-                  className="w-full py-1.5 rounded-lg text-[12px] font-semibold bg-forest-600 text-white hover:bg-forest-700 disabled:opacity-40 transition-colors"
+                  className="w-full py-1.5 rounded-lg text-[12px] font-semibold bg-[var(--bg-inverse)] text-white hover:bg-[var(--bg-inverse)] disabled:opacity-40 transition-colors"
                 >
                   {groupPending ? "Creating…" : `Create Group${selectedMembers.length > 0 ? ` (${selectedMembers.length + 1})` : ""}`}
                 </button>
@@ -261,7 +261,7 @@ export function RoomList({
           )}
 
           {groupRooms.length === 0 && !showNewGroup && (
-            <p className="px-3 py-2 text-[11px] text-[#334155]">No group chats yet</p>
+            <p className="px-3 py-2 text-[11px] text-[#444444]">No group chats yet</p>
           )}
 
           {groupRooms.map((room) => (
@@ -272,12 +272,12 @@ export function RoomList({
         {/* Direct Messages */}
         <div className="pt-2">
           <div className="flex items-center justify-between px-3 py-1">
-            <p className="text-[10px] font-semibold text-[#334155] uppercase tracking-wider">
+            <p className="text-[10px] font-semibold text-[#444444] uppercase tracking-wider">
               Direct Messages
             </p>
             <button
               onClick={() => { setShowNewDM((v) => !v); setShowNewGroup(false) }}
-              className="text-[#334155] hover:text-[#94A3B8] transition-colors"
+              className="text-[#444444] hover:text-[#a6a6a6] transition-colors"
               title="New DM"
             >
               <Plus size={13} />
@@ -286,10 +286,10 @@ export function RoomList({
 
           {/* New DM picker */}
           {showNewDM && (
-            <div className="mx-2 mb-1 bg-[#1E293B] rounded-lg overflow-hidden">
+            <div className="mx-2 mb-1 bg-[#2c2c2c] rounded-lg overflow-hidden">
               <div className="px-3 py-2 flex items-center justify-between border-b border-white/5">
-                <span className="text-[11px] text-[#94A3B8]">Start a conversation</span>
-                <button onClick={() => setShowNewDM(false)} className="text-[#475569] hover:text-[#94A3B8]">
+                <span className="text-[11px] text-[#a6a6a6]">Start a conversation</span>
+                <button onClick={() => setShowNewDM(false)} className="text-[#585858] hover:text-[#a6a6a6]">
                   <X size={12} />
                 </button>
               </div>
@@ -303,15 +303,15 @@ export function RoomList({
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/5 transition-colors"
                   >
                     <div className="relative shrink-0">
-                      <div className="w-6 h-6 rounded-full bg-forest-700 flex items-center justify-center text-[10px] font-bold text-white">
+                      <div className="w-6 h-6 rounded-full bg-[var(--bg-inverse)] flex items-center justify-center text-[10px] font-bold text-white">
                         {getInitials(u.full_name)}
                       </div>
                       {onlineSet.has(u.user) && (
-                        <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full border border-[#0F172A]" />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-[var(--bg-inverse)] rounded-full border border-[#1c1c1c]" />
                       )}
                     </div>
-                    <span className="text-[12px] text-[#CBD5E1] flex-1">{u.full_name}</span>
-                    {alreadyHasDM && <span className="text-[10px] text-[#334155]">existing</span>}
+                    <span className="text-[12px] text-[#d6d6d6] flex-1">{u.full_name}</span>
+                    {alreadyHasDM && <span className="text-[10px] text-[#444444]">existing</span>}
                   </button>
                 )
               })}
@@ -319,7 +319,7 @@ export function RoomList({
           )}
 
           {dmRooms.length === 0 && !showNewDM && (
-            <p className="px-3 py-2 text-[11px] text-[#334155]">No conversations yet</p>
+            <p className="px-3 py-2 text-[11px] text-[#444444]">No conversations yet</p>
           )}
 
           {dmRooms.map((room) => {
@@ -331,7 +331,7 @@ export function RoomList({
                 <RoomItem room={room} />
                 {isOnline && (
                   <span
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 bg-green-400 rounded-full border border-[#0F172A] pointer-events-none"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 bg-[var(--bg-inverse)] rounded-full border border-[#1c1c1c] pointer-events-none"
                     style={{ left: "22px", top: "auto", bottom: "6px" }}
                   />
                 )}
@@ -344,11 +344,11 @@ export function RoomList({
       {/* Online presence strip */}
       {onlineUsers.length > 0 && (
         <div className="shrink-0 px-3 py-2 border-t border-white/5">
-          <p className="text-[10px] text-[#334155] mb-1.5">Online now</p>
+          <p className="text-[10px] text-[#444444] mb-1.5">Online now</p>
           <div className="flex flex-wrap gap-1">
             {onlineUsers.slice(0, 8).map((u) => (
               <div key={u.user} title={u.full_name}
-                className="w-6 h-6 rounded-full bg-forest-700 flex items-center justify-center text-[9px] font-bold text-white ring-1 ring-green-400"
+                className="w-6 h-6 rounded-full bg-[var(--bg-inverse)] flex items-center justify-center text-[9px] font-bold text-white ring-1 ring-[var(--border-strong)]"
               >
                 {getInitials(u.full_name)}
               </div>

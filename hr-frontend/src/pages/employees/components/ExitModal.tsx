@@ -115,15 +115,15 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
         {/* Step indicator */}
         {step !== "done" && (
           <div className="flex items-center gap-2 mb-2">
-            <div className={cn("flex items-center gap-1.5 text-xs font-medium", step === "resignation" ? "text-forest-700" : "text-green-600")}>
-              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === "resignation" ? "bg-forest-700 text-white" : "bg-green-500 text-white")}>
+            <div className={cn("flex items-center gap-1.5 text-xs font-medium", step === "resignation" ? "text-[var(--text-primary)]" : "text-[var(--text-primary)]")}>
+              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === "resignation" ? "bg-[var(--bg-inverse)] text-white" : "bg-[var(--bg-subtle)]0 text-white")}>
                 {step === "resignation" ? "1" : <CheckCircle2 size={12} />}
               </div>
               Resignation
             </div>
             <div className="flex-1 h-px bg-gray-200" />
-            <div className={cn("flex items-center gap-1.5 text-xs font-medium", step === "interview" ? "text-forest-700" : "text-gray-400")}>
-              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === "interview" ? "bg-forest-700 text-white" : "bg-gray-200 text-gray-500")}>
+            <div className={cn("flex items-center gap-1.5 text-xs font-medium", step === "interview" ? "text-[var(--text-primary)]" : "text-gray-400")}>
+              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === "interview" ? "bg-[var(--bg-inverse)] text-white" : "bg-gray-200 text-gray-500")}>
                 2
               </div>
               Exit Interview
@@ -141,7 +141,7 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
                 value={lastWorkingDay}
                 min={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setLastWorkingDay(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-[var(--border-subtle)] focus:ring-2 focus:ring-[var(--border-strong)]"
               />
             </div>
 
@@ -150,7 +150,7 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
               <div
                 className={cn(
                   "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors",
-                  dragOver ? "border-blue-400 bg-blue-50" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  dragOver ? "border-[var(--border-subtle)] bg-[var(--bg-subtle)]" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                 )}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
                 onDragLeave={() => setDragOver(false)}
@@ -159,7 +159,7 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
               >
                 {file ? (
                   <div className="flex items-center justify-center gap-3">
-                    <FileText size={20} className="text-forest-500 shrink-0" />
+                    <FileText size={20} className="text-[var(--text-tertiary)]0 shrink-0" />
                     <div className="text-left min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
                       <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(0)} KB</p>
@@ -214,7 +214,7 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-2">Would you recommend this company to others? *</label>
               <div className="flex gap-3">
-                {([["Yes", ThumbsUp, "bg-green-100 text-green-700 border-green-300"], ["Maybe", Minus, "bg-yellow-100 text-yellow-700 border-yellow-300"], ["No", ThumbsDown, "bg-red-100 text-red-700 border-red-300"]] as const).map(([val, Icon, activeClass]) => (
+                {([["Yes", ThumbsUp, "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]"], ["Maybe", Minus, "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]"], ["No", ThumbsDown, "bg-red-100 text-red-700 border-red-300"]] as const).map(([val, Icon, activeClass]) => (
                   <button
                     key={val}
                     onClick={() => setRecommend(val as Recommend)}
@@ -238,7 +238,7 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
                 onChange={(e) => setEnjoyed(e.target.value)}
                 rows={3}
                 placeholder="The collaborative culture, the technical challenges…"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none outline-none focus:border-[var(--border-subtle)] focus:ring-2 focus:ring-[var(--border-strong)]"
               />
             </div>
 
@@ -250,7 +250,7 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
                 onChange={(e) => setImprove(e.target.value)}
                 rows={3}
                 placeholder="Better work-life balance, clearer growth paths…"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none outline-none focus:border-[var(--border-subtle)] focus:ring-2 focus:ring-[var(--border-strong)]"
               />
             </div>
 
@@ -262,7 +262,7 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
                 onChange={(e) => setMgmtFeedback(e.target.value)}
                 rows={3}
                 placeholder="Your thoughts on leadership, communication…"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none outline-none focus:border-[var(--border-subtle)] focus:ring-2 focus:ring-[var(--border-strong)]"
               />
             </div>
 
@@ -279,8 +279,8 @@ export function ExitModal({ open, onClose, employeeId, employeeName }: Props) {
         {/* ── Done ── */}
         {step === "done" && (
           <div className="py-8 text-center space-y-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 size={32} className="text-green-600" />
+            <div className="w-16 h-16 bg-[var(--bg-subtle)] rounded-full flex items-center justify-center mx-auto">
+              <CheckCircle2 size={32} className="text-[var(--text-primary)]" />
             </div>
             <div>
               <h3 className="text-base font-semibold text-gray-900">Your feedback has been recorded.</h3>

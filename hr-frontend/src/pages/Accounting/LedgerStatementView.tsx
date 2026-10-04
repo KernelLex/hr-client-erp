@@ -81,7 +81,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
     { key: "counterparty", header: "Counterparty", render: r => r.counterparty || r.party_name || "—" },
     { key: "narration", header: "Narration", render: r => r.narration || "—" },
     { key: "debit", header: "Debit", align: "right", render: r => r.debit ? <span className="font-mono text-red-600">{fmtINR(r.debit)}</span> : <span className="text-gray-300">—</span> },
-    { key: "credit", header: "Credit", align: "right", render: r => r.credit ? <span className="font-mono text-emerald-700">{fmtINR(r.credit)}</span> : <span className="text-gray-300">—</span> },
+    { key: "credit", header: "Credit", align: "right", render: r => r.credit ? <span className="font-mono text-[var(--text-primary)]">{fmtINR(r.credit)}</span> : <span className="text-gray-300">—</span> },
   ]
 
   return (
@@ -93,7 +93,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
           value={selected ? selected.ledger_name : pickerQuery}
           onChange={e => { setSelected(null); setPickerQuery(e.target.value) }}
           placeholder={placeholder ?? "Search for a ledger…"}
-          className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#c8a45c] bg-white"
+          className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#171717] bg-white"
         />
         {selected && (
           <button
@@ -109,7 +109,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
               <button
                 key={o.ledger_name}
                 onClick={() => { setSelected(o); setPickerQuery("") }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-[#f5efe4] flex items-center justify-between gap-2"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-[#F5F5F5] flex items-center justify-between gap-2"
               >
                 <span>
                   <span className="text-[#2c2c2a]">{o.ledger_name}</span>
@@ -143,7 +143,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
             </div>
             <div>
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total In</p>
-              <p className="text-sm font-semibold text-emerald-700">{fmtINR(stmt?.total_inflow ?? 0)}</p>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">{fmtINR(stmt?.total_inflow ?? 0)}</p>
             </div>
             <div>
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total Out</p>
@@ -165,7 +165,7 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
                       <div
                         key={m.month}
                         title={`${fmtMonthKey(m.month)} · net ${fmtINR(m.total)} · ${m.count} txns`}
-                        className={`flex-1 min-w-[3px] rounded-sm transition-colors ${m.total >= 0 ? "bg-emerald-500/60 hover:bg-emerald-600" : "bg-red-500/60 hover:bg-red-600"}`}
+                        className={`flex-1 min-w-[3px] rounded-sm transition-colors ${m.total >= 0 ? "bg-[var(--bg-subtle)]0 hover:bg-[var(--bg-inverse)]" : "bg-red-500/60 hover:bg-red-600"}`}
                         style={{ height: `${Math.max(6, ((m.inflow + m.outflow) / maxAct) * 100)}%` }}
                       />
                     ))}
@@ -183,12 +183,12 @@ export function LedgerStatementView({ scope, placeholder }: { scope?: "bank_cash
             value={txnSearch}
             onChange={e => setTxnSearch(e.target.value)}
             placeholder="Search narration, party, voucher #…"
-            className="w-full max-w-xs text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#c8a45c]"
+            className="w-full max-w-xs text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#171717]"
           />
 
           {isLoading ? (
             <div className="flex justify-center py-16">
-              <Loader2 size={22} className="text-[#1e3a2f] animate-spin" />
+              <Loader2 size={22} className="text-[#171717] animate-spin" />
             </div>
           ) : isError ? (
             <p className="py-12 text-center text-sm text-red-500">Failed to load ledger statement.</p>

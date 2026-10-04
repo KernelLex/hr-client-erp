@@ -26,7 +26,7 @@ interface Material {
   images: Img[]; primary_image: string | null; reuse_suggestions: Suggestion[]
 }
 
-const STATUS_TONE: Record<string, string> = { Available: "#15803d", Reserved: "#b45309", Reused: "#6b7280", Scrapped: "#dc2626" }
+const STATUS_TONE: Record<string, string> = { Available: "#171717", Reserved: "#171717", Reused: "#6b7280", Scrapped: "#dc2626" }
 
 export function ReclaimedDetail() {
   const { name = "" } = useParams()
@@ -106,7 +106,7 @@ export function ReclaimedDetail() {
     <div>
       <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</div>
       <input list={`dl_${k}`} value={form[k] ?? ""} onChange={(e) => set(k, e.target.value)}
-        className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+        className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }} />
       <datalist id={`dl_${k}`}>{options.map((o) => <option key={o} value={o} />)}</datalist>
     </div>
   )
@@ -114,7 +114,7 @@ export function ReclaimedDetail() {
     <div>
       <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</div>
       <input type={type} value={form[k] ?? ""} onChange={(e) => set(k, e.target.value)}
-        className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+        className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }} />
     </div>
   )
 
@@ -156,7 +156,7 @@ export function ReclaimedDetail() {
               {txt("edge_banding", "Edge Banding")}
               <div>
                 <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Condition</div>
-                <select value={form.condition ?? ""} onChange={(e) => set("condition", e.target.value)} className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }}>
+                <select value={form.condition ?? ""} onChange={(e) => set("condition", e.target.value)} className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }}>
                   {["New", "Like New", "Good", "Usable with rework"].map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -192,7 +192,7 @@ export function ReclaimedDetail() {
         {/* Right col — images + reuse suggestions */}
         <div className="space-y-4">
           <Card title="Photos">
-            <label className="mb-3 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold" style={{ border: "1px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+            <label className="mb-3 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold" style={{ border: "1px solid var(--border, #E3E3E3)", color: "var(--brand-primary)" }}>
               <Upload size={14} /> Add photos
               <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => onUpload(e.target.files)} />
             </label>
@@ -201,11 +201,11 @@ export function ReclaimedDetail() {
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 {m.images.map((img, i) => (
-                  <div key={i} className="relative overflow-hidden rounded-lg" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+                  <div key={i} className="relative overflow-hidden rounded-lg" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
                     <img src={img.image} alt={img.caption ?? ""} className="h-24 w-full object-cover" />
                     {!!img.is_primary && <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[9px] font-semibold text-white">PRIMARY</span>}
                     <div className="flex items-center justify-between px-1 py-0.5">
-                      <button title="Set primary" onClick={() => mutateImages(m.images.map((x, j) => ({ ...x, is_primary: j === i ? 1 : 0 })))} style={{ color: img.is_primary ? "#b45309" : "var(--text-muted)" }}><Star size={13} /></button>
+                      <button title="Set primary" onClick={() => mutateImages(m.images.map((x, j) => ({ ...x, is_primary: j === i ? 1 : 0 })))} style={{ color: img.is_primary ? "#171717" : "var(--text-muted)" }}><Star size={13} /></button>
                       <button title="Remove" onClick={() => mutateImages(m.images.filter((_, j) => j !== i))} style={{ color: "#dc2626" }}><Trash2 size={13} /></button>
                     </div>
                   </div>
@@ -220,22 +220,22 @@ export function ReclaimedDetail() {
             ) : (
               <div className="space-y-2">
                 {m.reuse_suggestions.map((s, i) => (
-                  <div key={i} className="rounded-lg p-2.5" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+                  <div key={i} className="rounded-lg p-2.5" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
                     <div className="flex items-center justify-between">
                       <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{s.boq_title}</div>
-                      <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: s.score >= 70 ? "#dcfce7" : "#fef9c3", color: s.score >= 70 ? "#15803d" : "#854d0e" }}>{s.score}% match</span>
+                      <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: s.score >= 70 ? "#F5F5F5" : "#F5F5F5", color: s.score >= 70 ? "#171717" : "#171717" }}>{s.score}% match</span>
                     </div>
                     <div className="text-xs" style={{ color: "var(--text-muted)" }}>{[s.customer, s.area, s.unit_name].filter(Boolean).join(" · ")} · needs {s.required}</div>
                     <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>{s.why}</div>
                     <div className="mt-1.5 flex gap-2">
                       <button onClick={() => navigate(`/quotation/boqs/${s.boq}`)} className="text-[11px] font-semibold" style={{ color: "var(--brand-primary)" }}>Open BOQ</button>
                       {s.opportunity && m.status === "Available" && (
-                        <button onClick={() => post("reserve_reclaimed", { name, opportunity: s.opportunity }, "Reserved for this job")} className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#b45309" }}>
+                        <button onClick={() => post("reserve_reclaimed", { name, opportunity: s.opportunity }, "Reserved for this job")} className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#171717" }}>
                           <MapPin size={11} /> Reserve for this
                         </button>
                       )}
                       {s.opportunity && m.status === "Reserved" && m.reserved_for === s.opportunity && (
-                        <button onClick={() => post("mark_reused", { name, opportunity: s.opportunity }, "Marked reused")} className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#15803d" }}>
+                        <button onClick={() => post("mark_reused", { name, opportunity: s.opportunity }, "Marked reused")} className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#171717" }}>
                           <Recycle size={11} /> Mark reused here
                         </button>
                       )}
@@ -253,7 +253,7 @@ export function ReclaimedDetail() {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl bg-white p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+    <div className="rounded-xl bg-white p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
       <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{title}</div>
       {children}
     </div>
@@ -264,7 +264,7 @@ function Action({ label, onClick, busy, primary, danger }: { label: string; onCl
   return (
     <button onClick={onClick} disabled={busy}
       className="rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
-      style={primary ? { background: "var(--brand-primary)", color: "#fff" } : danger ? { border: "1px solid #fecaca", color: "#dc2626" } : { border: "1px solid var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+      style={primary ? { background: "var(--brand-primary)", color: "#fff" } : danger ? { border: "1px solid #fecaca", color: "#dc2626" } : { border: "1px solid var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
       {label}
     </button>
   )

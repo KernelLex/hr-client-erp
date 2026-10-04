@@ -19,16 +19,16 @@ function fmt(amount: number) {
 
 function statusClass(status: ClaimStatus) {
   return status === "Approved"
-    ? "bg-green-100 text-green-800"
+    ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
     : status === "Rejected"
     ? "bg-red-100 text-red-800"
-    : "bg-orange-100 text-orange-800"
+    : "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
 }
 
 function typeStyle(type: string): React.CSSProperties {
   return type === "Petrol"
-    ? { backgroundColor: "#DBEAFE", color: "#1E40AF" }
-    : { backgroundColor: "#EDE9FE", color: "#5B21B6" }
+    ? { backgroundColor: "#F5F5F5", color: "#171717" }
+    : { backgroundColor: "#F5F5F5", color: "#171717" }
 }
 
 function ClaimRow({ claim }: { claim: ExpenseClaim }) {
@@ -38,15 +38,15 @@ function ClaimRow({ claim }: { claim: ExpenseClaim }) {
   return (
     <div
       className="rounded-[10px] overflow-hidden transition-all duration-150"
-      style={{ border: "1px solid #E2E8F0", marginBottom: "8px" }}
+      style={{ border: "1px solid #e9e9e9", marginBottom: "8px" }}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLDivElement
-        el.style.borderColor = "#85b89a"
+        el.style.borderColor = "#6B6B6B"
         el.style.boxShadow = "var(--shadow-card-hover)"
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLDivElement
-        el.style.borderColor = "#E2E8F0"
+        el.style.borderColor = "#e9e9e9"
         el.style.boxShadow = "none"
       }}
     >
@@ -61,7 +61,7 @@ function ClaimRow({ claim }: { claim: ExpenseClaim }) {
               className="text-[11px] font-medium px-2 py-0.5 rounded"
               style={typeStyle(claim.claim_type)}
             >
-              {claim.claim_type === "Petrol" ? "⛽" : "📦"} {claim.claim_type}
+              {claim.claim_type === "Petrol" ? "◆" : "▦"} {claim.claim_type}
             </span>
             <span className="text-xs text-gray-500">{claim.claim_date}</span>
           </div>
@@ -92,26 +92,26 @@ function ClaimRow({ claim }: { claim: ExpenseClaim }) {
           )}
           {receipt && (
             <a href={receipt} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+              className="inline-flex items-center gap-1 text-xs text-[var(--text-primary)] hover:underline">
               <ExternalLink size={11} /> View Receipt
             </a>
           )}
           {claim.status === "Approved" && (
-            <div className="bg-green-50 border border-green-100 rounded p-2 text-xs text-green-800">
-              ✅ Approved by Owais{claim.reviewed_on ? ` on ${claim.reviewed_on.slice(0, 10)}` : ""}
-              {claim.admin_notes && <div className="mt-1 text-green-700">Note: {claim.admin_notes}</div>}
+            <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 text-xs text-[var(--text-primary)]">
+              ✓ Approved by Owais{claim.reviewed_on ? ` on ${claim.reviewed_on.slice(0, 10)}` : ""}
+              {claim.admin_notes && <div className="mt-1 text-[var(--text-primary)]">Note: {claim.admin_notes}</div>}
             </div>
           )}
           {claim.status === "Rejected" && (
             <div className="bg-red-50 border border-red-100 rounded p-2 text-xs text-red-800">
-              ❌ Rejected{claim.reviewed_on ? ` on ${claim.reviewed_on.slice(0, 10)}` : ""}
+              ✕ Rejected{claim.reviewed_on ? ` on ${claim.reviewed_on.slice(0, 10)}` : ""}
               {claim.rejection_reason && <div className="mt-1 font-medium">Reason: {claim.rejection_reason}</div>}
               {claim.admin_notes && <div className="mt-1 text-red-700">Note: {claim.admin_notes}</div>}
             </div>
           )}
           {claim.status === "Pending" && (
-            <div className="bg-orange-50 border border-orange-100 rounded p-2 text-xs text-orange-700">
-              ⏳ Awaiting Owais's review
+            <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 text-xs text-[var(--text-primary)]">
+              ◴ Awaiting Owais's review
             </div>
           )}
         </div>
@@ -170,7 +170,7 @@ export function MyClaimsDashboard() {
   const years = Array.from({ length: 3 }, (_, i) => now.getFullYear() - i)
 
   return (
-    <div className="p-6 max-w-3xl space-y-5">
+    <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Receipt size={20} className="text-gray-600" />
@@ -217,15 +217,15 @@ export function MyClaimsDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryCard
           label="Total Claimed" amount={summary?.total_claimed ?? 0}
-          bg="#FFFFFF" border="#85b89a" amountColor="#16291f" labelColor="#1e3a2f"
+          bg="#FFFFFF" border="#6B6B6B" amountColor="#171717" labelColor="#171717"
         />
         <SummaryCard
           label="Approved" amount={summary?.total_approved ?? 0}
-          bg="#ECFDF5" border="#6EE7B7" amountColor="#065F46" labelColor="#047857"
+          bg="#F5F5F5" border="#E3E3E3" amountColor="#171717" labelColor="#171717"
         />
         <SummaryCard
           label="Pending" amount={summary?.total_pending ?? 0}
-          bg="#FFFBEB" border="#FCD34D" amountColor="#92400E" labelColor="#B45309"
+          bg="#F5F5F5" border="#E3E3E3" amountColor="#171717" labelColor="#171717"
         />
         <SummaryCard
           label="Rejected" amount={summary?.total_rejected ?? 0}

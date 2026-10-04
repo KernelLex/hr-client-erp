@@ -29,10 +29,14 @@ export interface AnalysisResult {
 export interface DashboardInsights {
   success: boolean
   health_score?: number
-  health_label?: "Excellent" | "Good" | "Fair" | "Poor"
+  health_label?: "Excellent" | "Good" | "Fair" | "Needs Attention" | "Poor"
   insights?: string[]
   alerts?: string[]
   recommendations?: string[]
+  /** optional AI-written narrative (cached/async); null until generated */
+  ai_summary?: string | null
+  /** true while the AI narrative is still being generated in the background */
+  ai_pending?: boolean
   reason?: string
 }
 
@@ -82,8 +86,8 @@ export function analyseSelected(doc_names: string[]): Promise<AnalysisResult> {
   })
 }
 
-export function getDashboardInsights(): Promise<DashboardInsights> {
-  return call<DashboardInsights>("get_dashboard_insights")
+export function getDashboardInsights(force = false): Promise<DashboardInsights> {
+  return call<DashboardInsights>("get_dashboard_insights", force ? { force: 1 } : {})
 }
 
 export function comparePeriods(period1: string, period2: string): Promise<PeriodComparison> {

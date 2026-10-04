@@ -84,34 +84,29 @@ export const STAGE_ORDER: CRMStage[] = [
   "Lead", "Discussion", "Quotation", "Order", "Delivery", "Success",
 ]
 
+// Monochrome overhaul — stages are told apart by position + label, not hue.
+// Only the terminal "Failed" state keeps the one sanctioned safety red.
+const NEUTRAL_BADGE = "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]"
 export const STAGE_COLORS: Record<CRMStage, string> = {
-  Lead: "bg-blue-100 text-blue-800 border-blue-200",
-  Discussion: "bg-purple-100 text-purple-800 border-purple-200",
-  Quotation: "bg-amber-100 text-amber-800 border-amber-200",
-  Order: "bg-orange-100 text-orange-800 border-orange-200",
-  Delivery: "bg-teal-100 text-teal-800 border-teal-200",
-  Success: "bg-green-100 text-green-800 border-green-200",
-  Failed: "bg-red-100 text-red-800 border-red-200",
+  Lead: NEUTRAL_BADGE,
+  Discussion: NEUTRAL_BADGE,
+  Quotation: NEUTRAL_BADGE,
+  Order: NEUTRAL_BADGE,
+  Delivery: NEUTRAL_BADGE,
+  Success: "bg-[var(--bg-inverse)] text-[var(--text-inverse)] border-transparent",
+  Failed: "bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]",
 }
 
+// Depth of progress — a ramp of ink tints so later stages read as "further
+// along" without colour. Used as the small rail at the top of each column.
 export const STAGE_COLUMN_COLORS: Record<CRMStage, string> = {
-  Lead: "border-blue-400",
-  Discussion: "border-purple-400",
-  Quotation: "border-amber-400",
-  Order: "border-orange-400",
-  Delivery: "border-teal-400",
-  Success: "border-green-400",
-  Failed: "border-red-400",
-}
-
-export const STAGE_HEADER_COLORS: Record<CRMStage, string> = {
-  Lead: "bg-blue-600",
-  Discussion: "bg-purple-600",
-  Quotation: "bg-amber-600",
-  Order: "bg-orange-600",
-  Delivery: "bg-teal-600",
-  Success: "bg-green-600",
-  Failed: "bg-red-600",
+  Lead: "var(--n300)",
+  Discussion: "var(--n400)",
+  Quotation: "var(--n500)",
+  Order: "var(--n600)",
+  Delivery: "var(--n700)",
+  Success: "var(--n900)",
+  Failed: "var(--color-danger)",
 }
 
 export const SERVICE_INTERESTS = ["Logistics", "HR Services", "Accounting", "Other"] as const

@@ -44,7 +44,7 @@ function renderContent(content: string) {
   return parts.map((part, i) => {
     if (part.startsWith("@")) {
       return (
-        <span key={i} className="text-forest-600 font-semibold bg-forest-50 rounded px-0.5">
+        <span key={i} className="text-[var(--text-primary)] font-semibold bg-[var(--bg-subtle)] rounded px-0.5">
           {part}
         </span>
       )
@@ -149,7 +149,7 @@ export function MessageItem({ message, prevMessage, currentUser, mentionUserName
           "group flex items-start gap-2.5 px-4 py-0.5 transition-colors",
           sameGroup ? "pt-0" : "pt-2",
           hovered && "bg-gray-50",
-          isMentioned && !message.is_deleted && "bg-amber-50 hover:bg-amber-50"
+          isMentioned && !message.is_deleted && "bg-[var(--bg-subtle)] hover:bg-[var(--bg-subtle)]"
         )}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -159,7 +159,7 @@ export function MessageItem({ message, prevMessage, currentUser, mentionUserName
           {!sameGroup ? (
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-              style={{ backgroundColor: isOwn ? "#1e3a2f" : "#334155" }}
+              style={{ backgroundColor: isOwn ? "#171717" : "#444444" }}
             >
               {getInitials(message.sender_name)}
             </div>
@@ -171,14 +171,14 @@ export function MessageItem({ message, prevMessage, currentUser, mentionUserName
           {/* Name + time — only for first in group */}
           {!sameGroup && (
             <div className="flex items-baseline gap-2 mb-0.5">
-              <span className={cn("text-sm font-semibold", isOwn ? "text-forest-700" : "text-gray-800")}>
+              <span className={cn("text-sm font-semibold", isOwn ? "text-[var(--text-primary)]" : "text-gray-800")}>
                 {message.sender_name}
                 {isOwn && <span className="text-xs font-normal text-gray-400 ml-1">(you)</span>}
               </span>
               <span className="text-[11px] text-gray-400">{formatTime(message.sent_at)}</span>
               {isMentioned && (
-                <span className="text-[10px] font-semibold text-amber-600 bg-amber-100 rounded px-1">
-                  ✦ mentioned you
+                <span className="text-[10px] font-semibold text-[var(--text-primary)] bg-[var(--bg-subtle)] rounded px-1">
+                  ◆ mentioned you
                 </span>
               )}
             </div>

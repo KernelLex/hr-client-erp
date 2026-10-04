@@ -11,7 +11,7 @@ type Summary = { total_items: number; with_cost: number; coverage_pct: number }
 type ListResp = { rules: Rule[]; summary: Summary }
 type SearchItem = { item_code: string; item_name: string; brand: string; mrp?: number; cost?: number }
 
-const field = "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+const field = "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-[var(--border-subtle)] focus:outline-none"
 const inr = (n?: number | null) => n == null ? "—" : "₹" + Number(n).toLocaleString("en-IN")
 
 export function CostPricesPage() {
@@ -34,7 +34,7 @@ export function CostPricesPage() {
 
   const s = list.data?.summary
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 mx-auto">
       <h1 className="text-2xl font-bold text-slate-800 mb-1">Cost / Dealer Prices</h1>
       <p className="text-sm text-gray-500 mb-5">The price lists you gave are selling price (MRP) only. Enter your real cost here so quotes can show true profit.</p>
 
@@ -52,11 +52,11 @@ export function CostPricesPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-slate-700">Dealer discount by brand</h2>
           <button onClick={() => apply.mutate()} disabled={apply.isPending}
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">
+            className="rounded-md bg-[var(--bg-inverse)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
             {apply.isPending ? "Applying…" : "Apply discounts → cost"}
           </button>
         </div>
-        {apply.data && <div className="text-sm text-emerald-600 mb-2">✓ Updated cost on {apply.data.updated.toLocaleString("en-IN")} items.</div>}
+        {apply.data && <div className="text-sm text-[var(--text-primary)] mb-2">✓ Updated cost on {apply.data.updated.toLocaleString("en-IN")} items.</div>}
         <table className="w-full text-sm">
           <thead><tr className="text-xs text-gray-400 border-b"><th className="text-left py-1">Brand</th><th className="w-28 text-right">Discount %</th><th className="w-24">Status</th><th className="w-8"></th></tr></thead>
           <tbody>
@@ -64,7 +64,7 @@ export function CostPricesPage() {
               <tr key={r.name} className="border-b border-gray-50">
                 <td className="py-1 text-slate-700">{r.brand}</td>
                 <td className="text-right text-slate-600">{r.discount_percent}%</td>
-                <td className="text-center"><span className={r.status === "Active" ? "text-emerald-600" : "text-gray-400"}>{r.status}</span></td>
+                <td className="text-center"><span className={r.status === "Active" ? "text-[var(--text-primary)]" : "text-gray-400"}>{r.status}</span></td>
                 <td className="text-right"><button onClick={() => delRule.mutate(r.name!)} className="text-red-400 hover:text-red-600">✕</button></td>
               </tr>
             ))}
@@ -74,7 +74,7 @@ export function CostPricesPage() {
               <td className="text-right"><input className={`${field} w-20 text-right`} type="number" value={draft.discount_percent} onChange={(e) => setDraft({ ...draft, discount_percent: parseFloat(e.target.value) || 0 })} /></td>
               <td className="text-center">
                 <select className={field} value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })}><option>Active</option><option>Inactive</option></select></td>
-              <td className="text-right"><button onClick={() => draft.brand && saveRule.mutate(draft)} className="text-indigo-600 hover:text-indigo-800 text-lg">+</button></td>
+              <td className="text-right"><button onClick={() => draft.brand && saveRule.mutate(draft)} className="text-[var(--text-primary)] hover:text-[var(--text-primary)] text-lg">+</button></td>
             </tr>
           </tbody>
         </table>
@@ -105,7 +105,7 @@ function PerItemCost({ onSaved }: { onSaved: () => void }) {
     const r = await vendorCostGet<{ items: SearchItem[] }>("search_items", { query: val })
     setItems(r.items || [])
   }
-  const field2 = "rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+  const field2 = "rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[var(--border-subtle)] focus:outline-none"
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
       <h2 className="font-semibold text-slate-700 mb-3">Per-item cost override</h2>
@@ -119,7 +119,7 @@ function PerItemCost({ onSaved }: { onSaved: () => void }) {
                 <td className="py-1"><div className="text-slate-700">{it.item_name}</div><div className="text-xs text-gray-400">{it.brand} · {it.item_code}</div></td>
                 <td className="text-right text-gray-500">{inr(it.mrp)}</td>
                 <td className="text-right"><input className="w-24 text-right border border-gray-200 rounded px-1 py-0.5" type="number" defaultValue={it.cost ?? undefined} placeholder={inr(it.cost)} onChange={(e) => setEdits({ ...edits, [it.item_code]: parseFloat(e.target.value) || 0 })} /></td>
-                <td className="text-right"><button onClick={() => save.mutate({ item_code: it.item_code, cost: edits[it.item_code] ?? it.cost ?? 0 })} className="text-indigo-600 hover:text-indigo-800 text-xs font-medium">Save</button></td>
+                <td className="text-right"><button onClick={() => save.mutate({ item_code: it.item_code, cost: edits[it.item_code] ?? it.cost ?? 0 })} className="text-[var(--text-primary)] hover:text-[var(--text-primary)] text-xs font-medium">Save</button></td>
               </tr>
             ))}
           </tbody>

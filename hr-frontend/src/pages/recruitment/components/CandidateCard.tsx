@@ -22,7 +22,7 @@ export function CandidateCard({ candidate, onClick }: Props) {
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="text-gray-400 hover:text-blue-500 shrink-0 mt-0.5"
+            className="text-gray-400 hover:text-[var(--text-tertiary)]0 shrink-0 mt-0.5"
           >
             <ExternalLink size={12} />
           </a>
@@ -32,7 +32,7 @@ export function CandidateCard({ candidate, onClick }: Props) {
       <p className="text-xs text-gray-400 truncate">{candidate.email_id}</p>
 
       {candidate.custom_current_interview_round_name && (
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-gold-600 border-gold-200 bg-gold-50">
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-[var(--text-primary)] border-[var(--border-subtle)] bg-[var(--bg-subtle)]">
           {candidate.custom_current_interview_round_name}
         </Badge>
       )}
@@ -44,7 +44,7 @@ export function CandidateCard({ candidate, onClick }: Props) {
               <Star
                 key={i}
                 size={10}
-                className={i < candidate.applicant_rating! ? "fill-amber-400 text-amber-400" : "text-gray-200"}
+                className={i < candidate.applicant_rating! ? "fill-[var(--text-primary)] text-[var(--text-primary)]" : "text-gray-200"}
               />
             ))}
           </div>

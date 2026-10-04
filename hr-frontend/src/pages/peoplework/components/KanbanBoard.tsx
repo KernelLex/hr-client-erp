@@ -5,10 +5,10 @@ import type { Column, Row } from "../types"
 import { PriorityPill, StatusPill } from "./Pills"
 
 const LANE_ACCENT: Record<string, string> = {
-  good: "#16a34a",
-  warn: "#c8a45c",
+  good: "#171717",
+  warn: "#171717",
   bad: "#dc2626",
-  info: "#1e3a2f",
+  info: "#171717",
 }
 
 function laneAccent(lane: string): string {

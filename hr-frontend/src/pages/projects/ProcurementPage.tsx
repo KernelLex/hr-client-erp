@@ -16,7 +16,7 @@ type GRNList = { grns: GRN[] }
 type SiteInv = { items: { item_description: string; spec?: string; uom?: string; qty: number; value: number }[]; total_value: number; line_count: number }
 
 const inr = (n?: number) => "₹" + (n || 0).toLocaleString("en-IN")
-const CAT_COLORS: Record<string, string> = { Carcass: "bg-amber-50 text-amber-700", Shutter: "bg-orange-50 text-orange-700", Finish: "bg-purple-50 text-purple-700", "Edge Band": "bg-teal-50 text-teal-700", Hardware: "bg-blue-50 text-blue-700" }
+const CAT_COLORS: Record<string, string> = { Carcass: "bg-[var(--bg-subtle)] text-[var(--text-primary)]", Shutter: "bg-[var(--bg-subtle)] text-[var(--text-primary)]", Finish: "bg-[var(--bg-subtle)] text-[var(--text-primary)]", "Edge Band": "bg-[var(--bg-subtle)] text-[var(--text-primary)]", Hardware: "bg-[var(--bg-subtle)] text-[var(--text-primary)]" }
 
 export function ProcurementPage() {
   const { name } = useParams()
@@ -51,11 +51,11 @@ export function ProcurementPage() {
   const setGrnQty = (i: number, v: number) => setGrn(grn ? { ...grn, lines: (grn.lines || []).map((l, j) => j === i ? { ...l, received_qty: v } : l) } : grn)
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <button onClick={() => nav(`/projects/${name}`)} className="text-sm text-indigo-600 hover:underline">← Back to project</button>
+    <div className="p-6 mx-auto space-y-6">
+      <button onClick={() => nav(`/projects/${name}`)} className="text-sm text-[var(--text-primary)] hover:underline">← Back to project</button>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Procurement</h1>
-        <button onClick={() => build.mutate()} disabled={build.isPending} className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+        <button onClick={() => build.mutate()} disabled={build.isPending} className="rounded-md bg-[var(--bg-inverse)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
           {build.isPending ? "Building…" : mr.data?.exists ? "↻ Rebuild from BOQ" : "Build from BOQ"}
         </button>
       </div>
@@ -67,10 +67,10 @@ export function ProcurementPage() {
           <div className="flex justify-between items-center mb-3">
             <div><h2 className="font-semibold text-slate-700">Material Requirement Sheet</h2><div className="text-xs text-gray-400">{mr.data.name} · from {mr.data.source_boqs} · {mr.data.status}</div></div>
             <div className="flex gap-2">
-              <button onClick={() => suggest.mutate()} disabled={suggest.isPending} className="rounded-md border border-emerald-200 text-emerald-700 px-3 py-1.5 text-sm hover:bg-emerald-50 disabled:opacity-40" title="Assign the standard vendor (item brand) to lines with no vendor yet">
-                {suggest.isPending ? "…" : "⚡ Auto-assign vendors"}
+              <button onClick={() => suggest.mutate()} disabled={suggest.isPending} className="rounded-md border border-[var(--border-subtle)] text-[var(--text-primary)] px-3 py-1.5 text-sm hover:bg-[var(--bg-subtle)] disabled:opacity-40" title="Assign the standard vendor (item brand) to lines with no vendor yet">
+                {suggest.isPending ? "…" : "▸ Auto-assign vendors"}
               </button>
-              <button onClick={() => save.mutate()} disabled={!lines || save.isPending} className="rounded-md border border-indigo-200 text-indigo-700 px-3 py-1.5 text-sm hover:bg-indigo-50 disabled:opacity-40">Save vendors/rates</button>
+              <button onClick={() => save.mutate()} disabled={!lines || save.isPending} className="rounded-md border border-[var(--border-subtle)] text-[var(--text-primary)] px-3 py-1.5 text-sm hover:bg-[var(--bg-subtle)] disabled:opacity-40">Save vendors/rates</button>
             </div>
           </div>
           <table className="w-full text-sm">
@@ -98,7 +98,7 @@ export function ProcurementPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex justify-between items-center mb-3">
             <h2 className="font-semibold text-slate-700">VOQ — Vendor Order Quantity</h2>
-            <button onClick={() => genPOs.mutate()} disabled={genPOs.isPending || !voq.data.vendors.length} className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-40">
+            <button onClick={() => genPOs.mutate()} disabled={genPOs.isPending || !voq.data.vendors.length} className="rounded-md bg-[var(--bg-inverse)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-40">
               {genPOs.isPending ? "Generating…" : "Generate POs"}
             </button>
           </div>
@@ -106,7 +106,7 @@ export function ProcurementPage() {
             <div key={v.vendor} className="flex justify-between border-b border-gray-50 py-1.5 text-sm"><span className="text-slate-700">{v.vendor}</span><span className="text-gray-500">{v.lines} lines · {inr(v.value)}</span></div>
           ))}
           {!voq.data.vendors.length && <div className="text-xs text-gray-400">Assign vendors on the requirement lines above, then generate POs.</div>}
-          {voq.data.unassigned > 0 && <div className="text-xs text-amber-600 mt-2">{voq.data.unassigned} line(s) have no vendor yet.</div>}
+          {voq.data.unassigned > 0 && <div className="text-xs text-[var(--text-primary)] mt-2">{voq.data.unassigned} line(s) have no vendor yet.</div>}
         </div>
       )}
 
@@ -115,10 +115,10 @@ export function ProcurementPage() {
         <h2 className="font-semibold text-slate-700 mb-3">Purchase Orders {pos.data?.kpis ? <span className="text-xs text-gray-400 font-normal">· {pos.data.kpis.total} POs · {inr(pos.data.kpis.value)}{pos.data.kpis.intercompany ? ` · ${pos.data.kpis.intercompany} intercompany` : ""}</span> : null}</h2>
         {(pos.data?.pos || []).map((po) => (
           <div key={po.name} className="flex justify-between items-center border-b border-gray-50 py-1.5 text-sm">
-            <div><span className="text-slate-700">{po.vendor}</span> <span className="text-xs text-gray-400">· {po.name} · {inr(po.total)}</span>{po.is_intercompany ? <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600">intercompany → {po.supplying_company}</span> : null}</div>
+            <div><span className="text-slate-700">{po.vendor}</span> <span className="text-xs text-gray-400">· {po.name} · {inr(po.total)}</span>{po.is_intercompany ? <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-[var(--bg-subtle)] text-[var(--text-primary)]">intercompany → {po.supplying_company}</span> : null}</div>
             <div className="flex items-center gap-2">
               {po.status !== "Cancelled" && (
-                <button onClick={() => openGrn.mutate(po.name)} disabled={openGrn.isPending} className="text-xs text-emerald-700 border border-emerald-200 rounded px-2 py-0.5 hover:bg-emerald-50 disabled:opacity-40">📦 Receive</button>
+                <button onClick={() => openGrn.mutate(po.name)} disabled={openGrn.isPending} className="text-xs text-[var(--text-primary)] border border-[var(--border-subtle)] rounded px-2 py-0.5 hover:bg-[var(--bg-subtle)] disabled:opacity-40">▦ Receive</button>
               )}
               <select className="text-xs border border-gray-200 rounded px-1 py-0.5" value={po.status} onChange={(e) => poStatus.mutate({ name: po.name, status: e.target.value })}>
                 <option>Draft</option><option>Sent</option><option>Received</option><option>Cancelled</option>
@@ -131,13 +131,13 @@ export function ProcurementPage() {
 
       {/* Goods Receipt editor (open when a PO is being received) */}
       {grn && (
-        <div className="bg-white rounded-xl shadow-sm border border-emerald-200 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-[var(--border-subtle)] p-5">
           <div className="flex justify-between items-center mb-3">
             <div><h2 className="font-semibold text-slate-700">Goods Receipt — {grn.vendor}</h2><div className="text-xs text-gray-400">{grn.name} · PO {grn.purchase_order} · {grn.status}</div></div>
             <div className="flex gap-2">
               <button onClick={() => setGrn(null)} className="rounded-md border border-gray-200 text-gray-500 px-3 py-1.5 text-sm hover:bg-gray-50">Close</button>
-              <button onClick={() => saveGrn.mutate()} disabled={saveGrn.isPending} className="rounded-md border border-indigo-200 text-indigo-700 px-3 py-1.5 text-sm hover:bg-indigo-50 disabled:opacity-40">Save</button>
-              <button onClick={() => confirmGrn.mutate()} disabled={confirmGrn.isPending || grn.status === "Received"} className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-40">{grn.status === "Received" ? "Received ✓" : "Confirm receipt"}</button>
+              <button onClick={() => saveGrn.mutate()} disabled={saveGrn.isPending} className="rounded-md border border-[var(--border-subtle)] text-[var(--text-primary)] px-3 py-1.5 text-sm hover:bg-[var(--bg-subtle)] disabled:opacity-40">Save</button>
+              <button onClick={() => confirmGrn.mutate()} disabled={confirmGrn.isPending || grn.status === "Received"} className="rounded-md bg-[var(--bg-inverse)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-40">{grn.status === "Received" ? "Received ✓" : "Confirm receipt"}</button>
             </div>
           </div>
           <table className="w-full text-sm">
@@ -166,7 +166,7 @@ export function ProcurementPage() {
           {(grns.data?.grns || []).map((g) => (
             <div key={g.name} className="flex justify-between items-center border-b border-gray-50 py-1.5 text-sm">
               <div><span className="text-slate-700">{g.vendor}</span> <span className="text-xs text-gray-400">· {g.name} · {g.receipt_date} · {inr(g.total)}</span></div>
-              <span className={`text-xs px-1.5 py-0.5 rounded ${g.status === "Received" ? "bg-emerald-50 text-emerald-700" : "bg-gray-50 text-gray-500"}`}>{g.status}</span>
+              <span className={`text-xs px-1.5 py-0.5 rounded ${g.status === "Received" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-gray-50 text-gray-500"}`}>{g.status}</span>
             </div>
           ))}
         </div>

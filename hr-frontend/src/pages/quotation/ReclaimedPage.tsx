@@ -55,9 +55,9 @@ export function ReclaimedPage() {
   return (
     <>
       {savings && savings.pieces_reused > 0 && (
-        <div className="mb-4 rounded-xl p-4 shadow-sm" style={{ border: "0.5px solid #bbf7d0", background: "#f0fdf4" }}>
+        <div className="mb-4 rounded-xl p-4 shadow-sm" style={{ border: "0.5px solid #F5F5F5", background: "#F5F5F5" }}>
           <div className="mb-3 flex flex-wrap items-baseline gap-x-6 gap-y-1">
-            <span className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: "#15803d" }}>♻ Reuse impact</span>
+            <span className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: "#171717" }}>↻ Reuse impact</span>
             <span className="text-sm" style={{ color: "var(--text-primary)" }}>
               <b>{inr(savings.waste_avoided)}</b> waste avoided · <b>{savings.pieces_reused}</b> pieces reused
             </span>
@@ -73,8 +73,8 @@ export function ReclaimedPage() {
                   {savings.by_material.slice(0, 6).map((m) => (
                     <div key={m.material} className="flex items-center gap-2">
                       <div className="w-32 shrink-0 truncate text-xs" style={{ color: "var(--text-primary)" }}>{m.material}</div>
-                      <div className="h-3 flex-1 rounded" style={{ background: "#dcfce7" }}>
-                        <div className="h-3 rounded" style={{ width: `${Math.max(4, (m.value / maxMat) * 100)}%`, background: "#22c55e" }} />
+                      <div className="h-3 flex-1 rounded" style={{ background: "#F5F5F5" }}>
+                        <div className="h-3 rounded" style={{ width: `${Math.max(4, (m.value / maxMat) * 100)}%`, background: "#171717" }} />
                       </div>
                       <div className="w-20 shrink-0 text-right text-xs tabular-nums" style={{ color: "var(--text-muted)" }}>{inr(m.value)}</div>
                     </div>

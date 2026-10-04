@@ -40,8 +40,8 @@ function getMonthKey(dateStr: string): string {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    Pending: "bg-yellow-100 text-yellow-700 border border-yellow-200",
-    Approved: "bg-green-100 text-green-700 border border-green-200",
+    Pending: "bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)]",
+    Approved: "bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)]",
     Rejected: "bg-red-100 text-red-700 border border-red-200",
   }
   return (
@@ -71,7 +71,7 @@ function LeaveDocumentsPanel({ leaveId }: { leaveId: string }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-forest-700 mt-1"
+        className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-[var(--text-primary)] mt-1"
       >
         <Paperclip size={11} />
         {files.length > 0 ? `${files.length} document${files.length > 1 ? "s" : ""}` : "Attach documents"}
@@ -101,7 +101,7 @@ function LeaveDocumentsPanel({ leaveId }: { leaveId: string }) {
                 href={f.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-forest-700 hover:underline truncate"
+                className="text-xs text-[var(--text-primary)] hover:underline truncate"
               >
                 {f.file_name}
               </a>
@@ -114,7 +114,7 @@ function LeaveDocumentsPanel({ leaveId }: { leaveId: string }) {
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={upload.isPending}
-        className="flex items-center gap-1 text-xs text-forest-700 hover:text-forest-800 disabled:opacity-50"
+        className="flex items-center gap-1 text-xs text-[var(--text-primary)] hover:text-[var(--text-primary)] disabled:opacity-50"
       >
         <Upload size={11} />
         {upload.isPending ? "Uploading…" : "Upload document"}
@@ -181,11 +181,11 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
     <Card id="apply-leave-form" className="bg-white shadow-sm border-0">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <Plus size={15} className="text-forest-500" />
+          <Plus size={15} className="text-[var(--text-tertiary)]0" />
           Apply for Leave
           {initialType && (
             <span className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#F3E8FF", color: "#c8a45c" }}>
+              style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
               {initialType}
             </span>
           )}
@@ -200,7 +200,7 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
             <select
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-500 bg-white"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] bg-white"
             >
               <option value="">Select leave type…</option>
               {LEAVE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -220,7 +220,7 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
                   setFromDate(e.target.value)
                   if (toDate && e.target.value > toDate) setToDate(e.target.value)
                 }}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-500"
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
               />
             </div>
             <div>
@@ -232,15 +232,15 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
                 value={toDate}
                 min={fromDate || today}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-500"
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
               />
             </div>
           </div>
 
           {fromDate && toDate && (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 flex items-center gap-2">
-              <Clock size={14} className="text-forest-500" />
-              <span className="text-sm text-forest-800">
+            <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg px-4 py-2.5 flex items-center gap-2">
+              <Clock size={14} className="text-[var(--text-tertiary)]0" />
+              <span className="text-sm text-[var(--text-primary)]">
                 <span className="font-semibold">{totalDays}</span> working day{totalDays !== 1 ? "s" : ""} (Sundays excluded)
               </span>
             </div>
@@ -268,14 +268,14 @@ function ApplyLeaveForm({ leaves, onSuccess, initialType = "" }: { leaves: Leave
               onChange={(e) => setReason(e.target.value)}
               rows={3}
               placeholder="Briefly explain the reason for your leave…"
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-500 resize-none"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] resize-none"
             />
           </div>
 
           <Button
             type="submit"
             disabled={applyMutation.isPending || leavesThisMonth >= MAX_LEAVES_PER_MONTH}
-            className="w-full bg-forest-700 hover:bg-forest-800 text-white font-semibold py-2 rounded-lg text-sm"
+            className="w-full bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] text-white font-semibold py-2 rounded-lg text-sm"
           >
             {applyMutation.isPending ? "Submitting…" : "Submit Leave Request"}
           </Button>
@@ -308,19 +308,19 @@ function LeaveBalanceCard({ leaves }: { leaves: LeaveApplication[] }) {
     <Card className="bg-white shadow-sm border-0">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <CalendarDays size={15} className="text-emerald-500" />
+          <CalendarDays size={15} className="text-[var(--text-tertiary)]0" />
           Leave This Year
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold text-emerald-700">{total}</p>
-            <p className="text-[11px] text-emerald-600 mt-0.5">Days taken</p>
+          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl p-3 text-center">
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{total}</p>
+            <p className="text-[11px] text-[var(--text-primary)] mt-0.5">Days taken</p>
           </div>
-          <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold text-yellow-600">{pending}</p>
-            <p className="text-[11px] text-yellow-600 mt-0.5">Pending</p>
+          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl p-3 text-center">
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{pending}</p>
+            <p className="text-[11px] text-[var(--text-primary)] mt-0.5">Pending</p>
           </div>
         </div>
 
@@ -332,7 +332,7 @@ function LeaveBalanceCard({ leaves }: { leaves: LeaveApplication[] }) {
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-gray-200 rounded-full h-1.5">
               <div
-                className={`h-1.5 rounded-full ${thisMonthCount >= MAX_LEAVES_PER_MONTH ? "bg-red-500" : "bg-forest-500"}`}
+                className={`h-1.5 rounded-full ${thisMonthCount >= MAX_LEAVES_PER_MONTH ? "bg-red-500" : "bg-[var(--bg-subtle)]0"}`}
                 style={{ width: `${Math.min((thisMonthCount / MAX_LEAVES_PER_MONTH) * 100, 100)}%` }}
               />
             </div>
@@ -422,11 +422,11 @@ function LeaveHistoryTable({ leaves, isLoading }: { leaves: LeaveApplication[]; 
                     </tr>
                   )}
                   {leave.status === "Approved" && leave.admin_remarks && (
-                    <tr key={`${leave.name}-remarks`} className="border-b border-gray-50 bg-green-50">
+                    <tr key={`${leave.name}-remarks`} className="border-b border-gray-50 bg-[var(--bg-subtle)]">
                       <td colSpan={8} className="px-3 py-2">
                         <div className="flex items-start gap-2">
-                          <CheckCircle2 size={13} className="text-green-500 mt-0.5 shrink-0" />
-                          <span className="text-xs text-green-700">{leave.admin_remarks}</span>
+                          <CheckCircle2 size={13} className="text-[var(--text-tertiary)]0 mt-0.5 shrink-0" />
+                          <span className="text-xs text-[var(--text-primary)]">{leave.admin_remarks}</span>
                         </div>
                       </td>
                     </tr>
@@ -450,7 +450,7 @@ export function LeavePage() {
   // Admin (Owais) sees the approval panel; others see the apply form
   if (isAdmin) {
     return (
-      <div className="p-6 max-w-6xl space-y-6 min-h-full">
+      <div className="p-6 space-y-6 min-h-full">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Leave Requests</h1>
           <p className="text-sm text-gray-500 mt-0.5">Review and approve team leave requests</p>
@@ -483,7 +483,7 @@ function EmployeeLeavePage() {
   }, [preSelectedType])
 
   return (
-    <div className="p-6 max-w-6xl space-y-6 min-h-full">
+    <div className="p-6 space-y-6 min-h-full">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">My Leave</h1>
         <p className="text-sm text-gray-500 mt-0.5">Apply for leave and track your requests</p>

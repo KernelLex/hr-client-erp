@@ -69,16 +69,16 @@ function fmtDate(d: string | null) {
 
 function voucherBadge(type: string) {
   const map: Record<string, string> = {
-    Sales: "bg-forest-100 text-forest-700",
-    "PERFORMA INVOICE": "bg-forest-50 text-forest-600",
+    Sales: "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+    "PERFORMA INVOICE": "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
     Purchase: "bg-red-100 text-red-700",
-    Receipt: "bg-emerald-100 text-emerald-700",
-    Payment: "bg-orange-100 text-orange-700",
-    Journal: "bg-gold-100 text-gold-700",
-    "Credit Note": "bg-yellow-100 text-yellow-700",
-    "Debit Note": "bg-pink-100 text-pink-700",
+    Receipt: "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+    Payment: "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+    Journal: "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+    "Credit Note": "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+    "Debit Note": "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
     "Purchase Order": "bg-red-50 text-red-600",
-    "Sales Order": "bg-blue-50 text-blue-600",
+    "Sales Order": "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
   }
   return map[type] ?? "bg-gray-100 text-gray-600"
 }
@@ -101,20 +101,20 @@ function PartyDrawer({ party, onClose }: { party: string; onClose: () => void })
           <div>
             <p className="font-semibold text-gray-900 text-sm">{party}</p>
             {data && (
-              <p className={`text-xs mt-0.5 ${data.balance > 0 ? "text-emerald-600" : data.balance < 0 ? "text-red-500" : "text-gray-400"}`}>
+              <p className={`text-xs mt-0.5 ${data.balance > 0 ? "text-[var(--text-primary)]" : data.balance < 0 ? "text-red-500" : "text-gray-400"}`}>
                 Outstanding: {data.balance_fmt} · {data.group}
               </p>
             )}
           </div>
           {data && (
-            <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${data.is_debtor ? "bg-forest-100 text-forest-700" : data.is_creditor ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}>
+            <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${data.is_debtor ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : data.is_creditor ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}>
               {data.is_debtor ? "Debtor" : data.is_creditor ? "Creditor" : "Ledger"}
             </span>
           )}
         </div>
 
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center"><Loader2 size={24} className="text-forest-500 animate-spin" /></div>
+          <div className="flex-1 flex items-center justify-center"><Loader2 size={24} className="text-[var(--text-tertiary)]0 animate-spin" /></div>
         ) : !data ? (
           <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">No data found</div>
         ) : (
@@ -291,10 +291,10 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
 
   if (phase === "done") return (
     <div className="flex flex-col items-center gap-3 py-8">
-      <CheckCircle2 size={40} className="text-emerald-500" />
+      <CheckCircle2 size={40} className="text-[var(--text-tertiary)]0" />
       <p className="font-semibold text-gray-800">Import complete — all values refreshed</p>
       <p className="text-sm text-gray-500 text-center max-w-lg">{msg}</p>
-      <button onClick={reset} className="mt-1 px-4 py-2 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-700">Import Again</button>
+      <button onClick={reset} className="mt-1 px-4 py-2 bg-[var(--bg-inverse)] text-white rounded-lg text-sm font-medium hover:bg-[var(--bg-inverse)]">Import Again</button>
     </div>
   )
   if (phase === "error") return (
@@ -308,7 +308,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
   if (phase !== "idle") return (
     <div className="space-y-3 py-4">
       <div className="flex items-center gap-2.5">
-        <Loader2 size={16} className="text-forest-500 animate-spin shrink-0" />
+        <Loader2 size={16} className="text-[var(--text-tertiary)]0 animate-spin shrink-0" />
         <p className="text-sm text-gray-700">{msg}</p>
       </div>
       <div>
@@ -321,7 +321,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
           <span>{pct}%</span>
         </div>
         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-forest-500 rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
+          <div className="h-full bg-[var(--bg-subtle)]0 rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
         </div>
       </div>
       <p className="text-xs text-gray-400">
@@ -331,7 +331,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
   )
 
   const roleBadge = (role: string) =>
-    role === "masters" ? "bg-blue-100 text-blue-700" : role === "transactions" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
+    role === "masters" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : role === "transactions" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-gray-100 text-gray-500"
   const fileLabel = (f: ServerFile) => `${f.filename} · ${f.size_fmt} · ${f.modified}`
 
   return (
@@ -356,7 +356,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
           {filesLoading && !listing ? (
             <div className="flex items-center gap-2 py-6 text-sm text-gray-400"><Loader2 size={16} className="animate-spin" /> Scanning server for Tally files…</div>
           ) : !listing || listing.files.length === 0 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)]">
               No Tally XML files found on the server. Place your exports in <code className="font-mono">/home/vera/tally_uploads</code> (or upload small files from your computer), then click Rescan.
             </div>
           ) : (
@@ -364,7 +364,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
               <div>
                 <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Masters file</label>
                 <select value={selMasters} onChange={e => setSelMasters(e.target.value)}
-                  className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-forest-400">
+                  className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-[var(--border-subtle)]">
                   <option value="">Select masters export…</option>
                   {listing.files.map(f => <option key={f.path} value={f.path}>{fileLabel(f)}{f.role === "masters" ? "  ✓" : ""}</option>)}
                 </select>
@@ -372,7 +372,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
               <div>
                 <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Transactions file</label>
                 <select value={selTrans} onChange={e => setSelTrans(e.target.value)}
-                  className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-forest-400">
+                  className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-[var(--border-subtle)]">
                   <option value="">Select transactions export…</option>
                   {listing.files.map(f => <option key={f.path} value={f.path}>{fileLabel(f)}{f.role === "transactions" ? "  ✓" : ""}</option>)}
                 </select>
@@ -399,14 +399,14 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
               <RefreshCw size={12} className={filesLoading ? "animate-spin" : ""} /> Rescan server
             </button>
             <button disabled={!selMasters || !selTrans} onClick={importFromServer}
-              className="px-5 py-2 bg-forest-600 text-white rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-forest-700 transition-colors">
+              className="px-5 py-2 bg-[var(--bg-inverse)] text-white rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--bg-inverse)] transition-colors">
               Import &amp; refresh everything
             </button>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs text-blue-800 flex items-start gap-2">
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-2.5 text-xs text-[var(--text-primary)] flex items-start gap-2">
             <AlertCircle size={13} className="shrink-0 mt-0.5" />
             <span>Large files are supported — they're uploaded in chunks, so the full Transactions export (~1.5 GB) and Masters (~120 MB) work fine over the internet. A big file can take a while depending on your connection speed; keep this tab open until it finishes.</span>
           </div>
@@ -416,10 +416,10 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
               { label: "Transactions XML", hint: "All Transactions.xml", file: transFile, ref: transRef, set: setTransFile },
             ].map(({ label, hint, file, ref, set }) => (
               <div key={label} onClick={() => ref.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all ${file ? "border-forest-300 bg-forest-50" : "border-gray-200 hover:border-forest-300 hover:bg-slate-50"}`}>
+                className={`border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all ${file ? "border-[var(--border-subtle)] bg-[var(--bg-subtle)]" : "border-gray-200 hover:border-[var(--border-subtle)] hover:bg-slate-50"}`}>
                 <input ref={ref} type="file" accept=".xml" className="hidden" onChange={e => set(e.target.files?.[0] ?? null)} />
                 <div className="flex items-start gap-3">
-                  {file ? <CheckCircle2 size={15} className="text-forest-500 mt-0.5 shrink-0" /> : <Upload size={15} className="text-gray-300 mt-0.5 shrink-0" />}
+                  {file ? <CheckCircle2 size={15} className="text-[var(--text-tertiary)]0 mt-0.5 shrink-0" /> : <Upload size={15} className="text-gray-300 mt-0.5 shrink-0" />}
                   <div>
                     <p className="text-sm font-semibold text-gray-800">{label}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{file ? `${file.name} (${fmtSize(file.size)})` : hint}</p>
@@ -431,7 +431,7 @@ function TallyUpload({ onDone }: { onDone: () => void }) {
           <div className="flex items-center justify-between">
             <p className="text-xs text-gray-400">Gateway of Tally → Data → Export</p>
             <button disabled={!mastersFile || !transFile} onClick={uploadAndImport}
-              className="px-5 py-2 bg-forest-600 text-white rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-forest-700 transition-colors">
+              className="px-5 py-2 bg-[var(--bg-inverse)] text-white rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--bg-inverse)] transition-colors">
               Upload &amp; Import
             </button>
           </div>
@@ -467,10 +467,10 @@ function SearchTab({ onSelectParty, totalVouchers }: { onSelectParty: (p: string
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === "Enter" && doSearch()}
             placeholder="Search party, narration, or voucher no…"
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-forest-400" />
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--border-subtle)]" />
         </div>
         <select value={vtype} onChange={e => setVtype(e.target.value)}
-          className="py-2 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-forest-400 bg-white text-gray-700">
+          className="py-2 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--border-subtle)] bg-white text-gray-700">
           <option value="">All Types</option>
           {["Sales","Purchase","Receipt","Payment","Journal","Credit Note","Debit Note","PERFORMA INVOICE","Purchase Order","Sales Order","Contra"].map(t => (
             <option key={t} value={t}>{t}</option>
@@ -478,18 +478,18 @@ function SearchTab({ onSelectParty, totalVouchers }: { onSelectParty: (p: string
         </select>
         <div className="flex gap-2">
           <input type="date" value={fromD} onChange={e => setFromD(e.target.value)}
-            className="flex-1 py-2 px-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-forest-400" />
+            className="flex-1 py-2 px-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--border-subtle)]" />
           <input type="date" value={toD} onChange={e => setToD(e.target.value)}
-            className="flex-1 py-2 px-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-forest-400" />
+            className="flex-1 py-2 px-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--border-subtle)]" />
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <button onClick={doSearch} className="px-5 py-2 bg-forest-600 text-white rounded-lg text-sm font-semibold hover:bg-forest-700 transition-colors">Search</button>
+        <button onClick={doSearch} className="px-5 py-2 bg-[var(--bg-inverse)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--bg-inverse)] transition-colors">Search</button>
         {triggered && <button onClick={() => { setQ(""); setVtype(""); setFromD(""); setToD(""); setTriggered(false) }} className="text-sm text-gray-400 hover:text-gray-600">Clear</button>}
         {data && <span className="text-xs text-gray-400">{data.total.toLocaleString()} results</span>}
       </div>
 
-      {isLoading && <div className="flex justify-center py-8"><Loader2 size={20} className="text-forest-500 animate-spin" /></div>}
+      {isLoading && <div className="flex justify-center py-8"><Loader2 size={20} className="text-[var(--text-tertiary)]0 animate-spin" /></div>}
 
       {data && data.results.length > 0 && (
         <>
@@ -631,10 +631,10 @@ export default function OperationsPage() {
         {finSummary?.max_date && (() => {
           const gapDays = Math.floor((Date.now() - new Date(finSummary.max_date).getTime()) / 86_400_000)
           return gapDays > 20 ? (
-            <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "var(--color-warning-bg)", border: "0.5px solid #fde68a" }}>
+            <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "var(--color-warning-bg)", border: "0.5px solid #F5F5F5" }}>
               <div className="flex items-center gap-2">
                 <AlertCircle size={14} style={{ color: "var(--color-warning)" }} className="shrink-0" />
-                <span className="text-sm" style={{ color: "#92400e" }}>
+                <span className="text-sm" style={{ color: "#171717" }}>
                   Tally data is <strong>{gapDays} days</strong> behind. Last import: {finSummary.max_date}.
                   Upload the latest XML to get current numbers.
                 </span>
@@ -683,7 +683,7 @@ export default function OperationsPage() {
         {tab === "import" && (
           <div className="rounded-xl p-5 bg-white" style={{ border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
             <div className="flex items-center gap-2 mb-5">
-              <Upload size={16} className="text-forest-500" />
+              <Upload size={16} className="text-[var(--text-tertiary)]0" />
               <p className="text-base font-semibold text-gray-900">Update Tally Data</p>
               <span className="text-xs text-gray-400">Upload new Tally XML exports to refresh all values across the app</span>
             </div>

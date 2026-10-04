@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils"
 
 const STAGE_STYLES: Record<PipelineStage, { header: string; badge: string }> = {
   "Application Received": { header: "bg-gray-100 text-gray-700", badge: "bg-gray-200 text-gray-700" },
-  "Screening":            { header: "bg-blue-50 text-blue-700",  badge: "bg-blue-100 text-blue-700" },
-  "Interview":            { header: "bg-gold-50 text-gold-700", badge: "bg-gold-100 text-gold-700" },
-  "Offer Sent":           { header: "bg-orange-50 text-orange-700", badge: "bg-orange-100 text-orange-700" },
-  "Hired":                { header: "bg-green-50 text-green-700",  badge: "bg-green-100 text-green-700" },
+  "Screening":            { header: "bg-[var(--bg-subtle)] text-[var(--text-primary)]",  badge: "bg-[var(--bg-subtle)] text-[var(--text-primary)]" },
+  "Interview":            { header: "bg-[var(--bg-subtle)] text-[var(--text-primary)]", badge: "bg-[var(--bg-subtle)] text-[var(--text-primary)]" },
+  "Offer Sent":           { header: "bg-[var(--bg-subtle)] text-[var(--text-primary)]", badge: "bg-[var(--bg-subtle)] text-[var(--text-primary)]" },
+  "Hired":                { header: "bg-[var(--bg-subtle)] text-[var(--text-primary)]",  badge: "bg-[var(--bg-subtle)] text-[var(--text-primary)]" },
   "Rejected":             { header: "bg-red-50 text-red-700",    badge: "bg-red-100 text-red-700" },
 }
 

@@ -52,9 +52,9 @@ interface MyOrgDocs {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const COMPANY_COLOR: Record<string, string> = {
-  "Vera Enterprises": "bg-blue-600",
-  "Schones Leben": "bg-purple-600",
-  "Hagan Modular": "bg-orange-500",
+  "Vera Enterprises": "bg-[var(--bg-inverse)]",
+  "Schones Leben": "bg-[var(--bg-inverse)]",
+  "Hagan Modular": "bg-[var(--bg-subtle)]0",
 }
 
 const COMPANIES = ["Vera Enterprises", "Schones Leben", "Hagan Modular"]
@@ -252,7 +252,7 @@ function EditModal({
         <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-[var(--bg-inverse)] text-white rounded-lg hover:bg-[var(--bg-inverse)] disabled:opacity-50">
             <Save size={14} />{saving ? "Saving…" : "Save"}
           </button>
         </div>
@@ -295,7 +295,7 @@ function DocRow({
 
   return (
     <>
-      <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all group">
+      <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-100 hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] transition-all group">
         <div className="min-w-0 flex-1 cursor-pointer" onClick={onView}>
           <p className="text-sm font-medium text-gray-900 truncate">{primary}</p>
           {secondary && <p className="text-xs text-gray-500 truncate mt-0.5">{secondary}</p>}
@@ -304,7 +304,7 @@ function DocRow({
           {badge && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{badge}</span>}
           {isAdmin && (
             <>
-              <button onClick={onEdit} className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-indigo-600 transition-all" title="Edit">
+              <button onClick={onEdit} className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-[var(--text-primary)] transition-all" title="Edit">
                 <Pencil size={13} />
               </button>
               <button onClick={() => setConfirmDel(true)} className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 transition-all" title="Delete">
@@ -330,16 +330,16 @@ function SectionHeader({ icon: Icon, title, count, isAdmin, onAdd, loading }: {
 }) {
   return (
     <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-50">
-      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
-        <Icon className="w-4 h-4 text-indigo-600" />
+      <div className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] flex items-center justify-center shrink-0">
+        <Icon className="w-4 h-4 text-[var(--text-primary)]" />
       </div>
       <h3 className="font-semibold text-gray-900 text-sm flex-1">{title}</h3>
       {count !== undefined && !loading && (
-        <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-medium">{count}</span>
+        <span className="text-xs bg-[var(--bg-subtle)] text-[var(--text-primary)] px-2 py-0.5 rounded-full font-medium">{count}</span>
       )}
       {isAdmin && (
         <button onClick={onAdd}
-          className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+          className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-[var(--bg-inverse)] text-white rounded-lg hover:bg-[var(--bg-inverse)] transition-colors">
           <Plus size={12} /> Add
         </button>
       )}
@@ -413,11 +413,11 @@ export function OrgHubPage() {
   const { q, primaryKey, secondaryKey, badgeKey } = tabData[tab]
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-app, #F8FAFC)" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg-app, #fafafa)" }}>
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-6 py-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[var(--bg-inverse)] flex items-center justify-center shadow shrink-0">
             <Building2 className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -438,8 +438,8 @@ export function OrgHubPage() {
               <button key={c} onClick={() => setCompany(c)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   company === c
-                    ? `${COMPANY_COLOR[c] ?? "bg-indigo-600"} text-white shadow-sm`
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-indigo-300"
+                    ? `${COMPANY_COLOR[c] ?? "bg-[var(--bg-inverse)]"} text-white shadow-sm`
+                    : "bg-white text-gray-600 border border-gray-200 hover:border-[var(--border-subtle)]"
                 }`}>
                 {c}
               </button>
@@ -456,10 +456,10 @@ export function OrgHubPage() {
             return (
               <button key={id} onClick={() => setTab(id)}
                 className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  tab === id ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-800"
+                  tab === id ? "border-[var(--border-subtle)] text-[var(--text-primary)]" : "border-transparent text-gray-500 hover:text-gray-800"
                 }`}>
                 <Icon className="w-3.5 h-3.5" />{label}
-                <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${tab === id ? "bg-indigo-50 text-indigo-600" : "bg-gray-100 text-gray-500"}`}>
+                <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${tab === id ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-gray-100 text-gray-500"}`}>
                   {cnt}
                 </span>
               </button>
@@ -469,7 +469,7 @@ export function OrgHubPage() {
       </div>
 
       {/* Content */}
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-6 mx-auto">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <SectionHeader
             icon={currentTab.icon}

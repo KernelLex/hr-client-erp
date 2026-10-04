@@ -15,15 +15,15 @@ import { VoucherDocument, type VoucherRow } from "@/pages/Operations/VoucherBrow
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const CAT_COLORS: Record<string, string> = {
-  "B2B Sales":       "#16a34a",
-  "B2C Sales":       "#0d9488",
+  "B2B Sales":       "#171717",
+  "B2C Sales":       "#171717",
   "B2B Purchase":    "#dc2626",
-  "Project":         "#2563eb",
+  "Project":         "#171717",
   "Stock Movement":  "#6b7280",
-  "Collection":      "#059669",
-  "Payment":         "#d97706",
-  "Journal/Contra":  "#c8a45c",
-  "Other":           "#94a3b8",
+  "Collection":      "#171717",
+  "Payment":         "#171717",
+  "Journal/Contra":  "#171717",
+  "Other":           "#a6a6a6",
 }
 
 function fmtShort(d: string): string {
@@ -53,11 +53,11 @@ function anomalyToVoucherRow(a: AnomalyRow): VoucherRow {
 function StatsStrip({ stats }: { stats: EnrichmentStats }) {
   const pct = stats.total > 0 ? Math.round((stats.enriched / stats.total) * 100) : 0
   const cards = [
-    { label: "Total Vouchers", value: stats.total.toLocaleString(),     color: "#1e3a2f", bg: "#eef5f1" },
-    { label: "Enriched by AI", value: stats.enriched.toLocaleString(),  color: "#059669", bg: "#ecfdf5" },
-    { label: "Pending",        value: stats.pending.toLocaleString(),    color: "#d97706", bg: "#fffbeb" },
+    { label: "Total Vouchers", value: stats.total.toLocaleString(),     color: "#171717", bg: "#F5F5F5" },
+    { label: "Enriched by AI", value: stats.enriched.toLocaleString(),  color: "#171717", bg: "#F5F5F5" },
+    { label: "Pending",        value: stats.pending.toLocaleString(),    color: "#171717", bg: "#F5F5F5" },
     { label: "Anomalies",      value: stats.anomalies.toLocaleString(),  color: "#dc2626", bg: "#fef2f2" },
-    { label: "Human Verified", value: stats.verified.toLocaleString(),   color: "#0891b2", bg: "#ecfeff" },
+    { label: "Human Verified", value: stats.verified.toLocaleString(),   color: "#171717", bg: "#F5F5F5" },
   ]
   return (
     <div className="space-y-3">
@@ -73,10 +73,10 @@ function StatsStrip({ stats }: { stats: EnrichmentStats }) {
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-medium text-gray-600">Enrichment coverage</span>
-            <span className="text-xs font-bold text-forest-600">{pct}%</span>
+            <span className="text-xs font-bold text-[var(--text-primary)]">{pct}%</span>
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-forest-500 rounded-full transition-all duration-500"
+            <div className="h-full bg-[var(--bg-subtle)]0 rounded-full transition-all duration-500"
                  style={{ width: `${pct}%` }} />
           </div>
         </div>
@@ -130,14 +130,14 @@ function OverviewTab({ stats, onRefreshStats }: { stats: EnrichmentStats; onRefr
       {/* Enrichment control card */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 bg-forest-50 rounded-xl flex items-center justify-center">
-            <BookOpen size={18} className="text-forest-600" strokeWidth={1.5} />
+          <div className="w-10 h-10 bg-[var(--bg-subtle)] rounded-xl flex items-center justify-center">
+            <BookOpen size={18} className="text-[var(--text-primary)]" strokeWidth={1.5} />
           </div>
           <div>
             <h3 className="font-semibold text-gray-800">Ollama Enrichment</h3>
             <p className="text-xs text-gray-400">Uses local llama3.1 model</p>
           </div>
-          {isRunning && <Loader2 size={16} className="text-forest-500 animate-spin ml-auto" />}
+          {isRunning && <Loader2 size={16} className="text-[var(--text-tertiary)]0 animate-spin ml-auto" />}
         </div>
 
         {isRunning && statusData && (
@@ -147,7 +147,7 @@ function OverviewTab({ stats, onRefreshStats }: { stats: EnrichmentStats; onRefr
               <span>{statusData.progress}%</span>
             </div>
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-forest-500 rounded-full transition-all duration-300"
+              <div className="h-full bg-[var(--bg-subtle)]0 rounded-full transition-all duration-300"
                    style={{ width: `${statusData.progress}%` }} />
             </div>
             <p className="text-xs text-gray-400 mt-1.5">
@@ -157,7 +157,7 @@ function OverviewTab({ stats, onRefreshStats }: { stats: EnrichmentStats; onRefr
         )}
 
         {!isRunning && statusData?.status === "done" && (
-          <div className="mb-4 flex items-center gap-2 text-sm text-green-600 bg-green-50 rounded-xl px-3 py-2">
+          <div className="mb-4 flex items-center gap-2 text-sm text-[var(--text-primary)] bg-[var(--bg-subtle)] rounded-xl px-3 py-2">
             <CheckCircle2 size={14} /> <span>{statusData.message}</span>
           </div>
         )}
@@ -168,7 +168,7 @@ function OverviewTab({ stats, onRefreshStats }: { stats: EnrichmentStats; onRefr
           {!isRunning ? (
             <button onClick={() => startMut.mutate()}
               disabled={startMut.isPending || stats.pending === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-forest-600 text-white rounded-xl hover:bg-forest-700 disabled:opacity-40 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[var(--bg-inverse)] text-white rounded-xl hover:bg-[var(--bg-inverse)] disabled:opacity-40 transition-colors">
               {startMut.isPending ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
               {stats.pending === 0 ? "All enriched" : `Enrich ${stats.pending.toLocaleString()} pending`}
             </button>
@@ -195,7 +195,7 @@ function OverviewTab({ stats, onRefreshStats }: { stats: EnrichmentStats; onRefr
           <div className="space-y-2.5">
             {Object.entries(stats.categories).sort(([,a],[,b]) => b - a).map(([cat, cnt]) => {
               const pct = Math.round((cnt / totalCatCount) * 100)
-              const color = CAT_COLORS[cat] || "#94a3b8"
+              const color = CAT_COLORS[cat] || "#a6a6a6"
               return (
                 <div key={cat}>
                   <div className="flex items-center justify-between text-xs mb-0.5">
@@ -254,8 +254,8 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
   if (anomalyCount === 0) {
     return (
       <div className="py-16 flex flex-col items-center gap-3 bg-white rounded-2xl border border-gray-100">
-        <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center">
-          <CheckCircle2 size={26} className="text-green-500" />
+        <div className="w-14 h-14 bg-[var(--bg-subtle)] rounded-2xl flex items-center justify-center">
+          <CheckCircle2 size={26} className="text-[var(--text-tertiary)]0" />
         </div>
         <p className="font-semibold text-gray-700">No anomalies found</p>
         <p className="text-sm text-gray-400">All enriched vouchers passed anomaly checks</p>
@@ -270,7 +270,7 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
           <div className="flex items-center gap-3">
             <input type="checkbox" checked={allSelected}
               onChange={() => allSelected ? setSelected(new Set()) : setSelected(new Set(allGuids))}
-              className="rounded border-gray-300 text-forest-600 cursor-pointer" />
+              className="rounded border-gray-300 text-[var(--text-primary)] cursor-pointer" />
             <span className="text-xs text-gray-500">
               {selected.size > 0 ? `${selected.size} selected` : `${data?.total ?? anomalyCount} anomalies`}
             </span>
@@ -279,7 +279,7 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
           {selected.size > 0 && (
             <button onClick={() => dismissAllMut.mutate([...selected])}
               disabled={dismissAllMut.isPending}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors">
               {dismissAllMut.isPending ? <Loader2 size={11} className="animate-spin" /> : <ThumbsUp size={11} />}
               Dismiss {selected.size} as OK
             </button>
@@ -287,7 +287,7 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
         </div>
 
         {isLoading ? (
-          <div className="py-12 flex justify-center"><Loader2 size={22} className="text-forest-400 animate-spin" /></div>
+          <div className="py-12 flex justify-center"><Loader2 size={22} className="text-[var(--text-primary)] animate-spin" /></div>
         ) : rows.length === 0 ? (
           <div className="py-12 text-center text-gray-400 text-sm">No anomalies need review</div>
         ) : (
@@ -315,20 +315,20 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
                         e.target.checked ? s.add(row.tally_guid) : s.delete(row.tally_guid)
                         setSelected(s)
                       }}
-                      className="rounded border-gray-300 text-forest-600 cursor-pointer" />
+                      className="rounded border-gray-300 text-[var(--text-primary)] cursor-pointer" />
                   </td>
                   <td className="py-3 px-4 text-gray-400 text-xs font-mono whitespace-nowrap">{fmtShort(row.voucher_date)}</td>
                   <td className="py-3 px-4 text-xs font-medium text-gray-600">{row.voucher_type}</td>
                   <td className="py-3 px-4">
                     <p className="font-medium text-gray-800 truncate max-w-[160px]">{row.party_name || row.debit_ledger || "—"}</p>
                     {row.party_norm && row.party_norm !== row.party_name && (
-                      <p className="text-[10px] text-forest-500 truncate max-w-[160px]">{row.party_norm}</p>
+                      <p className="text-[10px] text-[var(--text-tertiary)]0 truncate max-w-[160px]">{row.party_norm}</p>
                     )}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-start gap-1.5">
-                      <AlertTriangle size={12} className="text-amber-500 shrink-0 mt-0.5" />
-                      <span className="text-xs text-amber-700 line-clamp-2">{row.anomaly_reason || "Flagged by AI"}</span>
+                      <AlertTriangle size={12} className="text-[var(--text-tertiary)]0 shrink-0 mt-0.5" />
+                      <span className="text-xs text-[var(--text-primary)] line-clamp-2">{row.anomaly_reason || "Flagged by AI"}</span>
                     </div>
                   </td>
                   <td className="py-3 px-4 text-right font-mono font-semibold text-sm text-gray-700">{row.amount_fmt}</td>
@@ -341,7 +341,7 @@ function AnomaliesTab({ anomalyCount }: { anomalyCount: number }) {
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => reviewMut.mutate({ guid: row.tally_guid, confirmed: false })}
                         title="Mark as OK"
-                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                        className="p-1.5 text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors">
                         <ThumbsUp size={13} />
                       </button>
                       <button onClick={() => reviewMut.mutate({ guid: row.tally_guid, confirmed: true })}
@@ -400,8 +400,8 @@ function NormalizationsTab() {
   if (!isLoading && rows.length === 0 && page === 1) {
     return (
       <div className="py-16 flex flex-col items-center gap-3 bg-white rounded-2xl border border-gray-100">
-        <div className="w-14 h-14 bg-teal-50 rounded-2xl flex items-center justify-center">
-          <CheckCircle2 size={26} className="text-teal-500" />
+        <div className="w-14 h-14 bg-[var(--bg-subtle)] rounded-2xl flex items-center justify-center">
+          <CheckCircle2 size={26} className="text-[var(--text-tertiary)]0" />
         </div>
         <p className="font-semibold text-gray-700">No normalizations pending</p>
         <p className="text-sm text-gray-400">Party names are consistent across all enriched vouchers</p>
@@ -418,7 +418,7 @@ function NormalizationsTab() {
         </p>
       </div>
       {isLoading ? (
-        <div className="py-12 flex justify-center"><Loader2 size={22} className="text-forest-400 animate-spin" /></div>
+        <div className="py-12 flex justify-center"><Loader2 size={22} className="text-[var(--text-primary)] animate-spin" /></div>
       ) : (
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100">
@@ -487,7 +487,7 @@ export default function VerificationPage() {
   if (isLoading || !stats) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-3">
-        <Loader2 size={28} className="text-forest-400 animate-spin" />
+        <Loader2 size={28} className="text-[var(--text-primary)] animate-spin" />
         <p className="text-sm text-gray-400">Loading verification data…</p>
       </div>
     )
@@ -502,12 +502,12 @@ export default function VerificationPage() {
         </div>
         <div className="flex items-center gap-2">
           {stats.anomalies > 0 && (
-            <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-xl">
               <AlertTriangle size={12} /> {stats.anomalies} anomalies need review
             </span>
           )}
           {stats.pending === 0 && stats.enriched > 0 && (
-            <span className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-xl">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-xl">
               <ShieldCheck size={12} /> All vouchers enriched
             </span>
           )}
@@ -523,7 +523,7 @@ export default function VerificationPage() {
           return (
             <button key={t.id} onClick={() => setTab(t.id as TabId)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                tab === t.id ? "border-forest-500 text-forest-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                tab === t.id ? "border-[var(--border-subtle)] text-[var(--text-primary)]" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}>
               <Icon size={14} />
               {t.label}

@@ -18,7 +18,7 @@ type Project = {
 }
 
 const inr = (n?: number) => "₹" + (n || 0).toLocaleString("en-IN")
-const field = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+const field = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[var(--border-subtle)] focus:outline-none"
 
 export function ProjectDeliveryDetail() {
   const { name } = useParams()
@@ -46,8 +46,8 @@ export function ProjectDeliveryDetail() {
   if (q.isLoading || !p) return <div className="p-6 text-gray-400">Loading…</div>
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <button onClick={() => nav("/projects")} className="text-sm text-indigo-600 hover:underline">← All projects</button>
+    <div className="p-6 mx-auto space-y-6">
+      <button onClick={() => nav("/projects")} className="text-sm text-[var(--text-primary)] hover:underline">← All projects</button>
 
       {/* header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
@@ -55,18 +55,18 @@ export function ProjectDeliveryDetail() {
           <div>
             <h1 className="text-xl font-bold text-slate-800">{p.project_title}</h1>
             <div className="text-sm text-gray-500">{p.name} · {p.project_type} · {p.customer_name || "—"} · {p.company}</div>
-            {p.site_address && <div className="text-xs text-gray-400 mt-1">📍 {p.site_address}</div>}
+            {p.site_address && <div className="text-xs text-gray-400 mt-1">◉ {p.site_address}</div>}
           </div>
           <div className="text-right">
-            <span className="inline-block px-3 py-1 rounded-full bg-indigo-600 text-white text-sm">{p.stage}</span>
+            <span className="inline-block px-3 py-1 rounded-full bg-[var(--bg-inverse)] text-white text-sm">{p.stage}</span>
             <div className="text-xs text-gray-400 mt-1">{p.status} · {p.percent_complete || 0}% complete</div>
-            <button onClick={() => nav(`/projects/${p.name}/procurement`)} className="mt-2 rounded-md border border-indigo-200 text-indigo-700 px-2.5 py-1 text-xs hover:bg-indigo-50">⛓ Procurement</button>
+            <button onClick={() => nav(`/projects/${p.name}/procurement`)} className="mt-2 rounded-md border border-[var(--border-subtle)] text-[var(--text-primary)] px-2.5 py-1 text-xs hover:bg-[var(--bg-subtle)]">⇌ Procurement</button>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4 mt-4 text-center">
           <div><div className="text-xs text-gray-400">Contract</div><div className="font-bold text-slate-700">{inr(p.contract_value)}</div></div>
-          <div><div className="text-xs text-gray-400">Collected</div><div className="font-bold text-emerald-600">{inr(p.advance_received)}</div></div>
-          <div><div className="text-xs text-gray-400">Outstanding</div><div className="font-bold text-amber-600">{inr(p.outstanding)}</div></div>
+          <div><div className="text-xs text-gray-400">Collected</div><div className="font-bold text-[var(--text-primary)]">{inr(p.advance_received)}</div></div>
+          <div><div className="text-xs text-gray-400">Outstanding</div><div className="font-bold text-[var(--text-primary)]">{inr(p.outstanding)}</div></div>
         </div>
       </div>
 
@@ -75,7 +75,7 @@ export function ProjectDeliveryDetail() {
         <h2 className="font-semibold text-slate-700 mb-3">Lifecycle</h2>
         <div className="flex flex-wrap gap-1 mb-3">
           {p.stage_order.map((s, i) => (
-            <div key={s} className={`text-xs px-2 py-1 rounded ${i < p.stage_index ? "bg-emerald-100 text-emerald-700" : i === p.stage_index ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-400"}`}>{s}</div>
+            <div key={s} className={`text-xs px-2 py-1 rounded ${i < p.stage_index ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : i === p.stage_index ? "bg-[var(--bg-inverse)] text-white" : "bg-gray-100 text-gray-400"}`}>{s}</div>
           ))}
         </div>
         {p.exit_criteria && <div className="text-xs text-gray-500 mb-3">Exit: {p.exit_criteria}</div>}
@@ -83,7 +83,7 @@ export function ProjectDeliveryDetail() {
           <div className="flex gap-2 items-center">
             <input className={field} placeholder={`Notes for advancing to "${p.next_stage}"…`} value={note} onChange={(e) => setNote(e.target.value)} />
             <button onClick={() => { advance.mutate({ name: p.name, notes: note }); setNote("") }} disabled={advance.isPending}
-              className="whitespace-nowrap rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">Advance → {p.next_stage}</button>
+              className="whitespace-nowrap rounded-md bg-[var(--bg-inverse)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">Advance → {p.next_stage}</button>
           </div>
         )}
       </div>
@@ -96,7 +96,7 @@ export function ProjectDeliveryDetail() {
             <input className="w-28 rounded-md border border-gray-300 px-2 py-1 text-sm" placeholder="± amount" value={varAmt} onChange={(e) => setVarAmt(e.target.value)} />
             <input className="w-40 rounded-md border border-gray-300 px-2 py-1 text-sm" placeholder="variation reason" value={varReason} onChange={(e) => setVarReason(e.target.value)} />
             <button onClick={() => { if (varAmt) { variation.mutate({ name: p.name, amount: varAmt, reason: varReason }); setVarAmt(""); setVarReason("") } }}
-              className="rounded-md border border-amber-300 text-amber-700 px-2 py-1 text-sm hover:bg-amber-50">Variation</button>
+              className="rounded-md border border-[var(--border-subtle)] text-[var(--text-primary)] px-2 py-1 text-sm hover:bg-[var(--bg-subtle)]">Variation</button>
           </div>
         </div>
         <table className="w-full text-sm">
@@ -108,8 +108,8 @@ export function ProjectDeliveryDetail() {
                 <td className="text-center text-xs text-gray-500">{m.stage}</td>
                 <td className="text-right text-gray-500">{m.percent}%</td>
                 <td className="text-right text-slate-600">{inr(m.amount)}</td>
-                <td className="text-center"><span className={`text-xs px-2 py-0.5 rounded-full ${m.status === "Received" ? "bg-emerald-100 text-emerald-700" : m.status === "Due" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-500"}`}>{m.status}</span></td>
-                <td className="text-right">{m.status !== "Received" && <button onClick={() => pay.mutate({ name: p.name, idx: m.idx })} className="text-indigo-600 hover:text-indigo-800 text-xs font-medium">Record ✓</button>}</td>
+                <td className="text-center"><span className={`text-xs px-2 py-0.5 rounded-full ${m.status === "Received" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : m.status === "Due" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-gray-100 text-gray-500"}`}>{m.status}</span></td>
+                <td className="text-right">{m.status !== "Received" && <button onClick={() => pay.mutate({ name: p.name, idx: m.idx })} className="text-[var(--text-primary)] hover:text-[var(--text-primary)] text-xs font-medium">Record ✓</button>}</td>
               </tr>
             ))}
           </tbody>
@@ -126,8 +126,8 @@ export function ProjectDeliveryDetail() {
         </div>
         {p.site_logs.map((l) => (
           <div key={l.idx} className="flex justify-between items-center border-b border-gray-50 py-1.5 text-sm">
-            <div><span className={`text-xs px-1.5 py-0.5 rounded ${l.log_type === "Snag" ? "bg-red-50 text-red-600" : l.log_type === "Alteration" ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"}`}>{l.log_type}</span> <span className="text-slate-700">{l.description}</span> <span className="text-xs text-gray-400">· {l.log_date}</span></div>
-            {l.status === "Open" ? <button onClick={() => resolveLog.mutate({ name: p.name, idx: l.idx })} className="text-xs text-emerald-600 hover:underline">Resolve</button> : <span className="text-xs text-emerald-600">✓ Resolved</span>}
+            <div><span className={`text-xs px-1.5 py-0.5 rounded ${l.log_type === "Snag" ? "bg-red-50 text-red-600" : l.log_type === "Alteration" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-[var(--bg-subtle)] text-[var(--text-primary)]"}`}>{l.log_type}</span> <span className="text-slate-700">{l.description}</span> <span className="text-xs text-gray-400">· {l.log_date}</span></div>
+            {l.status === "Open" ? <button onClick={() => resolveLog.mutate({ name: p.name, idx: l.idx })} className="text-xs text-[var(--text-primary)] hover:underline">Resolve</button> : <span className="text-xs text-[var(--text-primary)]">✓ Resolved</span>}
           </div>
         ))}
         {!p.site_logs.length && <div className="text-xs text-gray-300">No site issues logged.</div>}
@@ -140,7 +140,7 @@ export function ProjectDeliveryDetail() {
           <input className={field} placeholder="Task (e.g. Fix carcass, wall A)" value={cardTitle} onChange={(e) => setCardTitle(e.target.value)} />
           <input className="w-40 rounded-md border border-gray-300 px-2 py-1.5 text-sm" placeholder="Assigned to" value={cardWho} onChange={(e) => setCardWho(e.target.value)} />
           <input className="w-40 rounded-md border border-gray-300 px-2 py-1.5 text-sm" type="date" value={cardDate} onChange={(e) => setCardDate(e.target.value)} />
-          <button onClick={() => { if (cardTitle) { saveCard.mutate({ payload: { title: cardTitle, project: p.name, stage: p.stage, assigned_to: cardWho, scheduled_date: cardDate, company: p.company } }); setCardTitle(""); setCardWho(""); setCardDate("") } }} className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700">Add</button>
+          <button onClick={() => { if (cardTitle) { saveCard.mutate({ payload: { title: cardTitle, project: p.name, stage: p.stage, assigned_to: cardWho, scheduled_date: cardDate, company: p.company } }); setCardTitle(""); setCardWho(""); setCardDate("") } }} className="rounded-md bg-[var(--bg-inverse)] px-3 py-1.5 text-sm text-white hover:bg-[var(--bg-inverse)]">Add</button>
         </div>
         {(p.work_cards || []).map((c) => (
           <div key={c.name} className="flex justify-between items-center border-b border-gray-50 py-1.5 text-sm">

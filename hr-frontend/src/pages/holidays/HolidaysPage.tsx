@@ -32,16 +32,16 @@ function HolidayBadge({ holiday, isNext }: { holiday: Holiday; isNext: boolean }
   if (holiday.is_today) {
     return (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full animate-pulse"
-        style={{ backgroundColor: "#ECFDF5", color: "#065F46" }}>
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-        Today! 🎉
+        style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
+        <span className="w-1.5 h-1.5 rounded-full bg-[var(--bg-subtle)]0 inline-block" />
+        Today! ✓
       </span>
     )
   }
   if (isNext) {
     return (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
-        style={{ backgroundColor: "#F3E8FF", color: "#6B21A8" }}>
+        style={{ backgroundColor: "#F5F5F5", color: "#646464" }}>
         Next Holiday
       </span>
     )
@@ -49,14 +49,14 @@ function HolidayBadge({ holiday, isNext }: { holiday: Holiday; isNext: boolean }
   if (holiday.is_past) {
     return (
       <span className="inline-flex items-center text-[11px] font-medium px-2.5 py-0.5 rounded-full"
-        style={{ backgroundColor: "#F1F5F9", color: "#94A3B8" }}>
+        style={{ backgroundColor: "#f5f5f5", color: "#a6a6a6" }}>
         Done ✓
       </span>
     )
   }
   return (
     <span className="inline-flex items-center text-[11px] font-medium px-2.5 py-0.5 rounded-full"
-      style={{ backgroundColor: "#EFF6FF", color: "#1D4ED8" }}>
+      style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
       Upcoming
     </span>
   )
@@ -66,7 +66,7 @@ function HolidayBadge({ holiday, isNext }: { holiday: Holiday; isNext: boolean }
 
 function StatCard({ label, value, accent }: { label: string; value: string | number; accent: string }) {
   return (
-    <div className="bg-white rounded-xl p-4 text-center" style={{ border: "1px solid #F1F5F9", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderTop: `3px solid ${accent}` }}>
+    <div className="bg-white rounded-xl p-4 text-center" style={{ border: "1px solid #f5f5f5", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderTop: `3px solid ${accent}` }}>
       <div className="text-2xl font-bold mb-0.5" style={{ color: accent }}>{value}</div>
       <div className="text-[12px] text-gray-500 leading-tight">{label}</div>
     </div>
@@ -130,28 +130,28 @@ function CalendarSection() {
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Holidays" value={stats.total} accent="#3d7d5c" />
-        <StatCard label="Past Holidays" value={stats.past} accent="#94A3B8" />
-        <StatCard label="Remaining" value={stats.remaining} accent="#1D9E75" />
+        <StatCard label="Total Holidays" value={stats.total} accent="#6B6B6B" />
+        <StatCard label="Past Holidays" value={stats.past} accent="#a6a6a6" />
+        <StatCard label="Remaining" value={stats.remaining} accent="#171717" />
         <StatCard
           label="Next Holiday"
           value={nextHoliday ? formatDisplayDate(nextHoliday.date) : "—"}
-          accent="#8B5CF6"
+          accent="#171717"
         />
       </div>
 
       {/* Next holiday banner */}
       {nextHoliday && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
-          style={{ backgroundColor: "#fdf8ef", border: "1px solid #DDD6FE" }}>
-          <CalendarDays size={18} style={{ color: "#c8a45c" }} />
-          <p className="text-sm font-semibold" style={{ color: "#b8934c" }}>
+          style={{ backgroundColor: "#F5F5F5", border: "1px solid #F5F5F5" }}>
+          <CalendarDays size={18} style={{ color: "#171717" }} />
+          <p className="text-sm font-semibold" style={{ color: "#171717" }}>
             {nextHoliday.name} — {
               nextHoliday.days_until === 0 ? "Today!" :
               nextHoliday.days_until === 1 ? "Tomorrow!" :
               `in ${nextHoliday.days_until} days`
             }
-            <span className="ml-2 font-normal text-gold-400">
+            <span className="ml-2 font-normal text-[var(--text-primary)]">
               ({nextHoliday.day}, {formatDisplayDate(nextHoliday.date)})
             </span>
           </p>
@@ -160,16 +160,16 @@ function CalendarSection() {
 
       {/* Leave balance card */}
       {Object.keys(approvedByType).length > 0 && (
-        <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #F1F5F9", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #f5f5f5", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
           <p className="text-sm font-semibold text-gray-700 mb-3">Your Leave Balance — {currentYear}</p>
           <div className="space-y-2">
             {Object.entries(approvedByType).map(([type, days]) => (
               <div key={type} className="flex items-center justify-between gap-3">
                 <span className="text-[13px] text-gray-600 min-w-[140px]">{type}</span>
                 <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${Math.min((days / 12) * 100, 100)}%`, backgroundColor: "#3d7d5c" }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.min((days / 12) * 100, 100)}%`, backgroundColor: "#6B6B6B" }} />
                 </div>
-                <span className="text-[13px] font-semibold text-forest-600 min-w-[40px] text-right">{days}d</span>
+                <span className="text-[13px] font-semibold text-[var(--text-primary)] min-w-[40px] text-right">{days}d</span>
               </div>
             ))}
           </div>
@@ -184,11 +184,11 @@ function CalendarSection() {
           const allPast = pastCount === monthHolidays.length
           return (
             <div key={month} className="bg-white rounded-xl overflow-hidden"
-              style={{ border: "1px solid #F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+              style={{ border: "1px solid #f5f5f5", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
               {/* Month header */}
               <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50"
-                style={{ backgroundColor: allPast ? "#F8FAFC" : "#FAFBFF" }}>
-                <h3 className="text-sm font-semibold" style={{ color: allPast ? "#94A3B8" : "#1e3a2f" }}>
+                style={{ backgroundColor: allPast ? "#fafafa" : "#F5F5F5" }}>
+                <h3 className="text-sm font-semibold" style={{ color: allPast ? "#a6a6a6" : "#171717" }}>
                   {month} {currentYear}
                 </h3>
                 <span className="text-[11px] text-gray-400">
@@ -204,17 +204,17 @@ function CalendarSection() {
                     <div key={h.date}
                       className="flex items-center gap-4 px-5 py-3.5 border-b border-gray-50 last:border-0"
                       style={{
-                        backgroundColor: isNext ? "#FAFBFF" : h.is_today ? "#F0FDF4" : "white",
+                        backgroundColor: isNext ? "#F5F5F5" : h.is_today ? "#F5F5F5" : "white",
                         opacity: h.is_past ? 0.65 : 1,
                       }}>
                       {/* Index */}
                       <span className="text-[11px] text-gray-400 w-4 shrink-0">{idx + 1}</span>
                       {/* Date */}
-                      <span className="text-sm font-semibold w-14 shrink-0" style={{ color: h.is_past ? "#94A3B8" : "#1E293B" }}>
+                      <span className="text-sm font-semibold w-14 shrink-0" style={{ color: h.is_past ? "#a6a6a6" : "#2c2c2c" }}>
                         {formatDisplayDate(h.date)}
                       </span>
                       {/* Name */}
-                      <span className="flex-1 text-sm font-medium" style={{ color: h.is_past ? "#94A3B8" : "#334155" }}>
+                      <span className="flex-1 text-sm font-medium" style={{ color: h.is_past ? "#a6a6a6" : "#444444" }}>
                         {h.name}
                       </span>
                       {/* Day */}
@@ -234,11 +234,11 @@ function CalendarSection() {
 
       {/* Happy Holiday card */}
       <div className="rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
-        style={{ background: "linear-gradient(135deg, #EDE9FE 0%, #FAE8FF 100%)", border: "1px solid #DDD6FE" }}>
-        <div className="text-4xl">🎊</div>
+        style={{ background: "linear-gradient(135deg, #F5F5F5 0%, #F5F5F5 100%)", border: "1px solid #F5F5F5" }}>
+        <div className="text-4xl">✓</div>
         <div className="flex-1">
-          <p className="font-semibold text-gold-800 mb-0.5">Happy Holiday</p>
-          <p className="text-sm text-gold-600">
+          <p className="font-semibold text-[var(--text-primary)] mb-0.5">Happy Holiday</p>
+          <p className="text-sm text-[var(--text-primary)]">
             You have 1 extra holiday to use for any personal occasion — birthday, anniversary,
             or a festival not on the official calendar.
           </p>
@@ -246,7 +246,7 @@ function CalendarSection() {
         <button
           onClick={() => navigate("/leave?type=Happy+Holiday")}
           className="shrink-0 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:opacity-90"
-          style={{ backgroundColor: "#c8a45c", color: "white" }}>
+          style={{ backgroundColor: "#171717", color: "white" }}>
           Apply Happy Holiday
         </button>
       </div>
@@ -257,13 +257,13 @@ function CalendarSection() {
 // ─── SECTION 2: Leave Policy ──────────────────────────────────────────────────
 
 const COLOR_MAP: Record<string, { bg: string; text: string; border: string }> = {
-  green:  { bg: "#F0FDF4", text: "#15803D", border: "#86EFAC" },
-  blue:   { bg: "#EFF6FF", text: "#1D4ED8", border: "#93C5FD" },
-  purple: { bg: "#fdf8ef", text: "#b8934c", border: "#C4B5FD" },
-  pink:   { bg: "#FDF2F8", text: "#9D174D", border: "#F9A8D4" },
-  teal:   { bg: "#F0FDFA", text: "#0F766E", border: "#5EEAD4" },
-  grey:   { bg: "#F8FAFC", text: "#475569", border: "#CBD5E1" },
-  orange: { bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
+  green:  { bg: "#F5F5F5", text: "#171717", border: "#E3E3E3" },
+  blue:   { bg: "#F5F5F5", text: "#171717", border: "#c8c8c8" },
+  purple: { bg: "#F5F5F5", text: "#171717", border: "#E3E3E3" },
+  pink:   { bg: "#f8f8f8", text: "#171717", border: "#171717" },
+  teal:   { bg: "#F5F5F5", text: "#171717", border: "#a4a4a4" },
+  grey:   { bg: "#fafafa", text: "#585858", border: "#d6d6d6" },
+  orange: { bg: "#F5F5F5", text: "#171717", border: "#E3E3E3" },
   red:    { bg: "#FEF2F2", text: "#991B1B", border: "#FCA5A5" },
 }
 
@@ -278,12 +278,12 @@ function LeavePolicyCard({ policy }: { policy: LeaveTypePolicy }) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-3 px-5 py-4 text-left hover:opacity-90 transition-opacity">
         <span className="text-2xl shrink-0">{policy.icon}</span>
-        <span className="flex-1 font-semibold text-sm" style={{ color: "#1E293B" }}>{policy.type}</span>
+        <span className="flex-1 font-semibold text-sm" style={{ color: "#2c2c2c" }}>{policy.type}</span>
         <span className="text-sm font-bold px-3 py-1 rounded-full shrink-0"
           style={{ backgroundColor: colors.bg, color: colors.text }}>
           {policy.days_label}
         </span>
-        <span style={{ color: "#94A3B8" }}>
+        <span style={{ color: "#a6a6a6" }}>
           {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </span>
       </button>
@@ -320,20 +320,20 @@ function PolicySection() {
     <div className="space-y-5">
       {/* Summary pills */}
       <div className="flex flex-wrap gap-3">
-        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#eef5f1", color: "#1e3a2f" }}>
-          🏖️ {policy.summary.public_holidays} Public Holidays
+        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
+          ◆ {policy.summary.public_holidays} Public Holidays
         </div>
-        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#F0FDF4", color: "#15803D" }}>
-          🌿 {policy.summary.earned_leave} Earned Leave days
+        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
+          ◆ {policy.summary.earned_leave} Earned Leave days
         </div>
-        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#EFF6FF", color: "#1D4ED8" }}>
-          🏥 {policy.summary.sick_leave} Sick Leave days
+        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
+          ◆ {policy.summary.sick_leave} Sick Leave days
         </div>
-        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#FDF4FF", color: "#86198F" }}>
-          🎊 +{policy.summary.happy_holiday} Happy Holiday
+        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#F5F5F5", color: "#545454" }}>
+          ✓ +{policy.summary.happy_holiday} Happy Holiday
         </div>
-        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#FFFBEB", color: "#92400E" }}>
-          ↩️ Max {policy.summary.max_carry_forward} days carry forward
+        <div className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
+          ↩ Max {policy.summary.max_carry_forward} days carry forward
         </div>
       </div>
 
@@ -359,16 +359,16 @@ function RulesSection() {
   if (!policy) return null
 
   return (
-    <div className="rounded-xl p-6" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
+    <div className="rounded-xl p-6" style={{ backgroundColor: "#F5F5F5", border: "1px solid #F5F5F5" }}>
       <div className="flex items-center gap-2 mb-5">
-        <AlertTriangle size={18} style={{ color: "#D97706" }} />
-        <h3 className="font-semibold text-base" style={{ color: "#92400E" }}>Important Leave Rules for {new Date().getFullYear()}</h3>
+        <AlertTriangle size={18} style={{ color: "#171717" }} />
+        <h3 className="font-semibold text-base" style={{ color: "#171717" }}>Important Leave Rules for {new Date().getFullYear()}</h3>
       </div>
       <ul className="space-y-3">
         {policy.important_rules.map((rule, i) => (
           <li key={i} className="flex items-start gap-3">
-            <span className="text-base shrink-0">📌</span>
-            <span className="text-sm leading-relaxed" style={{ color: "#78350F" }}>{rule}</span>
+            <span className="text-base shrink-0">◆</span>
+            <span className="text-sm leading-relaxed" style={{ color: "#444444" }}>{rule}</span>
           </li>
         ))}
       </ul>
@@ -384,23 +384,23 @@ export function HolidaysContent() {
   const [activeSection, setActiveSection] = useState<HolidayTab>("calendar")
 
   const SECTIONS: { id: HolidayTab; label: string; icon: string }[] = [
-    { id: "calendar", label: `${new Date().getFullYear()} Holidays`, icon: "📅" },
-    { id: "policy",   label: "Leave Policy",  icon: "📋" },
-    { id: "rules",    label: "Important Rules", icon: "⚠️" },
+    { id: "calendar", label: `${new Date().getFullYear()} Holidays`, icon: "◰" },
+    { id: "policy",   label: "Leave Policy",  icon: "▤" },
+    { id: "rules",    label: "Important Rules", icon: "△" },
   ]
 
   return (
     <div className="space-y-5">
       {/* Section tab nav */}
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ backgroundColor: "#F1F5F9" }}>
+      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ backgroundColor: "#f5f5f5" }}>
         {SECTIONS.map((s) => (
           <button
             key={s.id}
             onClick={() => setActiveSection(s.id)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all"
             style={activeSection === s.id
-              ? { backgroundColor: "white", color: "#1E293B", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }
-              : { color: "#64748B" }}>
+              ? { backgroundColor: "white", color: "#2c2c2c", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }
+              : { color: "#787878" }}>
             <span>{s.icon}</span>
             {s.label}
           </button>
@@ -424,7 +424,7 @@ export function HolidaysPage() {
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg, #3d7d5c 0%, #8B5CF6 100%)" }}>
+            style={{ background: "linear-gradient(135deg, #6B6B6B 0%, #171717 100%)" }}>
             <Gift size={18} className="text-white" />
           </div>
           <div>

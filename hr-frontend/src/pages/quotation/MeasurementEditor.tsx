@@ -168,7 +168,7 @@ export function MeasurementEditor() {
       <DocumentLinkBar doctype="Vera Measurement Sheet" name={name} />
 
       {/* Header card */}
-      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
         <div className="mb-3 flex items-start justify-between">
           <div>
             <h1 className="font-heading text-xl font-semibold" style={{ color: "var(--brand-primary)" }}>
@@ -194,7 +194,7 @@ export function MeasurementEditor() {
         </div>
 
         {/* Workflow */}
-        <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           {m.status === "Draft" && (
             <button onClick={() => action("submit_measurement", "Submitted for review")} disabled={!!busy}
               className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--brand-primary)" }}>
@@ -203,13 +203,13 @@ export function MeasurementEditor() {
           )}
           {m.status === "Submitted" && (
             <button onClick={() => action("reopen_measurement", "Reopened")} disabled={!!busy}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #E3E3E3)", color: "var(--brand-primary)" }}>
               Reopen
             </button>
           )}
           {(m.status === "Draft" || m.status === "Submitted") && (
             <button onClick={() => action("approve_measurement", "Approved — BOQ can now be built on this")} disabled={!!busy}
-              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #c8a24a)" }}>
+              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #171717)" }}>
               Approve
             </button>
           )}
@@ -235,7 +235,7 @@ export function MeasurementEditor() {
       {!locked && (templates?.templates.length ?? 0) > 0 && (
         <div className="mb-2 flex items-center justify-end gap-2">
           <span className="text-xs" style={{ color: "var(--text-muted)" }}>Start from a template:</span>
-          <select value={tpl} onChange={(e) => setTpl(e.target.value)} className="rounded px-2 py-1 text-xs" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }}>
+          <select value={tpl} onChange={(e) => setTpl(e.target.value)} className="rounded px-2 py-1 text-xs" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }}>
             <option value="">Choose product type…</option>
             {templates!.templates.map((t) => <option key={t.name} value={t.name}>{t.label}</option>)}
           </select>
@@ -250,7 +250,7 @@ export function MeasurementEditor() {
         onSave={(rows) => saveRegister("services", rows)} emptyLabel="No services recorded." />
 
       {/* Site photos (§11) — capture the site per area alongside the dimensions. */}
-      <div className="mt-4 rounded-xl p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+      <div className="mt-4 rounded-xl p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
         <div className="mb-2 flex items-center justify-between">
           <div className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
             Site Photos {m.photos.length > 0 && `(${m.photos.length})`}
@@ -268,7 +268,7 @@ export function MeasurementEditor() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {m.photos.map((p, i) => (
-              <div key={i} className="overflow-hidden rounded-lg" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+              <div key={i} className="overflow-hidden rounded-lg" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
                 <a href={p.image} target="_blank" rel="noreferrer">
                   <img src={p.image} alt={p.caption || `Site photo ${i + 1}`} className="h-32 w-full object-cover" />
                 </a>
@@ -278,10 +278,10 @@ export function MeasurementEditor() {
                   ) : (
                     <>
                       <input defaultValue={p.area ?? ""} placeholder="Area" onBlur={(e) => updatePhotoField(i, "area", e.target.value)}
-                        className="w-full rounded px-1.5 py-0.5 text-[11px]" style={{ border: "0.5px solid var(--border, #e0d9cb)" }} />
+                        className="w-full rounded px-1.5 py-0.5 text-[11px]" style={{ border: "0.5px solid var(--border, #E3E3E3)" }} />
                       <div className="flex items-center gap-1">
                         <input defaultValue={p.caption ?? ""} placeholder="Caption" onBlur={(e) => updatePhotoField(i, "caption", e.target.value)}
-                          className="w-full rounded px-1.5 py-0.5 text-[11px]" style={{ border: "0.5px solid var(--border, #e0d9cb)" }} />
+                          className="w-full rounded px-1.5 py-0.5 text-[11px]" style={{ border: "0.5px solid var(--border, #E3E3E3)" }} />
                         <button title="Remove" onClick={() => savePhotos(m.photos.filter((_, j) => j !== i))}
                           className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold" style={{ color: "#dc2626", border: "0.5px solid #fecaca" }}>✕</button>
                       </div>

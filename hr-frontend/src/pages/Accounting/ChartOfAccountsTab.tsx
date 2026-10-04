@@ -21,11 +21,11 @@ export interface Account {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const ROOT_TYPE_COLORS: Record<string, string> = {
-  Asset:     "bg-blue-50 text-blue-700 border border-blue-100",
+  Asset:     "bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)]",
   Liability: "bg-red-50 text-red-700 border border-red-100",
-  Equity:    "bg-emerald-50 text-emerald-700 border border-emerald-100",
-  Income:    "bg-purple-50 text-purple-700 border border-purple-100",
-  Expense:   "bg-orange-50 text-orange-700 border border-orange-100",
+  Equity:    "bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)]",
+  Income:    "bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)]",
+  Expense:   "bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)]",
 }
 
 function fmtBalance(balance: number): string {
@@ -79,7 +79,7 @@ function AccountNode({
     <>
       <div
         className="flex items-center gap-2 py-2 pr-3 rounded-lg transition-colors
-          hover:bg-[#f5efe4] cursor-pointer group select-none"
+          hover:bg-[#F5F5F5] cursor-pointer group select-none"
         style={{ paddingLeft: `${10 + depth * 18}px` }}
         onClick={() => isGroup && hasChildren && onToggle(acc.name)}
       >
@@ -96,8 +96,8 @@ function AccountNode({
         <span className="shrink-0">
           {isGroup
             ? isExpanded
-              ? <FolderOpen size={14} className="text-[#c8a45c]" />
-              : <Folder size={14} className="text-[#c8a45c]" />
+              ? <FolderOpen size={14} className="text-[#171717]" />
+              : <Folder size={14} className="text-[#171717]" />
             : <FileText size={13} className="text-gray-300" />}
         </span>
 
@@ -178,7 +178,7 @@ export function ChartOfAccountsTab() {
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-20">
-      <Loader2 size={24} className="text-[#1e3a2f] animate-spin" />
+      <Loader2 size={24} className="text-[#171717] animate-spin" />
     </div>
   )
 
@@ -198,7 +198,7 @@ export function ChartOfAccountsTab() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by account or group name…"
-            className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#c8a45c] bg-white"
+            className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#171717] bg-white"
           />
           {search && (
             <button

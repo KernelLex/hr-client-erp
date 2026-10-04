@@ -76,6 +76,10 @@ scheduler_events = {
 	"daily": [
 		"hr_client.drive_sync.watch_manager.renew_watches",
 	],
+	"hourly": [
+		# Keep the AI Insights narrative warm so the page never waits on the LLM.
+		"hr_client.api.ai.refresh_ai_insights",
+	],
 	"cron": {
 		"*/10 * * * *": [
 			"hr_client.drive_sync.delta_sync.run_delta_sync",

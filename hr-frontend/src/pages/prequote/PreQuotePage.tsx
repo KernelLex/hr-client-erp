@@ -27,11 +27,11 @@ export default function PreQuotePage() {
     create.mutate(payload, { onSuccess: () => setForm({ ...EMPTY }) })
   }
 
-  const field = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+  const field = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[var(--border-subtle)] focus:outline-none"
   const label = "block text-xs font-medium text-gray-600 mb-1"
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 mx-auto">
       <h1 className="text-2xl font-bold text-slate-800 mb-1">Pre-Quote</h1>
       <p className="text-sm text-gray-500 mb-6">Capture a requirement and a budgetary estimate, then convert it to an Opportunity.</p>
 
@@ -67,7 +67,7 @@ export default function PreQuotePage() {
             <div className="col-span-2"><label className={label}>Requirement Summary</label><textarea className={field} rows={2} value={form.requirement_summary} onChange={(e) => set("requirement_summary", e.target.value)} /></div>
           </div>
           <button onClick={submit} disabled={create.isPending || !form.customer_name || !form.mobile}
-            className="mt-4 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+            className="mt-4 rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
             {create.isPending ? "Saving…" : "Create Pre-Quote"}
           </button>
         </div>
@@ -86,16 +86,16 @@ export default function PreQuotePage() {
                         <div className="font-medium text-slate-800">{p.customer_name}</div>
                         <div className="text-xs text-gray-500">{p.project_name || p.quotation_type} · {p.mobile}</div>
                       </div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${p.status === "Converted" ? "bg-green-100 text-green-700" : p.status === "Dropped" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700"}`}>{p.status}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${p.status === "Converted" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : p.status === "Dropped" ? "bg-red-100 text-red-600" : "bg-[var(--bg-subtle)] text-[var(--text-primary)]"}`}>{p.status}</span>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       <span className="text-[11px] text-gray-400">{p.name}</span>
                       {p.status !== "Converted" ? (
                         <button onClick={() => convert.mutate(p.name)} disabled={convert.isPending}
-                          className="ml-auto text-xs rounded bg-emerald-600 px-2 py-1 text-white hover:bg-emerald-700 disabled:opacity-50">
+                          className="ml-auto text-xs rounded bg-[var(--bg-inverse)] px-2 py-1 text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
                           Convert to Opportunity
                         </button>
-                      ) : p.opportunity ? <span className="ml-auto text-xs text-green-600">→ {p.opportunity}</span> : null}
+                      ) : p.opportunity ? <span className="ml-auto text-xs text-[var(--text-primary)]">→ {p.opportunity}</span> : null}
                     </div>
                   </div>
                 ))}

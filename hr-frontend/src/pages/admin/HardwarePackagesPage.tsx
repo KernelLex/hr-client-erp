@@ -15,7 +15,7 @@ type ListResp = { packages: (Pkg & { item_count: number })[]; kpis: Record<strin
 const TIERS = ["Standard", "Premium", "Luxury"]
 const EMPTY: Pkg = { package_name: "", tier: "Standard", status: "Active", product_scope: "", description: "", auto_price: 1, package_price: 0, items: [] }
 
-const field = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+const field = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[var(--border-subtle)] focus:outline-none"
 const label = "block text-xs font-medium text-gray-600 mb-1"
 const inr = (n?: number) => "₹" + (n || 0).toLocaleString("en-IN")
 
@@ -46,17 +46,17 @@ export function HardwarePackagesPage() {
   const total = (p: Pkg) => (p.items || []).reduce((s, it) => s + (it.qty || 0) * (it.rate || 0), 0)
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 mx-auto">
       <h1 className="text-2xl font-bold text-slate-800 mb-1">Hardware Packages</h1>
       <p className="text-sm text-gray-500 mb-5">Define Standard / Premium / Luxury bundles once, then drop them into quotes.</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* list */}
         <div className="lg:col-span-2 space-y-3">
-          <button onClick={() => open()} className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">+ New Package</button>
+          <button onClick={() => open()} className="w-full rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)]">+ New Package</button>
           {!(list.data?.packages || []).length && (
-            <button onClick={() => seed.mutate()} disabled={seed.isPending} className="w-full rounded-md border border-emerald-200 text-emerald-700 px-4 py-2 text-sm hover:bg-emerald-50 disabled:opacity-40">
-              {seed.isPending ? "Seeding…" : "✨ Seed starter packages"}
+            <button onClick={() => seed.mutate()} disabled={seed.isPending} className="w-full rounded-md border border-[var(--border-subtle)] text-[var(--text-primary)] px-4 py-2 text-sm hover:bg-[var(--bg-subtle)] disabled:opacity-40">
+              {seed.isPending ? "Seeding…" : "◆ Seed starter packages"}
             </button>
           )}
           {TIERS.map((t) => {
@@ -67,7 +67,7 @@ export function HardwarePackagesPage() {
                 <div className="text-xs font-semibold text-gray-400 uppercase mt-3 mb-1">{t}</div>
                 {rows.map((p) => (
                   <button key={p.name} onClick={() => open(p.name)}
-                    className={`w-full text-left rounded-lg border p-3 mb-2 bg-white hover:border-indigo-300 ${sel?.name === p.name ? "border-indigo-500 ring-1 ring-indigo-200" : "border-gray-200"}`}>
+                    className={`w-full text-left rounded-lg border p-3 mb-2 bg-white hover:border-[var(--border-subtle)] ${sel?.name === p.name ? "border-[var(--border-subtle)] ring-1 ring-[var(--border-strong)]" : "border-gray-200"}`}>
                     <div className="flex justify-between">
                       <span className="font-medium text-slate-700 text-sm">{p.package_name}</span>
                       <span className="text-sm text-slate-600">{inr(p.package_price)}</span>
@@ -136,7 +136,7 @@ function PackageEditor({ pkg, onChange, onSave, saving, onDelete, computedTotal 
         {results.length > 0 && (
           <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-56 overflow-auto mt-1">
             {results.map((r) => (
-              <button key={r.item_code} onClick={() => addItem(r)} className="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 flex justify-between">
+              <button key={r.item_code} onClick={() => addItem(r)} className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--bg-subtle)] flex justify-between">
                 <span>{r.item_name} <span className="text-gray-400">· {r.brand} · {r.item_code}</span></span>
                 <span className="text-gray-600">{inr(r.rate)}</span>
               </button>
@@ -178,7 +178,7 @@ function PackageEditor({ pkg, onChange, onSave, saving, onDelete, computedTotal 
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={onSave} disabled={saving || !pkg.package_name} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving…" : "Save Package"}</button>
+        <button onClick={onSave} disabled={saving || !pkg.package_name} className="rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">{saving ? "Saving…" : "Save Package"}</button>
         {onDelete && <button onClick={onDelete} className="rounded-md border border-red-200 text-red-600 px-3 py-2 text-sm hover:bg-red-50">Delete</button>}
       </div>
     </div>

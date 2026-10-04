@@ -36,7 +36,7 @@ export default function AccountsPage() {
         <div className="flex items-center gap-3 mb-6">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: "#1D9E75" }}
+            style={{ backgroundColor: "#171717" }}
           >
             <BookOpen size={18} className="text-white" />
           </div>
@@ -53,7 +53,7 @@ export default function AccountsPage() {
         {/* Sub-tabs */}
         <div
           className="flex gap-1 p-1 rounded-xl mb-6 w-fit"
-          style={{ backgroundColor: "#f1f5f9" }}
+          style={{ backgroundColor: "#f5f5f5" }}
         >
           {TABS.map((tab) => (
             <button
@@ -67,7 +67,7 @@ export default function AccountsPage() {
                       color: "var(--text-primary)",
                       boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
                     }
-                  : { color: "#64748b" }
+                  : { color: "#787878" }
               }
             >
               {tab.label}

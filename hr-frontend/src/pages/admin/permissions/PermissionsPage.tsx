@@ -10,9 +10,9 @@ import { Navigate } from "react-router-dom"
 
 
 const COMPANY_STYLES: Record<string, { badge: string; avatar: string }> = {
-  "Vera Enterprises": { badge: "bg-blue-100 text-blue-700 border-blue-200", avatar: "bg-blue-600" },
-  "Schones Leben": { badge: "bg-purple-100 text-purple-700 border-purple-200", avatar: "bg-purple-600" },
-  "Hagan Modular": { badge: "bg-orange-100 text-orange-700 border-orange-200", avatar: "bg-orange-500" },
+  "Vera Enterprises": { badge: "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]", avatar: "bg-[var(--bg-inverse)]" },
+  "Schones Leben": { badge: "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]", avatar: "bg-[var(--bg-inverse)]" },
+  "Hagan Modular": { badge: "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]", avatar: "bg-[var(--bg-subtle)]0" },
 }
 
 function initials(name: string) {
@@ -69,7 +69,7 @@ function GroupBlock({
             {group.label}
           </span>
           {group.admin && (
-            <span className="text-[9px] font-semibold bg-gold-100 text-gold-700 px-1.5 py-0.5 rounded shrink-0">admin</span>
+            <span className="text-[9px] font-semibold bg-[var(--bg-subtle)] text-[var(--text-primary)] px-1.5 py-0.5 rounded shrink-0">admin</span>
           )}
           {hasItems && (
             <span className="text-[11px] text-gray-400 tabular-nums shrink-0">
@@ -171,9 +171,9 @@ function CompanyAccessBlock({
   }
 
   return (
-    <div className="rounded-xl border border-forest-100 bg-forest-50/40 p-3.5">
+    <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)]/40 p-3.5">
       <div className="flex items-center gap-2 mb-2.5">
-        <Building2 size={15} className="text-forest-700" />
+        <Building2 size={15} className="text-[var(--text-primary)]" />
         <span className="text-sm font-semibold text-gray-800">Company Access</span>
         <span className="text-[11px] text-gray-400">— which books this person can open</span>
       </div>
@@ -192,7 +192,7 @@ function CompanyAccessBlock({
             <div
               key={co}
               className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 border ${
-                on ? "border-forest-200 bg-white" : "border-gray-100 bg-gray-50/60"
+                on ? "border-[var(--border-subtle)] bg-white" : "border-gray-100 bg-gray-50/60"
               }`}
             >
               <span className={`text-sm flex-1 truncate ${on ? "text-gray-800 font-medium" : "text-gray-400"}`}>
@@ -205,7 +205,7 @@ function CompanyAccessBlock({
                   disabled={!canGrant}
                   title={isDefault ? "Default company" : "Set as default"}
                   className={`flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-                    isDefault ? "text-gold-600" : "text-gray-300 hover:text-gold-500"
+                    isDefault ? "text-[var(--text-primary)]" : "text-gray-300 hover:text-[var(--text-tertiary)]0"
                   } ${canGrant ? "cursor-pointer" : "cursor-default"}`}
                 >
                   <Star size={12} fill={isDefault ? "currentColor" : "none"} />
@@ -228,9 +228,9 @@ function CompanyAccessBlock({
             disabled={!dirty || update.isPending}
             className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-all ${
               saved
-                ? "bg-green-100 text-green-700"
+                ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
                 : dirty
-                  ? "bg-forest-700 text-white hover:bg-forest-800 shadow-sm"
+                  ? "bg-[var(--bg-inverse)] text-white hover:bg-[var(--bg-inverse)] shadow-sm"
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
@@ -300,7 +300,7 @@ function UserPermissionCard({
 
   return (
     <div className={`bg-white rounded-2xl shadow-sm overflow-hidden border ${
-      user.is_admin ? "border-gold-200 ring-1 ring-gold-100" : "border-gray-200"
+      user.is_admin ? "border-[var(--border-subtle)] ring-1 ring-[var(--border-strong)]" : "border-gray-200"
     }`}>
       {/* Card header */}
       <div className="flex items-center justify-between px-5 py-4">
@@ -312,7 +312,7 @@ function UserPermissionCard({
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold text-gray-900">{user.name}</p>
               {user.is_admin && (
-                <span className="text-[10px] font-semibold bg-gold-600 text-white px-2 py-0.5 rounded-full">Full Access</span>
+                <span className="text-[10px] font-semibold bg-[var(--bg-inverse)] text-white px-2 py-0.5 rounded-full">Full Access</span>
               )}
             </div>
             <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
@@ -338,12 +338,12 @@ function UserPermissionCard({
       <div className="px-5 py-4 space-y-3">
         {user.is_admin ? (
           <>
-            <div className="rounded-xl border border-gold-100 bg-gold-50/50 p-3.5 flex items-center gap-2">
-              <Building2 size={15} className="text-gold-600" />
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)]/50 p-3.5 flex items-center gap-2">
+              <Building2 size={15} className="text-[var(--text-primary)]" />
               <span className="text-sm font-medium text-gray-700">All companies</span>
               <span className="text-[11px] text-gray-400">— owner / platform admin, cannot be restricted</span>
             </div>
-            <p className="text-xs text-gold-500 py-1">Administrator — full access to every module, cannot be restricted.</p>
+            <p className="text-xs text-[var(--text-tertiary)]0 py-1">Administrator — full access to every module, cannot be restricted.</p>
           </>
         ) : (
           <>
@@ -362,8 +362,8 @@ function UserPermissionCard({
             onClick={handleSave}
             disabled={!dirty || update.isPending}
             className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-1.5 rounded-lg transition-all ${
-              saved ? "bg-green-100 text-green-700"
-              : dirty ? "bg-forest-700 text-white hover:bg-forest-800 shadow-sm"
+              saved ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
+              : dirty ? "bg-[var(--bg-inverse)] text-white hover:bg-[var(--bg-inverse)] shadow-sm"
               : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
@@ -397,12 +397,12 @@ export function PermissionsPage() {
   const countFor = (co: string | null) => allUsers.filter((u) => userInCompany(u, co)).length
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-7">
         <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-gold-50 flex items-center justify-center shadow-sm">
-            <Shield size={22} className="text-gold-600" />
+          <div className="h-11 w-11 rounded-2xl bg-[var(--bg-subtle)] flex items-center justify-center shadow-sm">
+            <Shield size={22} className="text-[var(--text-primary)]" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Role Control</h1>
@@ -429,8 +429,8 @@ export function PermissionsPage() {
             onClick={() => setCompanyFilter(null)}
             className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
               companyFilter === null
-                ? "bg-forest-700 text-white border-forest-700"
-                : "bg-white text-gray-600 border-gray-200 hover:border-forest-300"
+                ? "bg-[var(--bg-inverse)] text-white border-[var(--border-subtle)]"
+                : "bg-white text-gray-600 border-gray-200 hover:border-[var(--border-subtle)]"
             }`}
           >
             All <span className="tabular-nums opacity-70">({countFor(null)})</span>
@@ -441,8 +441,8 @@ export function PermissionsPage() {
               onClick={() => setCompanyFilter(co)}
               className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
                 companyFilter === co
-                  ? "bg-forest-700 text-white border-forest-700"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-forest-300"
+                  ? "bg-[var(--bg-inverse)] text-white border-[var(--border-subtle)]"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-[var(--border-subtle)]"
               }`}
             >
               {co} <span className="tabular-nums opacity-70">({countFor(co)})</span>

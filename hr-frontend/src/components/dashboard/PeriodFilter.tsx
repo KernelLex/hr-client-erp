@@ -25,8 +25,8 @@ export function PeriodFilter({ value, onChange }: { value: PeriodValue; onChange
           onClick={() => onChange({ ...value, period: o.key })}
           className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
             value.period === o.key
-              ? "bg-[#1e3a2f] text-white border-[#1e3a2f]"
-              : "bg-white text-gray-600 border-gray-200 hover:border-[#1e3a2f]"
+              ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)] border-[var(--bg-inverse)]"
+              : "bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]"
           }`}
         >
           {o.label}

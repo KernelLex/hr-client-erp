@@ -58,21 +58,19 @@ function useDashboardStats() {
 function StatSkeleton() {
   return (
     <div
-      className="rounded-xl p-5 animate-pulse"
+      className="rounded-2xl p-5 animate-pulse"
       style={{
-        background: "#FFFFFF",
+        background: "var(--bg-surface)",
         border: "var(--border-card)",
         boxShadow: "var(--shadow-card)",
       }}
     >
       <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <div className="h-3 bg-gray-200 rounded w-24" />
-          <div className="h-8 bg-gray-300 rounded w-12" />
-          <div className="h-3 bg-gray-100 rounded w-20" />
-        </div>
-        <div className="h-10 w-10 bg-gray-100 rounded-full" />
+        <div className="h-3 bg-gray-200 rounded w-24" />
+        <div className="h-9 w-9 bg-gray-100 rounded-xl" />
       </div>
+      <div className="h-7 bg-gray-300 rounded w-14 mt-4" />
+      <div className="h-3 bg-gray-100 rounded w-20 mt-2.5" />
     </div>
   )
 }
@@ -99,13 +97,15 @@ const ACTIVITY_ICONS: Record<string, React.ElementType> = {
   gray: Circle,
 }
 
+// Monochrome activity icons — differentiated by glyph, not hue. "red" keeps the
+// one sanctioned safety colour for genuine error events.
 const ACTIVITY_ICON_COLORS: Record<string, string> = {
-  blue: "#3B82F6",
-  violet: "#c8a45c",
-  emerald: "#10B981",
-  red: "#EF4444",
-  orange: "#F59E0B",
-  gray: "#94A3B8",
+  blue: "var(--text-secondary)",
+  violet: "var(--text-primary)",
+  emerald: "var(--text-primary)",
+  red: "var(--color-danger)",
+  orange: "var(--text-secondary)",
+  gray: "var(--text-tertiary)",
 }
 
 function ProgressBar({ value, color }: { value: number; color: string }) {
@@ -117,8 +117,14 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
 }
 
 function StatusDot({ status }: { status: "green" | "yellow" | "red" | "gray" }) {
-  const colors = { green: "bg-green-500", yellow: "bg-yellow-500", red: "bg-red-500", gray: "bg-gray-400" }
-  return <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${colors[status]}`} />
+  // Monochrome: good = ink, ok = mid-grey, bad = safety red, unknown = light.
+  const colors: Record<string, string> = {
+    green: "var(--text-primary)",
+    yellow: "var(--text-tertiary)",
+    red: "var(--color-danger)",
+    gray: "var(--border-default)",
+  }
+  return <span className="inline-block w-2 h-2 rounded-full flex-shrink-0" style={{ background: colors[status] }} />
 }
 
 function AIHealthWidget({ onNavigate, onSync, onProcess }: {
@@ -135,10 +141,11 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
     enabled: open,
   })
 
-  const scoreColor = !health ? "#94A3B8"
-    : health.overall_score >= 85 ? "#16a34a"
-    : health.overall_score >= 70 ? "#2563eb"
-    : health.overall_score >= 50 ? "#ca8a04" : "#dc2626"
+  // Monochrome: higher score = darker ink; only a failing score uses safety red.
+  const scoreColor = !health ? "var(--text-tertiary)"
+    : health.overall_score >= 85 ? "var(--text-primary)"
+    : health.overall_score >= 70 ? "var(--text-secondary)"
+    : health.overall_score >= 50 ? "var(--text-tertiary)" : "var(--color-danger)"
 
   const rtStatus = (ms: number | null): "green" | "yellow" | "red" | "gray" =>
     ms === null ? "gray" : ms < 2000 ? "green" : ms < 5000 ? "yellow" : "red"
@@ -150,14 +157,14 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
     rate >= 80 ? "green" : rate >= 50 ? "yellow" : "red"
 
   return (
-    <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+    <div className="rounded-2xl border overflow-hidden" style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)", boxShadow: "var(--shadow-card)" }}>
       <button
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-[var(--overlay-hover)]"
         onClick={() => setOpen((v) => !v)}
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-forest-600 to-gold-600 flex items-center justify-center flex-shrink-0">
-            <Bot className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "var(--bg-inverse)" }}>
+            <Bot className="w-4 h-4" style={{ color: "var(--text-inverse)" }} />
           </div>
           <div className="text-left">
             <p className="font-semibold text-gray-900 text-sm">AI & System Health</p>
@@ -178,14 +185,14 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
         <div className="px-5 pb-5 border-t border-gray-50">
           <div className="flex justify-between items-center py-3">
             <p className="text-xs text-gray-400">Auto-refreshes every 60s</p>
-            <button onClick={() => refetch()} disabled={isFetching} className="text-xs text-forest-500 hover:text-forest-700 flex items-center gap-1">
+            <button onClick={() => refetch()} disabled={isFetching} className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1">
               <RefreshCw className={`w-3 h-3 ${isFetching ? "animate-spin" : ""}`} /> Refresh
             </button>
           </div>
 
           {isLoading && (
             <div className="flex items-center justify-center py-10">
-              <Loader2 className="w-6 h-6 animate-spin text-forest-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-[var(--text-tertiary)]" />
             </div>
           )}
 
@@ -216,7 +223,7 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
                       <span className="text-xs text-gray-500">{health.ollama.response_time_ms}ms</span>
                     </div>
                   )}
-                  <button onClick={() => { }} className="mt-2 text-xs text-forest-500 hover:text-forest-700">Test AI</button>
+                  <button onClick={() => { }} className="mt-2 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Test AI</button>
                 </div>
 
                 {/* Extraction */}
@@ -227,9 +234,9 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
                   </div>
                   <p className="text-xs text-gray-500">{health.extraction.success_rate}% success</p>
                   <p className="text-xs text-gray-400">{health.extraction.processed} done · {health.extraction.pending} pending</p>
-                  <ProgressBar value={health.extraction.success_rate} color="#3d7d5c" />
+                  <ProgressBar value={health.extraction.success_rate} color="var(--text-primary)" />
                   {health.extraction.pending > 0 && (
-                    <button onClick={onProcess} className="mt-2 text-xs text-forest-500 hover:text-forest-700">⚡ Process Pending</button>
+                    <button onClick={onProcess} className="mt-2 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">▸ Process Pending</button>
                   )}
                 </div>
 
@@ -247,7 +254,7 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
                       : "Never synced"}
                   </p>
                   <p className="text-xs text-gray-400">{health.drive_sync.files_found} files · {health.drive_sync.last_sync_status || "—"}</p>
-                  <button onClick={onSync} className="mt-2 text-xs text-forest-500 hover:text-forest-700">🔄 Sync Now</button>
+                  <button onClick={onSync} className="mt-2 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">↻ Sync Now</button>
                 </div>
 
                 {/* Data Quality */}
@@ -258,13 +265,13 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
                   </div>
                   <p className="text-xs text-gray-500">{health.data_quality.quality_score}% quality</p>
                   <p className="text-xs text-gray-400">{health.data_quality.total_structured} records · {health.data_quality.with_amounts} with amounts</p>
-                  <ProgressBar value={health.data_quality.quality_score} color="#16a34a" />
+                  <ProgressBar value={health.data_quality.quality_score} color="var(--text-primary)" />
                 </div>
               </div>
 
               <button
                 onClick={onNavigate}
-                className="w-full text-sm text-forest-600 hover:text-forest-800 flex items-center justify-center gap-1.5 py-2 border border-forest-200 rounded-xl hover:bg-forest-50 transition-colors"
+                className="w-full text-sm flex items-center justify-center gap-1.5 py-2 border rounded-xl transition-colors text-[var(--text-primary)] border-[var(--border-subtle)] hover:bg-[var(--overlay-hover)]"
               >
                 View Full AI Insights <ExternalLink className="w-3.5 h-3.5" />
               </button>
@@ -295,57 +302,39 @@ export function Dashboard() {
       value: stats?.total_employees ?? "—",
       sub: "Active employees",
       icon: Users,
-      iconBg: "#eef5f1",
-      iconColor: "#1e3a2f",
+      iconBg: "#F5F5F5",
+      iconColor: "#171717",
     },
     {
       label: "Open Positions",
       value: stats?.open_positions ?? "—",
       sub: "Job openings",
       icon: Briefcase,
-      iconBg: "#fdf8ef",
-      iconColor: "#c8a45c",
+      iconBg: "#F5F5F5",
+      iconColor: "#171717",
     },
     {
       label: "Candidates",
       value: stats?.candidates_this_month ?? "—",
       sub: "This month",
       icon: UserCheck,
-      iconBg: "#ECFDF5",
-      iconColor: "#10B981",
+      iconBg: "#F5F5F5",
+      iconColor: "#171717",
     },
     {
       label: "Interviews Today",
       value: stats?.interviews_today ?? "—",
       sub: "Scheduled today",
       icon: CalendarClock,
-      iconBg: "#FFFBEB",
-      iconColor: "#F59E0B",
+      iconBg: "#F5F5F5",
+      iconColor: "#171717",
     },
   ]
 
   const QUICK_ACTIONS = [
-    {
-      label: "Post New Job",
-      icon: Plus,
-      bg: "#1e3a2f",
-      hover: "#2d5544",
-      onClick: () => navigate("/recruitment"),
-    },
-    {
-      label: "Add Candidate",
-      icon: UserPlus,
-      bg: "#c8a45c",
-      hover: "#b8934c",
-      onClick: () => navigate("/recruitment"),
-    },
-    {
-      label: "Schedule Interview",
-      icon: Calendar,
-      bg: "#059669",
-      hover: "#047857",
-      onClick: () => navigate("/recruitment"),
-    },
+    { label: "Post New Job", icon: Plus, onClick: () => navigate("/recruitment") },
+    { label: "Add Candidate", icon: UserPlus, onClick: () => navigate("/recruitment") },
+    { label: "Schedule Interview", icon: Calendar, onClick: () => navigate("/recruitment") },
   ]
 
   // Group console — Owais viewing "All companies". Placed after all hooks to
@@ -353,7 +342,7 @@ export function Dashboard() {
   if (activeCompany === ALL_COMPANIES) {
     return (
       <div className="min-h-full" style={{ background: "var(--bg-app)" }}>
-        <div className="px-6 md:px-7 py-6 max-w-5xl">
+        <div className="px-6 md:px-7 py-6">
           <GroupConsole />
         </div>
       </div>
@@ -371,18 +360,19 @@ export function Dashboard() {
           </div>
         }
       />
-      <div className="px-6 md:px-7 pb-8 max-w-5xl space-y-6">
+      <div className="px-6 md:px-7 pb-8 space-y-6">
 
       {/* Default password warning banner */}
       {showPasswordBanner && (
-        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <AlertTriangle size={18} className="text-amber-500 flex-shrink-0" />
-          <p className="text-sm text-amber-800 flex-1">
+        <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ border: "1px solid var(--border-strong)", background: "var(--bg-subtle)" }}>
+          <AlertTriangle size={18} className="flex-shrink-0" style={{ color: "var(--text-primary)" }} />
+          <p className="text-sm flex-1" style={{ color: "var(--text-primary)" }}>
             You are still using the default password. Please change it before going live.
           </p>
           <button
             onClick={() => navigate("/my-profile")}
-            className="text-sm font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900 flex-shrink-0"
+            className="text-sm font-medium underline underline-offset-2 flex-shrink-0"
+            style={{ color: "var(--text-primary)" }}
           >
             Change password
           </button>
@@ -393,8 +383,8 @@ export function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
-          : STAT_CARDS.map(({ label, value, sub }) => (
-              <StatCard key={label} label={label} value={value} sub={sub} />
+          : STAT_CARDS.map(({ label, value, sub, icon }) => (
+              <StatCard key={label} label={label} value={value} sub={sub} icon={icon} />
             ))}
       </div>
 
@@ -436,16 +426,16 @@ export function Dashboard() {
             ) : (
               activity.map(({ action, detail, time, dot }, i) => {
                 const IconComp = ACTIVITY_ICONS[dot] ?? Circle
-                const iconColor = ACTIVITY_ICON_COLORS[dot] ?? "#94A3B8"
+                const iconColor = ACTIVITY_ICON_COLORS[dot] ?? "#a6a6a6"
                 const isLast = i === activity.length - 1
                 return (
                   <div
                     key={i}
                     className="flex items-start gap-3 py-3 transition-colors"
                     style={{
-                      borderBottom: isLast ? "none" : "1px solid #F1F5F9",
+                      borderBottom: isLast ? "none" : "1px solid #f5f5f5",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F8FAFC")}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fafafa")}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
                     <div
@@ -482,74 +472,59 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 pt-0">
-            {QUICK_ACTIONS.map(({ label, icon: Icon, bg, hover, onClick }) => (
+            {/* Primary quick actions — solid ink (monochrome) */}
+            {QUICK_ACTIONS.map(({ label, icon: Icon, onClick }) => (
               <button
                 key={label}
                 onClick={onClick}
-                className="w-full flex items-center gap-2.5 text-sm font-semibold text-white transition-all duration-150"
+                className="w-full flex items-center gap-2.5 text-sm font-semibold transition-colors duration-150"
                 style={{
-                  backgroundColor: bg,
+                  backgroundColor: "var(--bg-inverse)",
+                  color: "var(--text-inverse)",
                   borderRadius: "var(--radius-button)",
                   padding: "10px 16px",
                   border: "none",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = hover
-                  e.currentTarget.style.boxShadow = `0 4px 12px ${bg}4D`
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = bg
-                  e.currentTarget.style.boxShadow = "none"
-                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.88" }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1" }}
               >
-                <Icon size={15} className="text-white opacity-90" />
+                <Icon size={15} style={{ color: "var(--text-inverse)", opacity: 0.9 }} />
                 {label}
               </button>
             ))}
+            {/* Admin actions — secondary (outlined) so they read as distinct */}
             {isAdmin && (
               <button
                 onClick={() => navigate("/admin/attendance")}
-                className="w-full flex items-center gap-2.5 text-sm font-semibold transition-all duration-150"
+                className="w-full flex items-center gap-2.5 text-sm font-semibold transition-colors duration-150 hover:bg-[var(--overlay-hover)]"
                 style={{
-                  backgroundColor: "#ECFDF5",
-                  color: "#065F46",
+                  backgroundColor: "var(--bg-surface)",
+                  color: "var(--text-primary)",
                   borderRadius: "var(--radius-button)",
                   padding: "10px 16px",
-                  border: "1px solid #6EE7B7",
+                  border: "1px solid var(--border-control)",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#D1FAE5"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#ECFDF5"
-                }}
               >
-                <Activity size={15} style={{ color: "#059669" }} />
+                <Activity size={15} style={{ color: "var(--text-secondary)" }} />
                 Live Attendance
               </button>
             )}
             {isAdmin && (
               <button
                 onClick={() => navigate("/admin/permissions")}
-                className="w-full flex items-center gap-2.5 text-sm font-semibold transition-all duration-150"
+                className="w-full flex items-center gap-2.5 text-sm font-semibold transition-colors duration-150 hover:bg-[var(--overlay-hover)]"
                 style={{
-                  backgroundColor: "#fdf8ef",
-                  color: "#4C1D95",
+                  backgroundColor: "var(--bg-surface)",
+                  color: "var(--text-primary)",
                   borderRadius: "var(--radius-button)",
                   padding: "10px 16px",
-                  border: "1px solid #DDD6FE",
+                  border: "1px solid var(--border-control)",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#EDE9FE"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#fdf8ef"
-                }}
               >
-                <Shield size={15} style={{ color: "#c8a45c" }} />
+                <Shield size={15} style={{ color: "var(--text-secondary)" }} />
                 Role Control
               </button>
             )}
@@ -561,38 +536,38 @@ export function Dashboard() {
       {isAdmin && tallySnap && (
         <div
           className="rounded-xl p-5"
-          style={{ background: "var(--brand-primary)", border: "none", borderRadius: "var(--radius-card)" }}
+          style={{ background: "var(--bg-inverse)", border: "none", borderRadius: "var(--radius-card)" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Activity size={15} style={{ color: "var(--gold)" }} />
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--gold)" }}>
+              <Activity size={15} style={{ color: "var(--text-inverse)" }} />
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-inverse)" }}>
                 Tally Financial Snapshot · {tallyFmtDate(tallySnap.as_of)}
               </span>
             </div>
             <button
               onClick={() => navigate("/accounting")}
               className="text-xs transition-colors"
-              style={{ color: "var(--gold-light)" }}
+              style={{ color: "var(--text-inverse)", opacity: 0.7 }}
             >
               Full View →
             </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {[
-              { label: "Cash + Bank",   value: tallySnap.cash_bank,    icon: Wallet,      color: "text-white" },
-              { label: "Receivables",   value: tallySnap.receivables,  icon: TrendingUp,  color: "text-green-300" },
-              { label: "Payables",      value: tallySnap.payables,     icon: TrendingDown,color: "text-red-300" },
-              { label: "FY Sales",      value: tallySnap.fy_sales,     icon: TrendingUp,  color: "text-blue-200" },
-              { label: "FY Purchases",  value: tallySnap.fy_purchases, icon: TrendingDown,color: "text-orange-200" },
-              { label: "Net GST Due",   value: tallySnap.net_gst,      icon: FileText,    color: "text-yellow-200" },
-            ].map(({ label, value, icon: Icon, color }) => (
+              { label: "Cash + Bank",   value: tallySnap.cash_bank,    icon: Wallet },
+              { label: "Receivables",   value: tallySnap.receivables,  icon: TrendingUp },
+              { label: "Payables",      value: tallySnap.payables,     icon: TrendingDown },
+              { label: "FY Sales",      value: tallySnap.fy_sales,     icon: TrendingUp },
+              { label: "FY Purchases",  value: tallySnap.fy_purchases, icon: TrendingDown },
+              { label: "Net GST Due",   value: tallySnap.net_gst,      icon: FileText },
+            ].map(({ label, value, icon: Icon }) => (
               <div key={label} className="rounded-lg px-3 py-2.5" style={{ background: "rgba(255,255,255,0.07)" }}>
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Icon size={10} className="text-gray-400" />
-                  <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">{label}</span>
+                  <Icon size={10} style={{ color: "rgba(255,255,255,0.5)" }} />
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</span>
                 </div>
-                <p className={`font-mono text-lg font-bold leading-tight ${color}`}>{value}</p>
+                <p className="font-mono text-lg font-bold leading-tight" style={{ color: "var(--text-inverse)" }}>{value}</p>
               </div>
             ))}
           </div>

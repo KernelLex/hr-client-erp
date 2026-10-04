@@ -34,7 +34,7 @@ export function DirectoryEmployeeCard({ employee }: DirectoryCardProps) {
           <p className="font-semibold text-gray-900 text-sm truncate">{employee.employee_name}</p>
           <p className="text-xs text-gray-500 truncate">{employee.designation}</p>
         </div>
-        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${employee.status === "Active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${employee.status === "Active" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-[var(--bg-subtle)] text-[var(--text-primary)]"}`}>
           {employee.status}
         </span>
       </div>
@@ -109,7 +109,7 @@ export function OnboardingEmployeeCard({ employee, docsChecklist, onUpdate }: On
             <span>{progress}%</span>
           </div>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-400 rounded-full transition-all" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-[var(--bg-inverse)] rounded-full transition-all" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}

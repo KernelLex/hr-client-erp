@@ -133,7 +133,7 @@ function Field({ label, field, value, editMode, canEditThis, draft, onChange, ty
         {labelEl}
         <select
           className="w-full rounded-lg text-sm font-medium"
-          style={{ border: "1px solid #b0d1bd", backgroundColor: "#eef5f1", color: "var(--text-primary)", padding: "6px 10px" }}
+          style={{ border: "1px solid #E3E3E3", backgroundColor: "#F5F5F5", color: "var(--text-primary)", padding: "6px 10px" }}
           value={current}
           onChange={(e) => onChange(field, e.target.value)}
         >
@@ -150,7 +150,7 @@ function Field({ label, field, value, editMode, canEditThis, draft, onChange, ty
         <textarea
           rows={2}
           className="w-full rounded-lg text-sm font-medium resize-none"
-          style={{ border: "1px solid #b0d1bd", backgroundColor: "#eef5f1", color: "var(--text-primary)", padding: "6px 10px" }}
+          style={{ border: "1px solid #E3E3E3", backgroundColor: "#F5F5F5", color: "var(--text-primary)", padding: "6px 10px" }}
           value={current}
           onChange={(e) => onChange(field, e.target.value)}
         />
@@ -166,7 +166,7 @@ function Field({ label, field, value, editMode, canEditThis, draft, onChange, ty
         value={current}
         onChange={(e) => onChange(field, e.target.value)}
         className="h-8 text-sm font-medium"
-        style={{ borderColor: "#b0d1bd", backgroundColor: "#eef5f1" }}
+        style={{ borderColor: "#E3E3E3", backgroundColor: "#F5F5F5" }}
       />
     </div>
   )
@@ -197,7 +197,7 @@ function SkillsEditor({ value, editMode, canEdit, onChange }: {
       <div className="flex flex-wrap gap-2">
         {skills.map((s) => (
           <span key={s} className="text-xs font-medium px-3 py-1 rounded-full"
-            style={{ border: "1px solid #85b89a", color: "#1e3a2f", backgroundColor: "#eef5f1" }}>
+            style={{ border: "1px solid #6B6B6B", color: "#171717", backgroundColor: "#F5F5F5" }}>
             {s}
           </span>
         ))}
@@ -210,7 +210,7 @@ function SkillsEditor({ value, editMode, canEdit, onChange }: {
       <div className="flex flex-wrap gap-2 min-h-[28px]">
         {skills.map((s) => (
           <span key={s} className="flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full"
-            style={{ border: "1px solid #85b89a", color: "#1e3a2f", backgroundColor: "#eef5f1" }}>
+            style={{ border: "1px solid #6B6B6B", color: "#171717", backgroundColor: "#F5F5F5" }}>
             {s}
             <button onClick={() => onChange(skills.filter((x) => x !== s).join(", "))}
               className="hover:text-red-500 transition-colors ml-0.5" type="button">
@@ -223,7 +223,7 @@ function SkillsEditor({ value, editMode, canEdit, onChange }: {
         <Input placeholder="Add a skill…" value={newSkill}
           onChange={(e) => setNewSkill(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill() } }}
-          className="h-8 text-sm flex-1" style={{ borderColor: "#b0d1bd", backgroundColor: "#eef5f1" }} />
+          className="h-8 text-sm flex-1" style={{ borderColor: "#E3E3E3", backgroundColor: "#F5F5F5" }} />
         <Button type="button" size="sm" onClick={addSkill} className="gap-1 text-white"
           style={{ backgroundColor: "var(--brand-primary)" }}>
           <Plus size={13} /> Add
@@ -262,7 +262,7 @@ function ProfileHeader({
   return (
     <div className="bg-white" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
       {/* Gradient banner */}
-      <div className="relative w-full" style={{ height: "120px", background: "linear-gradient(135deg, #1e3a2f 0%, #c8a45c 100%)" }}>
+      <div className="relative w-full" style={{ height: "120px", background: "linear-gradient(135deg, #171717 0%, #171717 100%)" }}>
         {/* Back button */}
         {isAdmin && !isSelf && (
           <button onClick={() => navigate("/admin/employees")}
@@ -301,7 +301,7 @@ function ProfileHeader({
           {/* Avatar */}
           <div className="relative shrink-0" style={{ flexShrink: 0 }}>
             <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden"
-              style={{ backgroundColor: "#eef5f1", border: "4px solid white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+              style={{ backgroundColor: "#F5F5F5", border: "4px solid white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
               {photoUrl ? (
                 <img src={photoUrl} alt={profile.employee_name} className="w-full h-full object-cover" />
               ) : (
@@ -332,19 +332,19 @@ function ProfileHeader({
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
               {profile.company_email && (
                 <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-                  <Mail size={11} style={{ color: "#94A3B8" }} />
+                  <Mail size={11} style={{ color: "#a6a6a6" }} />
                   {profile.company_email}
                 </span>
               )}
               {profile.cell_number && (
                 <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-                  <Phone size={11} style={{ color: "#94A3B8" }} />
+                  <Phone size={11} style={{ color: "#a6a6a6" }} />
                   {formatPhone(profile.cell_number)}
                 </span>
               )}
               <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "#ECFDF5", color: "#065F46" }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--bg-subtle)]0 inline-block" />
                 Active
               </span>
             </div>
@@ -366,7 +366,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void }) {
   return (
-    <div className="bg-white border-b" style={{ borderColor: "#E2E8F0" }}>
+    <div className="bg-white border-b" style={{ borderColor: "#e9e9e9" }}>
       <div className="flex px-6">
         {TABS.map(({ id, label, icon }) => {
           const isActive = active === id
@@ -376,11 +376,11 @@ function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void 
               onClick={() => onChange(id)}
               className="flex items-center gap-1.5 px-5 py-3.5 text-sm font-medium transition-colors border-b-2 whitespace-nowrap"
               style={{
-                borderColor: isActive ? "#3d7d5c" : "transparent",
-                color: isActive ? "#3d7d5c" : "#64748B",
+                borderColor: isActive ? "#6B6B6B" : "transparent",
+                color: isActive ? "#6B6B6B" : "#787878",
                 fontWeight: isActive ? 600 : 500,
               }}
-              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "#F8F7FF" }}
+              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "#F5F5F5" }}
               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent" }}
             >
               {icon}{label}
@@ -458,7 +458,7 @@ function ProfileTabContent({
                             value={String((draft[fld] as string | undefined) ?? "")}
                             onChange={(e) => onChange(fld, e.target.value)}
                             className="h-8 text-sm font-medium"
-                            style={{ borderColor: "#b0d1bd", backgroundColor: "#eef5f1" }} />
+                            style={{ borderColor: "#E3E3E3", backgroundColor: "#F5F5F5" }} />
                         ) : (
                           <p className="font-medium flex items-center gap-1.5" style={{ fontSize: "14px", color: "var(--text-primary)" }}>
                             {profile[fld]
@@ -598,7 +598,7 @@ function ApplyLeaveModal({ onClose }: { onClose: () => void }) {
             <label className="block text-xs font-medium text-gray-600 mb-1.5">Leave Type <span className="text-red-500">*</span></label>
             <select
               className="w-full rounded-lg text-sm border py-2 px-3"
-              style={{ borderColor: "#E2E8F0", backgroundColor: "#fff", color: "var(--text-primary)" }}
+              style={{ borderColor: "#e9e9e9", backgroundColor: "#fff", color: "var(--text-primary)" }}
               value={leaveType} onChange={(e) => setLeaveType(e.target.value)} required
             >
               <option value="">Select leave type…</option>
@@ -618,8 +618,8 @@ function ApplyLeaveModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {totalDays > 0 && (
-            <p className="text-xs font-medium px-3 py-2 rounded-lg" style={{ backgroundColor: "#eef5f1", color: "#1e3a2f" }}>
-              📅 {totalDays} working day{totalDays !== 1 ? "s" : ""} (Sundays excluded)
+            <p className="text-xs font-medium px-3 py-2 rounded-lg" style={{ backgroundColor: "#F5F5F5", color: "#171717" }}>
+              ◰ {totalDays} working day{totalDays !== 1 ? "s" : ""} (Sundays excluded)
             </p>
           )}
 
@@ -627,7 +627,7 @@ function ApplyLeaveModal({ onClose }: { onClose: () => void }) {
             <label className="block text-xs font-medium text-gray-600 mb-1.5">Reason <span className="text-red-500">*</span></label>
             <textarea
               className="w-full border rounded-lg text-sm p-3 resize-none focus:outline-none focus:ring-1"
-              style={{ borderColor: "#E2E8F0" }}
+              style={{ borderColor: "#e9e9e9" }}
               rows={3}
               placeholder="Briefly describe the reason for leave…"
               value={reason} onChange={(e) => setReason(e.target.value)} required
@@ -652,7 +652,7 @@ function ApplyLeaveModal({ onClose }: { onClose: () => void }) {
 
 function SummaryCard({ label, value, accent }: { label: string; value: string | number; accent: string }) {
   return (
-    <div className="bg-white rounded-xl p-4 flex flex-col gap-1" style={{ border: "1px solid #F1F5F9", boxShadow: "var(--shadow-card)", borderLeft: `3px solid ${accent}` }}>
+    <div className="bg-white rounded-xl p-4 flex flex-col gap-1" style={{ border: "1px solid #f5f5f5", boxShadow: "var(--shadow-card)", borderLeft: `3px solid ${accent}` }}>
       <span className="text-2xl font-bold" style={{ color: accent }}>{value}</span>
       <span className="text-[11px] text-gray-400 leading-tight">{label}</span>
     </div>
@@ -681,9 +681,9 @@ function LeaveHistoryTabContent() {
 
   function statusBadge(status: string) {
     const styles: Record<string, React.CSSProperties> = {
-      Approved: { backgroundColor: "#ECFDF5", color: "#065F46" },
+      Approved: { backgroundColor: "#F5F5F5", color: "#171717" },
       Rejected: { backgroundColor: "#FEF2F2", color: "#991B1B" },
-      Pending:  { backgroundColor: "#FFFBEB", color: "#92400E" },
+      Pending:  { backgroundColor: "#F5F5F5", color: "#171717" },
     }
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
@@ -697,9 +697,9 @@ function LeaveHistoryTabContent() {
     <div className="p-6 space-y-5">
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <SummaryCard label="Days Approved This Year" value={totalDays} accent="#3d7d5c" />
-        <SummaryCard label="Approved Requests" value={approvedCount} accent="#1D9E75" />
-        <SummaryCard label="Pending Requests" value={pendingCount} accent="#F59E0B" />
+        <SummaryCard label="Days Approved This Year" value={totalDays} accent="#6B6B6B" />
+        <SummaryCard label="Approved Requests" value={approvedCount} accent="#171717" />
+        <SummaryCard label="Pending Requests" value={pendingCount} accent="#171717" />
         <SummaryCard label="Rejected Requests" value={rejectedCount} accent="#EF4444" />
       </div>
 
@@ -711,7 +711,7 @@ function LeaveHistoryTabContent() {
             <button key={f} onClick={() => setFilter(f)}
               className="px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all"
               style={{
-                borderColor: filter === f ? "var(--brand-primary)" : "#E5E7EB",
+                borderColor: filter === f ? "var(--brand-primary)" : "#e8e8e8",
                 backgroundColor: filter === f ? "var(--brand-primary)" : "#fff",
                 color: filter === f ? "#fff" : "#6B7280",
               }}>
@@ -863,7 +863,7 @@ export function EmployeeProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-full" style={{ backgroundColor: "var(--bg-app)" }}>
-        <div className="h-[188px] animate-pulse" style={{ background: "linear-gradient(135deg, #1e3a2f 0%, #c8a45c 100%)" }} />
+        <div className="h-[188px] animate-pulse" style={{ background: "linear-gradient(135deg, #171717 0%, #171717 100%)" }} />
         <div className="h-14 bg-white border-b border-gray-100 animate-pulse" />
         <div className="p-6 space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">

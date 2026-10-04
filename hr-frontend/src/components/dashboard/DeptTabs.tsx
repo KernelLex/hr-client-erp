@@ -30,7 +30,7 @@ export function DeptTabs({ tabs, active, onChange }: DeptTabsProps) {
             {tab.badge !== undefined && (
               <span
                 className="text-[10px] font-semibold rounded-full px-1.5 py-0.5"
-                style={isActive ? { background: "var(--gold)", color: "var(--brand-primary)" } : { background: "var(--brand-primary)", color: "#fff" }}
+                style={isActive ? { background: "var(--text-inverse)", color: "var(--bg-inverse)" } : { background: "var(--bg-inverse)", color: "var(--text-inverse)" }}
               >
                 {tab.badge}
               </span>

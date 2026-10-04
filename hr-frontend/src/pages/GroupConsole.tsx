@@ -72,7 +72,7 @@ export function GroupConsole() {
               key={name}
               onClick={() => void setCompany(name)}
               className="text-left rounded-2xl border bg-white p-5 shadow-sm transition-all hover:shadow-md"
-              style={{ borderColor: "#eef0f2", borderTop: `3px solid ${accent}` }}
+              style={{ borderColor: "#F5F5F5", borderTop: `3px solid ${accent}` }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: accent }} />

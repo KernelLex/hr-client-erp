@@ -33,7 +33,7 @@ export default function LogisticsPage() {
       <div className="px-6 md:px-7 pb-8">
         <div
           className="mb-5 px-4 py-3 rounded-xl text-xs"
-          style={{ background: "var(--color-info-bg)", color: "#2c4a3a", border: "0.5px solid var(--info-border, #c4d4c4)" }}
+          style={{ background: "var(--color-info-bg)", color: "#171717", border: "0.5px solid var(--info-border, #F5F5F5)" }}
         >
           Dispatch records derived from Tally Delivery Note vouchers. There is no vehicle, driver or route tracking yet.
         </div>

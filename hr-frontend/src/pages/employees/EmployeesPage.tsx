@@ -98,7 +98,7 @@ export function EmployeesPage() {
             </TabsTrigger>
             <TabsTrigger value="onboarding">
               Onboarding
-              {!onbLoading && <span className="ml-1.5 text-[10px] bg-blue-100 text-blue-600 rounded-full px-1.5 py-0.5">{onboardingEmployees.length}</span>}
+              {!onbLoading && <span className="ml-1.5 text-[10px] bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-full px-1.5 py-0.5">{onboardingEmployees.length}</span>}
             </TabsTrigger>
           </TabsList>
 

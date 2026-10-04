@@ -100,7 +100,7 @@ export function ChatPage() {
   }
 
   return (
-    <div className="flex h-full overflow-hidden" style={{ backgroundColor: "#F8FAFC" }}>
+    <div className="flex h-full overflow-hidden" style={{ backgroundColor: "#fafafa" }}>
       {/* Left panel — room list */}
       <div
         className="w-[220px] shrink-0 flex flex-col h-full overflow-hidden border-r border-white/5"
@@ -142,7 +142,7 @@ export function ChatPage() {
               <div className="ml-auto flex items-center gap-2">
                 {onlineUsers.length > 0 && (
                   <span className="text-xs text-gray-400">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 mr-1" />
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--bg-inverse)] mr-1" />
                     {onlineUsers.length} online
                   </span>
                 )}
@@ -150,7 +150,7 @@ export function ChatPage() {
                 {activeRoomId && (
                   <button
                     onClick={() => setShowSearch(true)}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-forest-600 hover:bg-forest-50 transition-colors"
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
                     title="Search in this chat"
                   >
                     <Search size={15} />

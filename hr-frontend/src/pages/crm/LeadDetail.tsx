@@ -20,7 +20,7 @@ import {
   useMarkFailed, useCreateQuotation,
 } from "./useCRM"
 import type { CRMStage, CRMQuotationItem } from "./types"
-import { STAGE_ORDER, STAGE_COLORS, STAGE_HEADER_COLORS } from "./types"
+import { STAGE_ORDER, STAGE_COLORS } from "./types"
 
 
 function daysSince(dateStr: string): number {
@@ -39,14 +39,14 @@ function StageProgressBar({ current }: { current: CRMStage }) {
           <div key={stage} className="flex items-center gap-1">
             <div className={cn(
               "px-2.5 py-1 rounded text-xs font-medium",
-              isCurrent ? cn(STAGE_HEADER_COLORS[stage], "text-white")
-                : isPast ? "bg-green-100 text-green-700"
+              isCurrent ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
+                : isPast ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
                 : "bg-gray-100 text-gray-400"
             )}>
               {isPast ? "✓ " : ""}{stage}
             </div>
             {idx < STAGE_ORDER.length - 1 && (
-              <div className={cn("w-4 h-0.5", isPast ? "bg-green-400" : "bg-gray-200")} />
+              <div className={cn("w-4 h-0.5", isPast ? "bg-[var(--bg-inverse)]" : "bg-gray-200")} />
             )}
           </div>
         )
@@ -100,7 +100,7 @@ function RequestAdvanceModal({
           <div>
             <Label>Notes for Owais (optional)</Label>
             <textarea
-              className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+              className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] mt-1"
               placeholder="Add context..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -235,7 +235,7 @@ function QuotationBuilder({ leadId }: { leadId: string }) {
       <div>
         <Label className="text-xs">Terms & Conditions</Label>
         <textarea
-          className="w-full min-h-[60px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full min-h-[60px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
           value={terms} onChange={(e) => setTerms(e.target.value)} placeholder="Payment terms..." />
       </div>
       <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
@@ -285,29 +285,29 @@ function AdminApprovalPanel({ leadId, pendingApproval }: {
   }
 
   return (
-    <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 space-y-3">
+    <div className="border border-[var(--border-subtle)] bg-[var(--bg-subtle)] rounded-lg p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <AlertTriangle size={16} className="text-amber-600" />
-        <p className="font-semibold text-amber-800 text-sm">Approval Required</p>
+        <AlertTriangle size={16} className="text-[var(--text-primary)]" />
+        <p className="font-semibold text-[var(--text-primary)] text-sm">Approval Required</p>
       </div>
       <p className="text-sm text-gray-700">
         Stage advance: <strong>{pendingApproval.current_stage} → {pendingApproval.requested_stage}</strong>
       </p>
       {pendingApproval.request_notes && (
-        <p className="text-xs text-gray-600 italic bg-white rounded p-2 border border-amber-100">
+        <p className="text-xs text-gray-600 italic bg-white rounded p-2 border border-[var(--border-subtle)]">
           "{pendingApproval.request_notes}"
         </p>
       )}
       <div>
         <Label className="text-xs">Admin Notes</Label>
         <textarea
-          className="w-full min-h-[60px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-amber-500 mt-1"
+          className="w-full min-h-[60px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] mt-1"
           placeholder="Notes for the requester..." value={adminNotes}
           onChange={(e) => setAdminNotes(e.target.value)} />
       </div>
       {!showReject ? (
         <div className="flex gap-2">
-          <Button className="flex-1 bg-green-600 hover:bg-green-700 gap-1" onClick={handleApprove}
+          <Button className="flex-1 bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] gap-1" onClick={handleApprove}
             disabled={approveStage.isPending}>
             <CheckCircle size={14} />
             {approveStage.isPending ? "Approving…" : "✓ Approve"}
@@ -405,14 +405,14 @@ export function LeadDetail() {
       {!isTerminal && (
         <div>
           {isPendingApproval ? (
-            <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 text-sm text-orange-800">
-              <span>⏳</span>
+            <div className="flex items-center gap-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)]">
+              <span>◴</span>
               <span>Awaiting Owais's approval to advance to <strong>{nextStage}</strong></span>
             </div>
           ) : isRejected ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-800">
-                <span>❌</span>
+                <span>✕</span>
                 <span>Stage advance was rejected{lead.rejection_reason ? `: ${lead.rejection_reason}` : ""}</span>
               </div>
               {nextStage && (
@@ -423,7 +423,7 @@ export function LeadDetail() {
             </div>
           ) : canRequestAdvance ? (
             <Button
-              className="bg-green-600 hover:bg-green-700 gap-2"
+              className="bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] gap-2"
               onClick={() => setShowAdvanceModal(true)}
             >
               Push to {nextStage} →
@@ -433,8 +433,8 @@ export function LeadDetail() {
       )}
 
       {lead.status === "Success" && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
-          ✅ Lead successfully closed!
+        <div className="flex items-center gap-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)]">
+          ✓ Lead successfully closed!
         </div>
       )}
 
@@ -485,8 +485,8 @@ export function LeadDetail() {
                     </div>
                     {lead.quotation.pdf_attachment && (
                       <a href={lead.quotation.pdf_attachment} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline">
-                        📄 View PDF
+                        className="inline-flex items-center gap-1 text-sm text-[var(--text-primary)] hover:underline">
+                        ▤ View PDF
                       </a>
                     )}
                   </div>
@@ -508,9 +508,9 @@ export function LeadDetail() {
                     <div key={a.name} className="flex items-start gap-3 text-sm">
                       <div className={cn(
                         "mt-0.5 w-2 h-2 rounded-full shrink-0",
-                        a.approval_status === "Approved" ? "bg-green-500"
+                        a.approval_status === "Approved" ? "bg-[var(--bg-subtle)]0"
                           : a.approval_status === "Rejected" ? "bg-red-500"
-                          : "bg-amber-500"
+                          : "bg-[var(--bg-subtle)]0"
                       )} />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-600">
@@ -526,9 +526,9 @@ export function LeadDetail() {
                       </div>
                       <Badge className={cn(
                         "text-[10px] shrink-0",
-                        a.approval_status === "Approved" ? "bg-green-100 text-green-800"
+                        a.approval_status === "Approved" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
                           : a.approval_status === "Rejected" ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          : "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
                       )}>
                         {a.approval_status}
                       </Badge>

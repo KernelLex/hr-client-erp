@@ -61,7 +61,7 @@ export function TermsTemplatesPage() {
       <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-secondary, #6a6a5c)" }}>{label}</label>
       {opts ? (
         <select value={form[k]} onChange={(e) => setForm((p) => ({ ...p, [k]: e.target.value }))}
-          className="w-full rounded-md px-3 py-2 text-sm outline-none" style={{ border: "var(--border-card)", background: "#fff", color: "#111827" }}>
+          className="w-full rounded-md px-3 py-2 text-sm outline-none" style={{ border: "var(--border-card)", background: "#fff", color: "#1c1c1c" }}>
           {opts.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
       ) : (
@@ -90,7 +90,7 @@ export function TermsTemplatesPage() {
         <div className="fixed inset-0 z-[500] flex justify-end">
           <div className="absolute inset-0" style={{ background: "rgba(30,58,47,0.45)" }} onClick={submitting ? undefined : () => setOpen(false)} />
           <div className="relative flex h-full w-full max-w-[480px] flex-col bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b px-5 py-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            <div className="flex items-start justify-between border-b px-5 py-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
               <div>
                 <h2 className="font-heading text-lg font-semibold" style={{ color: "var(--brand-primary)" }}>New Terms Template</h2>
                 <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>Pick the clauses to snapshot into this version.</p>
@@ -112,10 +112,10 @@ export function TermsTemplatesPage() {
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-secondary, #6a6a5c)" }}>
                   Clauses ({picked.size} selected)
                 </div>
-                <div className="rounded-lg" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+                <div className="rounded-lg" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
                   {clauses.length === 0 && <div className="px-3 py-3 text-xs" style={{ color: "var(--text-muted)" }}>No active clauses. Create clauses first.</div>}
                   {clauses.map((c) => (
-                    <label key={c.code} className="flex cursor-pointer items-center gap-2 border-b px-3 py-2 text-sm last:border-b-0" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                    <label key={c.code} className="flex cursor-pointer items-center gap-2 border-b px-3 py-2 text-sm last:border-b-0" style={{ borderColor: "var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
                       <input type="checkbox" checked={picked.has(c.code)} onChange={() => toggle(c.code)} className="h-4 w-4" />
                       <span className="font-medium">{c.title}</span>
                       <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>{c.code} · {c.category}{c.mandatory === "Yes" ? " · mandatory" : ""}</span>
@@ -127,7 +127,7 @@ export function TermsTemplatesPage() {
               {err && <div className="mt-4 rounded-md px-3 py-2 text-xs" style={{ background: "#fdeaea", color: "#dc2626" }}>{err}</div>}
             </div>
 
-            <div className="flex justify-end gap-2 border-t px-5 py-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            <div className="flex justify-end gap-2 border-t px-5 py-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
               <button onClick={() => setOpen(false)} disabled={submitting} className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50" style={{ border: "var(--border-card)", color: "var(--text-primary)", background: "#fff" }}>Cancel</button>
               <button onClick={submit} disabled={submitting} className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--brand-primary)" }}>
                 {submitting ? "Saving..." : "Create Template"}

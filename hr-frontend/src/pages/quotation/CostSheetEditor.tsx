@@ -69,7 +69,7 @@ const LINE_COLS: GridCol[] = [
 ]
 
 const inr = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0)
-const TONE = { red: "#dc2626", amber: "#d97706", green: "#15803d" }
+const TONE = { red: "#dc2626", amber: "#171717", green: "#171717" }
 
 export function CostSheetEditor() {
   const { name = "" } = useParams()
@@ -159,7 +159,7 @@ export function CostSheetEditor() {
         type="number" value={form[k]} disabled={locked}
         onChange={(e) => setField(k, e.target.value)}
         className="mt-0.5 w-full rounded px-2 py-1 text-sm disabled:opacity-60"
-        style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }}
+        style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }}
       />
     </div>
   )
@@ -173,7 +173,7 @@ export function CostSheetEditor() {
       <StageBar current="Costing" />
       <DocumentLinkBar doctype="Vera Cost Sheet" name={name} />
 
-      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
         <div className="mb-3 flex items-start justify-between">
           <div>
             <h1 className="font-heading text-xl font-semibold" style={{ color: "var(--brand-primary)" }}>{c.cost_title}</h1>
@@ -195,7 +195,7 @@ export function CostSheetEditor() {
         </div>
 
         {/* Editable overhead + GP targets */}
-        <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           <div className="grid grid-cols-2 items-end gap-3 md:grid-cols-4">
             {numInput("overhead_percent", "Overhead %")}
             {numInput("target_gp_percent", "Target GP %")}
@@ -213,10 +213,10 @@ export function CostSheetEditor() {
         </div>
 
         {/* Workflow */}
-        <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           {!locked && (
             <button onClick={pullCosts} disabled={!!busy} title="Fill cost from the owner's Vendor Cost list for item-linked lines"
-              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #E3E3E3)", color: "var(--brand-primary)" }}>
               {busy === "pull" ? "Pulling…" : "↧ Pull catalogue costs"}
             </button>
           )}
@@ -228,13 +228,13 @@ export function CostSheetEditor() {
           )}
           {c.status === "Submitted" && (
             <button onClick={() => action("reopen_cost_sheet", "Reopened")} disabled={!!busy}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #E3E3E3)", color: "var(--brand-primary)" }}>
               Reopen
             </button>
           )}
           {(c.status === "Draft" || c.status === "Submitted") && (
             <button onClick={() => action("approve_cost_sheet", "Approved — stamped for the quotation & sales order")} disabled={!!busy}
-              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #c8a24a)" }}>
+              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #171717)" }}>
               Approve
             </button>
           )}

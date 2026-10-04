@@ -4,11 +4,11 @@
 type PillTone = "good" | "warn" | "bad" | "muted" | "info"
 
 const TONE_STYLE: Record<PillTone, { bg: string; color: string }> = {
-  good: { bg: "#e6f4ea", color: "#16a34a" },
-  warn: { bg: "#fdf0e4", color: "#c2620c" },
+  good: { bg: "#F5F5F5", color: "#171717" },
+  warn: { bg: "#F5F5F5", color: "#171717" },
   bad: { bg: "#fdeaea", color: "#dc2626" },
-  info: { bg: "#e8f0e8", color: "#1e3a2f" },
-  muted: { bg: "#efeadf", color: "#6a6a5c" },
+  info: { bg: "#F5F5F5", color: "#171717" },
+  muted: { bg: "#F5F5F5", color: "#6a6a5c" },
 }
 
 function statusTone(value: string): PillTone {

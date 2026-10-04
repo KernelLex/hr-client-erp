@@ -64,20 +64,20 @@ interface TypeConfig {
 }
 
 const VTYPE_CONFIG: Record<string, TypeConfig> = {
-  "Sales":             { label: "Sales Invoice",    color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0", icon: TrendingUp,     partyLabel: "Bill To" },
-  "PERFORMA INVOICE":  { label: "Performa Invoice", color: "#0d9488", bg: "#f0fdfa", border: "#99f6e4", icon: FileText,       partyLabel: "Bill To" },
-  "Sales Order":       { label: "Sales Order",      color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe", icon: ShoppingCart,   partyLabel: "Client" },
+  "Sales":             { label: "Sales Invoice",    color: "#171717", bg: "#F5F5F5", border: "#F5F5F5", icon: TrendingUp,     partyLabel: "Bill To" },
+  "PERFORMA INVOICE":  { label: "Performa Invoice", color: "#171717", bg: "#F5F5F5", border: "#E3E3E3", icon: FileText,       partyLabel: "Bill To" },
+  "Sales Order":       { label: "Sales Order",      color: "#171717", bg: "#F5F5F5", border: "#E3E3E3", icon: ShoppingCart,   partyLabel: "Client" },
   "Purchase":          { label: "Purchase Invoice", color: "#dc2626", bg: "#fef2f2", border: "#fecaca", icon: Package,        partyLabel: "Vendor" },
   "Purchase Order":    { label: "Purchase Order",   color: "#e11d48", bg: "#fff1f2", border: "#fecdd3", icon: ShoppingBag,    partyLabel: "Vendor" },
-  "Receipt":           { label: "Receipt",          color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", icon: Download,       partyLabel: "Received From" },
-  "Payment":           { label: "Payment",          color: "#d97706", bg: "#fffbeb", border: "#fde68a", icon: Upload,         partyLabel: "Paid To" },
-  "Journal":           { label: "Journal Entry",    color: "#c8a45c", bg: "#fdf8ef", border: "#ddd6fe", icon: BookOpen,       partyLabel: "Party" },
-  "Contra":            { label: "Contra Entry",     color: "#1e3a2f", bg: "#eef5f1", border: "#b0d1bd", icon: ArrowLeftRight, partyLabel: "Party" },
-  "Credit Note":       { label: "Credit Note",      color: "#b45309", bg: "#fffbeb", border: "#fde68a", icon: FileMinus,      partyLabel: "Issued To" },
-  "Debit Note":        { label: "Debit Note",       color: "#be185d", bg: "#fdf2f8", border: "#fbcfe8", icon: FilePlus,       partyLabel: "Issued By" },
-  "Delivery Note":     { label: "Delivery Note",    color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", icon: Truck,          partyLabel: "Delivered To" },
-  "Stock Journal":     { label: "Stock Journal",    color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb", icon: Archive,        partyLabel: "Party" },
-  "Other":             { label: "Other",            color: "#475569", bg: "#f8fafc", border: "#e2e8f0", icon: File,           partyLabel: "Party" },
+  "Receipt":           { label: "Receipt",          color: "#171717", bg: "#F5F5F5", border: "#cdcdcd", icon: Download,       partyLabel: "Received From" },
+  "Payment":           { label: "Payment",          color: "#171717", bg: "#F5F5F5", border: "#F5F5F5", icon: Upload,         partyLabel: "Paid To" },
+  "Journal":           { label: "Journal Entry",    color: "#171717", bg: "#F5F5F5", border: "#F5F5F5", icon: BookOpen,       partyLabel: "Party" },
+  "Contra":            { label: "Contra Entry",     color: "#171717", bg: "#F5F5F5", border: "#E3E3E3", icon: ArrowLeftRight, partyLabel: "Party" },
+  "Credit Note":       { label: "Credit Note",      color: "#171717", bg: "#F5F5F5", border: "#F5F5F5", icon: FileMinus,      partyLabel: "Issued To" },
+  "Debit Note":        { label: "Debit Note",       color: "#171717", bg: "#f8f8f8", border: "#F5F5F5", icon: FilePlus,       partyLabel: "Issued By" },
+  "Delivery Note":     { label: "Delivery Note",    color: "#171717", bg: "#F5F5F5", border: "#E3E3E3", icon: Truck,          partyLabel: "Delivered To" },
+  "Stock Journal":     { label: "Stock Journal",    color: "#6b7280", bg: "#fafafa", border: "#e8e8e8", icon: Archive,        partyLabel: "Party" },
+  "Other":             { label: "Other",            color: "#585858", bg: "#fafafa", border: "#e9e9e9", icon: File,           partyLabel: "Party" },
 }
 
 const TYPE_ORDER = [
@@ -132,7 +132,7 @@ function FolderCard({
         </span>
       </div>
 
-      <p className="font-semibold text-[14px] text-gray-800 group-hover:text-forest-600 transition-colors leading-tight">
+      <p className="font-semibold text-[14px] text-gray-800 group-hover:text-[var(--text-primary)] transition-colors leading-tight">
         {cfg.label}
       </p>
       <p className="text-xl font-bold mt-1 font-mono tracking-tight" style={{ color: cfg.color }}>
@@ -140,7 +140,7 @@ function FolderCard({
       </p>
 
       <ChevronRight size={14}
-        className="absolute right-4 bottom-4 text-gray-200 group-hover:text-forest-400 transition-all group-hover:translate-x-0.5" />
+        className="absolute right-4 bottom-4 text-gray-200 group-hover:text-[var(--text-primary)] transition-all group-hover:translate-x-0.5" />
     </button>
   )
 }
@@ -501,7 +501,7 @@ export function VoucherDocument({
           {party && voucher.party_name && (
             <div className="px-8 pb-6 flex items-center justify-between border-t border-gray-50 pt-4">
               <button onClick={() => { onClose(); onViewParty(voucher.party_name) }}
-                className="flex items-center gap-2 text-sm font-medium text-forest-600 hover:text-forest-800 transition-colors">
+                className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] hover:text-[var(--text-primary)] transition-colors">
                 <ExternalLink size={13} />
                 View full statement for {voucher.party_name}
               </button>
@@ -611,7 +611,7 @@ export function VoucherListView({
             onKeyDown={e => e.key === "Enter" && doSearch()}
             placeholder="Search party, narration or voucher number…"
             className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white
-                       focus:outline-none focus:border-forest-300 focus:ring-1 focus:ring-forest-100 transition-colors"
+                       focus:outline-none focus:border-[var(--border-subtle)] focus:ring-1 focus:ring-[var(--border-strong)] transition-colors"
           />
           {searchInput && (
             <button onClick={clearSearch}
@@ -626,13 +626,13 @@ export function VoucherListView({
         </button>
         {/* FY filter */}
         <select value={localFy} onChange={e => { setLocalFy(e.target.value); setPage(1) }}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-forest-300">
+          className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-[var(--border-subtle)]">
           <option value="all">All Time</option>
           {availableFY.map(y => <option key={y} value={y}>{y.replace("-", "–")}</option>)}
         </select>
         {/* Sort */}
         <select value={sort} onChange={e => { setSort(e.target.value); setPage(1) }}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-forest-300">
+          className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:border-[var(--border-subtle)]">
           <option value="date_desc">Newest first</option>
           <option value="date_asc">Oldest first</option>
           <option value="amount_desc">Highest amount</option>
@@ -643,7 +643,7 @@ export function VoucherListView({
       {/* Table */}
       {isLoading ? (
         <div className="bg-white rounded-2xl border border-gray-100 py-16 flex flex-col items-center gap-3 shadow-sm">
-          <Loader2 size={24} className="text-forest-400 animate-spin" />
+          <Loader2 size={24} className="text-[var(--text-primary)] animate-spin" />
           <p className="text-sm text-gray-400">Loading entries…</p>
         </div>
       ) : (

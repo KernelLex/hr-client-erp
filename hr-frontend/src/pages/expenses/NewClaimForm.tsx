@@ -130,22 +130,22 @@ export function NewClaimForm() {
         <p className="text-sm text-gray-600 mb-4">Choose claim type:</p>
         <div className="grid grid-cols-2 gap-4">
           <button
-            className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all group"
+            className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-gray-200 hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] transition-all group"
             onClick={() => setClaimType("Petrol")}
           >
-            <span className="text-4xl">⛽</span>
+            <span className="text-4xl">◆</span>
             <div className="text-center">
-              <p className="font-semibold text-gray-900 group-hover:text-blue-700">Petrol Claim</p>
+              <p className="font-semibold text-gray-900 group-hover:text-[var(--text-primary)]">Petrol Claim</p>
               <p className="text-xs text-gray-500 mt-1">₹{PETROL_RATE}/km — auto calculated</p>
             </div>
           </button>
           <button
-            className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-gray-200 hover:border-gold-400 hover:bg-gold-50 transition-all group"
+            className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-gray-200 hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] transition-all group"
             onClick={() => setClaimType("Material")}
           >
-            <span className="text-4xl">📦</span>
+            <span className="text-4xl">▦</span>
             <div className="text-center">
-              <p className="font-semibold text-gray-900 group-hover:text-gold-700">Material Claim</p>
+              <p className="font-semibold text-gray-900 group-hover:text-[var(--text-primary)]">Material Claim</p>
               <p className="text-xs text-gray-500 mt-1">Purchases &amp; supplies</p>
             </div>
           </button>
@@ -164,7 +164,7 @@ export function NewClaimForm() {
       <Card className="bg-white shadow-md border-0">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl flex items-center gap-2">
-            {claimType === "Petrol" ? "⛽" : "📦"} {claimType} Claim
+            {claimType === "Petrol" ? "◆" : "▦"} {claimType} Claim
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -206,12 +206,12 @@ export function NewClaimForm() {
                   </div>
                 </div>
                 {/* Auto-calculated amount display */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
-                  <p className="text-xs text-blue-600 font-medium mb-1">Calculated Amount</p>
-                  <p className="text-2xl font-bold text-blue-700">
+                <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg px-4 py-3">
+                  <p className="text-xs text-[var(--text-primary)] font-medium mb-1">Calculated Amount</p>
+                  <p className="text-2xl font-bold text-[var(--text-primary)]">
                     ₹{kmValue > 0 ? calculatedAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : "0.00"}
                   </p>
-                  <p className="text-xs text-blue-500 mt-1">
+                  <p className="text-xs text-[var(--text-tertiary)]0 mt-1">
                     {kmValue > 0 ? `${kmValue} km × ₹${PETROL_RATE}/km` : "Enter km to calculate"}
                   </p>
                 </div>
@@ -232,7 +232,7 @@ export function NewClaimForm() {
                 <div>
                   <Label htmlFor="material_description">Material Description *</Label>
                   <textarea id="material_description"
-                    className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
                     placeholder="Describe what was purchased..."
                     value={form.material_description}
                     onChange={(e) => set("material_description", e.target.value)} required />
@@ -248,11 +248,11 @@ export function NewClaimForm() {
                   <Label>Invoice / Receipt</Label>
                   <div className="mt-1">
                     {invoiceFile ? (
-                      <div className="flex items-center gap-2 bg-gold-50 border border-gold-200 rounded-lg px-3 py-2">
-                        <Paperclip size={14} className="text-gold-500 shrink-0" />
-                        <span className="text-sm text-gold-700 truncate flex-1">{invoiceFile.name}</span>
+                      <div className="flex items-center gap-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg px-3 py-2">
+                        <Paperclip size={14} className="text-[var(--text-tertiary)]0 shrink-0" />
+                        <span className="text-sm text-[var(--text-primary)] truncate flex-1">{invoiceFile.name}</span>
                         <button type="button" onClick={() => setInvoiceFile(null)}
-                          className="text-gold-400 hover:text-gold-700">
+                          className="text-[var(--text-primary)] hover:text-[var(--text-primary)]">
                           <X size={14} />
                         </button>
                       </div>
@@ -260,7 +260,7 @@ export function NewClaimForm() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-500 hover:border-gold-300 hover:text-gold-600 hover:bg-gold-50 transition-all"
+                        className="flex items-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-500 hover:border-[var(--border-subtle)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-all"
                       >
                         <Paperclip size={14} />
                         Attach invoice (PDF, JPG, PNG)
@@ -281,7 +281,7 @@ export function NewClaimForm() {
             <div>
               <Label htmlFor="purpose">Purpose *</Label>
               <textarea id="purpose"
-                className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
                 placeholder={claimType === "Petrol"
                   ? "Why was this trip made? e.g. Client visit for project X"
                   : "What was this for? e.g. Office supplies for project Y"}

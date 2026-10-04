@@ -52,7 +52,15 @@ def _load_tally_snapshot() -> dict:
 
 
 def _financial_line() -> str:
-    snap = _load_tally_snapshot()
+    # LIVE, company-scoped figures (same source as the Dashboard / AI Insights) —
+    # no longer the stale tally_snapshot.json.
+    try:
+        from hr_client.api.ai import get_business_snapshot
+        snap = get_business_snapshot()
+        if not snap.get("success"):
+            snap = {}
+    except Exception:
+        snap = {}
     def c(k, d=0):
         try: return float(snap.get(k, d) or d)
         except Exception: return d
@@ -69,7 +77,7 @@ def _financial_line() -> str:
         f"Debtors ₹{c('sundry_debtors'):,.0f} | Creditors ₹{c('sundry_creditors'):,.0f} | "
         f"Net GST ₹{gst_net:,.0f}\n"
         f"Cash ₹{c('cash_in_hand'):,.0f} | Bank ₹{c('bank_balance'):,.0f} | "
-        f"All-time Sales ₹{c('total_sales_alltime'):,.0f}"
+        f"All-time Sales ₹{c('total_sales'):,.0f}"
     )
 
 

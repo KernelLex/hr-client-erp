@@ -63,7 +63,7 @@ const LOG_COLS: GridCol[] = [
 ]
 
 const inr = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0)
-const TONE = { red: "#dc2626", amber: "#d97706", green: "#15803d" }
+const TONE = { red: "#dc2626", amber: "#171717", green: "#171717" }
 
 export function QuotationEditor() {
   const { name = "" } = useParams()
@@ -186,7 +186,7 @@ export function QuotationEditor() {
       <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</div>
       <input type="number" value={form[k] as string} disabled={locked} onChange={(e) => setField(k, e.target.value)}
         className="mt-0.5 w-full rounded px-2 py-1 text-sm disabled:opacity-60"
-        style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+        style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }} />
     </div>
   )
   const txt = (k: keyof typeof form, label: string) => (
@@ -194,7 +194,7 @@ export function QuotationEditor() {
       <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</div>
       <input type="text" value={form[k] as string} disabled={locked} onChange={(e) => setField(k, e.target.value)}
         className="mt-0.5 w-full rounded px-2 py-1 text-sm disabled:opacity-60"
-        style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+        style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }} />
     </div>
   )
 
@@ -208,7 +208,7 @@ export function QuotationEditor() {
       <DocumentLinkBar doctype="Vera Sales Quotation" name={name} />
 
       {/* Header */}
-      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
         <div className="mb-3 flex items-start justify-between">
           <div>
             <h1 className="font-heading text-xl font-semibold" style={{ color: "var(--brand-primary)" }}>{q.quotation_title}</h1>
@@ -242,7 +242,7 @@ export function QuotationEditor() {
               </label>
               <input type="text" value={form.credit_terms} disabled={locked} placeholder="Credit terms note"
                 onChange={(e) => setField("credit_terms", e.target.value)}
-                className="flex-1 rounded px-2 py-1 text-xs disabled:opacity-60" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }} />
+                className="flex-1 rounded px-2 py-1 text-xs disabled:opacity-60" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }} />
               {!locked && (
                 <button onClick={saveCommercials} disabled={!dirty || busy === "save"}
                   className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40" style={{ background: "var(--brand-primary)" }}>
@@ -263,10 +263,10 @@ export function QuotationEditor() {
                 <div className="flex-1">
                   <div className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Negotiated grand total</div>
                   <input type="number" value={negotiated} onChange={(e) => setNegotiated(e.target.value)} placeholder={String(q.grand_total || "")}
-                    className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+                    className="mt-0.5 w-full rounded px-2 py-1 text-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }} />
                 </div>
                 <button onClick={applyNegotiated} disabled={busy === "negotiate" || !negotiated}
-                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #c8a24a)" }}>
+                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #171717)" }}>
                   Apply
                 </button>
               </div>
@@ -284,7 +284,7 @@ export function QuotationEditor() {
               <Cell label="Routes To" value={<strong>{q.required_authority}</strong>} tone="var(--brand-primary)" />
             </div>
             {q.triggered_rules_list.length > 0 && (
-              <div className="mt-2 rounded-lg p-2 text-[11px]" style={{ background: "var(--cream-dark, #ebe3d3)" }}>
+              <div className="mt-2 rounded-lg p-2 text-[11px]" style={{ background: "var(--cream-dark, #F5F5F5)" }}>
                 {q.triggered_rules_list.map((r, i) => (
                   <div key={i} style={{ color: "var(--text-primary)" }}>• {r.rule} → <strong>{r.routes_to}</strong></div>
                 ))}
@@ -294,7 +294,7 @@ export function QuotationEditor() {
         </div>
 
         {/* Delivery & execution terms (§29/§30/§35) */}
-        <div className="mt-4 grid grid-cols-2 gap-3 border-t pt-3 md:grid-cols-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 grid grid-cols-2 gap-3 border-t pt-3 md:grid-cols-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           {num("validity_days", "Validity (days)")}
           {txt("delivery_period", "Delivery Period")}
           {txt("installation_period", "Installation Period")}
@@ -309,7 +309,7 @@ export function QuotationEditor() {
         </div>
 
         {/* Workflow */}
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           {(q.status === "Draft" || q.status === "Returned") && (
             <button onClick={() => post("submit_for_approval", {}, "Submitted for approval")} disabled={!!busy}
               className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--brand-primary)" }}>
@@ -320,11 +320,11 @@ export function QuotationEditor() {
             <>
               <span className="text-xs" style={{ color: "var(--text-muted)" }}>Deciding as <strong>{q.required_authority}</strong>:</span>
               <button onClick={() => post("decide", { action: "Approve", comment: window.prompt("Approval comment (optional)") ?? "" }, "Approved")} disabled={!!busy}
-                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #c8a24a)" }}>Approve</button>
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #171717)" }}>Approve</button>
               <button onClick={() => { const c = window.prompt("Conditions to record & print:"); if (c) post("decide", { action: "Approve with Conditions", conditions: c }, "Approved with conditions") }} disabled={!!busy}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--gold, #c8a24a)", color: "var(--brand-primary)" }}>Approve w/ Conditions</button>
+                className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--gold, #171717)", color: "var(--brand-primary)" }}>Approve w/ Conditions</button>
               <button onClick={() => { const c = window.prompt("Reason to return for revision:"); if (c) post("decide", { action: "Return for Revision", comment: c }, "Returned for revision") }} disabled={!!busy}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #e0d9cb)", color: "var(--text-primary)" }}>Return</button>
+                className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #E3E3E3)", color: "var(--text-primary)" }}>Return</button>
               <button onClick={() => { const c = window.prompt("Reason to reject:"); if (c) post("decide", { action: "Reject", comment: c }, "Rejected") }} disabled={!!busy}
                 className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid #f3c2c2", color: "#dc2626" }}>Reject</button>
             </>
@@ -333,12 +333,12 @@ export function QuotationEditor() {
             <button onClick={() => post("create_revision", {}, "Revision created", (r) => { if (r.name) navigate(`/quotation/quotations/${r.name}`) })} disabled={!!busy}
               className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--brand-primary)" }}>Create Revision</button>
           )}
-          {q.conditions && <span className="text-xs" style={{ color: "#d97706" }}>Conditions: {q.conditions}</span>}
+          {q.conditions && <span className="text-xs" style={{ color: "#171717" }}>Conditions: {q.conditions}</span>}
           {/* Print */}
           <div className="ml-auto flex items-center gap-1">
             {(["summary", "detailed", "technical", "internal"] as const).map((f) => (
               <button key={f} onClick={() => navigate(`/quotation/quotations/${q.name}/print/${f}`)}
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium" style={{ border: "0.5px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium" style={{ border: "0.5px solid var(--border, #E3E3E3)", color: "var(--brand-primary)" }}>
                 <Printer size={11} /> {f}
               </button>
             ))}
@@ -374,7 +374,7 @@ export function QuotationEditor() {
         const delta = (a?: number, b?: number) => (a ?? 0) - (b ?? 0)
         const fmtD = (n: number) => (n === 0 ? "—" : (n > 0 ? "+" : "") + inr(n))
         return (
-          <div className="mb-6 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+          <div className="mb-6 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
             <div className="mb-2 font-heading text-sm font-semibold" style={{ color: "var(--brand-primary)" }}>Revision Comparison</div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -387,7 +387,7 @@ export function QuotationEditor() {
                 </thead>
                 <tbody>
                   {comparison.section_order.map((sec) => (
-                    <tr key={sec} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                    <tr key={sec} className="border-t" style={{ borderColor: "var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
                       <td className="py-1.5">{sec}</td>
                       {revs.map((r) => <td key={r.name} className="py-1.5 text-right">{inr(r.sections[sec] || 0)}</td>)}
                       <td className="py-1.5 text-right" style={{ color: delta(last.sections[sec], prev.sections[sec]) ? "var(--brand-primary)" : "var(--text-muted)" }}>
@@ -395,7 +395,7 @@ export function QuotationEditor() {
                       </td>
                     </tr>
                   ))}
-                  <tr className="border-t font-semibold" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                  <tr className="border-t font-semibold" style={{ borderColor: "var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
                     <td className="py-1.5">Grand Total</td>
                     {revs.map((r) => <td key={r.name} className="py-1.5 text-right">{inr(r.grand_total)}</td>)}
                     <td className="py-1.5 text-right" style={{ color: "var(--brand-primary)" }}>{fmtD(delta(last.grand_total, prev.grand_total))}</td>
@@ -409,17 +409,17 @@ export function QuotationEditor() {
 
       {/* Conversion gate (§4.11) */}
       {(q.status === "Approved" || q.status === "Converted") && (
-        <div className="mb-6 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+        <div className="mb-6 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
           <div className="mb-2 font-heading text-sm font-semibold" style={{ color: "var(--brand-primary)" }}>Sales Order Conversion (§4.11)</div>
           <div className="grid gap-1.5 md:grid-cols-2">
             {q.conversion_gate.map((c, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm" style={{ color: c.ok ? "#15803d" : "var(--text-muted)" }}>
+              <div key={i} className="flex items-center gap-2 text-sm" style={{ color: c.ok ? "#171717" : "var(--text-muted)" }}>
                 {c.ok ? <CheckCircle2 size={15} /> : <XCircle size={15} />} {c.label}
               </div>
             ))}
           </div>
           {!q.sales_order && (
-            <div className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
               <label className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-primary)" }}>
                 <input type="checkbox" checked={!!q.customer_acceptance} onChange={(e) => post("set_acceptance", { customer_acceptance: e.target.checked ? 1 : 0 }, "Updated")} />
                 Customer acceptance recorded
@@ -430,7 +430,7 @@ export function QuotationEditor() {
               </label>
               <button onClick={() => post("convert_to_sales_order", {}, "Converted to Sales Order", (r) => { if (r.sales_order) navigate(`/quotation/sales-orders/${r.sales_order}`) })}
                 disabled={!!busy || !gateOk}
-                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #c8a24a)" }}>
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #171717)" }}>
                 Convert to Sales Order
               </button>
             </div>
@@ -444,11 +444,11 @@ export function QuotationEditor() {
       )}
 
       {/* Terms */}
-      <div className="mb-6 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+      <div className="mb-6 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
         <div className="mb-2 flex items-center justify-between">
           <div className="font-heading text-sm font-semibold" style={{ color: "var(--brand-primary)" }}>Terms &amp; Conditions</div>
           {!locked && (
-            <select onChange={(e) => applyTerms(e.target.value)} defaultValue="" className="rounded px-2 py-1 text-xs" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+            <select onChange={(e) => applyTerms(e.target.value)} defaultValue="" className="rounded px-2 py-1 text-xs" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
               <option value="">Apply a template…</option>
               {(templates ?? []).map((t) => <option key={t.name} value={t.name}>{t.template_name} · V{t.version} · {t.category}</option>)}
             </select>

@@ -27,11 +27,11 @@ import type { PermissionMap, RegistryGroup } from "@/pages/admin/permissions/typ
 const BLOOD_GROUPS = ["", "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]
 
 const GRADIENTS = [
-  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-  "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-  "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-  "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
 ]
 
 function getGradient(name: string): string {
@@ -61,11 +61,11 @@ function ProfileField({
   if (!editMode) {
     return (
       <div className="space-y-1">
-        <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#94A3B8", fontWeight: 500 }}>
+        <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#a6a6a6", fontWeight: 500 }}>
           {label}
         </p>
-        <p style={{ fontSize: "14px", fontWeight: 500, color: current ? "#0F172A" : "#CBD5E1" }}>
-          {current || <em style={{ fontStyle: "italic", color: "#CBD5E1" }}>Not set</em>}
+        <p style={{ fontSize: "14px", fontWeight: 500, color: current ? "#1c1c1c" : "#d6d6d6" }}>
+          {current || <em style={{ fontStyle: "italic", color: "#d6d6d6" }}>Not set</em>}
         </p>
       </div>
     )
@@ -73,11 +73,11 @@ function ProfileField({
   if (as === "select" && options) {
     return (
       <div className="space-y-1">
-        <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#94A3B8", fontWeight: 500 }}>
+        <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#a6a6a6", fontWeight: 500 }}>
           {label}
         </p>
         <select
-          className="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-forest-500"
+          className="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-[var(--border-strong)]"
           value={current}
           onChange={(e) => onChange(field, e.target.value)}
         >
@@ -88,7 +88,7 @@ function ProfileField({
   }
   return (
     <div className="space-y-1">
-      <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#94A3B8", fontWeight: 500 }}>
+      <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#a6a6a6", fontWeight: 500 }}>
         {label}
       </p>
       <Input type={type} value={current} onChange={(e) => onChange(field, e.target.value)} className="h-8 text-sm" />
@@ -101,9 +101,9 @@ function InfoSection({ title, children }: { title: string; children: React.React
     <div
       className="bg-white rounded-xl p-5"
       style={{
-        border: "1px solid #E2E8F0",
+        border: "1px solid #e9e9e9",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-        borderLeft: "4px solid #1e3a2f",
+        borderLeft: "4px solid #171717",
       }}
     >
       <p className="text-sm font-semibold text-gray-800 mb-4">{title}</p>
@@ -151,7 +151,7 @@ function ProfileTab({ email, profile }: { email: string; profile: EmployeeProfil
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending || Object.keys(draft).length === 0}
               className="gap-1"
-              style={{ backgroundColor: "#1e3a2f", color: "white" }}
+              style={{ backgroundColor: "#171717", color: "white" }}
             >
               <Check size={14} /> {saveMutation.isPending ? "Saving…" : "Save Changes"}
             </Button>
@@ -199,9 +199,9 @@ function ProfileTab({ email, profile }: { email: string; profile: EmployeeProfil
 // ── Leave History Tab ─────────────────────────────────────────────────────────
 
 function statusBadge(status: string) {
-  if (status === "Approved") return <Badge className="bg-emerald-50 text-emerald-700 border-0 text-xs">Approved</Badge>
+  if (status === "Approved") return <Badge className="bg-[var(--bg-subtle)] text-[var(--text-primary)] border-0 text-xs">Approved</Badge>
   if (status === "Rejected") return <Badge className="bg-red-50 text-red-700 border-0 text-xs">Rejected</Badge>
-  return <Badge className="bg-amber-50 text-amber-700 border-0 text-xs">Pending</Badge>
+  return <Badge className="bg-[var(--bg-subtle)] text-[var(--text-primary)] border-0 text-xs">Pending</Badge>
 }
 
 function LeaveHistoryTab({ email }: { email: string }) {
@@ -251,7 +251,7 @@ function LeaveHistoryTab({ email }: { email: string }) {
           <div
             key={leave.name}
             className="bg-white rounded-xl p-4"
-            style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+            style={{ border: "1px solid #e9e9e9", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1 flex-1">
@@ -268,7 +268,7 @@ function LeaveHistoryTab({ email }: { email: string }) {
               </div>
               {leave.status === "Pending" && (
                 <div className="flex gap-2 shrink-0">
-                  <Button size="sm" className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                  <Button size="sm" className="h-7 text-xs bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] text-white"
                     onClick={() => handleApprove(leave.name)} disabled={approve.isPending}>
                     Approve
                   </Button>
@@ -288,7 +288,7 @@ function LeaveHistoryTab({ email }: { email: string }) {
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-5 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900">Reject Leave Request</h3>
             <textarea
-              className="w-full border border-gray-300 rounded-md text-sm p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-forest-500"
+              className="w-full border border-gray-300 rounded-md text-sm p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-[var(--border-strong)]"
               rows={3}
               placeholder="Reason for rejection (required)"
               value={remarks}
@@ -390,7 +390,7 @@ function PermissionsTab({ email }: { email: string }) {
           size="sm"
           disabled={!dirty || updateMutation.isPending}
           onClick={handleSave}
-          style={saved ? { backgroundColor: "#059669", color: "white" } : { backgroundColor: "#1e3a2f", color: "white" }}
+          style={saved ? { backgroundColor: "#171717", color: "white" } : { backgroundColor: "#171717", color: "white" }}
         >
           {saved ? <><Check size={14} className="mr-1" /> Saved</> : updateMutation.isPending ? "Saving…" : "Save Permissions"}
         </Button>
@@ -413,14 +413,14 @@ const NOTE_BASE = "hr_client.api.notes"
 function notesUrl(method: string) { return apiUrl(`${NOTE_BASE}.${method}`) }
 
 const TAG_SELECTED: Record<string, { bg: string; border: string; text: string }> = {
-  Good:    { bg: "#D1FAE5", border: "#6EE7B7", text: "#065F46" },
-  Neutral: { bg: "#FEF9C3", border: "#FDE047", text: "#713F12" },
+  Good:    { bg: "#F5F5F5", border: "#E3E3E3", text: "#171717" },
+  Neutral: { bg: "#F5F5F5", border: "#171717", text: "#171717" },
   Bad:     { bg: "#FEE2E2", border: "#FCA5A5", text: "#991B1B" },
 }
 
 const TAG_BADGE: Record<string, { bg: string; text: string }> = {
-  Good:    { bg: "#D1FAE5", text: "#065F46" },
-  Neutral: { bg: "#FEF9C3", text: "#713F12" },
+  Good:    { bg: "#F5F5F5", text: "#171717" },
+  Neutral: { bg: "#F5F5F5", text: "#171717" },
   Bad:     { bg: "#FEE2E2", text: "#991B1B" },
 }
 
@@ -449,7 +449,7 @@ function SentimentButton({
         padding: "6px 16px",
         fontSize: "13px",
         fontWeight: selected ? 600 : 400,
-        border: selected ? `1px solid ${s.border}` : "1px solid #D1D5DB",
+        border: selected ? `1px solid ${s.border}` : "1px solid #d6d6d6",
         backgroundColor: selected ? s.bg : "white",
         color: selected ? s.text : "#6B7280",
         transition: "all 0.15s ease",
@@ -534,9 +534,9 @@ function NotesColumn({ email }: { email: string }) {
       {/* Add note card */}
       <div
         className="bg-white rounded-xl p-4"
-        style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+        style={{ border: "1px solid #e9e9e9", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
       >
-        <p className="text-sm font-semibold mb-3 flex items-center gap-1.5" style={{ color: "#1e3a2f" }}>
+        <p className="text-sm font-semibold mb-3 flex items-center gap-1.5" style={{ color: "#171717" }}>
           <Plus size={14} /> Add Private Note
         </p>
         <form onSubmit={handleAdd} className="space-y-3">
@@ -547,18 +547,18 @@ function NotesColumn({ email }: { email: string }) {
             placeholder="Write a private note about this employee…"
             className="w-full resize-none text-sm rounded-lg px-3 py-2.5"
             style={{
-              border: "1px solid #E2E8F0",
+              border: "1px solid #e9e9e9",
               borderRadius: "8px",
               outline: "none",
               transition: "border-color 0.15s, box-shadow 0.15s",
               minHeight: "80px",
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = "#1e3a2f"
+              e.target.style.borderColor = "#171717"
               e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)"
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = "#E2E8F0"
+              e.target.style.borderColor = "#e9e9e9"
               e.target.style.boxShadow = "none"
             }}
           />
@@ -571,7 +571,7 @@ function NotesColumn({ email }: { email: string }) {
               disabled={submitting || !noteText.trim()}
               style={{
                 marginLeft: "auto",
-                backgroundColor: "#1e3a2f",
+                backgroundColor: "#171717",
                 color: "white",
                 borderRadius: "8px",
                 padding: "8px 20px",
@@ -581,8 +581,8 @@ function NotesColumn({ email }: { email: string }) {
                 cursor: submitting ? "not-allowed" : "pointer",
                 opacity: submitting || !noteText.trim() ? 0.6 : 1,
               }}
-              onMouseEnter={(e) => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#16291f" }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1e3a2f" }}
+              onMouseEnter={(e) => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#171717" }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#171717" }}
             >
               {submitting ? "Saving…" : "Add Note"}
             </button>
@@ -606,7 +606,7 @@ function NotesColumn({ email }: { email: string }) {
               key={note.name}
               className="bg-white rounded-[10px] p-4"
               style={{
-                border: "1px solid #E2E8F0",
+                border: "1px solid #e9e9e9",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                 marginBottom: "12px",
               }}
@@ -618,13 +618,13 @@ function NotesColumn({ email }: { email: string }) {
                     onChange={(e) => setEditText(e.target.value)}
                     rows={3}
                     className="w-full text-sm rounded-lg px-3 py-2.5 resize-none"
-                    style={{ border: "1px solid #E2E8F0", outline: "none", minHeight: "80px" }}
+                    style={{ border: "1px solid #e9e9e9", outline: "none", minHeight: "80px" }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = "#1e3a2f"
+                      e.target.style.borderColor = "#171717"
                       e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)"
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = "#E2E8F0"
+                      e.target.style.borderColor = "#e9e9e9"
                       e.target.style.boxShadow = "none"
                     }}
                   />
@@ -637,7 +637,7 @@ function NotesColumn({ email }: { email: string }) {
                         <X size={12} className="mr-1" /> Cancel
                       </Button>
                       <Button size="sm" onClick={() => handleUpdate(note.name)}
-                        className="h-7 text-xs" style={{ backgroundColor: "#1e3a2f", color: "white" }}>
+                        className="h-7 text-xs" style={{ backgroundColor: "#171717", color: "white" }}>
                         <Check size={12} className="mr-1" /> Save
                       </Button>
                     </div>
@@ -656,9 +656,9 @@ function NotesColumn({ email }: { email: string }) {
                     </span>
                     <button
                       className="p-1 rounded"
-                      style={{ color: "#94A3B8", transition: "color 0.15s" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = "#1e3a2f")}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = "#94A3B8")}
+                      style={{ color: "#a6a6a6", transition: "color 0.15s" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "#171717")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "#a6a6a6")}
                       onClick={() => { setEditId(note.name); setEditText(note.note_content); setEditTag(note.tag) }}
                     >
                       <Pencil size={13} />
@@ -666,16 +666,16 @@ function NotesColumn({ email }: { email: string }) {
                     <button
                       className="p-1 rounded"
                       disabled={deletingId === note.name}
-                      style={{ color: "#94A3B8", transition: "color 0.15s" }}
+                      style={{ color: "#a6a6a6", transition: "color 0.15s" }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = "#EF4444")}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = "#94A3B8")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "#a6a6a6")}
                       onClick={() => handleDelete(note.name)}
                     >
                       <Trash2 size={13} />
                     </button>
                   </div>
                   {/* Note text */}
-                  <p className="whitespace-pre-wrap" style={{ fontSize: "14px", color: "#0F172A", lineHeight: 1.6 }}>
+                  <p className="whitespace-pre-wrap" style={{ fontSize: "14px", color: "#1c1c1c", lineHeight: 1.6 }}>
                     {note.note_content}
                   </p>
                 </>
@@ -707,10 +707,10 @@ function ProfileHeaderCard({ profile, email }: { profile: EmployeeProfile; email
   return (
     <div
       className="bg-white rounded-xl overflow-hidden"
-      style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+      style={{ border: "1px solid #e9e9e9", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
     >
       {/* Gradient banner */}
-      <div className="h-20" style={{ background: "linear-gradient(135deg, #1e3a2f 0%, #c8a45c 100%)" }} />
+      <div className="h-20" style={{ background: "linear-gradient(135deg, #171717 0%, #171717 100%)" }} />
 
       {/* Avatar overlapping banner */}
       <div className="relative px-5 pb-4" style={{ marginTop: "-40px" }}>
@@ -719,7 +719,7 @@ function ProfileHeaderCard({ profile, email }: { profile: EmployeeProfile; email
             className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center"
             style={{
               border: "3px solid white",
-              background: gradient || "#EDE9FE",
+              background: gradient || "#F5F5F5",
               boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
             }}
           >
@@ -747,10 +747,10 @@ function ProfileHeaderCard({ profile, email }: { profile: EmployeeProfile; email
         <div className="mt-3 space-y-1.5">
           <h2 className="text-xl font-bold text-gray-900">{profile.employee_name}</h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className="text-xs font-normal bg-forest-50 text-forest-700 border-0">
+            <Badge variant="secondary" className="text-xs font-normal bg-[var(--bg-subtle)] text-[var(--text-primary)] border-0">
               {profile.designation}
             </Badge>
-            <Badge variant="secondary" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-0">
+            <Badge variant="secondary" className="text-xs font-normal bg-[var(--bg-subtle)] text-[var(--text-primary)] border-0">
               {profile.status || "Active"}
             </Badge>
           </div>

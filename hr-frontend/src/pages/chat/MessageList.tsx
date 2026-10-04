@@ -61,7 +61,7 @@ export function MessageList({
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-forest-400" />
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--text-primary)]" />
       </div>
     )
   }
@@ -69,8 +69,8 @@ export function MessageList({
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-        <div className="w-12 h-12 rounded-full bg-forest-50 flex items-center justify-center mb-3">
-          <span className="text-2xl">💬</span>
+        <div className="w-12 h-12 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mb-3">
+          <span className="text-2xl">◌</span>
         </div>
         <p className="text-sm font-semibold text-gray-700">No messages yet</p>
         <p className="text-xs text-gray-400 mt-1">Be the first to say something!</p>
@@ -90,7 +90,7 @@ export function MessageList({
           <div className="flex justify-center py-2">
             <button
               onClick={onLoadOlder}
-              className="text-xs text-forest-600 hover:text-forest-800 bg-forest-50 hover:bg-forest-100 rounded-full px-4 py-1.5 transition-colors"
+              className="text-xs text-[var(--text-primary)] hover:text-[var(--text-primary)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-subtle)] rounded-full px-4 py-1.5 transition-colors"
             >
               Load older messages
             </button>
@@ -114,7 +114,7 @@ export function MessageList({
       {/* Scroll to bottom button (shown when scrolled up) */}
       <button
         onClick={scrollToBottom}
-        className="absolute bottom-3 right-3 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center text-gray-500 hover:text-forest-600 hover:border-forest-200 transition-colors opacity-0 group-hover:opacity-100"
+        className="absolute bottom-3 right-3 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center text-gray-500 hover:text-[var(--text-primary)] hover:border-[var(--border-subtle)] transition-colors opacity-0 group-hover:opacity-100"
         style={{ opacity: scrolledUp ? 1 : 0, pointerEvents: scrolledUp ? "auto" : "none" }}
       >
         <ArrowDown size={14} />

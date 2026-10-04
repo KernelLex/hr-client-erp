@@ -19,6 +19,7 @@ import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts"
+import { CHART_INK, CHART_GRID, CHART_SERIES } from "@/lib/chartColors"
 
 // ── Accounts Dashboard extra types ──────────────────────────────────────────
 
@@ -103,11 +104,11 @@ function fmtINR(n: number | null | undefined) {
 }
 
 const CAT_STYLE: Record<string, string> = {
-  Fast: "bg-green-50 text-green-700 border-green-200",
-  Mid:  "bg-blue-50 text-blue-700 border-blue-200",
-  Slow: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  Fast: "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]",
+  Mid:  "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]",
+  Slow: "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]",
   Dead: "bg-gray-50 text-gray-600 border-gray-200",
-  Low:  "bg-orange-50 text-orange-700 border-orange-200",
+  Low:  "bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-subtle)]",
   Reorder: "bg-red-50 text-red-700 border-red-200",
 }
 
@@ -433,15 +434,15 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       {/* Info banner */}
       <div
         className="flex gap-3 items-start px-4 py-3.5 rounded-xl"
-        style={{ background: "var(--color-info-bg)", border: "0.5px solid #c4d4c4" }}
+        style={{ background: "var(--color-info-bg)", border: "0.5px solid #F5F5F5" }}
       >
         <div
           className="w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0"
           style={{ background: "var(--brand-primary)", color: "var(--gold)" }}
         >
-          ⚡
+          ▸
         </div>
-        <p className="text-xs leading-relaxed" style={{ color: "#2c4a3a" }}>
+        <p className="text-xs leading-relaxed" style={{ color: "#171717" }}>
           <strong>One connected ledger.</strong> Every card here is computed live from your latest Tally import
           (as of {fmtDate(data.as_of)}). Click any Receivables, Payables or Cash Flow card to open its full
           drill-down report with search, sort and export.{" "}
@@ -454,15 +455,15 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
       {/* ── Headline KPI band (always visible) ── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         {bandItems.map((b) => (
-          <div key={b.label} className="rounded-xl px-3 py-2.5" style={{ background: "var(--brand-primary)" }}>
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--gold-light)" }}>{b.label}</p>
-            <p className="text-base font-bold text-white font-mono leading-tight mt-0.5">{b.value}</p>
+          <div key={b.label} className="rounded-xl px-3 py-2.5" style={{ background: "var(--bg-inverse)" }}>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.6)" }}>{b.label}</p>
+            <p className="text-base font-bold font-mono leading-tight mt-0.5" style={{ color: "var(--text-inverse)" }}>{b.value}</p>
           </div>
         ))}
       </div>
 
       {/* ── Sub-tab bar (sticky) ── */}
-      <div className="sticky top-0 z-20 -mx-1 px-1 py-1 bg-[var(--bg-app,#f5efe4)]">
+      <div className="sticky top-0 z-20 -mx-1 px-1 py-1 bg-[var(--bg-app,#F5F5F5)]">
         <div className="flex gap-1 p-1 rounded-xl overflow-x-auto scrollbar-none" style={{ background: "#fff", border: "var(--border-card)" }}>
           {SUB_TABS.map(({ id, label }) => (
             <button key={id} onClick={() => setSubTab(id)}
@@ -544,11 +545,11 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                   >
                     <span className="block text-left">
                       {shortName}
-                      <span className={`ml-2 text-xs font-normal ${isActive ? "text-[#d4c8a8]" : "text-gray-400"}`}>
+                      <span className={`ml-2 text-xs font-normal ${isActive ? "text-[#8F8F8F]" : "text-gray-400"}`}>
                         {acc.account_type}
                       </span>
                     </span>
-                    <span className={`block text-left text-xs mt-0.5 ${isActive ? "text-[#d4c8a8]" : "text-gray-400"}`}>
+                    <span className={`block text-left text-xs mt-0.5 ${isActive ? "text-[#8F8F8F]" : "text-gray-400"}`}>
                       {acc.available > 0
                         ? `Available: ${fmtINR(acc.available)}`
                         : acc.od_utilised > 0
@@ -574,7 +575,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                   <div className="flex flex-wrap gap-4 px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                     <div>
                       <p className="text-xs text-gray-400">Current Balance</p>
-                      <p className={`text-lg font-bold ${bankStmt.closing_balance < 0 ? "text-green-700" : "text-orange-600"}`}>
+                      <p className={`text-lg font-bold ${bankStmt.closing_balance < 0 ? "text-[var(--text-primary)]" : "text-[var(--text-primary)]"}`}>
                         {fmtINR(Math.abs(bankStmt.closing_balance))}
                         <span className="text-xs ml-1 font-normal text-gray-400">
                           {bankStmt.closing_balance < 0 ? "Dr (available)" : "Cr (collected/OD)"}
@@ -583,7 +584,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Period Inflows</p>
-                      <p className="text-sm font-semibold text-green-700">+{fmtINR(bankStmt.total_inflow)}</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">+{fmtINR(bankStmt.total_inflow)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Period Outflows</p>
@@ -591,7 +592,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Net</p>
-                      <p className={`text-sm font-semibold ${bankStmt.net >= 0 ? "text-green-700" : "text-red-600"}`}>
+                      <p className={`text-sm font-semibold ${bankStmt.net >= 0 ? "text-[var(--text-primary)]" : "text-red-600"}`}>
                         {bankStmt.net >= 0 ? "+" : "−"}{fmtINR(Math.abs(bankStmt.net))}
                       </p>
                     </div>
@@ -613,7 +614,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                       placeholder="Search narration, party, voucher #…"
                       value={stmtSearch}
                       onChange={e => { setStmtSearch(e.target.value); setStmtPage(1) }}
-                      className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#c8a45c]"
+                      className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#171717]"
                     />
                   </div>
                   <input type="date" value={stmtFrom}
@@ -646,7 +647,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                             <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Party / Counterparty</th>
                             <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Narration</th>
                             <th className="text-right px-4 py-2.5 text-xs text-red-500 font-medium w-28">Debit (Out)</th>
-                            <th className="text-right px-4 py-2.5 text-xs text-green-600 font-medium w-28">Credit (In)</th>
+                            <th className="text-right px-4 py-2.5 text-xs text-[var(--text-primary)] font-medium w-28">Credit (In)</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -658,15 +659,15 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                             </tr>
                           )}
                           {bankStmt.transactions.map((r, i) => (
-                            <tr key={i} className={`border-b border-gray-50 hover:bg-gray-50 ${r.direction === "credit" ? "hover:bg-green-50/30" : "hover:bg-red-50/20"}`}>
+                            <tr key={i} className={`border-b border-gray-50 hover:bg-gray-50 ${r.direction === "credit" ? "hover:bg-[var(--bg-subtle)]" : "hover:bg-red-50/20"}`}>
                               <td className="px-4 py-2.5 text-xs text-gray-500 whitespace-nowrap">{r.date}</td>
                               <td className="px-4 py-2.5 text-xs text-gray-400 whitespace-nowrap font-mono">{r.voucher_number || "—"}</td>
                               <td className="px-4 py-2.5 text-xs whitespace-nowrap">
                                 <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                  r.voucher_type === "Receipt"  ? "bg-green-100 text-green-700" :
+                                  r.voucher_type === "Receipt"  ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" :
                                   r.voucher_type === "Payment"  ? "bg-red-100 text-red-700" :
-                                  r.voucher_type === "Contra"   ? "bg-blue-100 text-blue-700" :
-                                  r.voucher_type === "Journal"  ? "bg-yellow-100 text-yellow-700" :
+                                  r.voucher_type === "Contra"   ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" :
+                                  r.voucher_type === "Journal"  ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" :
                                   "bg-gray-100 text-gray-600"
                                 }`}>{r.voucher_type || "—"}</span>
                               </td>
@@ -690,7 +691,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                               </td>
                               <td className="px-4 py-2.5 text-right whitespace-nowrap">
                                 {r.credit > 0 ? (
-                                  <span className="text-green-700 font-semibold text-xs">{fmtINR(r.credit)}</span>
+                                  <span className="text-[var(--text-primary)] font-semibold text-xs">{fmtINR(r.credit)}</span>
                                 ) : <span className="text-gray-200">—</span>}
                               </td>
                             </tr>
@@ -777,22 +778,22 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
           <ChartCard label="Sales — Monthly Trend (₹ Lakhs)">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={recentMonths} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <CartesianGrid stroke="#f0e8d8" vertical={false} />
+                <CartesianGrid stroke={CHART_GRID} vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#8a8a80" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: "#8a8a80" }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => [`₹${Number(v)}L`, "Sales"]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                <Line type="monotone" dataKey="sales" stroke="#1e3a2f" strokeWidth={2} dot={{ r: 3, fill: "#c8a45c" }} />
+                <Line type="monotone" dataKey="sales" stroke={CHART_INK} strokeWidth={2} dot={{ r: 3, fill: CHART_SERIES[1] }} />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
           <ChartCard label="Purchases — Monthly Trend (₹ Lakhs)">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={recentMonths} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <CartesianGrid stroke="#f0e8d8" vertical={false} />
+                <CartesianGrid stroke={CHART_GRID} vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#8a8a80" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: "#8a8a80" }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => [`₹${Number(v)}L`, "Purchases"]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                <Bar dataKey="purchases" fill="#c8a45c" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="purchases" fill={CHART_SERIES[1]} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -889,11 +890,11 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
           <ChartCard label="Cash Flow — Monthly Trend (Net, ₹ Lakhs)">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={recentMonths} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <CartesianGrid stroke="#f0e8d8" vertical={false} />
+                <CartesianGrid stroke={CHART_GRID} vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#8a8a80" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: "#8a8a80" }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => [`₹${Number(v)}L`, "Net"]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                <Line type="monotone" dataKey="net" stroke="#16a34a" strokeWidth={2} dot={{ r: 3, fill: "#16a34a" }} />
+                <Line type="monotone" dataKey="net" stroke={CHART_INK} strokeWidth={2} dot={{ r: 3, fill: CHART_INK }} />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -942,7 +943,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
           <div className="flex gap-4 text-xs mt-1" style={{ color: "var(--text-muted)" }}>
             <span>Total tracked: <strong>{invExtra.total_sku_count}</strong> items</span>
             {invExtra.reorder_alert_count > 0 && (
-              <span className="text-red-600 font-medium">⚠ {invExtra.reorder_alert_count} reorder alerts</span>
+              <span className="text-red-600 font-medium">△ {invExtra.reorder_alert_count} reorder alerts</span>
             )}
           </div>
         </section>
@@ -956,7 +957,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
           {(["mtd","ytd","last_month","custom"] as const).map(p => (
             <button key={p}
               onClick={() => setCardPeriod(p)}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${cardPeriod === p ? "bg-forest-700 text-white border-forest-700" : "bg-white text-gray-600 border-gray-200 hover:border-forest-400"}`}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${cardPeriod === p ? "bg-[var(--bg-inverse)] text-white border-[var(--border-subtle)]" : "bg-white text-gray-600 border-gray-200 hover:border-[var(--border-subtle)]"}`}
             >
               {p === "mtd" ? "This Month" : p === "ytd" ? "This FY" : p === "last_month" ? "Last Month" : "Custom"}
             </button>
@@ -977,23 +978,23 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
           <>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}>
               {/* Net Sales */}
-              <div className="rounded-xl p-4 border" style={{ background: "#f0fdf4", borderColor: "#bbf7d0" }}>
+              <div className="rounded-xl p-4 border" style={{ background: "#F5F5F5", borderColor: "#F5F5F5" }}>
                 <p className="text-xs text-gray-500 mb-1 font-medium uppercase tracking-wide">Net Sales</p>
-                <p className="text-2xl font-bold" style={{ color: "#166534" }}>{fmtINR(profitData.net_sales)}</p>
+                <p className="text-2xl font-bold" style={{ color: "#171717" }}>{fmtINR(profitData.net_sales)}</p>
                 {profitData.credit_notes > 0 && (
                   <p className="text-xs text-gray-400 mt-0.5">Gross {fmtINR(profitData.gross_sales)} − Returns {fmtINR(profitData.credit_notes)}</p>
                 )}
                 {profitData.pop.net_sales_pct != null && (
-                  <p className="text-xs mt-1 font-medium" style={{ color: profitData.pop.net_sales_pct >= 0 ? "#16a34a" : "#dc2626" }}>
+                  <p className="text-xs mt-1 font-medium" style={{ color: profitData.pop.net_sales_pct >= 0 ? "#171717" : "#dc2626" }}>
                     {profitData.pop.net_sales_pct >= 0 ? "↑" : "↓"} {Math.abs(profitData.pop.net_sales_pct)}% vs prior period
                   </p>
                 )}
               </div>
 
               {/* COGS */}
-              <div className="rounded-xl p-4 border" style={{ background: "#fff7ed", borderColor: "#fed7aa" }}>
+              <div className="rounded-xl p-4 border" style={{ background: "#F5F5F5", borderColor: "#E3E3E3" }}>
                 <p className="text-xs text-gray-500 mb-1 font-medium uppercase tracking-wide">COGS</p>
-                <p className="text-2xl font-bold" style={{ color: "#9a3412" }}>{fmtINR(profitData.cogs)}</p>
+                <p className="text-2xl font-bold" style={{ color: "#171717" }}>{fmtINR(profitData.cogs)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">Purchases in period (stock Δ≈0 proxy)</p>
                 {profitData.closing_stock > 0 && (
                   <p className="text-xs text-gray-400">Closing stock: {fmtINR(profitData.closing_stock)}</p>
@@ -1001,26 +1002,26 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
               </div>
 
               {/* Gross Profit */}
-              <div className="rounded-xl p-4 border" style={{ background: profitData.gross_profit >= 0 ? "#f0fdf4" : "#fef2f2", borderColor: profitData.gross_profit >= 0 ? "#86efac" : "#fecaca" }}>
+              <div className="rounded-xl p-4 border" style={{ background: profitData.gross_profit >= 0 ? "#F5F5F5" : "#fef2f2", borderColor: profitData.gross_profit >= 0 ? "#E3E3E3" : "#fecaca" }}>
                 <p className="text-xs text-gray-500 mb-1 font-medium uppercase tracking-wide">Gross Profit</p>
-                <p className="text-2xl font-bold" style={{ color: profitData.gross_profit >= 0 ? "#166534" : "#dc2626" }}>{fmtINR(profitData.gross_profit)}</p>
+                <p className="text-2xl font-bold" style={{ color: profitData.gross_profit >= 0 ? "#171717" : "#dc2626" }}>{fmtINR(profitData.gross_profit)}</p>
                 {profitData.gross_margin_pct != null && (
                   <p className="text-xs text-gray-400 mt-0.5">Margin {profitData.gross_margin_pct}%</p>
                 )}
                 {profitData.pop.gross_profit_pct != null && (
-                  <p className="text-xs mt-1 font-medium" style={{ color: profitData.pop.gross_profit_pct >= 0 ? "#16a34a" : "#dc2626" }}>
+                  <p className="text-xs mt-1 font-medium" style={{ color: profitData.pop.gross_profit_pct >= 0 ? "#171717" : "#dc2626" }}>
                     {profitData.pop.gross_profit_pct >= 0 ? "↑" : "↓"} {Math.abs(profitData.pop.gross_profit_pct)}% vs prior period
                   </p>
                 )}
               </div>
 
               {/* Net Profit */}
-              <div className="rounded-xl p-4 border" style={{ background: profitData.net_profit >= 0 ? "#f0f9ff" : "#fef2f2", borderColor: profitData.net_profit >= 0 ? "#bae6fd" : "#fecaca" }}>
+              <div className="rounded-xl p-4 border" style={{ background: profitData.net_profit >= 0 ? "#F5F5F5" : "#fef2f2", borderColor: profitData.net_profit >= 0 ? "#E3E3E3" : "#fecaca" }}>
                 <p className="text-xs text-gray-500 mb-1 font-medium uppercase tracking-wide">Net Profit</p>
-                <p className="text-2xl font-bold" style={{ color: profitData.net_profit >= 0 ? "#0369a1" : "#dc2626" }}>{fmtINR(profitData.net_profit)}</p>
+                <p className="text-2xl font-bold" style={{ color: profitData.net_profit >= 0 ? "#171717" : "#dc2626" }}>{fmtINR(profitData.net_profit)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">After period Opex {fmtINR(profitData.opex_period)}</p>
                 {profitData.net_margin_pct != null && (
-                  <p className="text-xs mt-1 font-medium" style={{ color: profitData.net_margin_pct >= 0 ? "#0369a1" : "#dc2626" }}>
+                  <p className="text-xs mt-1 font-medium" style={{ color: profitData.net_margin_pct >= 0 ? "#171717" : "#dc2626" }}>
                     Net margin {profitData.net_margin_pct}%
                   </p>
                 )}
@@ -1054,12 +1055,12 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                 return (
                   <div key={side} className="rounded-xl p-4 border border-gray-100 bg-white">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold" style={{ color: side === "creditors" ? "#dc2626" : "#16a34a" }}>
+                      <p className="text-sm font-semibold" style={{ color: side === "creditors" ? "#dc2626" : "#171717" }}>
                         {side === "creditors" ? "Creditors (Payable)" : "Debtors (Receivable)"}
                       </p>
                       <button
                         onClick={() => setModal(side === "creditors" ? "ageing_cred" : "ageing_debt")}
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs text-[var(--text-primary)] hover:underline"
                       >→ Drill-down</button>
                     </div>
                     <p className="text-lg font-bold mb-2">{fmtINR(s.grand_total)}</p>
@@ -1067,7 +1068,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                       {Object.entries(labels).map(([k, lbl]) => (
                         <div key={k} className="text-center">
                           <p className="text-xs text-gray-400 leading-tight">{lbl}</p>
-                          <p className={`text-xs font-semibold mt-0.5 ${s.totals[k] > 0 ? (k === "b90plus" ? "text-red-600" : k === "b46_90" ? "text-orange-500" : "text-gray-700") : "text-gray-300"}`}>
+                          <p className={`text-xs font-semibold mt-0.5 ${s.totals[k] > 0 ? (k === "b90plus" ? "text-red-600" : k === "b46_90" ? "text-[var(--text-tertiary)]0" : "text-gray-700") : "text-gray-300"}`}>
                             {fmtINR(s.totals[k] || 0)}
                           </p>
                         </div>
@@ -1091,7 +1092,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                       <p className="text-sm font-semibold text-gray-700">{label}</p>
                       <button
                         onClick={() => setModal(side === "adv_to_creditors" ? "ageing_advcred" : "ageing_advdebt")}
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs text-[var(--text-primary)] hover:underline"
                       >→ Drill-down</button>
                     </div>
                     <p className="text-lg font-bold mb-2">{fmtINR(s.grand_total)}</p>
@@ -1099,7 +1100,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                       {Object.entries(labels).map(([k, lbl]) => (
                         <div key={k} className="text-center">
                           <p className="text-xs text-gray-400 leading-tight">{lbl}</p>
-                          <p className={`text-xs font-semibold mt-0.5 ${s.totals[k] > 0 ? (k === "b24plus" ? "text-red-600" : k === "b13_24m" ? "text-orange-500" : "text-gray-700") : "text-gray-300"}`}>
+                          <p className={`text-xs font-semibold mt-0.5 ${s.totals[k] > 0 ? (k === "b24plus" ? "text-red-600" : k === "b13_24m" ? "text-[var(--text-tertiary)]0" : "text-gray-700") : "text-gray-300"}`}>
                             {fmtINR(s.totals[k] || 0)}
                           </p>
                         </div>
@@ -1136,7 +1137,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
             <div className="rounded-xl p-4 border border-gray-100 bg-white">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">By Stock Group / Brand</p>
-                <button onClick={() => setModal("inv_groups")} className="text-xs text-blue-600 hover:underline">→ Full list</button>
+                <button onClick={() => setModal("inv_groups")} className="text-xs text-[var(--text-primary)] hover:underline">→ Full list</button>
               </div>
               <div className="space-y-1.5 max-h-44 overflow-y-auto">
                 {cardInv.by_group.slice(0, 8).map(r => (
@@ -1151,7 +1152,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
             <div className="rounded-xl p-4 border border-gray-100 bg-white">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">By Movement Category</p>
-                <button onClick={() => setModal("inv_categories")} className="text-xs text-blue-600 hover:underline">→ Full list</button>
+                <button onClick={() => setModal("inv_categories")} className="text-xs text-[var(--text-primary)] hover:underline">→ Full list</button>
               </div>
               <div className="space-y-1.5">
                 {cardInv.by_category.map(r => (
@@ -1380,7 +1381,7 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
           <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
             <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent Entries ({transportData.from_date} → {transportData.to_date})</p>
-              <button onClick={() => setModal("transport_detail")} className="text-xs text-blue-600 hover:underline">→ All</button>
+              <button onClick={() => setModal("transport_detail")} className="text-xs text-[var(--text-primary)] hover:underline">→ All</button>
             </div>
             <table className="w-full text-sm">
               <thead><tr className="border-b border-gray-50 bg-gray-50">
@@ -1581,9 +1582,9 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
             {fundsExtra?.virtuals.map((v, i) => (
               <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-3 py-2.5 font-medium">{v.gateway_name}</td>
-                <td className="px-3 py-2.5 text-right text-green-700 font-semibold">{fmtINR(v.available_balance)}</td>
+                <td className="px-3 py-2.5 text-right text-[var(--text-primary)] font-semibold">{fmtINR(v.available_balance)}</td>
                 <td className="px-3 py-2.5 text-right text-gray-500">{fmtINR(v.credit_limit)}</td>
-                <td className="px-3 py-2.5 text-right text-orange-600">{fmtINR(v.utilised)}</td>
+                <td className="px-3 py-2.5 text-right text-[var(--text-primary)]">{fmtINR(v.utilised)}</td>
               </tr>
             ))}
           </tbody>
@@ -1729,8 +1730,8 @@ export function AccountingOverview({ onGoToImport }: AccountingOverviewProps) {
                 <td className="px-3 py-2.5 font-medium">{od.bank_name}</td>
                 <td className="px-3 py-2.5 text-gray-600 text-xs">{od.facility_name}</td>
                 <td className="px-3 py-2.5 text-right">{fmtINR(od.sanctioned_limit)}</td>
-                <td className="px-3 py-2.5 text-right text-orange-600">{fmtINR(od.utilised)}</td>
-                <td className="px-3 py-2.5 text-right text-green-700 font-semibold">{fmtINR(od.available)}</td>
+                <td className="px-3 py-2.5 text-right text-[var(--text-primary)]">{fmtINR(od.utilised)}</td>
+                <td className="px-3 py-2.5 text-right text-[var(--text-primary)] font-semibold">{fmtINR(od.available)}</td>
                 <td className="px-3 py-2.5 text-right text-gray-500 text-xs">{od.interest_rate?.toFixed(2) ?? "—"}%</td>
               </tr>
             ))}

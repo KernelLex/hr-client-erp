@@ -131,12 +131,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   return (
     <div
       className="fixed inset-0 z-[500] flex items-start justify-center px-4"
-      style={{ background: "rgba(30,58,47,.42)", paddingTop: "90px" }}
+      style={{ background: "var(--scrim)", paddingTop: "90px" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
         className="w-full bg-white overflow-hidden"
-        style={{ maxWidth: "560px", borderRadius: "14px", boxShadow: "0 24px 70px rgba(0,0,0,.35)", border: "0.5px solid var(--border, #e0d9cb)" }}
+        style={{ maxWidth: "560px", borderRadius: "14px", boxShadow: "0 24px 70px rgba(0,0,0,.35)", border: "0.5px solid var(--border, #E3E3E3)" }}
       >
         <input
           ref={inputRef}
@@ -145,7 +145,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           onKeyDown={onKeyDown}
           placeholder='Jump to any screen… try "invoice", "payroll", "leave"'
           className="w-full outline-none text-[14px] text-gray-900"
-          style={{ padding: "16px 18px", borderBottom: "0.5px solid var(--border, #e0d9cb)", fontFamily: "'Inter', sans-serif" }}
+          style={{ padding: "16px 18px", borderBottom: "0.5px solid var(--border, #E3E3E3)", fontFamily: "'Inter', sans-serif" }}
         />
         <div className="overflow-y-auto p-1.5" style={{ maxHeight: "380px" }}>
           {results.length === 0 ? (
@@ -155,14 +155,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               <button
                 key={e.group + e.to}
                 onClick={() => go(e.to)}
-                className="w-full flex items-center gap-2.5 rounded-md text-left text-[13px] text-gray-900 hover:bg-[var(--cream,#f5efe4)]"
+                className="w-full flex items-center gap-2.5 rounded-md text-left text-[13px] text-gray-900 hover:bg-[var(--cream,#F5F5F5)]"
                 style={{ padding: "9px 12px" }}
               >
                 <span
                   className="shrink-0 text-center font-semibold uppercase"
                   style={{
                     fontSize: "9px", letterSpacing: ".8px", color: "var(--text-muted, #8a8a80)",
-                    background: "var(--cream-dark, #ebe3d3)", padding: "2px 8px", borderRadius: "10px",
+                    background: "var(--cream-dark, #F5F5F5)", padding: "2px 8px", borderRadius: "10px",
                     minWidth: "104px",
                   }}
                 >

@@ -6,11 +6,11 @@ import { getAllEmployees, type EmployeeListItem } from "@/api/employee"
 
 
 const GRADIENTS = [
-  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-  "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-  "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-  "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
+  "linear-gradient(135deg, #171717 0%, #171717 100%)",
 ]
 
 function getGradient(name: string): string {
@@ -28,15 +28,15 @@ function departmentLabel(dept: string) {
 }
 
 const DEPT_BADGE: Record<string, { bg: string; text: string }> = {
-  Logistics:  { bg: "#FEF3C7", text: "#92400E" },
-  Accounts:   { bg: "#D1FAE5", text: "#065F46" },
-  Project:    { bg: "#DBEAFE", text: "#1E40AF" },
-  Management: { bg: "#EDE9FE", text: "#5B21B6" },
-  HR:         { bg: "#FCE7F3", text: "#9D174D" },
+  Logistics:  { bg: "#F5F5F5", text: "#171717" },
+  Accounts:   { bg: "#F5F5F5", text: "#171717" },
+  Project:    { bg: "#F5F5F5", text: "#171717" },
+  Management: { bg: "#F5F5F5", text: "#171717" },
+  HR:         { bg: "#F5F5F5", text: "#171717" },
 }
 
 function getBadgeStyle(dept: string) {
-  return DEPT_BADGE[dept] ?? { bg: "#F1F5F9", text: "#475569" }
+  return DEPT_BADGE[dept] ?? { bg: "#f5f5f5", text: "#585858" }
 }
 
 function EmployeeCardItem({ emp }: { emp: EmployeeListItem }) {
@@ -51,9 +51,9 @@ function EmployeeCardItem({ emp }: { emp: EmployeeListItem }) {
     <div
       role="button"
       tabIndex={0}
-      className="flex flex-col items-center text-center p-6 rounded-2xl bg-white select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-400"
+      className="flex flex-col items-center text-center p-6 rounded-2xl bg-white select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-strong)]"
       style={{
-        border: "1px solid #E2E8F0",
+        border: "1px solid #e9e9e9",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         cursor: "pointer",
         transition: "all 0.2s ease",
@@ -64,20 +64,20 @@ function EmployeeCardItem({ emp }: { emp: EmployeeListItem }) {
         const el = e.currentTarget as HTMLDivElement
         el.style.boxShadow = "0 8px 24px rgba(79,70,229,0.12)"
         el.style.transform = "translateY(-2px)"
-        el.style.borderColor = "#85b89a"
+        el.style.borderColor = "#6B6B6B"
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLDivElement
         el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)"
         el.style.transform = "translateY(0)"
-        el.style.borderColor = "#E2E8F0"
+        el.style.borderColor = "#e9e9e9"
       }}
     >
       {/* Avatar */}
       <div className="relative mb-4">
         <div
           className="w-[72px] h-[72px] rounded-full flex items-center justify-center overflow-hidden"
-          style={{ background: gradient || "#EDE9FE" }}
+          style={{ background: gradient || "#F5F5F5" }}
         >
           {emp.image ? (
             <img src={emp.image} alt={emp.employee_name} className="w-full h-full object-cover" />
@@ -86,7 +86,7 @@ function EmployeeCardItem({ emp }: { emp: EmployeeListItem }) {
           )}
         </div>
         {pendingLeaves > 0 && (
-          <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-[var(--bg-subtle)]0 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
             {pendingLeaves}
           </span>
         )}
@@ -111,7 +111,7 @@ function SkeletonCard() {
   return (
     <div
       className="flex flex-col items-center p-6 rounded-2xl bg-white animate-pulse"
-      style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+      style={{ border: "1px solid #e9e9e9", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
     >
       <div className="w-[72px] h-[72px] rounded-full bg-gray-200 mb-4" />
       <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
@@ -137,15 +137,15 @@ export function AdminEmployeesPage() {
   const count = employees?.length ?? 0
 
   return (
-    <div className="p-6 max-w-5xl space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-[22px] font-bold" style={{ color: "var(--text-primary, #0F172A)" }}>
+        <h1 className="text-[22px] font-bold" style={{ color: "var(--text-primary, #1c1c1c)" }}>
           Team Members
         </h1>
         <p className="text-[14px] text-gray-500 mt-1 flex items-center gap-1.5">
           {!isLoading && (
-            <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+            <span className="inline-block w-2 h-2 rounded-full bg-[var(--bg-subtle)]0" />
           )}
           {isLoading ? "Loading…" : `${count} active employee${count !== 1 ? "s" : ""}`}
         </p>

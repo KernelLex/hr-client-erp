@@ -136,7 +136,7 @@ export function DataTable<T>({
             <button
               onClick={onPrint}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md"
-              style={{ background: "var(--gold)", color: "var(--brand-primary)" }}
+              style={{ background: "var(--bg-surface)", color: "var(--text-primary)", border: "1px solid var(--border-control)" }}
             >
               <Printer size={12} /> Print
             </button>
@@ -183,7 +183,7 @@ export function DataTable<T>({
                     key={rowKey(row)}
                     className={cn("transition-colors", onRowClick && "cursor-pointer")}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#faf6ed")}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--overlay-hover)")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
                     {columns.map((col) => (
@@ -231,7 +231,7 @@ export function DataTable<T>({
                       onClick={() => toggleCollapse(g.key)}
                     >
                       <td colSpan={columns.length} className="px-3 py-1.5"
-                        style={{ background: "#faf6ed", borderBottom: "0.5px solid var(--border-card)", borderTop: "0.5px solid var(--border-card)" }}>
+                        style={{ background: "#F5F5F5", borderBottom: "0.5px solid var(--border-card)", borderTop: "0.5px solid var(--border-card)" }}>
                         <div className="flex items-center gap-1.5">
                           <span className="shrink-0" style={{ color: "var(--brand-primary)" }}>
                             {isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}

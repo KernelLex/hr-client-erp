@@ -22,7 +22,9 @@ import {
   type AttendanceEntry,
 } from "./useJibble"
 
-const PIE_COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4"]
+import { PIE_SERIES, CHART_GRID, CHART_AXIS, CHART_INK, CHART_DANGER, seriesColor } from "@/lib/chartColors"
+
+const PIE_COLORS = PIE_SERIES
 
 // ── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -79,9 +81,9 @@ function SkeletonRow({ cols }: { cols: number }) {
 
 function StatusBadge({ status }: { status?: string }) {
   const map: Record<string, { label: string; cls: string }> = {
-    on_time: { label: "On Time",  cls: "bg-green-100 text-green-700" },
-    late:    { label: "Late",     cls: "bg-orange-100 text-orange-700" },
-    working: { label: "Working",  cls: "bg-blue-100 text-forest-800" },
+    on_time: { label: "On Time",  cls: "bg-[var(--bg-subtle)] text-[var(--text-primary)]" },
+    late:    { label: "Late",     cls: "bg-[var(--bg-subtle)] text-[var(--text-primary)]" },
+    working: { label: "Working",  cls: "bg-[var(--bg-subtle)] text-[var(--text-primary)]" },
     absent:  { label: "Absent",   cls: "bg-red-100 text-red-700" },
   }
   const s = map[status ?? ""] ?? { label: status ?? "—", cls: "bg-gray-100 text-gray-600" }
@@ -128,7 +130,7 @@ function DateRangePicker({
                 onClick={() => onPreset(key)}
                 className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                   preset === key
-                    ? "bg-forest-700 text-white"
+                    ? "bg-[var(--bg-inverse)] text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -149,7 +151,7 @@ function DateRangePicker({
                   const maxTo = isoDate(addDays(new Date(newFrom), 29))
                   onCustomChange(newFrom, dateTo > maxTo ? maxTo : dateTo)
                 }}
-                className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--border-strong)]"
               />
               <span className="text-xs text-gray-400">→</span>
               <input
@@ -158,7 +160,7 @@ function DateRangePicker({
                 min={dateFrom}
                 max={isoDate(addDays(new Date(dateFrom), 29))}
                 onChange={(e) => onCustomChange(dateFrom, e.target.value)}
-                className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--border-strong)]"
               />
             </div>
           )}
@@ -203,7 +205,7 @@ function LiveStatusSection() {
         <CardContent className="pt-4 pb-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="size-2 rounded-full bg-green-500 animate-pulse" />
+              <div className="size-2 rounded-full bg-[var(--bg-subtle)]0 animate-pulse" />
               <span className="text-sm font-semibold text-gray-800">Live Status</span>
             </div>
             <span className="text-xs text-gray-400">Auto-refreshes every 60s</span>
@@ -215,7 +217,7 @@ function LiveStatusSection() {
                 ))
               : allPeople.map((p) => (
                   <div key={p.id} className="flex items-center gap-1.5">
-                    <div className={`size-2.5 rounded-full ${clockedInIds.has(p.id) ? "bg-green-500" : "bg-gray-300"}`} />
+                    <div className={`size-2.5 rounded-full ${clockedInIds.has(p.id) ? "bg-[var(--bg-subtle)]0" : "bg-gray-300"}`} />
                     <span className="text-xs text-gray-600">
                       {(p.fullName || p.name)?.split(" ")[0]}
                     </span>
@@ -245,12 +247,12 @@ function LiveStatusSection() {
             return (
               <Card key={person.id} className="bg-white shadow-sm border-0">
                 <CardContent className="pt-3 pb-3 text-center">
-                  <div className="size-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
-                    <span className="text-sm font-bold text-green-700">{initials(name)}</span>
+                  <div className="size-10 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mx-auto mb-2">
+                    <span className="text-sm font-bold text-[var(--text-primary)]">{initials(name)}</span>
                   </div>
                   <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
                   <p className="text-[11px] text-gray-400 mt-0.5">In since {clockedAtStr}</p>
-                  <div className="size-1.5 rounded-full bg-green-500 mx-auto mt-1.5" />
+                  <div className="size-1.5 rounded-full bg-[var(--bg-subtle)]0 mx-auto mt-1.5" />
                 </CardContent>
               </Card>
             )
@@ -299,7 +301,7 @@ function AttendanceTable({ dateFrom, dateTo }: AttendanceTableProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <Clock size={15} className="text-forest-500" />
+            <Clock size={15} className="text-[var(--text-tertiary)]0" />
             Attendance
           </CardTitle>
           <Button
@@ -381,7 +383,7 @@ function LateAbsentRow() {
       <Card className="bg-white shadow-sm border-0">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <AlertTriangle size={15} className="text-orange-500" />
+            <AlertTriangle size={15} className="text-[var(--text-tertiary)]0" />
             Late Arrivals Today
             {!lateQ.isLoading && late.length > 0 && (
               <span className="ml-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{late.length}</span>
@@ -392,21 +394,21 @@ function LateAbsentRow() {
           {lateQ.isLoading ? (
             <div className="space-y-2 animate-pulse">{[1,2].map((i) => <div key={i} className="h-8 bg-gray-100 rounded" />)}</div>
           ) : late.length === 0 ? (
-            <p className="text-sm text-gray-400 py-2 text-center">Everyone on time today 🎉</p>
+            <p className="text-sm text-gray-400 py-2 text-center">Everyone on time today ✓</p>
           ) : (
             <div className="space-y-2">
               {late.map((emp, i) => (
                 <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
                   <div className="flex items-center gap-2">
-                    <div className="size-7 rounded-full bg-orange-100 flex items-center justify-center">
-                      <span className="text-[10px] font-bold text-orange-700">{initials(emp.person_name)}</span>
+                    <div className="size-7 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center">
+                      <span className="text-[10px] font-bold text-[var(--text-primary)]">{initials(emp.person_name)}</span>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-800">{emp.person_name}</p>
                       <p className="text-[11px] text-gray-400">Clocked in at {emp.clock_in}</p>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold text-orange-600">+{emp.minutes_late}m late</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)]">+{emp.minutes_late}m late</span>
                 </div>
               ))}
             </div>
@@ -420,7 +422,7 @@ function LateAbsentRow() {
             <UserX size={15} className="text-red-500" />
             Absent Today
             {!absentQ.isLoading && absent.length > 0 && (
-              <span className="ml-1 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{absent.length}</span>
+              <span className="ml-1 bg-[var(--bg-subtle)]0 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{absent.length}</span>
             )}
           </CardTitle>
         </CardHeader>
@@ -428,7 +430,7 @@ function LateAbsentRow() {
           {absentQ.isLoading ? (
             <div className="space-y-2 animate-pulse">{[1,2].map((i) => <div key={i} className="h-8 bg-gray-100 rounded" />)}</div>
           ) : absent.length === 0 ? (
-            <p className="text-sm text-gray-400 py-2 text-center">Full attendance ✅</p>
+            <p className="text-sm text-gray-400 py-2 text-center">Full attendance ✓</p>
           ) : (
             <div className="space-y-2">
               {absent.map((emp, i) => (
@@ -464,7 +466,7 @@ function WeeklyHoursChart() {
     <Card className="bg-white shadow-sm border-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <TrendingUp size={15} className="text-gold-500" />
+          <TrendingUp size={15} className="text-[var(--text-tertiary)]0" />
           Weekly Hours
           {data?.success && "week_start" in data && (
             <span className="text-[11px] text-gray-400 font-normal">
@@ -482,16 +484,16 @@ function WeeklyHoursChart() {
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: CHART_AXIS }} />
+              <YAxis tick={{ fontSize: 11, fill: CHART_AXIS }} />
               <Tooltip formatter={(val) => [`${val}h`, "Hours"]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-              <ReferenceLine y={45} stroke="#ef4444" strokeDasharray="4 4"
-                label={{ value: "45h target", fontSize: 10, fill: "#ef4444" }} />
+              <ReferenceLine y={45} stroke={CHART_DANGER} strokeDasharray="4 4"
+                label={{ value: "45h target", fontSize: 10, fill: CHART_DANGER }} />
               <Bar dataKey="hours" radius={[4, 4, 0, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell key={index}
-                    fill={entry.hours >= 36 ? "#10b981" : entry.hours >= 20 ? "#f59e0b" : "#ef4444"} />
+                    fill={entry.hours >= 36 ? CHART_INK : entry.hours >= 20 ? seriesColor(2) : CHART_DANGER} />
                 ))}
               </Bar>
             </BarChart>
@@ -526,7 +528,7 @@ function MonthlySummaryTable() {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <Users size={15} className="text-emerald-500" />
+            <Users size={15} className="text-[var(--text-tertiary)]0" />
             Monthly Summary
             {data?.success && "month_start" in data && (
               <span className="text-[11px] text-gray-400 font-normal">
@@ -563,7 +565,7 @@ function MonthlySummaryTable() {
                   <td className="px-4 py-3 text-gray-600">{e.avg_hours_per_day}h</td>
                   <td className="px-4 py-3">
                     {e.overtime_days > 0
-                      ? <span className="text-orange-600 font-medium">{e.overtime_days} days</span>
+                      ? <span className="text-[var(--text-primary)] font-medium">{e.overtime_days} days</span>
                       : <span className="text-gray-400">—</span>}
                   </td>
                 </tr>
@@ -586,7 +588,7 @@ function OvertimeAlerts() {
     <Card className="bg-white shadow-sm border-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <AlertTriangle size={15} className="text-amber-500" />
+          <AlertTriangle size={15} className="text-[var(--text-tertiary)]0" />
           Overtime This Month
         </CardTitle>
       </CardHeader>
@@ -598,10 +600,10 @@ function OvertimeAlerts() {
         ) : (
           <div className="space-y-3">
             {entries.map((emp, i) => (
-              <div key={i} className="border border-amber-100 rounded-lg p-3">
+              <div key={i} className="border border-[var(--border-subtle)] rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-800">{emp.person_name}</span>
-                  <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-[var(--text-primary)] bg-[var(--bg-subtle)] px-2 py-0.5 rounded-full">
                     {emp.total_overtime_hours}h total OT
                   </span>
                 </div>
@@ -681,14 +683,14 @@ function JibbleSettingsPanel() {
     <Card className="bg-white shadow-sm border-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          {result?.connected === false ? <WifiOff size={15} className="text-red-500" /> : <Wifi size={15} className="text-green-500" />}
+          {result?.connected === false ? <WifiOff size={15} className="text-red-500" /> : <Wifi size={15} className="text-[var(--text-tertiary)]0" />}
           Jibble Connection
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className={`size-2 rounded-full ${result == null ? "bg-gray-300" : result.connected ? "bg-green-500" : "bg-red-500"}`} />
+            <div className={`size-2 rounded-full ${result == null ? "bg-gray-300" : result.connected ? "bg-[var(--bg-subtle)]0" : "bg-red-500"}`} />
             <span className="text-xs text-gray-600">
               {result == null ? "Status unknown"
                 : result.connected ? `Connected${result.organization ? ` — org: ${result.organization.slice(0, 8)}…` : ""}`
@@ -703,7 +705,7 @@ function JibbleSettingsPanel() {
           </Button>
         </div>
         {result?.connected && (
-          <div className="flex items-center gap-2 text-xs text-green-600">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-primary)]">
             <CheckCircle2 size={12} />
             Last verified: {new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })} IST
           </div>
@@ -744,7 +746,7 @@ export function AttendancePage() {
   if (!isAdmin) return <Navigate to="/" replace />
 
   return (
-    <div className="p-6 max-w-6xl space-y-6 min-h-full">
+    <div className="p-6 space-y-6 min-h-full">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>

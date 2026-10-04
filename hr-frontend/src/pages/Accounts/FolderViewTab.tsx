@@ -25,31 +25,31 @@ import {
 } from "@/api/accounts"
 
 const METHOD_CONFIG: Record<string, { dot: string; label: string }> = {
-  drive_api:         { dot: "#16a34a", label: "Confirmed by Google Drive" },
-  last_modifier:     { dot: "#2563eb", label: "Detected from last edit" },
-  folder_path:       { dot: "#94a3b8", label: "Estimated from folder location" },
-  drive_api_unknown: { dot: "#f97316", label: "Not a Vera Enterprises account" },
+  drive_api:         { dot: "#171717", label: "Confirmed by Google Drive" },
+  last_modifier:     { dot: "#171717", label: "Detected from last edit" },
+  folder_path:       { dot: "#a6a6a6", label: "Estimated from folder location" },
+  drive_api_unknown: { dot: "#171717", label: "Not a Vera Enterprises account" },
 }
 
 // Folder color coding by name prefix
 const FOLDER_COLOR: Record<string, { bg: string; icon: string; label: string }> = {
-  "01_Sales":      { bg: "#dcfce7", icon: "#16a34a", label: "Sales" },
+  "01_Sales":      { bg: "#F5F5F5", icon: "#171717", label: "Sales" },
   "02_Purchase":   { bg: "#fee2e2", icon: "#dc2626", label: "Purchase" },
-  "03_Accounts":   { bg: "#ede9fe", icon: "#c8a45c", label: "Accounts" },
-  "04_HR_Payroll": { bg: "#fef3c7", icon: "#d97706", label: "HR & Payroll" },
-  "05_Logistics":  { bg: "#dbeafe", icon: "#2563eb", label: "Logistics" },
+  "03_Accounts":   { bg: "#F5F5F5", icon: "#171717", label: "Accounts" },
+  "04_HR_Payroll": { bg: "#F5F5F5", icon: "#171717", label: "HR & Payroll" },
+  "05_Logistics":  { bg: "#F5F5F5", icon: "#171717", label: "Logistics" },
 }
 
 function getFolderStyle(name: string) {
   const key = Object.keys(FOLDER_COLOR).find((k) => name.startsWith(k))
-  return key ? FOLDER_COLOR[key] : { bg: "#f3f4f6", icon: "#6b7280", label: name }
+  return key ? FOLDER_COLOR[key] : { bg: "#f4f4f4", icon: "#6b7280", label: name }
 }
 
 function FileIcon({ ext }: { ext: string }) {
   if (ext === "pdf") return <FileText size={14} className="shrink-0" style={{ color: "#dc2626" }} />
-  if (["xlsx", "xls", "csv"].includes(ext)) return <FileSpreadsheet size={14} className="shrink-0" style={{ color: "#16a34a" }} />
-  if (["doc", "docx"].includes(ext)) return <FileText size={14} className="shrink-0" style={{ color: "#2563eb" }} />
-  return <File size={14} className="shrink-0" style={{ color: "#94a3b8" }} />
+  if (["xlsx", "xls", "csv"].includes(ext)) return <FileSpreadsheet size={14} className="shrink-0" style={{ color: "#171717" }} />
+  if (["doc", "docx"].includes(ext)) return <FileText size={14} className="shrink-0" style={{ color: "#171717" }} />
+  return <File size={14} className="shrink-0" style={{ color: "#a6a6a6" }} />
 }
 
 function formatBytes(bytes: number) {
@@ -107,18 +107,18 @@ function FolderNode({ folder, depth, onFileClick, selectedFileId, searchQuery }:
           paddingLeft: `${depth * 16 + 8}px`,
           backgroundColor: isRoot ? style.bg : undefined,
         }}
-        onMouseEnter={(e) => { if (!isRoot) e.currentTarget.style.backgroundColor = "#f8fafc" }}
+        onMouseEnter={(e) => { if (!isRoot) e.currentTarget.style.backgroundColor = "#fafafa" }}
         onMouseLeave={(e) => { if (!isRoot) e.currentTarget.style.backgroundColor = "transparent" }}
         onClick={() => setOpen((v) => !v)}
       >
-        <span style={{ color: "#94a3b8" }}>
+        <span style={{ color: "#a6a6a6" }}>
           {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
         </span>
         <Folder size={14} className="shrink-0" style={{ color: style.icon }} />
         <span className="text-sm font-medium truncate flex-1" style={{ color: "var(--text-primary)" }}>
           {folder.name}
         </span>
-        <span className="text-[10px] rounded px-1.5 py-0.5 ml-1" style={{ backgroundColor: "#e2e8f0", color: "#64748b" }}>
+        <span className="text-[10px] rounded px-1.5 py-0.5 ml-1" style={{ backgroundColor: "#e9e9e9", color: "#787878" }}>
           {folder.total_count}
         </span>
       </div>
@@ -170,15 +170,15 @@ function FileRow({ file, depth, onClick, selected }: FileRowProps) {
       style={{
         paddingLeft: `${depth * 16 + 8}px`,
         paddingRight: "8px",
-        backgroundColor: selected ? "#eff6ff" : undefined,
+        backgroundColor: selected ? "#F5F5F5" : undefined,
       }}
-      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.backgroundColor = "#f8fafc" }}
+      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.backgroundColor = "#fafafa" }}
       onMouseLeave={(e) => { if (!selected) e.currentTarget.style.backgroundColor = "transparent" }}
       onClick={onClick}
     >
       <span className="w-3.5 shrink-0" />
       <FileIcon ext={file.extension} />
-      <span className="text-sm truncate flex-1" style={{ color: selected ? "#1d4ed8" : "var(--text-primary)" }}>
+      <span className="text-sm truncate flex-1" style={{ color: selected ? "#171717" : "var(--text-primary)" }}>
         {file.name}
       </span>
       <span className="text-[10px] text-gray-400 shrink-0 hidden group-hover:inline">
@@ -218,10 +218,10 @@ function RightPanel({ file, onClose }: RightPanelProps) {
   return (
     <div
       className="flex flex-col h-full border-l overflow-y-auto"
-      style={{ borderColor: "#e2e8f0", backgroundColor: "#fff", minWidth: 0 }}
+      style={{ borderColor: "#e9e9e9", backgroundColor: "#fff", minWidth: 0 }}
     >
       {/* Header */}
-      <div className="flex items-start gap-2 p-4 border-b" style={{ borderColor: "#e2e8f0" }}>
+      <div className="flex items-start gap-2 p-4 border-b" style={{ borderColor: "#e9e9e9" }}>
         <FileIcon ext={file.extension} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold leading-tight break-all" style={{ color: "var(--text-primary)" }}>
@@ -235,13 +235,13 @@ function RightPanel({ file, onClose }: RightPanelProps) {
       </div>
 
       {/* Meta */}
-      <div className="p-4 space-y-2.5 border-b" style={{ borderColor: "#e2e8f0" }}>
+      <div className="p-4 space-y-2.5 border-b" style={{ borderColor: "#e9e9e9" }}>
         <MetaRow label="Size" value={formatBytes(file.size)} />
         <MetaRow label="Type" value={file.mimeType.split("/").pop() ?? file.mimeType} />
       </div>
 
       {/* Uploader section */}
-      <div className="p-4 border-b space-y-3" style={{ borderColor: "#e2e8f0" }}>
+      <div className="p-4 border-b space-y-3" style={{ borderColor: "#e9e9e9" }}>
         {/* Uploaded By */}
         <div>
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Uploaded By</p>
@@ -250,7 +250,7 @@ function RightPanel({ file, onClose }: RightPanelProps) {
               <div className="flex items-center gap-2">
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                  style={{ backgroundColor: "#1e3a2f" }}
+                  style={{ backgroundColor: "#171717" }}
                 >
                   {file.uploaded_by_name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
                 </div>
@@ -276,7 +276,7 @@ function RightPanel({ file, onClose }: RightPanelProps) {
               )}
             </div>
           ) : (
-            <p className="text-[11px] text-red-400">⚠ Could not detect uploader</p>
+            <p className="text-[11px] text-red-400">△ Could not detect uploader</p>
           )}
         </div>
 
@@ -287,7 +287,7 @@ function RightPanel({ file, onClose }: RightPanelProps) {
             <div className="flex items-center gap-2">
               <div
                 className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                style={{ backgroundColor: "#64748b" }}
+                style={{ backgroundColor: "#787878" }}
               >
                 {file.last_modified_by_name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
               </div>
@@ -309,7 +309,7 @@ function RightPanel({ file, onClose }: RightPanelProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-1.5 text-xs font-medium rounded-lg py-2 px-3 transition-colors"
-          style={{ backgroundColor: "#1d4ed8", color: "#fff" }}
+          style={{ backgroundColor: "#171717", color: "#fff" }}
         >
           <ExternalLink size={12} />
           Open in Drive
@@ -338,7 +338,7 @@ function RightPanel({ file, onClose }: RightPanelProps) {
       {/* Analysis result */}
       {analysis && (
         <div className="px-4 pb-4">
-          <div className="rounded-lg border p-3" style={{ borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}>
+          <div className="rounded-lg border p-3" style={{ borderColor: "#e9e9e9", backgroundColor: "#fafafa" }}>
             {analysis.type === "pdf" && (
               <>
                 <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">PDF Preview (first 3 pages)</p>
@@ -354,9 +354,9 @@ function RightPanel({ file, onClose }: RightPanelProps) {
                   <table className="text-[10px] border-collapse w-full">
                     <tbody>
                       {(analysis.rows ?? []).map((row, i) => (
-                        <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#f1f5f9" }}>
+                        <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#f5f5f5" }}>
                           {row.map((cell, j) => (
-                            <td key={j} className="border px-1.5 py-0.5 whitespace-nowrap" style={{ borderColor: "#e2e8f0" }}>
+                            <td key={j} className="border px-1.5 py-0.5 whitespace-nowrap" style={{ borderColor: "#e9e9e9" }}>
                               {cell}
                             </td>
                           ))}
@@ -411,10 +411,10 @@ function StatsHeader({ tree }: { tree: DriveTreeFolder }) {
           </div>
         )
       })}
-      <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 border" style={{ backgroundColor: "#f1f5f9", borderColor: "transparent" }}>
-        <Folder size={14} style={{ color: "#64748b" }} />
+      <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 border" style={{ backgroundColor: "#f5f5f5", borderColor: "transparent" }}>
+        <Folder size={14} style={{ color: "#787878" }} />
         <span className="text-xs font-semibold text-gray-500">Total</span>
-        <span className="text-xs font-bold rounded-full px-2 py-0.5" style={{ backgroundColor: "#64748b", color: "#fff" }}>
+        <span className="text-xs font-bold rounded-full px-2 py-0.5" style={{ backgroundColor: "#787878", color: "#fff" }}>
           {tree.total_count}
         </span>
       </div>
@@ -454,7 +454,7 @@ export function FolderViewTab() {
     return (
       <div className="space-y-3">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-8 rounded-lg animate-pulse" style={{ backgroundColor: "#e2e8f0", width: `${70 + (i % 3) * 10}%` }} />
+          <div key={i} className="h-8 rounded-lg animate-pulse" style={{ backgroundColor: "#e9e9e9", width: `${70 + (i % 3) * 10}%` }} />
         ))}
       </div>
     )
@@ -464,7 +464,7 @@ export function FolderViewTab() {
     return (
       <div className="text-center py-16 text-gray-400 text-sm">
         Failed to load folder tree.{" "}
-        <button className="underline text-blue-500" onClick={() => qc.invalidateQueries({ queryKey: ["folder-tree"] })}>
+        <button className="underline text-[var(--text-tertiary)]0" onClick={() => qc.invalidateQueries({ queryKey: ["folder-tree"] })}>
           Retry
         </button>
       </div>
@@ -487,7 +487,7 @@ export function FolderViewTab() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-8 pr-3 py-2 text-sm border rounded-lg outline-none focus:ring-1"
             style={{
-              borderColor: "#e2e8f0",
+              borderColor: "#e9e9e9",
               backgroundColor: "#fff",
               color: "var(--text-primary)",
             }}
@@ -524,7 +524,7 @@ export function FolderViewTab() {
         <div
           className="flex-1 rounded-xl border overflow-y-auto"
           style={{
-            borderColor: "#e2e8f0",
+            borderColor: "#e9e9e9",
             backgroundColor: "#fff",
             padding: "12px",
             maxHeight: "calc(100vh - 340px)",
@@ -541,8 +541,8 @@ export function FolderViewTab() {
                   <div
                     key={file.id}
                     className="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-colors"
-                    style={{ backgroundColor: selectedFile?.id === file.id ? "#eff6ff" : undefined }}
-                    onMouseEnter={(e) => { if (selectedFile?.id !== file.id) e.currentTarget.style.backgroundColor = "#f8fafc" }}
+                    style={{ backgroundColor: selectedFile?.id === file.id ? "#F5F5F5" : undefined }}
+                    onMouseEnter={(e) => { if (selectedFile?.id !== file.id) e.currentTarget.style.backgroundColor = "#fafafa" }}
                     onMouseLeave={(e) => { if (selectedFile?.id !== file.id) e.currentTarget.style.backgroundColor = "transparent" }}
                     onClick={() => setSelectedFile(file)}
                   >
@@ -568,7 +568,7 @@ export function FolderViewTab() {
         {selectedFile && (
           <div
             className="rounded-xl border overflow-hidden"
-            style={{ borderColor: "#e2e8f0", width: "320px", minWidth: "280px", maxHeight: "calc(100vh - 340px)", overflowY: "auto" }}
+            style={{ borderColor: "#e9e9e9", width: "320px", minWidth: "280px", maxHeight: "calc(100vh - 340px)", overflowY: "auto" }}
           >
             <RightPanel file={selectedFile} onClose={() => setSelectedFile(null)} />
           </div>

@@ -32,17 +32,17 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_STYLE: Record<string, { bg: string; text: string }> = {
-  Sales:     { bg: "#dcfce7", text: "#166534" },
+  Sales:     { bg: "#F5F5F5", text: "#171717" },
   Purchase:  { bg: "#fee2e2", text: "#991b1b" },
-  Accounts:  { bg: "#ede9fe", text: "#5b21b6" },
-  HR:        { bg: "#fef3c7", text: "#92400e" },
-  Logistics: { bg: "#dbeafe", text: "#1e40af" },
-  Other:     { bg: "#f3f4f6", text: "#374151" },
+  Accounts:  { bg: "#F5F5F5", text: "#171717" },
+  HR:        { bg: "#F5F5F5", text: "#171717" },
+  Logistics: { bg: "#F5F5F5", text: "#171717" },
+  Other:     { bg: "#f4f4f4", text: "#444444" },
 }
 
 const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
-  New:      { bg: "#dcfce7", text: "#166534" },
-  Reviewed: { bg: "#f3f4f6", text: "#6b7280" },
+  New:      { bg: "#F5F5F5", text: "#171717" },
+  Reviewed: { bg: "#f4f4f4", text: "#6b7280" },
   Flagged:  { bg: "#fee2e2", text: "#991b1b" },
 }
 
@@ -130,7 +130,7 @@ function FlagModal({
         </label>
         <textarea
           className="w-full border border-gray-200 rounded-lg p-3 text-xs resize-none focus:outline-none focus:ring-2 transition-shadow"
-          style={{ focusRingColor: "#1D9E75" } as React.CSSProperties}
+          style={{ focusRingColor: "#171717" } as React.CSSProperties}
           rows={3}
           placeholder="Describe the issue with this document…"
           value={notes}
@@ -198,11 +198,11 @@ function AnalysisPanel({
                   "_blank"
                 )
               }
-              className="text-[11px] px-3 py-1.5 rounded-lg border font-medium transition-colors hover:bg-[#f0fdf9]"
-              style={{ borderColor: "#1D9E75", color: "#1D9E75" }}
+              className="text-[11px] px-3 py-1.5 rounded-lg border font-medium transition-colors hover:bg-[#F5F5F5]"
+              style={{ borderColor: "#171717", color: "#171717" }}
             >
-              {key === "summarise" && "✦ Summarise"}
-              {key === "anomalies" && "⚠ Flag anomalies"}
+              {key === "summarise" && "◆ Summarise"}
+              {key === "anomalies" && "△ Flag anomalies"}
               {key === "compare" && "⇌ Compare"}
             </button>
           ))}
@@ -386,7 +386,7 @@ export function DriveDocumentsTab() {
           onClick={() => syncMutation.mutate()}
           disabled={syncMutation.isPending}
           className="text-white border-0 flex items-center gap-2 text-sm"
-          style={{ backgroundColor: "#1D9E75" }}
+          style={{ backgroundColor: "#171717" }}
         >
           <RefreshCw size={14} className={syncMutation.isPending ? "animate-spin" : ""} />
           {syncMutation.isPending ? "Syncing…" : "Sync Now"}
@@ -398,12 +398,12 @@ export function DriveDocumentsTab() {
         <StatCard
           label="Total Files This Month"
           value={statsLoading ? "…" : (stats?.total ?? 0)}
-          accent="#1D9E75"
+          accent="#171717"
         />
         <StatCard
           label="Pending Review"
           value={statsLoading ? "…" : (stats?.pending ?? 0)}
-          accent="#F59E0B"
+          accent="#171717"
         />
         <StatCard
           label="Flagged Files"
@@ -413,7 +413,7 @@ export function DriveDocumentsTab() {
         <StatCard
           label="Last Sync"
           value={statsLoading ? "…" : formatLastSync(stats?.last_sync ?? "Never")}
-          accent="#3d7d5c"
+          accent="#6B6B6B"
         />
       </div>
 
@@ -430,8 +430,8 @@ export function DriveDocumentsTab() {
               }}
               className="px-4 py-1.5 rounded-full text-[13px] font-medium border-2 transition-all whitespace-nowrap shrink-0"
               style={{
-                borderColor: category === cat ? "#1D9E75" : "#e5e7eb",
-                backgroundColor: category === cat ? "#1D9E75" : "#fff",
+                borderColor: category === cat ? "#171717" : "#e8e8e8",
+                backgroundColor: category === cat ? "#171717" : "#fff",
                 color: category === cat ? "#fff" : "#555",
               }}
             >
@@ -448,7 +448,7 @@ export function DriveDocumentsTab() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by file name, party, doc type, uploaded by, date…"
-            className="w-full pl-9 pr-9 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white"
+            className="w-full pl-9 pr-9 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] bg-white"
           />
           {searchQuery && (
             <button
@@ -543,7 +543,7 @@ export function DriveDocumentsTab() {
                               <button
                                 onClick={() => handleView(f)}
                                 className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg text-white font-medium transition-opacity hover:opacity-90"
-                                style={{ backgroundColor: "#1D9E75" }}
+                                style={{ backgroundColor: "#171717" }}
                                 title="Open in Drive + analyse"
                               >
                                 <ExternalLink size={11} />

@@ -91,7 +91,7 @@ export function TransactionSummaryBand({
                 <div
                   key={m.month}
                   title={`${fmtMonthKey(m.month)} · ${fmtCompact(m.total)} · ${m.count} ${noun.toLowerCase()}`}
-                  className="flex-1 min-w-[3px] rounded-sm bg-[#1e3a2f]/70 hover:bg-[#c8a45c] transition-colors"
+                  className="flex-1 min-w-[3px] rounded-sm bg-[#171717]/70 hover:bg-[#171717] transition-colors"
                   style={{ height: `${Math.max(6, (m.total / maxMonth) * 100)}%` }}
                 />
               ))}
@@ -117,12 +117,12 @@ export function TransactionSummaryBand({
                     title={`${t.party} · ${t.count} · ${fmtCompact(t.total)}`}
                     className={`max-w-[160px] truncate text-[11px] px-2 py-1 rounded-md border transition-colors ${
                       isActive
-                        ? "bg-[#1e3a2f] text-white border-[#1e3a2f]"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-[#c8a45c]"
+                        ? "bg-[#171717] text-white border-[#171717]"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-[#171717]"
                     }`}
                   >
                     <span className="font-medium">{t.party}</span>
-                    <span className={isActive ? "text-[#d4c8a8] ml-1" : "text-gray-400 ml-1"}>{fmtCompact(t.total)}</span>
+                    <span className={isActive ? "text-[#8F8F8F] ml-1" : "text-gray-400 ml-1"}>{fmtCompact(t.total)}</span>
                   </button>
                 )
               })}
@@ -133,10 +133,10 @@ export function TransactionSummaryBand({
 
       {/* GST / tax subtotal row (Sales / Purchase only) */}
       {gst && (
-        <div className="flex flex-wrap gap-x-6 gap-y-1 px-4 py-2 bg-[#faf6ed] border-t border-gray-100 text-xs">
+        <div className="flex flex-wrap gap-x-6 gap-y-1 px-4 py-2 bg-[#F5F5F5] border-t border-gray-100 text-xs">
           <span className="text-gray-500">Taxable (excl. {gst.label}): <strong className="text-[#2c2c2a] font-semibold">{fmtCompact(gst.excl)}</strong></span>
           <span className="text-gray-500">{gst.label}: <strong className="text-[#2c2c2a] font-semibold">{fmtCompact(gst.gst)}</strong></span>
-          <span className="text-gray-500">Grand total: <strong className="text-[#1e3a2f] font-semibold">{fmtCompact(gst.total)}</strong></span>
+          <span className="text-gray-500">Grand total: <strong className="text-[#171717] font-semibold">{fmtCompact(gst.total)}</strong></span>
         </div>
       )}
     </div>
@@ -154,7 +154,7 @@ export function MonthDivider({ monthKey, monthly, noun }: {
   const m = monthly.find(x => x.month === monthKey)
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[11px] font-bold uppercase tracking-wide text-[#1e3a2f]">
+      <span className="text-[11px] font-bold uppercase tracking-wide text-[#171717]">
         {monthKey ? fmtLongMonth(monthKey + "-01") : "Undated"}
       </span>
       {m && (

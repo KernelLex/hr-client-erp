@@ -13,7 +13,7 @@ type Summary = { total: number; priced: number; coverage_pct: number }
 type ListResp = { rates: Rate[]; summary: Summary }
 
 const SCOPES = ["Any", "Carcass", "Shutter", "Finish", "Edge Band"]
-const field = "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+const field = "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-[var(--border-subtle)] focus:outline-none"
 const inr = (n?: number | null) => n == null || n === 0 ? "—" : "₹" + Number(n).toLocaleString("en-IN")
 
 const blank: Rate = { item_name: "", scope: "Any", rate: 0, uom: "SFT", status: "Active" }
@@ -40,7 +40,7 @@ export function FinishRatesPage() {
   const s = list.data?.summary
   const rates = list.data?.rates || []
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 mx-auto">
       <h1 className="text-2xl font-bold text-slate-800 mb-1">Finish / Material Rates</h1>
       <p className="text-sm text-gray-500 mb-5">Standard per-unit rates (typically per SFT) for the materials, finishes and edge bands used on BOQ lines. These feed the Material Requirement Sheet so procurement gets a real cost.</p>
 
@@ -56,11 +56,11 @@ export function FinishRatesPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-slate-700">Rate card</h2>
           <button onClick={() => sync.mutate()} disabled={sync.isPending}
-            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+            className="rounded-md bg-[var(--bg-inverse)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
             {sync.isPending ? "Syncing…" : "Sync from catalogue"}
           </button>
         </div>
-        {sync.data && <div className="text-sm text-emerald-600 mb-2">✓ Added {sync.data.created} new rate line(s) from the studio catalogue. Fill in the rates below.</div>}
+        {sync.data && <div className="text-sm text-[var(--text-primary)] mb-2">✓ Added {sync.data.created} new rate line(s) from the studio catalogue. Fill in the rates below.</div>}
         <table className="w-full text-sm">
           <thead><tr className="text-xs text-gray-400 border-b">
             <th className="text-left py-1">Finish / Material</th><th className="w-28">Applies to</th>
@@ -77,7 +77,7 @@ export function FinishRatesPage() {
               <td className="text-right"><input className={`${field} w-24 text-right`} type="number" value={draft.rate} onChange={(e) => setDraft({ ...draft, rate: parseFloat(e.target.value) || 0 })} /></td>
               <td><input className={`${field} w-16`} value={draft.uom} onChange={(e) => setDraft({ ...draft, uom: e.target.value })} /></td>
               <td className="text-center"><select className={field} value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })}><option>Active</option><option>Inactive</option></select></td>
-              <td className="text-right"><button onClick={() => draft.item_name && saveRate.mutate(draft)} className="text-indigo-600 hover:text-indigo-800 text-lg">+</button></td>
+              <td className="text-right"><button onClick={() => draft.item_name && saveRate.mutate(draft)} className="text-[var(--text-primary)] hover:text-[var(--text-primary)] text-lg">+</button></td>
             </tr>
           </tbody>
         </table>
@@ -99,10 +99,10 @@ function RateRow({ row, onSave, onDelete }: { row: Rate; onSave: (u: Rate) => vo
           value={rate} onChange={(e) => { setRate(parseFloat(e.target.value) || 0); setDirty(true) }} />
       </td>
       <td className="text-center text-gray-500">{row.uom}</td>
-      <td className="text-center"><span className={row.status === "Active" ? "text-emerald-600" : "text-gray-400"}>{row.status}</span></td>
+      <td className="text-center"><span className={row.status === "Active" ? "text-[var(--text-primary)]" : "text-gray-400"}>{row.status}</span></td>
       <td className="text-right whitespace-nowrap">
         {dirty
-          ? <button onClick={() => { onSave({ ...row, rate }); setDirty(false) }} className="text-indigo-600 hover:text-indigo-800 text-xs font-medium mr-2">Save</button>
+          ? <button onClick={() => { onSave({ ...row, rate }); setDirty(false) }} className="text-[var(--text-primary)] hover:text-[var(--text-primary)] text-xs font-medium mr-2">Save</button>
           : <span className="text-gray-300 text-xs mr-2">{inr(row.rate)}</span>}
         <button onClick={onDelete} className="text-red-400 hover:text-red-600">✕</button>
       </td>

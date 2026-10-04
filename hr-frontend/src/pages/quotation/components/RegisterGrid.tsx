@@ -70,7 +70,7 @@ export function RegisterGrid({
   }
 
   const inputStyle: React.CSSProperties = {
-    border: "0.5px solid var(--border, #e0d9cb)",
+    border: "0.5px solid var(--border, #E3E3E3)",
     background: "#fff",
     color: "var(--text-primary)",
   }
@@ -86,7 +86,7 @@ export function RegisterGrid({
             <button
               onClick={addRow}
               className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium"
-              style={{ border: "0.5px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}
+              style={{ border: "0.5px solid var(--border, #E3E3E3)", color: "var(--brand-primary)" }}
             >
               <Plus size={13} /> Add row
             </button>
@@ -102,10 +102,10 @@ export function RegisterGrid({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+      <div className="overflow-x-auto rounded-lg" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
         <table className="w-full text-xs" style={{ borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "var(--cream-dark, #ebe3d3)" }}>
+            <tr style={{ background: "var(--cream-dark, #F5F5F5)" }}>
               {columns.map((c) => (
                 <th key={c.key} className="px-2 py-1.5 text-left font-semibold" style={{ color: "var(--text-primary)", minWidth: c.width }}>
                   {c.label}
@@ -123,7 +123,7 @@ export function RegisterGrid({
               </tr>
             )}
             {draft.map((r, i) => (
-              <tr key={i} style={{ borderTop: "0.5px solid var(--border, #e0d9cb)" }}>
+              <tr key={i} style={{ borderTop: "0.5px solid var(--border, #E3E3E3)" }}>
                 {columns.map((c) => (
                   <td key={c.key} className="px-1.5 py-1">
                     {!editable || c.readOnly ? (

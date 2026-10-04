@@ -9,7 +9,7 @@ type Payment = { name?: string; vendor?: string; amount?: number; payment_date?:
 type PayResp = { payments: Payment[] }
 
 const inr = (n?: number) => "₹" + (n || 0).toLocaleString("en-IN")
-const field = "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+const field = "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-[var(--border-subtle)] focus:outline-none"
 const MODES = ["Bank Transfer", "Cheque", "Cash", "UPI", "Other"]
 const blank: Payment = { vendor: "", amount: 0, mode: "Bank Transfer" }
 
@@ -24,7 +24,7 @@ export function VendorPaymentsPage() {
   const k = ledger.data?.kpis
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 mx-auto">
       <h1 className="text-2xl font-bold text-slate-800 mb-1">Vendor Payments</h1>
       <p className="text-sm text-gray-500 mb-5">What each supplier is owed (received vs paid) and a log of payments made.</p>
 
@@ -33,7 +33,7 @@ export function VendorPaymentsPage() {
           <Stat label="Vendors" value={String(k.vendors)} />
           <Stat label="Ordered" value={inr(k.ordered)} />
           <Stat label="Received" value={inr(k.received)} />
-          <Stat label="Paid" value={inr(k.paid)} tone="text-emerald-600" />
+          <Stat label="Paid" value={inr(k.paid)} tone="text-[var(--text-primary)]" />
           <Stat label="Outstanding" value={inr(k.outstanding)} tone="text-red-600" />
         </div>
       )}
@@ -50,7 +50,7 @@ export function VendorPaymentsPage() {
                 <td className="text-right text-gray-500">{r.pos}</td>
                 <td className="text-right text-gray-500">{inr(r.ordered)}</td>
                 <td className="text-right text-gray-500">{inr(r.received)}</td>
-                <td className="text-right text-emerald-600">{inr(r.paid)}</td>
+                <td className="text-right text-[var(--text-primary)]">{inr(r.paid)}</td>
                 <td className={`text-right font-medium ${r.outstanding > 0 ? "text-red-600" : "text-gray-400"}`}>{inr(r.outstanding)}</td>
               </tr>
             ))}
@@ -68,7 +68,7 @@ export function VendorPaymentsPage() {
           <L label="Date"><input className={field} type="date" value={draft.payment_date || ""} onChange={(e) => setDraft({ ...draft, payment_date: e.target.value })} /></L>
           <L label="Mode"><select className={field} value={draft.mode} onChange={(e) => setDraft({ ...draft, mode: e.target.value })}>{MODES.map((m) => <option key={m}>{m}</option>)}</select></L>
           <L label="Reference"><input className={`${field} w-32`} value={draft.reference || ""} onChange={(e) => setDraft({ ...draft, reference: e.target.value })} /></L>
-          <button onClick={() => draft.vendor && draft.amount ? rec.mutate(draft) : null} disabled={rec.isPending} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40">{rec.isPending ? "…" : "Record"}</button>
+          <button onClick={() => draft.vendor && draft.amount ? rec.mutate(draft) : null} disabled={rec.isPending} className="rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-40">{rec.isPending ? "…" : "Record"}</button>
         </div>
       </div>
 

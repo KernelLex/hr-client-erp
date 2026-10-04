@@ -15,7 +15,7 @@ function useBackgroundAIWarmup() {
     qc.prefetchQuery({ queryKey: ["ai-status"], queryFn: checkAIStatus, staleTime: 60_000 })
     qc.prefetchQuery({ queryKey: ["business-snapshot"], queryFn: getBusinessSnapshot, staleTime: 5 * 60_000 })
     const timer = setTimeout(() => {
-      qc.prefetchQuery({ queryKey: ["dashboard-insights"], queryFn: getDashboardInsights, staleTime: 5 * 60_000 })
+      qc.prefetchQuery({ queryKey: ["dashboard-insights"], queryFn: () => getDashboardInsights(), staleTime: 5 * 60_000 })
     }, 8_000)
     return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,7 +53,12 @@ export function Layout() {
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <TopBar onToggleSidebar={() => setSidebarOpen((v) => !v)} onOpenSearch={() => setPaletteOpen(true)} />
         <main className="flex-1 overflow-auto">
-          <Outlet />
+          {/* Single centering authority for every page. Pages supply their own
+              horizontal padding; this just bounds + centres the content so wide
+              monitors don't leave dead gutters on one or both sides. */}
+          <div className="mx-auto w-full">
+            <Outlet />
+          </div>
         </main>
       </div>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />

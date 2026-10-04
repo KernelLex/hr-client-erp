@@ -144,7 +144,7 @@ export function ReceivablePayableTab({ kind }: { kind: "receivable" | "payable" 
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => { setAgingFilter(null); setPage(1) }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${!agingFilter ? "bg-[#1e3a2f] text-white border-[#1e3a2f]" : "bg-white text-gray-600 border-gray-200"}`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${!agingFilter ? "bg-[#171717] text-white border-[#171717]" : "bg-white text-gray-600 border-gray-200"}`}
         >
           All
         </button>
@@ -152,7 +152,7 @@ export function ReceivablePayableTab({ kind }: { kind: "receivable" | "payable" 
           <button
             key={bucket}
             onClick={() => { setAgingFilter(bucket); setPage(1) }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${agingFilter === bucket ? "bg-[#1e3a2f] text-white border-[#1e3a2f]" : "bg-white text-gray-600 border-gray-200"}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${agingFilter === bucket ? "bg-[#171717] text-white border-[#171717]" : "bg-white text-gray-600 border-gray-200"}`}
           >
             {AGING_LABELS[bucket]} · {fmtINR(amt)}
           </button>
@@ -164,13 +164,13 @@ export function ReceivablePayableTab({ kind }: { kind: "receivable" | "payable" 
           value={searchInput}
           onChange={e => setSearchInput(e.target.value)}
           placeholder={`Search ${cfg.partyLabel.toLowerCase()}…`}
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#c8a45c]"
+          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#171717]"
         />
       </form>
 
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Loader2 size={22} className="text-[#1e3a2f] animate-spin" />
+          <Loader2 size={22} className="text-[#171717] animate-spin" />
         </div>
       ) : isError ? (
         <p className="py-12 text-center text-sm text-red-500">Failed to load {cfg.noun.toLowerCase()}.</p>
@@ -208,7 +208,7 @@ export function ReceivablePayableTab({ kind }: { kind: "receivable" | "payable" 
       <div className="pt-2 border-t border-gray-100">
         <button
           onClick={() => setShowAdvances(v => !v)}
-          className="text-xs font-semibold text-[#1e3a2f] hover:underline"
+          className="text-xs font-semibold text-[#171717] hover:underline"
         >
           {showAdvances ? "Hide" : "Show"} {kind === "receivable" ? "advances received" : "advances paid"}
         </button>

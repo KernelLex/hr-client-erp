@@ -27,8 +27,8 @@ function initials(name?: string) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    Pending:  "bg-yellow-100 text-yellow-700",
-    Approved: "bg-green-100 text-green-700",
+    Pending:  "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+    Approved: "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
     Rejected: "bg-red-100 text-red-700",
   }
   return (
@@ -107,7 +107,7 @@ function ApproveDialog({ leave, onClose, onConfirm, isPending }: ApproveDialogPr
           <Button
             onClick={onConfirm}
             disabled={isPending}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] text-white"
           >
             {isPending ? "Approving…" : "✓ Approve"}
           </Button>
@@ -149,12 +149,12 @@ function LeaveCard({ leave }: { leave: LeaveApplication }) {
 
   return (
     <>
-      <Card className="bg-white shadow-sm border border-gray-200 hover:border-blue-200 transition-colors">
+      <Card className="bg-white shadow-sm border border-gray-200 hover:border-[var(--border-subtle)] transition-colors">
         <CardContent className="pt-4 pb-4">
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div className="size-11 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-              <span className="text-sm font-bold text-forest-800">{initials(leave.employee_name)}</span>
+            <div className="size-11 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center shrink-0">
+              <span className="text-sm font-bold text-[var(--text-primary)]">{initials(leave.employee_name)}</span>
             </div>
 
             {/* Info */}
@@ -181,7 +181,7 @@ function LeaveCard({ leave }: { leave: LeaveApplication }) {
               <Button
                 size="sm"
                 onClick={() => setShowApprove(true)}
-                className="h-8 bg-green-600 hover:bg-green-700 text-white text-xs gap-1"
+                className="h-8 bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] text-white text-xs gap-1"
               >
                 <CheckCircle2 size={13} /> Approve
               </Button>
@@ -232,8 +232,8 @@ function PendingTab() {
         </div>
       ) : pending.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 py-16 text-center">
-          <CheckCircle2 size={40} className="text-green-300 mx-auto mb-3" />
-          <p className="text-base font-medium text-gray-500">No pending requests 🎉</p>
+          <CheckCircle2 size={40} className="text-[var(--text-tertiary)] mx-auto mb-3" />
+          <p className="text-base font-medium text-gray-500">No pending requests ✓</p>
           <p className="text-sm text-gray-400 mt-1">All leave requests have been reviewed</p>
         </div>
       ) : (
@@ -260,7 +260,7 @@ function AllRequestsTab() {
             key={s}
             onClick={() => setStatusFilter(s)}
             className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
-              statusFilter === s ? "bg-forest-700 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              statusFilter === s ? "bg-[var(--bg-inverse)] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {s}
@@ -344,7 +344,7 @@ function EmployeeHistoryModal({ email, name, onClose }: { email: string; name: s
         {Object.keys(byType).length > 0 && (
           <div className="px-6 py-3 border-b border-gray-50 flex gap-4 flex-wrap">
             {Object.entries(byType).map(([type, days]) => (
-              <span key={type} className="text-xs bg-blue-50 text-forest-800 px-2.5 py-1 rounded-full">
+              <span key={type} className="text-xs bg-[var(--bg-subtle)] text-[var(--text-primary)] px-2.5 py-1 rounded-full">
                 {type}: <strong>{days}d</strong>
               </span>
             ))}
@@ -422,8 +422,8 @@ function ByEmployeeTab() {
             <Card key={empId} className="bg-white shadow-sm border border-gray-200">
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="size-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-sm font-bold text-forest-800">{initials(emp.name)}</span>
+                  <div className="size-10 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center">
+                    <span className="text-sm font-bold text-[var(--text-primary)]">{initials(emp.name)}</span>
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{emp.name}</p>
@@ -432,12 +432,12 @@ function ByEmployeeTab() {
                 </div>
                 <div className="flex gap-3 mb-3">
                   {emp.pending > 0 && (
-                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs bg-[var(--bg-subtle)] text-[var(--text-primary)] px-2 py-0.5 rounded-full font-medium">
                       {emp.pending} pending
                     </span>
                   )}
                   {emp.approved > 0 && (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs bg-[var(--bg-subtle)] text-[var(--text-primary)] px-2 py-0.5 rounded-full font-medium">
                       {emp.approved} approved
                     </span>
                   )}
@@ -543,10 +543,10 @@ function SummaryTab() {
                     <td className="px-3 py-3 text-gray-600">{s.by_type["Work From Home"] ?? 0}</td>
                     <td className="px-3 py-3">
                       {s.pending > 0 ? (
-                        <span className="text-yellow-700 font-medium">{s.pending}</span>
+                        <span className="text-[var(--text-primary)] font-medium">{s.pending}</span>
                       ) : <span className="text-gray-400">0</span>}
                     </td>
-                    <td className="px-3 py-3 text-green-700 font-medium">{s.approved}</td>
+                    <td className="px-3 py-3 text-[var(--text-primary)] font-medium">{s.approved}</td>
                     <td className="px-3 py-3 text-red-600">{s.rejected}</td>
                   </tr>
                 ))
@@ -588,7 +588,7 @@ function AdminAddLeaveModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -642,7 +642,7 @@ function AdminAddLeaveModal({ onClose }: { onClose: () => void }) {
         <p className="text-[11px] text-gray-400">Total days are computed automatically (Sundays excluded).</p>
 
         <div className="flex gap-2 pt-1">
-          <Button className="flex-1 bg-blue-600 hover:bg-blue-700 gap-1" onClick={handleSubmit} disabled={!canSubmit || apply.isPending}>
+          <Button className="flex-1 bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] gap-1" onClick={handleSubmit} disabled={!canSubmit || apply.isPending}>
             {apply.isPending ? "Adding…" : "Add Leave"}
           </Button>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -688,7 +688,7 @@ export function LeaveAdminPanel() {
           >
             {label}
             {badge !== undefined && badge > 0 && (
-              <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+              <span className="bg-[var(--bg-subtle)]0 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                 {badge}
               </span>
             )}
@@ -696,7 +696,7 @@ export function LeaveAdminPanel() {
         ))}
       </div>
 
-      <Button size="sm" className="ml-auto bg-blue-600 hover:bg-blue-700 gap-1" onClick={() => setShowAddLeave(true)}>
+      <Button size="sm" className="ml-auto bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] gap-1" onClick={() => setShowAddLeave(true)}>
         <Plus size={14} /> Add Leave for Employee
       </Button>
       </div>

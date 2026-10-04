@@ -76,7 +76,7 @@ export function VoucherDetailDrawer({ name, guid, onClose }: { name?: string; gu
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           {isLoading && (
             <div className="flex justify-center py-16">
-              <Loader2 size={22} className="text-[#1e3a2f] animate-spin" />
+              <Loader2 size={22} className="text-[#171717] animate-spin" />
             </div>
           )}
           {isError && (
@@ -90,7 +90,7 @@ export function VoucherDetailDrawer({ name, guid, onClose }: { name?: string; gu
                   <p className="text-base font-semibold text-[#2c2c2a]">{data.voucher_number || data.name}</p>
                   <p className="text-xs text-gray-400 mt-0.5">{data.voucher_date}</p>
                 </div>
-                <p className="text-lg font-bold text-[#1e3a2f]">{data.amount_fmt || fmtINR(data.amount)}</p>
+                <p className="text-lg font-bold text-[#171717]">{data.amount_fmt || fmtINR(data.amount)}</p>
               </div>
 
               {data.party_name && (
@@ -114,7 +114,7 @@ export function VoucherDetailDrawer({ name, guid, onClose }: { name?: string; gu
                   {(data.all_ledger_entries ?? []).map((e, i) => (
                     <div key={i} className="flex items-center justify-between px-3 py-2 text-sm">
                       <span className="text-gray-700">{e.ledger}</span>
-                      <span className={`font-mono text-xs font-semibold ${e.is_dr ? "text-red-600" : "text-emerald-700"}`}>
+                      <span className={`font-mono text-xs font-semibold ${e.is_dr ? "text-red-600" : "text-[var(--text-primary)]"}`}>
                         {e.is_dr ? "Dr" : "Cr"} {fmtINR(e.amount)}
                       </span>
                     </div>

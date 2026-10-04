@@ -32,7 +32,7 @@ export function PipelinePage() {
           </button>
           {pipeline && (
             <>
-              <span style={{ color: "#E2E8F0" }}>/</span>
+              <span style={{ color: "#e9e9e9" }}>/</span>
               <div>
                 <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                   {pipeline.job_opening.job_title}
@@ -52,9 +52,9 @@ export function PipelinePage() {
           <button
             onClick={() => setAddCandidateOpen(true)}
             className="flex items-center gap-1.5 text-sm font-semibold text-white px-3 py-1.5 rounded-lg transition-all"
-            style={{ backgroundColor: "#1e3a2f" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#16291f")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1e3a2f")}
+            style={{ backgroundColor: "#171717" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#171717")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#171717")}
           >
             <UserPlus size={13} />
             Add Candidate

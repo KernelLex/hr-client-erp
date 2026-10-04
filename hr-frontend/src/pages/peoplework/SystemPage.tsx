@@ -179,7 +179,7 @@ function RowDetail({
     <div className="fixed inset-0 z-[500] flex justify-end">
       <div className="absolute inset-0" style={{ background: "rgba(30,58,47,0.45)" }} onClick={onClose} />
       <div className="relative flex h-full w-full max-w-[440px] flex-col bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           <h2 className="font-heading text-lg font-semibold" style={{ color: "var(--brand-primary)" }}>
             {spec.title ? spec.title(row) : "Details"}
           </h2>
@@ -189,7 +189,7 @@ function RowDetail({
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className="space-y-2.5">
             {entries.map(([k, v]) => (
-              <div key={k} className="flex items-start justify-between gap-4 border-b pb-2 text-sm" style={{ borderColor: "var(--border, #efeadf)" }}>
+              <div key={k} className="flex items-start justify-between gap-4 border-b pb-2 text-sm" style={{ borderColor: "var(--border, #F5F5F5)" }}>
                 <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{k}</span>
                 <span className="text-right" style={{ color: "var(--text-primary)" }}>{renderVal(k, v)}</span>
               </div>
@@ -213,7 +213,7 @@ function RowDetail({
         </div>
 
         {actions.length > 0 && (
-          <div className="flex flex-wrap justify-end gap-2 border-t px-5 py-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="flex flex-wrap justify-end gap-2 border-t px-5 py-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
             {actions.map((a) => (
               <button
                 key={a.label}

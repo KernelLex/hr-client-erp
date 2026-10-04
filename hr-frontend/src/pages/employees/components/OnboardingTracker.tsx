@@ -96,30 +96,30 @@ export function OnboardingTracker({ employeeId, currentStage, docsChecklist, itC
               <div className="flex flex-col items-center">
                 <div className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all",
-                  done ? "bg-green-500 border-green-500 text-white"
-                    : active ? "bg-forest-700 border-forest-700 text-white"
+                  done ? "bg-[var(--bg-subtle)]0 border-[var(--border-subtle)] text-white"
+                    : active ? "bg-[var(--bg-inverse)] border-[var(--border-subtle)] text-white"
                     : "bg-white border-gray-200 text-gray-400"
                 )}>
                   {done ? <Check size={14} /> : i + 1}
                 </div>
-                <span className={cn("text-[10px] mt-1 font-medium", active ? "text-forest-700" : done ? "text-green-600" : "text-gray-400")}>
+                <span className={cn("text-[10px] mt-1 font-medium", active ? "text-[var(--text-primary)]" : done ? "text-[var(--text-primary)]" : "text-gray-400")}>
                   {stage.short}
                 </span>
               </div>
               {i < STAGES.length - 1 && (
-                <div className={cn("flex-1 h-0.5 mx-1 mb-4 transition-colors", done ? "bg-green-400" : "bg-gray-200")} />
+                <div className={cn("flex-1 h-0.5 mx-1 mb-4 transition-colors", done ? "bg-[var(--bg-inverse)]" : "bg-gray-200")} />
               )}
             </div>
           )
         })}
         {/* Active end state */}
         <div className="flex items-center">
-          <div className={cn("w-0.5 h-0.5 mx-1 mb-4 flex-1", currentStage === "Active" ? "bg-green-400" : "bg-gray-200")} />
+          <div className={cn("w-0.5 h-0.5 mx-1 mb-4 flex-1", currentStage === "Active" ? "bg-[var(--bg-inverse)]" : "bg-gray-200")} />
           <div className="flex flex-col items-center">
-            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all", currentStage === "Active" ? "bg-green-500 border-green-500 text-white" : "bg-white border-gray-200 text-gray-400")}>
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all", currentStage === "Active" ? "bg-[var(--bg-subtle)]0 border-[var(--border-subtle)] text-white" : "bg-white border-gray-200 text-gray-400")}>
               {currentStage === "Active" ? <Check size={14} /> : "✓"}
             </div>
-            <span className={cn("text-[10px] mt-1 font-medium", currentStage === "Active" ? "text-green-600" : "text-gray-400")}>Active</span>
+            <span className={cn("text-[10px] mt-1 font-medium", currentStage === "Active" ? "text-[var(--text-primary)]" : "text-gray-400")}>Active</span>
           </div>
         </div>
       </div>
@@ -146,13 +146,13 @@ export function OnboardingTracker({ employeeId, currentStage, docsChecklist, itC
       )}
 
       {currentStage === "First Day" && (
-        <div className="bg-orange-50 border border-orange-100 rounded-lg p-4 mb-4 text-sm text-orange-700">
+        <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg p-4 mb-4 text-sm text-[var(--text-primary)]">
           All setup complete. Click below to mark the employee as joined and send a welcome email.
         </div>
       )}
 
       {currentStage === "Active" && (
-        <div className="bg-green-50 border border-green-100 rounded-lg p-4 text-sm text-green-700 flex items-center gap-2">
+        <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg p-4 text-sm text-[var(--text-primary)] flex items-center gap-2">
           <Check size={16} />
           Onboarding complete — employee is active.
         </div>
@@ -162,12 +162,12 @@ export function OnboardingTracker({ employeeId, currentStage, docsChecklist, itC
       {isActive && NEXT_STAGE[currentStage] && (
         <div className="mt-4">
           {!canGo && blockReason && (
-            <p className="text-xs text-amber-600 mb-2 flex items-center gap-1">
-              <span>⚠</span> {blockReason}
+            <p className="text-xs text-[var(--text-primary)] mb-2 flex items-center gap-1">
+              <span>△</span> {blockReason}
             </p>
           )}
           <Button
-            className={cn("w-full gap-2", currentStage === "First Day" ? "bg-green-600 hover:bg-green-700 text-white" : "")}
+            className={cn("w-full gap-2", currentStage === "First Day" ? "bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] text-white" : "")}
             disabled={!canGo || updateStage.isPending || sendWelcome.isPending}
             onClick={handleAdvance}
           >

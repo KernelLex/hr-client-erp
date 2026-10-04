@@ -37,7 +37,6 @@ const AdminEmployeesPage = lazy(() => import("@/pages/admin/employees/AdminEmplo
 const AdminEmployeeDetailPage = lazy(() => import("@/pages/admin/employees/AdminEmployeeDetailPage").then(m => ({ default: m.AdminEmployeeDetailPage })))
 const AttendancePage = lazy(() => import("@/pages/admin/attendance/AttendancePage").then(m => ({ default: m.AttendancePage })))
 const LeavePage = lazy(() => import("@/pages/leave/LeavePage").then(m => ({ default: m.LeavePage })))
-const PipelineBoard = lazy(() => import("@/pages/crm/PipelineBoard").then(m => ({ default: m.PipelineBoard })))
 const NewLeadForm = lazy(() => import("@/pages/crm/NewLeadForm").then(m => ({ default: m.NewLeadForm })))
 const LeadDetail = lazy(() => import("@/pages/crm/LeadDetail").then(m => ({ default: m.LeadDetail })))
 const MyClaimsDashboard = lazy(() => import("@/pages/expenses/MyClaimsDashboard").then(m => ({ default: m.MyClaimsDashboard })))
@@ -106,13 +105,17 @@ const WorkflowApprovalsPage = lazy(() => import("@/pages/peoplework/screens/Appr
 const TrainingProgramsPage = lazy(() => import("@/pages/peoplework/screens/Training").then(m => ({ default: m.TrainingProgramsPage })))
 const TrainingSessionsPage = lazy(() => import("@/pages/peoplework/screens/Training").then(m => ({ default: m.TrainingSessionsPage })))
 const ExitManagementPage = lazy(() => import("@/pages/peoplework/screens/ExitManagement").then(m => ({ default: m.ExitManagementPage })))
-const SalaryStructuresPage = lazy(() => import("@/pages/peoplework/screens/Payroll").then(m => ({ default: m.SalaryStructuresPage })))
 const SalaryAssignmentsPage = lazy(() => import("@/pages/peoplework/screens/Payroll").then(m => ({ default: m.SalaryAssignmentsPage })))
 const PayrollRunsPage = lazy(() => import("@/pages/peoplework/screens/Payroll").then(m => ({ default: m.PayrollRunsPage })))
 const SalarySlipsPage = lazy(() => import("@/pages/peoplework/screens/Payroll").then(m => ({ default: m.SalarySlipsPage })))
 const OnboardingPage = lazy(() => import("@/pages/peoplework/screens/Onboarding").then(m => ({ default: m.OnboardingPage })))
 const AppraisalCyclesPage = lazy(() => import("@/pages/peoplework/screens/Appraisal").then(m => ({ default: m.AppraisalCyclesPage })))
 const AppraisalsPage = lazy(() => import("@/pages/peoplework/screens/Appraisal").then(m => ({ default: m.AppraisalsPage })))
+// Tabbed hubs (monochrome overhaul) — bundle grouped pages under one entry.
+const CrmHub = lazy(() => import("@/pages/hubs/CrmHub").then(m => ({ default: m.CrmHub })))
+const TermsHub = lazy(() => import("@/pages/hubs/TermsHub").then(m => ({ default: m.TermsHub })))
+const CatalogueHub = lazy(() => import("@/pages/hubs/CatalogueHub").then(m => ({ default: m.CatalogueHub })))
+const PayrollHub = lazy(() => import("@/pages/hubs/PayrollHub").then(m => ({ default: m.PayrollHub })))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -174,7 +177,7 @@ function App() {
                 <Route path="/admin/attendance" element={<AttendancePage />} />
                 <Route path="/leave" element={<LeavePage />} />
                 {/* CRM routes */}
-                <Route path="/crm" element={<PipelineBoard />} />
+                <Route path="/crm" element={<CrmHub />} />
                 <Route path="/crm/new" element={<NewLeadForm />} />
                 <Route path="/crm/enquiries" element={<EnquiriesPage />} />
                 <Route path="/crm/opportunities" element={<OpportunitiesPage />} />
@@ -213,9 +216,12 @@ function App() {
                 {/* Quotation Studio — Sales Orders (§4.11) */}
                 <Route path="/quotation/sales-orders" element={<SalesOrdersPage />} />
                 <Route path="/quotation/sales-orders/:name" element={<SalesOrderEditor />} />
-                {/* Quotation Studio — Terms library (§4.10) */}
+                {/* Quotation Studio — Terms library (§4.10) + bundled hub */}
+                <Route path="/quotation/terms" element={<TermsHub />} />
                 <Route path="/quotation/terms-clauses" element={<TermsClausesPage />} />
                 <Route path="/quotation/terms-templates" element={<TermsTemplatesPage />} />
+                {/* Quotation Studio — Catalogue masters bundled hub */}
+                <Route path="/quotation/catalogue" element={<CatalogueHub />} />
                 {/* Expense routes */}
                 <Route path="/expenses" element={<MyClaimsDashboard />} />
                 <Route path="/expenses/new" element={<NewClaimForm />} />
@@ -264,7 +270,7 @@ function App() {
                 <Route path="/hrms/exit" element={<ExitManagementPage />} />
                 <Route path="/hrms/appraisal-cycles" element={<AppraisalCyclesPage />} />
                 <Route path="/hrms/appraisals" element={<AppraisalsPage />} />
-                <Route path="/hrms/payroll" element={<SalaryStructuresPage />} />
+                <Route path="/hrms/payroll" element={<PayrollHub />} />
                 <Route path="/hrms/salary-assignments" element={<SalaryAssignmentsPage />} />
                 <Route path="/hrms/payroll-runs" element={<PayrollRunsPage />} />
                 <Route path="/hrms/salary-slips" element={<SalarySlipsPage />} />

@@ -21,9 +21,9 @@ const EMPLOYEES: Employee[] = [
     department: "Sales",
     categories: ["Sales"],
     required: ["Quotation", "Sales Order", "Sales Invoice", "Receipt"],
-    color: "#1D9E75",
-    bg: "#f0fdf9",
-    border: "#bbf7d0",
+    color: "#171717",
+    bg: "#F5F5F5",
+    border: "#F5F5F5",
   },
   {
     name: "Lookman",
@@ -31,9 +31,9 @@ const EMPLOYEES: Employee[] = [
     department: "Purchase + Logistics",
     categories: ["Purchase", "Logistics"],
     required: ["Purchase Order", "Purchase Invoice", "GRN", "Transport Doc"],
-    color: "#F97316",
-    bg: "#fff7ed",
-    border: "#fed7aa",
+    color: "#171717",
+    bg: "#F5F5F5",
+    border: "#E3E3E3",
   },
   {
     name: "Manjunath",
@@ -41,9 +41,9 @@ const EMPLOYEES: Employee[] = [
     department: "Accounts",
     categories: ["Accounts"],
     required: ["Trial Balance", "Profit & Loss", "Balance Sheet", "Ledger"],
-    color: "#8B5CF6",
-    bg: "#fdf8ef",
-    border: "#ddd6fe",
+    color: "#171717",
+    bg: "#F5F5F5",
+    border: "#F5F5F5",
   },
   {
     name: "Bhagya",
@@ -51,9 +51,9 @@ const EMPLOYEES: Employee[] = [
     department: "HR + Payroll",
     categories: ["HR"],
     required: ["Attendance", "Payroll Summary", "Bank Reconciliation"],
-    color: "#F59E0B",
-    bg: "#fffbeb",
-    border: "#fde68a",
+    color: "#171717",
+    bg: "#F5F5F5",
+    border: "#F5F5F5",
   },
 ]
 
@@ -74,7 +74,7 @@ function getInitials(name: string) {
 }
 
 function ProgressBar({ pct }: { pct: number }) {
-  const color = pct === 100 ? "#1D9E75" : pct >= 50 ? "#F59E0B" : "#EF4444"
+  const color = pct === 100 ? "#171717" : pct >= 50 ? "#171717" : "#EF4444"
   return (
     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
       <div
@@ -122,7 +122,7 @@ function FileItem({
             href={file.drive_view_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-600 shrink-0 ml-1"
+            className="text-[var(--text-primary)] hover:text-[var(--text-primary)] shrink-0 ml-1"
             title="Open in Drive"
           >
             <ExternalLink className="w-3 h-3" />
@@ -134,7 +134,7 @@ function FileItem({
         <p className="text-[10px] text-gray-500">
           ↑ {file.uploaded_by_name}
           {isWrongUploader && (
-            <span className="ml-1 text-amber-600 font-medium">⚠ expected {expectedName}</span>
+            <span className="ml-1 text-[var(--text-primary)] font-medium">△ expected {expectedName}</span>
           )}
         </p>
       )}
@@ -197,7 +197,7 @@ function EmployeeCard({
           <span className="text-gray-500">{uploaded} of {total} uploaded</span>
           <span
             className="font-semibold"
-            style={{ color: pct === 100 ? "#1D9E75" : pct >= 50 ? "#F59E0B" : "#EF4444" }}
+            style={{ color: pct === 100 ? "#171717" : pct >= 50 ? "#171717" : "#EF4444" }}
           >
             {pct}%
           </span>
@@ -207,9 +207,9 @@ function EmployeeCard({
 
       {/* Wrong uploader warning */}
       {wrongUploaderCount > 0 && (
-        <div className="flex items-start gap-1.5 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-          <p className="text-[11px] text-amber-700">
+        <div className="flex items-start gap-1.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl px-3 py-2">
+          <AlertTriangle className="w-3.5 h-3.5 text-[var(--text-tertiary)]0 shrink-0 mt-0.5" />
+          <p className="text-[11px] text-[var(--text-primary)]">
             {wrongUploaderCount} file{wrongUploaderCount > 1 ? "s" : ""} uploaded by wrong account
           </p>
         </div>
@@ -235,14 +235,14 @@ function EmployeeCard({
                 <span
                   className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5"
                   style={{
-                    backgroundColor: present ? "#dcfce7" : "#fee2e2",
-                    color: present ? "#166534" : "#991b1b",
+                    backgroundColor: present ? "#F5F5F5" : "#fee2e2",
+                    color: present ? "#171717" : "#991b1b",
                   }}
                 >
                   {present ? "✓" : "✗"}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <span style={{ color: present ? "#374151" : "#9ca3af" }}>
+                  <span style={{ color: present ? "#444444" : "#9ca3af" }}>
                     {docType}
                     {!present && (
                       <span className="ml-1 text-[10px] text-red-400 font-medium">(missing)</span>
@@ -362,7 +362,7 @@ export function UploadStatusTab() {
   }
 
   const summaryPctColor =
-    summary.pct === 100 ? "#1D9E75" : summary.pct >= 50 ? "#F59E0B" : "#EF4444"
+    summary.pct === 100 ? "#171717" : summary.pct >= 50 ? "#171717" : "#EF4444"
 
   return (
     <div className="space-y-4">
@@ -373,7 +373,7 @@ export function UploadStatusTab() {
           <select
             value={selectedMonth}
             onChange={e => setSelectedMonth(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-forest-400"
+            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-[var(--border-subtle)]"
           >
             {MONTH_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -416,7 +416,7 @@ export function UploadStatusTab() {
 
         <div className="flex gap-5 flex-wrap">
           <div className="text-center">
-            <p className="text-lg font-bold text-green-600">{summary.totalUploaded}</p>
+            <p className="text-lg font-bold text-[var(--text-primary)]">{summary.totalUploaded}</p>
             <p className="text-[10px] text-gray-400">uploaded</p>
           </div>
           <div className="text-center">
@@ -425,12 +425,12 @@ export function UploadStatusTab() {
           </div>
           {summary.wrongUploaderCount > 0 && (
             <div className="text-center">
-              <p className="text-lg font-bold text-amber-500">{summary.wrongUploaderCount}</p>
+              <p className="text-lg font-bold text-[var(--text-tertiary)]0">{summary.wrongUploaderCount}</p>
               <p className="text-[10px] text-gray-400">wrong uploader</p>
             </div>
           )}
           {summary.pct === 100 && (
-            <div className="flex items-center gap-1.5 text-green-600">
+            <div className="flex items-center gap-1.5 text-[var(--text-primary)]">
               <CheckCircle2 className="w-5 h-5" />
               <span className="text-[13px] font-medium">All complete!</span>
             </div>

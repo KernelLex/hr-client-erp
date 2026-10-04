@@ -17,9 +17,9 @@ const STORAGE_KEY = "vera_ai_chat_pos"
 function TypingIndicator() {
   return (
     <div className="flex items-center gap-1 px-3 py-2">
-      <span className="w-2 h-2 bg-forest-400 rounded-full animate-bounce [animation-delay:0ms]" />
-      <span className="w-2 h-2 bg-forest-400 rounded-full animate-bounce [animation-delay:150ms]" />
-      <span className="w-2 h-2 bg-forest-400 rounded-full animate-bounce [animation-delay:300ms]" />
+      <span className="w-2 h-2 bg-[var(--bg-inverse)] rounded-full animate-bounce [animation-delay:0ms]" />
+      <span className="w-2 h-2 bg-[var(--bg-inverse)] rounded-full animate-bounce [animation-delay:150ms]" />
+      <span className="w-2 h-2 bg-[var(--bg-inverse)] rounded-full animate-bounce [animation-delay:300ms]" />
     </div>
   )
 }
@@ -190,18 +190,18 @@ export default function AIChat() {
           style={{ ...panelStyle, position: "fixed" }}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-forest-600 to-gold-600 px-4 py-3 flex items-center justify-between shrink-0">
+          <div className="bg-gradient-to-r from-[var(--bg-inverse)] to-[var(--bg-inverse)] px-4 py-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <Bot className="w-5 h-5 text-white" />
               <div>
                 <p className="text-white font-semibold text-sm">Vera AI</p>
-                <p className="text-forest-200 text-xs">
+                <p className="text-[var(--text-tertiary)] text-xs">
                   {isReady ? `${status.active_model}` : "Offline"}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {isReady && <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />}
+              {isReady && <span className="w-2 h-2 bg-[var(--bg-inverse)] rounded-full animate-pulse" />}
               <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white transition-colors">
                 <X className="w-4 h-4" />
               </button>
@@ -212,7 +212,7 @@ export default function AIChat() {
           <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
             {history.length === 0 && (
               <div className="text-center py-6">
-                <Sparkles className="w-8 h-8 text-forest-400 mx-auto mb-2" />
+                <Sparkles className="w-8 h-8 text-[var(--text-primary)] mx-auto mb-2" />
                 <p className="text-sm text-gray-600 font-medium">Hi! I'm Vera AI</p>
                 <p className="text-xs text-gray-400 mt-1">Ask me anything about your business data</p>
               </div>
@@ -221,7 +221,7 @@ export default function AIChat() {
               <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap ${
                   msg.role === "user"
-                    ? "bg-forest-600 text-white rounded-br-sm"
+                    ? "bg-[var(--bg-inverse)] text-white rounded-br-sm"
                     : "bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-sm"
                 }`}>
                   {msg.content}
@@ -236,8 +236,8 @@ export default function AIChat() {
               </div>
             )}
             {!isReady && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
-                Ollama is not running. Start it with <code className="bg-amber-100 px-1 rounded">ollama serve</code>.
+              <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl p-3 text-xs text-[var(--text-primary)]">
+                Ollama is not running. Start it with <code className="bg-[var(--bg-subtle)] px-1 rounded">ollama serve</code>.
               </div>
             )}
             <div ref={bottomRef} />
@@ -250,7 +250,7 @@ export default function AIChat() {
                 <button
                   key={chip}
                   onClick={() => handleSend(chip)}
-                  className="text-xs bg-forest-50 text-forest-700 border border-forest-200 rounded-full px-2.5 py-1 hover:bg-forest-100 transition-colors"
+                  className="text-xs bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-full px-2.5 py-1 hover:bg-[var(--bg-subtle)] transition-colors"
                 >
                   {chip}
                 </button>
@@ -269,13 +269,13 @@ export default function AIChat() {
                 placeholder={isReady ? "Ask Vera anything…" : "AI offline"}
                 disabled={!isReady || isPending}
                 rows={1}
-                className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-300 disabled:opacity-50 max-h-24"
+                className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] disabled:opacity-50 max-h-24"
                 style={{ overflowY: "auto" }}
               />
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || !isReady || isPending}
-                className="p-2 bg-forest-600 text-white rounded-xl hover:bg-forest-700 disabled:opacity-40 transition-colors flex-shrink-0"
+                className="p-2 bg-[var(--bg-inverse)] text-white rounded-xl hover:bg-[var(--bg-inverse)] disabled:opacity-40 transition-colors flex-shrink-0"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
@@ -298,7 +298,7 @@ export default function AIChat() {
             open
               ? "bg-gray-700"
               : isReady
-              ? "bg-gradient-to-br from-forest-600 to-gold-600"
+              ? "bg-gradient-to-br from-[var(--bg-inverse)] to-[var(--bg-inverse)]"
               : "bg-gray-400"
           }`}
         >
@@ -308,7 +308,7 @@ export default function AIChat() {
             <Bot className="w-6 h-6 text-white" />
           )}
           {!open && isReady && (
-            <span className="absolute top-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
+            <span className="absolute top-0 right-0 w-3 h-3 bg-[var(--bg-inverse)] border-2 border-white rounded-full" />
           )}
         </button>
       </div>

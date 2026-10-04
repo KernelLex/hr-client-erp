@@ -8,11 +8,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, Menu, Eye, X } from "lucide-react"
+import { LogOut, Menu, Eye, X, Moon, Sun, Rows3 } from "lucide-react"
 import { api, apiUrl } from "@/lib/api"
 import { useAuth, type ViewAsUser } from "@/context/AuthContext"
 import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
 import { CompanySwitcher } from "./CompanySwitcher"
+import { getTheme, toggleTheme as toggleThemePref, cycleDensity } from "@/lib/uiPrefs"
+
+// Density + light/dark controls (monochrome overhaul). State is local to force
+// a re-render; the actual preference lives on <html> + localStorage.
+function DisplayControls() {
+  const [theme, setThemeState] = useState(getTheme())
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        title="Density"
+        onClick={() => cycleDensity()}
+        className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-[var(--overlay-hover)]"
+        style={{ color: "var(--text-secondary)" }}
+      >
+        <Rows3 size={16} />
+      </button>
+      <button
+        title="Theme"
+        onClick={() => setThemeState(toggleThemePref())}
+        className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-[var(--overlay-hover)]"
+        style={{ color: "var(--text-secondary)" }}
+      >
+        {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
+    </div>
+  )
+}
 
 interface TopBarProps {
   onToggleSidebar?: () => void
@@ -60,7 +87,7 @@ function ViewAsSwitcher() {
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] transition-colors"
-        style={{ borderColor: isImpersonating ? "var(--gold)" : "var(--border,#e0d9cb)", color: isImpersonating ? "var(--brand-primary)" : "#6a6a5c" }}
+        style={{ borderColor: isImpersonating ? "var(--border-strong)" : "var(--border-control)", color: isImpersonating ? "var(--text-primary)" : "var(--text-secondary)" }}
       >
         <Eye size={13} />
         {isImpersonating ? `Viewing: ${viewAs?.name}` : "View as user"}
@@ -69,33 +96,33 @@ function ViewAsSwitcher() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl z-50 overflow-hidden" style={{ border: "0.5px solid var(--border,#e0d9cb)" }}>
+          <div className="absolute right-0 mt-2 w-72 rounded-xl z-50 overflow-hidden" style={{ background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)", boxShadow: "var(--shadow-3)" }}>
             <input
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search a user…"
-              className="w-full px-3 py-2.5 text-sm outline-none border-b"
-              style={{ borderColor: "var(--border,#e0d9cb)", color: "#2c2c2a" }}
+              className="w-full px-3 py-2.5 text-sm outline-none border-b bg-transparent"
+              style={{ borderColor: "var(--border-subtle)", color: "var(--text-primary)" }}
             />
             <div className="max-h-72 overflow-y-auto py-1">
               {isImpersonating && (
                 <button onClick={() => { setViewAs(null); setOpen(false) }}
-                  className="w-full text-left px-3 py-2 text-[13px] font-medium hover:bg-[var(--cream,#f5efe4)]" style={{ color: "var(--brand-primary)" }}>
+                  className="w-full text-left px-3 py-2 text-[13px] font-medium hover:bg-[var(--overlay-hover)]" style={{ color: "var(--text-primary)" }}>
                   ← Back to my own view
                 </button>
               )}
               {users.length === 0 ? (
-                <div className="px-3 py-4 text-center text-xs text-gray-400">No users</div>
+                <div className="px-3 py-4 text-center text-xs" style={{ color: "var(--text-tertiary)" }}>No users</div>
               ) : (
                 users.map((u) => (
                   <button key={u.email} onClick={() => pick(u)}
-                    className="w-full text-left px-3 py-2 hover:bg-[var(--cream,#f5efe4)]">
-                    <div className="text-[13px] text-gray-900 flex items-center gap-1.5">
+                    className="w-full text-left px-3 py-2 hover:bg-[var(--overlay-hover)]">
+                    <div className="text-[13px] flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
                       {u.name}
-                      {u.is_admin && <span className="text-[9px] font-semibold px-1.5 rounded" style={{ background: "var(--gold)", color: "var(--brand-primary)" }}>admin</span>}
+                      {u.is_admin && <span className="ui-badge" style={{ height: 16 }}>admin</span>}
                     </div>
-                    <div className="text-[11px] text-gray-400">{u.designation || u.email}</div>
+                    <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>{u.designation || u.email}</div>
                   </button>
                 ))
               )}
@@ -109,13 +136,12 @@ function ViewAsSwitcher() {
 
 export function TopBar({ onToggleSidebar, onOpenSearch }: TopBarProps) {
   const { realUser, logout, isRealAdmin, isImpersonating, viewAs, setViewAs } = useAuth()
-  const { activeCompany, availableCompanies, accentOf } = useCompany()
+  const { activeCompany, availableCompanies } = useCompany()
 
   const companyLabel =
     activeCompany === ALL_COMPANIES
       ? "All Companies"
       : availableCompanies.find((c) => c.name === activeCompany)?.label || activeCompany || "Vera ERP"
-  const companyAccent = accentOf(activeCompany)
 
   const initials = realUser?.full_name
     ? realUser.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
@@ -126,29 +152,32 @@ export function TopBar({ onToggleSidebar, onOpenSearch }: TopBarProps) {
       {/* Preview banner */}
       {isImpersonating && (
         <div className="no-print flex items-center justify-center gap-3 text-[12px] font-medium px-4 py-1.5"
-          style={{ background: "var(--brand-primary,#1e3a2f)", color: "var(--gold-light,#d4b675)" }}>
+          style={{ background: "var(--bg-inverse)", color: "var(--text-inverse)" }}>
           <Eye size={13} />
-          <span>Previewing the interface as <strong style={{ color: "#fff" }}>{viewAs?.name}</strong> — data still loads with your admin access.</span>
+          <span>Previewing the interface as <strong>{viewAs?.name}</strong> — data still loads with your admin access.</span>
           <button onClick={() => setViewAs(null)} className="flex items-center gap-1 rounded-full px-2 py-0.5"
-            style={{ background: "rgba(255,255,255,0.12)", color: "#fff" }}>
+            style={{ background: "rgba(255,255,255,0.18)", color: "var(--text-inverse)" }}>
             <X size={11} /> Exit preview
           </button>
         </div>
       )}
 
-      <header className="no-print h-14 border-b border-gray-200 bg-white shadow-sm flex items-center justify-between px-4 shrink-0">
+      <header
+        className="no-print h-14 flex items-center justify-between px-4 shrink-0"
+        style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--border-subtle)" }}
+      >
         <div className="flex items-center gap-2">
           <button
             onClick={onToggleSidebar}
-            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            className="p-1.5 rounded-md transition-colors hover:bg-[var(--overlay-hover)]"
+            style={{ color: "var(--text-secondary)" }}
           >
             <Menu size={18} />
           </button>
 
           {/* Active company name — always reflects the workspace you're in */}
-          <div className="hidden sm:flex items-center gap-2 pl-1 pr-2 mr-1 border-r" style={{ borderColor: "var(--border,#e0d9cb)" }}>
-            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: companyAccent }} />
-            <span className="font-heading text-[15px] font-semibold whitespace-nowrap max-w-[180px] truncate" style={{ color: "var(--brand-primary)" }}>
+          <div className="hidden sm:flex items-center gap-2 pl-1 pr-2 mr-1 border-r" style={{ borderColor: "var(--border-subtle)" }}>
+            <span className="text-[15px] font-semibold whitespace-nowrap max-w-[180px] truncate" style={{ color: "var(--text-primary)", letterSpacing: "-.01em" }}>
               {companyLabel}
             </span>
           </div>
@@ -156,18 +185,19 @@ export function TopBar({ onToggleSidebar, onOpenSearch }: TopBarProps) {
           {/* Global search — opens the command palette (also Ctrl/Cmd+K) */}
           <button
             onClick={onOpenSearch}
-            className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] text-gray-500 hover:text-gray-800 transition-colors"
-            style={{ borderColor: "var(--border, #e0d9cb)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--gold)" }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border, #e0d9cb)" }}
+            className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-[12px] transition-colors hover:bg-[var(--overlay-hover)]"
+            style={{ borderColor: "var(--border-control)", color: "var(--text-tertiary)" }}
           >
-            <span aria-hidden>🔍</span>
+            <span aria-hidden>⚲</span>
             <span>Search</span>
-            <kbd className="rounded px-1.5 py-0.5 text-[10px] text-gray-500" style={{ background: "var(--cream-dark, #ebe3d3)" }}>Ctrl K</kbd>
+            <kbd className="rounded px-1.5 py-0.5 text-[10px]" style={{ border: "1px solid var(--border-subtle)" }}>⌘K</kbd>
           </button>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Density + light/dark controls */}
+          <DisplayControls />
+
           {/* Active company switcher — always visible when >1 company is accessible */}
           <CompanySwitcher />
 
@@ -177,7 +207,7 @@ export function TopBar({ onToggleSidebar, onOpenSearch }: TopBarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger className="outline-none">
               <Avatar className="h-8 w-8 cursor-pointer">
-                <AvatarFallback className="bg-forest-700 text-white text-xs font-semibold">
+                <AvatarFallback className="text-xs font-semibold" style={{ background: "var(--bg-inverse)", color: "var(--text-inverse)" }}>
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -186,13 +216,13 @@ export function TopBar({ onToggleSidebar, onOpenSearch }: TopBarProps) {
               {realUser && (
                 <>
                   <div className="px-3 py-2">
-                    <p className="text-sm font-medium text-gray-900 truncate">{realUser.full_name}</p>
-                    <p className="text-xs text-gray-500 truncate">{realUser.name}</p>
+                    <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{realUser.full_name}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--text-tertiary)" }}>{realUser.name}</p>
                   </div>
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={() => logout()}>
+              <DropdownMenuItem className="cursor-pointer" onClick={() => logout()}>
                 <LogOut size={14} className="mr-2" />
                 Sign Out
               </DropdownMenuItem>

@@ -44,7 +44,7 @@ export function CompanySettingsPage() {
   })
 
   const set = (k: keyof Profile, v: string) => setForm((f) => ({ ...f, [k]: v }))
-  const field = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+  const field = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[var(--border-subtle)] focus:outline-none"
   const label = "block text-xs font-medium text-gray-600 mb-1"
 
   return (
@@ -107,10 +107,10 @@ export function CompanySettingsPage() {
             <button
               onClick={() => save.mutate()}
               disabled={save.isPending}
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+              className="rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
               {save.isPending ? "Saving…" : "Save"}
             </button>
-            {saved && <span className="text-sm text-emerald-600 font-medium">✓ Saved</span>}
+            {saved && <span className="text-sm text-[var(--text-primary)] font-medium">✓ Saved</span>}
             {save.isError && <span className="text-sm text-red-600">{(save.error as Error).message}</span>}
           </div>
         </div>

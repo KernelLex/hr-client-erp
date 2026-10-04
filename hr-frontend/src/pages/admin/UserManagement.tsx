@@ -59,7 +59,7 @@ function getInitials(name: string) {
 }
 
 function getAvatarColor(name: string) {
-  const colors = ["#1e3a2f", "#c8a45c", "#059669", "#DC2626", "#D97706", "#0891B2"]
+  const colors = ["#171717", "#171717", "#171717", "#DC2626", "#171717", "#171717"]
   let hash = 0
   for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) % colors.length
   return colors[Math.abs(hash)]
@@ -69,13 +69,13 @@ function getRoleBadgeStyle(role: string): string {
   if (role.toLowerCase().includes("administrator") || role.toLowerCase().includes("system manager"))
     return "bg-red-100 text-red-700"
   if (role.toLowerCase().includes("hr"))
-    return "bg-gold-100 text-gold-700"
+    return "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
   if (role.toLowerCase().includes("account"))
-    return "bg-green-100 text-green-700"
+    return "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
   if (role.toLowerCase().includes("sales") || role.toLowerCase().includes("crm"))
-    return "bg-blue-100 text-blue-700"
+    return "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
   if (role.toLowerCase().includes("logistic") || role.toLowerCase().includes("stock"))
-    return "bg-orange-100 text-orange-700"
+    return "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
   return "bg-gray-100 text-gray-600"
 }
 
@@ -99,9 +99,9 @@ function checkPasswordStrength(pw: string): { score: number; label: string; colo
   if (/[0-9]/.test(pw)) score++
   if (/[!@#$%^&*()\-_=+[\]{}|;:,.<>?/\\'"~`]/.test(pw)) score++
   if (score <= 1) return { score, label: "Weak", color: "#EF4444" }
-  if (score === 2) return { score, label: "Fair", color: "#F59E0B" }
-  if (score === 3) return { score, label: "Good", color: "#3B82F6" }
-  return { score, label: "Strong", color: "#10B981" }
+  if (score === 2) return { score, label: "Fair", color: "#171717" }
+  if (score === 3) return { score, label: "Good", color: "#171717" }
+  return { score, label: "Strong", color: "#171717" }
 }
 
 function PasswordField({
@@ -125,7 +125,7 @@ function PasswordField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-forest-500"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
         />
         <button
           type="button"
@@ -142,7 +142,7 @@ function PasswordField({
               <div
                 key={i}
                 className="h-1 flex-1 rounded-full transition-all"
-                style={{ backgroundColor: i <= strength.score ? strength.color : "#E5E7EB" }}
+                style={{ backgroundColor: i <= strength.score ? strength.color : "#e8e8e8" }}
               />
             ))}
           </div>
@@ -154,7 +154,7 @@ function PasswordField({
               [/[0-9]/.test(value), "Number"],
               [/[!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(value), "Special character"],
             ].map(([ok, label], i) => (
-              <li key={i} className="flex items-center gap-1" style={{ color: ok ? "#10B981" : "#9CA3AF" }}>
+              <li key={i} className="flex items-center gap-1" style={{ color: ok ? "#171717" : "#9CA3AF" }}>
                 <CheckCircle2 size={10} />
                 {label as string}
               </li>
@@ -232,19 +232,19 @@ function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: (
         <div className="grid grid-cols-2 gap-3">
           <FormField label="First Name *">
             <input value={form.firstName} onChange={(e) => field("firstName")(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
               placeholder="First name" />
           </FormField>
           <FormField label="Last Name *">
             <input value={form.lastName} onChange={(e) => field("lastName")(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
               placeholder="Last name" />
           </FormField>
         </div>
         <FormField label="Email *">
           <input value={form.email} onChange={(e) => field("email")(e.target.value)}
             type="email"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
             placeholder="email@company.com" />
         </FormField>
         <FormField label="Password *">
@@ -273,7 +273,7 @@ function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: (
         <div className="flex gap-2 pt-1">
           <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={submit} disabled={loading}
-            className="flex-1 rounded-lg bg-forest-600 py-2 text-sm text-white hover:bg-forest-700 disabled:opacity-50">
+            className="flex-1 rounded-lg bg-[var(--bg-inverse)] py-2 text-sm text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
             {loading ? "Creating..." : "Create User"}
           </button>
         </div>
@@ -339,7 +339,7 @@ function EditRolesModal({ user, roles, onClose, onSuccess }: { user: UserRecord;
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={submit} disabled={loading}
-            className="flex-1 rounded-lg bg-forest-600 py-2 text-sm text-white hover:bg-forest-700 disabled:opacity-50">
+            className="flex-1 rounded-lg bg-[var(--bg-inverse)] py-2 text-sm text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
             {loading ? "Saving..." : "Save Roles"}
           </button>
         </div>
@@ -398,7 +398,7 @@ function ChangePasswordModal({ user, onClose, onSuccess }: { user: UserRecord; o
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={submit} disabled={loading}
-            className="flex-1 rounded-lg bg-forest-600 py-2 text-sm text-white hover:bg-forest-700 disabled:opacity-50">
+            className="flex-1 rounded-lg bg-[var(--bg-inverse)] py-2 text-sm text-white hover:bg-[var(--bg-inverse)] disabled:opacity-50">
             {loading ? "Changing..." : "Change Password"}
           </button>
         </div>
@@ -423,8 +423,8 @@ function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-5">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${danger ? "bg-red-100" : "bg-amber-100"}`}>
-          <AlertTriangle size={18} className={danger ? "text-red-500" : "text-amber-500"} />
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${danger ? "bg-red-100" : "bg-[var(--bg-subtle)]"}`}>
+          <AlertTriangle size={18} className={danger ? "text-red-500" : "text-[var(--text-tertiary)]0"} />
         </div>
         <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
         <p className="text-sm text-gray-500 mb-4">{message}</p>
@@ -439,7 +439,7 @@ function ConfirmDialog({
         <div className="flex gap-2">
           <button onClick={onCancel} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={onConfirm} disabled={loading || !canConfirm}
-            className={`flex-1 rounded-lg py-2 text-sm text-white disabled:opacity-50 ${danger ? "bg-red-600 hover:bg-red-700" : "bg-amber-500 hover:bg-amber-600"}`}>
+            className={`flex-1 rounded-lg py-2 text-sm text-white disabled:opacity-50 ${danger ? "bg-red-600 hover:bg-red-700" : "bg-[var(--bg-subtle)]0 hover:bg-[var(--bg-inverse)]"}`}>
             {loading ? "..." : confirmLabel}
           </button>
         </div>
@@ -507,7 +507,7 @@ export function UserManagement() {
   if (guard) return guard
 
   return (
-    <div className="p-6 max-w-6xl space-y-6 min-h-full">
+    <div className="p-6 space-y-6 min-h-full">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -520,7 +520,7 @@ export function UserManagement() {
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 rounded-xl bg-forest-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-forest-700 transition-colors"
+          className="flex items-center gap-2 rounded-xl bg-[var(--bg-inverse)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] transition-colors"
         >
           <Plus size={15} />
           Add New User
@@ -534,7 +534,7 @@ export function UserManagement() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name or email..."
-          className="w-full rounded-xl border border-gray-200 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500"
+          className="w-full rounded-xl border border-gray-200 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
         />
       </div>
 
@@ -586,11 +586,11 @@ export function UserManagement() {
                         <p className="font-medium text-gray-900">{u.full_name}</p>
                         <p className="text-xs text-gray-400">{u.name}</p>
                         {u.linked_designation && (
-                          <p className="text-xs text-forest-500">{u.linked_designation}</p>
+                          <p className="text-xs text-[var(--text-tertiary)]0">{u.linked_designation}</p>
                         )}
                       </div>
                       {u.is_protected && (
-                        <div title="Protected account" className="text-amber-400">
+                        <div title="Protected account" className="text-[var(--text-primary)]">
                           <Lock size={13} />
                         </div>
                       )}
@@ -616,7 +616,7 @@ export function UserManagement() {
 
                   {/* Status */}
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${u.enabled ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${u.enabled ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-gray-100 text-gray-500"}`}>
                       {u.enabled ? "Active" : "Inactive"}
                     </span>
                   </td>
@@ -629,9 +629,9 @@ export function UserManagement() {
                   {/* Actions */}
                   <td className="px-4 py-3">
                     {u.is_protected ? (
-                      <div className="flex justify-end items-center gap-1 text-amber-400" title="Protected — limited actions">
+                      <div className="flex justify-end items-center gap-1 text-[var(--text-primary)]" title="Protected — limited actions">
                         <ShieldCheck size={14} />
-                        <span className="text-xs text-amber-500">Protected</span>
+                        <span className="text-xs text-[var(--text-tertiary)]0">Protected</span>
                       </div>
                     ) : (
                       <div className="flex justify-end items-center gap-1">
@@ -721,9 +721,9 @@ function ActionBtn({
   icon: React.ReactNode; label: string; onClick: () => void; color?: "default" | "amber" | "green" | "red"
 }) {
   const styles = {
-    default: "text-gray-400 hover:text-forest-600 hover:bg-forest-50",
-    amber: "text-gray-400 hover:text-amber-600 hover:bg-amber-50",
-    green: "text-gray-400 hover:text-green-600 hover:bg-green-50",
+    default: "text-gray-400 hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]",
+    amber: "text-gray-400 hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]",
+    green: "text-gray-400 hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]",
     red: "text-gray-400 hover:text-red-600 hover:bg-red-50",
   }
   return (

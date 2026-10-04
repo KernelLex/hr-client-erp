@@ -318,7 +318,7 @@ function LoadingScreen() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[380px] relative overflow-hidden rounded-xl">
-      <div className="absolute inset-0 bg-gradient-to-br from-gold-800 via-forest-800 to-forest-900" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-inverse)] via-[var(--bg-inverse)] to-[var(--bg-inverse)]" />
       <div
         className="absolute inset-0 opacity-30"
         style={{
@@ -340,8 +340,8 @@ function LoadingScreen() {
             <circle cx="32" cy="32" r="30" stroke="url(#spinGrad)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="80 120" />
             <defs>
               <linearGradient id="spinGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#a855f7" />
-                <stop offset="100%" stopColor="#3b82f6" />
+                <stop offset="0%" stopColor="#171717" />
+                <stop offset="100%" stopColor="#171717" />
               </linearGradient>
             </defs>
           </svg>
@@ -349,7 +349,7 @@ function LoadingScreen() {
         <div className="text-center space-y-2">
           <p className="text-white font-semibold text-lg">Generating Job Description</p>
           <p
-            className="text-gold-200 text-sm transition-opacity duration-300"
+            className="text-[var(--text-tertiary)] text-sm transition-opacity duration-300"
             style={{ opacity: fade ? 1 : 0 }}
           >
             {LOADING_MESSAGES[msgIndex]}
@@ -422,7 +422,7 @@ function JDSectionBlock({
           </button>
         ) : (
           <div className="flex gap-1">
-            <button onClick={save} className="p-1 rounded hover:bg-green-50 text-green-600">
+            <button onClick={save} className="p-1 rounded hover:bg-[var(--bg-subtle)] text-[var(--text-primary)]">
               <Check size={13} />
             </button>
             <button onClick={cancel} className="p-1 rounded hover:bg-red-50 text-red-500">
@@ -434,7 +434,7 @@ function JDSectionBlock({
       {editing ? (
         <textarea
           ref={taRef}
-          className="w-full text-sm border rounded-lg p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-gold-400 min-h-[80px] font-mono"
+          className="w-full text-sm border rounded-lg p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-[var(--border-strong)] min-h-[80px] font-mono"
           value={draft}
           onChange={(e) => {
             setDraft(e.target.value)
@@ -591,7 +591,7 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="text-gold-500" size={18} />
+            <Sparkles className="text-[var(--text-tertiary)]0" size={18} />
             {isReview ? "Review Job Description" : "New Job Opening"}
           </DialogTitle>
         </DialogHeader>
@@ -604,7 +604,7 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
                 Designation <span className="text-red-500">*</span>
               </label>
               <select
-                className="w-full text-sm border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white"
+                className="w-full text-sm border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] bg-white"
                 value={form.designation}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, designation: e.target.value, job_title: e.target.value }))
@@ -619,7 +619,7 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
                 Department <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <select
-                className="w-full text-sm border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white"
+                className="w-full text-sm border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] bg-white"
                 value={form.department}
                 onChange={(e) => setFormField("department", e.target.value)}
               >
@@ -632,7 +632,7 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
                 Describe the role in your own words
               </label>
               <textarea
-                className="w-full text-sm border rounded-xl p-3.5 resize-none min-h-[140px] focus:outline-none focus:ring-2 focus:ring-gold-400 transition leading-relaxed"
+                className="w-full text-sm border rounded-xl p-3.5 resize-none min-h-[140px] focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] transition leading-relaxed"
                 placeholder="e.g. Need a senior Python developer for our backend team, 5+ years experience, based in Bangalore, competitive salary..."
                 value={roleDescription}
                 onChange={(e) => setRoleDescription(e.target.value)}
@@ -651,7 +651,7 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
               disabled={!roleDescription.trim() || !form.job_title}
               className={cn(
                 "w-full py-3 rounded-xl font-semibold text-white text-sm transition-all duration-200 flex items-center justify-center gap-2",
-                "bg-gradient-to-r from-gold-600 to-forest-700 hover:from-gold-500 hover:to-forest-600",
+                "bg-gradient-to-r from-[var(--bg-inverse)] to-[var(--bg-inverse)] hover:from-[var(--bg-inverse)] hover:to-[var(--bg-inverse)]",
                 "disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
               )}
             >
@@ -821,7 +821,7 @@ export function AIJobDescriptionGenerator({ open, onClose, onCreated }: Props) {
                   size="sm"
                   onClick={handleSave}
                   disabled={saveJD.isPending || !form.job_title || !form.designation}
-                  className="bg-gradient-to-r from-gold-600 to-forest-700 hover:from-gold-500 hover:to-forest-600 text-white border-0 gap-1.5"
+                  className="bg-gradient-to-r from-[var(--bg-inverse)] to-[var(--bg-inverse)] hover:from-[var(--bg-inverse)] hover:to-[var(--bg-inverse)] text-white border-0 gap-1.5"
                 >
                   {saveJD.isPending ? (
                     <><Loader2 size={13} className="animate-spin" />Saving…</>

@@ -13,9 +13,9 @@ type ListResp = { tickets: Ticket[]; kpis: Record<string, number> }
 const CATS = ["Complaint", "Warranty", "AMC / Maintenance", "Installation Fix", "Other"]
 const PRIOS = ["Low", "Medium", "High", "Urgent"]
 const STATUSES = ["Open", "In Progress", "Resolved", "Closed"]
-const field = "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none w-full"
-const PRIO_COLOR: Record<string, string> = { Low: "bg-gray-100 text-gray-600", Medium: "bg-blue-50 text-blue-700", High: "bg-amber-50 text-amber-700", Urgent: "bg-red-50 text-red-700" }
-const STATUS_COLOR: Record<string, string> = { Open: "bg-red-50 text-red-700", "In Progress": "bg-amber-50 text-amber-700", Resolved: "bg-emerald-50 text-emerald-700", Closed: "bg-gray-100 text-gray-500" }
+const field = "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-[var(--border-subtle)] focus:outline-none w-full"
+const PRIO_COLOR: Record<string, string> = { Low: "bg-gray-100 text-gray-600", Medium: "bg-[var(--bg-subtle)] text-[var(--text-primary)]", High: "bg-[var(--bg-subtle)] text-[var(--text-primary)]", Urgent: "bg-red-50 text-red-700" }
+const STATUS_COLOR: Record<string, string> = { Open: "bg-red-50 text-red-700", "In Progress": "bg-[var(--bg-subtle)] text-[var(--text-primary)]", Resolved: "bg-[var(--bg-subtle)] text-[var(--text-primary)]", Closed: "bg-gray-100 text-gray-500" }
 
 const blank: Ticket = { ticket_title: "", customer: "", category: "Complaint", priority: "Medium", status: "Open" }
 
@@ -35,26 +35,26 @@ export function ServicePage() {
   const k = list.data?.kpis
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 mx-auto">
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold text-slate-800">Service & Warranty</h1>
-        <button onClick={() => setSel({ ...blank })} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">+ New Ticket</button>
+        <button onClick={() => setSel({ ...blank })} className="rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)]">+ New Ticket</button>
       </div>
       <p className="text-sm text-gray-500 mb-5">Post-handover complaints, warranty claims and maintenance visits.</p>
 
       {k && (
         <div className="flex flex-wrap gap-4 mb-6">
           <Stat label="Open" value={k.open} tone="text-red-600" />
-          <Stat label="In Progress" value={k.in_progress} tone="text-amber-600" />
-          <Stat label="Resolved" value={k.resolved} tone="text-emerald-600" />
+          <Stat label="In Progress" value={k.in_progress} tone="text-[var(--text-primary)]" />
+          <Stat label="Resolved" value={k.resolved} tone="text-[var(--text-primary)]" />
           <Stat label="Urgent" value={k.urgent} tone="text-red-700" />
           <Stat label="Total" value={k.total} />
         </div>
       )}
 
       <div className="flex gap-2 mb-3">
-        <button onClick={() => setFilter("")} className={`text-xs px-2 py-1 rounded ${!filter ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"}`}>All</button>
-        {STATUSES.map((s) => <button key={s} onClick={() => setFilter(s)} className={`text-xs px-2 py-1 rounded ${filter === s ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"}`}>{s}</button>)}
+        <button onClick={() => setFilter("")} className={`text-xs px-2 py-1 rounded ${!filter ? "bg-[var(--bg-inverse)] text-white" : "bg-gray-100 text-gray-600"}`}>All</button>
+        {STATUSES.map((s) => <button key={s} onClick={() => setFilter(s)} className={`text-xs px-2 py-1 rounded ${filter === s ? "bg-[var(--bg-inverse)] text-white" : "bg-gray-100 text-gray-600"}`}>{s}</button>)}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -62,7 +62,7 @@ export function ServicePage() {
           <thead><tr className="text-xs text-gray-400 border-b bg-gray-50"><th className="text-left p-2">Ticket</th><th>Customer</th><th>Category</th><th>Priority</th><th>Status</th><th>Reported</th></tr></thead>
           <tbody>
             {(list.data?.tickets || []).map((t) => (
-              <tr key={t.name} className="border-b border-gray-50 hover:bg-indigo-50/40 cursor-pointer" onClick={() => setSel(t)}>
+              <tr key={t.name} className="border-b border-gray-50 hover:bg-[var(--bg-subtle)] cursor-pointer" onClick={() => setSel(t)}>
                 <td className="p-2"><div className="text-slate-700">{t.ticket_title}</div><div className="text-xs text-gray-400">{t.name}</div></td>
                 <td className="text-center text-slate-600">{t.customer || "—"}</td>
                 <td className="text-center text-xs text-gray-500">{t.category}</td>
@@ -108,7 +108,7 @@ function TicketDrawer({ t, onClose, onSave, onDelete, saving }: { t: Ticket; onC
           <L label="Resolution"><textarea className={field} rows={2} value={d.resolution || ""} onChange={(e) => set("resolution", e.target.value)} /></L>
         </div>
         <div className="flex gap-2 mt-5">
-          <button onClick={() => onSave(d)} disabled={saving || !d.ticket_title} className="flex-1 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
+          <button onClick={() => onSave(d)} disabled={saving || !d.ticket_title} className="flex-1 rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--bg-inverse)] disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
           {onDelete && <button onClick={onDelete} className="rounded-md border border-red-200 text-red-600 px-4 py-2 text-sm hover:bg-red-50">Delete</button>}
         </div>
       </div>

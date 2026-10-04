@@ -8,6 +8,12 @@ import { useAuth } from "@/context/AuthContext"
 import { usePermissions } from "@/context/PermissionsContext"
 import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
 
+/* ============================================================================
+   MONOCHROME UI OVERHAUL (2026-10) — light sidebar, 7 areas.
+   Every route and permission gate from the previous sidebar is preserved;
+   only the grouping and skin changed. Hierarchy comes from weight/space, not
+   colour; the active item is marked by an ink left-border + ink text.
+   ============================================================================ */
 
 function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
@@ -19,19 +25,19 @@ function AdminBadge() {
   return (
     <span
       className="ml-auto text-[10px] font-semibold rounded px-1.5 py-0.5"
-      style={{ backgroundColor: "var(--gold)", color: "var(--brand-primary)" }}
+      style={{ border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
     >
       admin
     </span>
   )
 }
 
-// Unicode glyph icon (matches the reference sidebar's geometric symbols)
+// Unicode glyph icon (geometric, monochrome)
 function Glyph({ char, active }: { char: string; active: boolean }) {
   return (
     <span
       className="w-4 text-center shrink-0 text-[14px] leading-none"
-      style={{ color: active ? "var(--gold)" : "#8a9c8a" }}
+      style={{ color: active ? "var(--text-primary)" : "var(--text-tertiary)" }}
     >
       {char}
     </span>
@@ -63,14 +69,14 @@ function NavItem({
       onClick={onClick}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 whitespace-nowrap border-l-[3px]",
-          isActive ? "text-white" : "text-[#d4c8a8] hover:text-white hover:bg-white/5 border-transparent"
+          "flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-colors duration-150 whitespace-nowrap border-l-[2px] border-transparent",
+          isActive ? "" : "hover:bg-[var(--overlay-hover)]"
         )
       }
       style={({ isActive }) =>
         isActive
-          ? { backgroundColor: "var(--bg-sidebar-hover)", color: "#fff", borderLeftColor: "var(--gold)" }
-          : {}
+          ? { backgroundColor: "var(--overlay-selected)", color: "var(--text-primary)", borderLeftColor: "var(--text-primary)" }
+          : { color: "var(--text-secondary)" }
       }
     >
       {({ isActive }) => (
@@ -79,7 +85,10 @@ function NavItem({
           <span className="flex-1">{label}</span>
           {adminBadge && <AdminBadge />}
           {unreadCount > 0 && (
-            <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold px-1">
+            <span
+              className="ml-auto min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold px-1"
+              style={{ backgroundColor: "var(--bg-inverse)", color: "var(--text-inverse)" }}
+            >
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
@@ -89,8 +98,7 @@ function NavItem({
   )
 }
 
-// A child item inside a dropdown group — real navigation link, text-row style
-// (no per-item icon), matching the reference `.nav-sub-item`.
+// A child item inside a dropdown group — text-row style (no per-item icon)
 function SubItem({
   to,
   label,
@@ -111,11 +119,13 @@ function SubItem({
       to={to}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 py-1.5 rounded-md text-[12px] font-medium transition-all duration-150 whitespace-nowrap border-l-[3px]",
+        "flex items-center gap-2 py-1.5 rounded-md text-[12px] font-medium transition-colors duration-150 whitespace-nowrap border-l-[2px] border-transparent",
         indent ? "pl-11 pr-3" : "pl-9 pr-3",
-        isActive ? "text-white" : "text-[#d4c8a8]/85 hover:text-white hover:bg-white/5 border-transparent"
+        isActive ? "" : "hover:bg-[var(--overlay-hover)]"
       )}
-      style={isActive ? { backgroundColor: "var(--bg-sidebar-hover)", color: "#fff", borderLeftColor: "var(--gold)" } : {}}
+      style={isActive
+        ? { backgroundColor: "var(--overlay-selected)", color: "var(--text-primary)", borderLeftColor: "var(--text-primary)" }
+        : { color: "var(--text-tertiary)" }}
     >
       <span className="flex-1">{label}</span>
       {adminBadge && <AdminBadge />}
@@ -141,15 +151,16 @@ function GroupHeader({
     <button
       onClick={onToggle}
       className={cn(
-        "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150",
-        active ? "text-white" : "text-[#d4c8a8] hover:text-white hover:bg-white/5"
+        "w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-colors duration-150",
+        active ? "" : "hover:bg-[var(--overlay-hover)]"
       )}
+      style={{ color: active ? "var(--text-primary)" : "var(--text-secondary)" }}
     >
       <Glyph char={glyph} active={active} />
       <span className="flex-1 text-left">{label}</span>
       <span
         className="text-[13px] leading-none transition-transform duration-200 shrink-0"
-        style={{ color: "#5c7364", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}
+        style={{ color: "var(--text-tertiary)", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}
       >
         ›
       </span>
@@ -157,12 +168,12 @@ function GroupHeader({
   )
 }
 
-// Section title (e.g. OVERVIEW, OPERATIONS)
+// Section title (e.g. HOME, SALES)
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="px-3 pt-3.5 pb-1.5 text-[10px] font-semibold uppercase tracking-widest"
-      style={{ color: "#8a9c8a" }}
+      style={{ color: "var(--text-tertiary)" }}
     >
       {children}
     </div>
@@ -200,7 +211,7 @@ function readLS(key: string, defaultVal: boolean): boolean {
 export function Sidebar({ open = true, onClose }: SidebarProps) {
   const { user, logout } = useAuth()
   const { can } = usePermissions()
-  const { activeCompany, availableCompanies, accentOf } = useCompany()
+  const { activeCompany, availableCompanies } = useCompany()
   const location = useLocation()
   const { data: unreadData } = useUnreadCounts()
   const totalUnread = unreadData?.total_unread ?? 0
@@ -208,29 +219,54 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const isAdmin = !!(user && ADMIN_USERS.has(user.name))
 
   // Dropdown open state — persisted in localStorage
-  const [salesOpen, setSalesOpen] = useState(() => readLS("sidebar_sales_open", true))
   const [quotationOpen, setQuotationOpen] = useState(() => readLS("sidebar_quotation_open", false))
   const [accountingOpen, setAccountingOpen] = useState(() => readLS("sidebar_accounting_open", false))
-  const [hrOpen, setHrOpen] = useState(() => readLS("sidebar_hr_open", true))
+  const [dataOpen, setDataOpen] = useState(() => readLS("sidebar_data_open", false))
+  const [hrOpen, setHrOpen] = useState(() => readLS("sidebar_hr_open", false))
   const [todoOpen, setTodoOpen] = useState(() => readLS("sidebar_todo_open", true))
-  const [docsOpen, setDocsOpen] = useState(() => readLS("sidebar_docs_open", false))
   const [adminOpen, setAdminOpen] = useState(() => readLS("sidebar_admin_open", false))
+
+  // Active-state helpers
+  const path = location.pathname
+  const search = location.search
+
+  const isQuotationGroupActive = path.startsWith("/quotation/")
+
+  const acct = (tab: string) => path === "/accounting-module" && search === `?tab=${tab}`
+  const isAccountingGroupActive = path === "/accounting-module" || path === "/accounts-dashboard"
+  const isErpEntriesActive = path === "/erp-entries"
+  const isDataRequestsActive = path === "/data-entry-requests"
+  const isTallyActive = path === "/tally-upload"
+  const isUploadStatusActive = path === "/accounts" && search === "?tab=upload"
+  const isVerifyActive = path === "/verify"
+  const isExpensesActive = path.startsWith("/expenses")
+  const isDataGroupActive = isErpEntriesActive || isDataRequestsActive || isTallyActive || isUploadStatusActive || isVerifyActive || isExpensesActive
+
+  const isTeamActive = path.startsWith("/admin/employees")
+  const isEmpMasterActive = path === "/hrms/employees"
+  const isHrGroupActive = path.startsWith("/hrms/") || isTeamActive
+
+  const isPersonalTasksActive = path === "/todo/personal"
+  const isTeamTasksActive = path === "/todo/team"
+  const isApprovalsActive = path === "/todo/approvals"
+  const isRemindersActive = path === "/todo/reminders"
+  const isTodoGroupActive = path.startsWith("/todo/")
+
+  const isAdminGroupActive =
+    path === "/admin/users" || path === "/admin/permissions" || path === "/admin/company-settings" ||
+    path === "/admin/cost-prices" || path === "/admin/finish-rates" || path === "/admin/group-dashboard" ||
+    path === "/org-hub" || path === "/admin/org-hub"
 
   // Auto-expand the group that contains the active route
   useEffect(() => {
-    const p = location.pathname
-    if (p === "/crm" || p.startsWith("/crm/") || p === "/sales-register") setSalesOpen(true)
-    if (p.startsWith("/quotation/")) setQuotationOpen(true)
-    if (p === "/accounting-module") setAccountingOpen(true)
-    if (
-      p.startsWith("/admin/attendance") || p === "/leave" || p.startsWith("/expenses") ||
-      p.startsWith("/admin/employees") || p === "/holidays" || p.startsWith("/recruitment") ||
-      p.startsWith("/hrms/")
-    ) setHrOpen(true)
-    if (p.startsWith("/todo/")) setTodoOpen(true)
-    if (p === "/drive" || p.startsWith("/accounts") || p === "/verify" || p === "/ai-insights" || p === "/graphs") setDocsOpen(true)
-    if (p === "/admin/users" || p === "/admin/permissions" || p === "/admin/company-settings" || p === "/admin/cost-prices" || p === "/admin/finish-rates" || p === "/admin/group-dashboard" || p === "/admin/vendor-payments") setAdminOpen(true)
-  }, [location.pathname])
+    if (isQuotationGroupActive) setQuotationOpen(true)
+    if (isAccountingGroupActive) setAccountingOpen(true)
+    if (isDataGroupActive) setDataOpen(true)
+    if (isHrGroupActive) setHrOpen(true)
+    if (isTodoGroupActive) setTodoOpen(true)
+    if (isAdminGroupActive) setAdminOpen(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, location.search])
 
   function makeToggle(setter: React.Dispatch<React.SetStateAction<boolean>>, key: string) {
     return () => setter((v) => {
@@ -239,75 +275,17 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
       return next
     })
   }
-  const toggleSales = makeToggle(setSalesOpen, "sidebar_sales_open")
   const toggleQuotation = makeToggle(setQuotationOpen, "sidebar_quotation_open")
   const toggleAccounting = makeToggle(setAccountingOpen, "sidebar_accounting_open")
+  const toggleData = makeToggle(setDataOpen, "sidebar_data_open")
   const toggleHR = makeToggle(setHrOpen, "sidebar_hr_open")
   const toggleTodo = makeToggle(setTodoOpen, "sidebar_todo_open")
-  const toggleDocs = makeToggle(setDocsOpen, "sidebar_docs_open")
   const toggleAdmin = makeToggle(setAdminOpen, "sidebar_admin_open")
 
   // Close sidebar on mobile when a nav item is clicked
   function close() {
     if (window.innerWidth < 768) onClose?.()
   }
-
-  // Active-state helpers
-  const path = location.pathname
-  const search = location.search
-
-  const CRM_SUBROUTES = ["/crm/enquiries", "/crm/opportunities", "/crm/contacts", "/crm/team", "/crm/followups"]
-  const isPipelineActive = path === "/crm" || (path.startsWith("/crm/") && !CRM_SUBROUTES.includes(path))
-  const isSalesRegisterActive = path === "/sales-register"
-  const isSalesGroupActive = isPipelineActive || isSalesRegisterActive
-
-  const isQuotationGroupActive = path.startsWith("/quotation/")
-
-  const acct = (tab: string) => path === "/accounting-module" && search === `?tab=${tab}`
-  const isAccountingGroupActive = path === "/accounting-module"
-
-  const isAttendanceActive = path.startsWith("/admin/attendance")
-  const isHolidaysActive = path === "/holidays"
-  const isLeaveActive = path === "/leave"
-  const isExpensesActive = path.startsWith("/expenses")
-  const isTeamActive = path.startsWith("/admin/employees")
-  const isRecruitmentActive = path.startsWith("/recruitment")
-  const isEmpMasterActive = path === "/hrms/employees"
-  const isDepartmentsActive = path === "/hrms/departments"
-  const isDesignationsActive = path === "/hrms/designations"
-  const isShiftsActive = path === "/hrms/shifts"
-  const isShiftAssignActive = path === "/hrms/shift-assignments"
-  const isTrainingActive = path === "/hrms/training"
-  const isTrainingSessActive = path === "/hrms/training-sessions"
-  const isExitActive = path === "/hrms/exit"
-  const isPayrollActive = path === "/hrms/payroll"
-  const isSalaryAssignActive = path === "/hrms/salary-assignments"
-  const isPayrollRunsActive = path === "/hrms/payroll-runs"
-  const isSalarySlipsActive = path === "/hrms/salary-slips"
-  const isOnboardingActive = path === "/hrms/onboarding"
-  const isApprCyclesActive = path === "/hrms/appraisal-cycles"
-  const isApprsActive = path === "/hrms/appraisals"
-  const isHrGroupActive = isAttendanceActive || isHolidaysActive || isLeaveActive || isExpensesActive || isTeamActive || isRecruitmentActive || path.startsWith("/hrms/")
-
-  const isPersonalTasksActive = path === "/todo/personal"
-  const isTeamTasksActive = path === "/todo/team"
-  const isApprovalsActive = path === "/todo/approvals"
-  const isRemindersActive = path === "/todo/reminders"
-  const isCalendarActive = path === "/todo/calendar"
-  const isMeetingsActive = path === "/todo/meetings"
-  const isNotesActive = path === "/todo/notes"
-  const isTodoGroupActive = path.startsWith("/todo/")
-
-  const isAccountsDocActive = path === "/drive"
-  const isAccountsUploadActive = path === "/accounts" && search === "?tab=upload"
-  const isVerifyActive = path === "/verify"
-  const isAIInsightsActive = path === "/ai-insights"
-  const isGraphsActive = path === "/graphs"
-  const isDocsGroupActive = isAccountsDocActive || path.startsWith("/accounts") || isVerifyActive || isAIInsightsActive || isGraphsActive
-
-  const isUsersActive = path === "/admin/users"
-  const isPermsActive = path === "/admin/permissions"
-  const isAdminGroupActive = isUsersActive || isPermsActive
 
   // Permissions — registry-driven (can() also checks the parent group key)
   const showAttendance = can("attendance")
@@ -323,67 +301,56 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const showOrgHub = can("org_hub")
   const showTodo = can("todo")
 
-  // Brand reflects the active company so each workspace looks distinct.
+  // Brand reflects the active company so each workspace is identifiable — name
+  // + abbreviation only (no accent colour, per the monochrome overhaul).
   const isAllCompanies = activeCompany === ALL_COMPANIES
   const activeBrand = availableCompanies.find((c) => c.name === activeCompany)
   const brandName = isAllCompanies ? "All Companies" : activeBrand?.label || "Vera ERP"
   const brandAbbr = isAllCompanies ? "◆" : activeBrand?.abbr || "V"
-  const brandAccent = accentOf(activeCompany)
 
   const sidebarBody = (
     <div
       className="flex flex-col h-full overflow-hidden"
-      style={{ backgroundColor: "var(--bg-sidebar)", boxShadow: "var(--shadow-sidebar)" }}
+      style={{ backgroundColor: "var(--bg-sidebar)", borderRight: "1px solid var(--border-subtle)" }}
     >
       {/* Brand */}
       <div className="px-4 pt-5 pb-3 shrink-0">
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 font-heading text-lg text-white"
-            style={{ background: `linear-gradient(150deg, ${brandAccent}, ${brandAccent}cc)`, border: "0.5px solid rgba(255,255,255,0.25)", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}
+            className="w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0 text-base font-semibold"
+            style={{ backgroundColor: "var(--bg-inverse)", color: "var(--text-inverse)" }}
           >
             {brandAbbr}
           </div>
           <div className="leading-tight">
-            <div className="font-heading text-[16px] text-[var(--cream,#f5efe4)] whitespace-nowrap" style={{ color: "#f5efe4" }}>{brandName}</div>
-            <div className="text-[9px] tracking-[1.5px] mt-0.5" style={{ color: "#8a9c8a" }}>ERP WORKSPACE</div>
+            <div className="text-[15px] font-semibold whitespace-nowrap" style={{ color: "var(--text-primary)", letterSpacing: "-.01em" }}>{brandName}</div>
+            <div className="text-[9px] tracking-[1.5px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>ERP WORKSPACE</div>
           </div>
         </div>
-        <div className="mt-3 h-px" style={{ backgroundColor: "rgba(255,255,255,0.06)" }} />
+        <div className="mt-3 h-px" style={{ backgroundColor: "var(--border-subtle)" }} />
       </div>
 
       {/* Nav */}
       <nav className="flex-1 py-1 px-2 space-y-0.5 overflow-y-auto">
 
-        {/* ── OVERVIEW ── */}
-        <SectionTitle>Overview</SectionTitle>
-        <NavItem to="/" label="Dashboard" glyph="◫" end onClick={close} />
+        {/* ── HOME ── */}
+        <SectionTitle>Home</SectionTitle>
+        <NavItem to="/" label="Dashboard" glyph="▣" end onClick={close} />
+        {isAdmin && <NavItem to="/ai-insights" label="AI Insights" glyph="◇" adminBadge onClick={close} />}
+        {isAdmin && <NavItem to="/graphs" label="Graphs" glyph="◴" adminBadge onClick={close} />}
         <NavItem to="/my-profile" label="My Profile" glyph="◐" onClick={close} />
-        {showChat && <NavItem to="/chat" label="Chat" glyph="◈" unreadCount={totalUnread} onClick={close} />}
 
-        {/* ── OPERATIONS ── */}
-        <SectionTitle>Operations</SectionTitle>
+        {/* ── SALES ── */}
+        {(showCRM || showQuotation) && <SectionTitle>Sales</SectionTitle>}
 
-        {showCRM && (
-          <>
-            <GroupHeader label="Sales (CRM)" glyph="◈" open={salesOpen} active={isSalesGroupActive} onToggle={toggleSales} />
-            <GroupBody open={salesOpen} maxHeight={360}>
-              <SubItem to="/crm" label="Pipeline" isActive={isPipelineActive} onClick={close} />
-              <SubItem to="/crm/enquiries" label="Enquiries" isActive={path === "/crm/enquiries"} onClick={close} />
-              <SubItem to="/crm/opportunities" label="Opportunities" isActive={path === "/crm/opportunities"} onClick={close} />
-              <SubItem to="/crm/contacts" label="Customer Contacts" isActive={path === "/crm/contacts"} onClick={close} />
-              <SubItem to="/crm/followups" label="Follow-ups" isActive={path === "/crm/followups"} onClick={close} />
-              <SubItem to="/crm/team" label="Sales Team" isActive={path === "/crm/team"} onClick={close} />
-              {isAdmin && <SubItem to="/sales-register" label="Sales Register" isActive={isSalesRegisterActive} adminBadge onClick={close} />}
-            </GroupBody>
-          </>
-        )}
+        {/* CRM — pipeline + sub-screens bundled into one tabbed hub at /crm */}
+        {showCRM && <NavItem to="/crm" label="CRM" glyph="◈" onClick={close} />}
+        {showCRM && isAdmin && <NavItem to="/sales-register" label="Sales Register" glyph="▦" adminBadge onClick={close} />}
 
-        {/* Quotation Studio — masters that drive the six-stage chain (Phase 2 §4). */}
         {showQuotation && (
           <>
             <GroupHeader label="Quotation Studio" glyph="◆" open={quotationOpen} active={isQuotationGroupActive} onToggle={toggleQuotation} />
-            <GroupBody open={quotationOpen} maxHeight={600}>
+            <GroupBody open={quotationOpen} maxHeight={520}>
               <SubItem to="/quotation/prequote" label="Pre-Quote" isActive={path === "/quotation/prequote"} onClick={close} />
               <SubItem to="/quotation/projects" label="Projects" isActive={path.startsWith("/quotation/projects")} onClick={close} />
               <SubItem to="/quotation/measurements" label="Measurement Sheets" isActive={path.startsWith("/quotation/measurements")} onClick={close} />
@@ -392,43 +359,42 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <SubItem to="/quotation/quotations" label="Customer Quotations" isActive={path.startsWith("/quotation/quotations")} onClick={close} />
               <SubItem to="/quotation/sales-orders" label="Sales Orders" isActive={path.startsWith("/quotation/sales-orders")} onClick={close} />
               <SubItem to="/quotation/reclaimed" label="Reclaimed Materials" isActive={path.startsWith("/quotation/reclaimed")} onClick={close} />
-              <SubItem to="/quotation/terms-clauses" label="Terms — Clauses" isActive={path === "/quotation/terms-clauses"} onClick={close} />
-              <SubItem to="/quotation/terms-templates" label="Terms — Templates" isActive={path === "/quotation/terms-templates"} onClick={close} />
-              <SubItem to="/quotation/units" label="Units" isActive={path === "/quotation/units"} onClick={close} />
-              <SubItem to="/quotation/materials" label="Materials" isActive={path === "/quotation/materials"} onClick={close} />
-              <SubItem to="/quotation/finishes" label="Finishes" isActive={path === "/quotation/finishes"} onClick={close} />
-              <SubItem to="/quotation/hardware" label="Hardware" isActive={path === "/quotation/hardware"} onClick={close} />
               <SubItem to="/quotation/hardware-packages" label="Hardware Packages" isActive={path === "/quotation/hardware-packages"} onClick={close} />
-              <SubItem to="/quotation/pricing" label="Pricing Methods" isActive={path === "/quotation/pricing"} onClick={close} />
-              <SubItem to="/quotation/templates" label="Templates" isActive={path === "/quotation/templates"} onClick={close} />
+              {/* Catalogue masters bundled; Terms templates+clauses bundled */}
+              <SubItem to="/quotation/catalogue" label="Studio Catalogue" isActive={path === "/quotation/catalogue" || ["/quotation/materials","/quotation/finishes","/quotation/hardware","/quotation/units","/quotation/pricing","/quotation/templates"].includes(path)} onClick={close} />
+              <SubItem to="/quotation/terms" label="Terms" isActive={path === "/quotation/terms" || path === "/quotation/terms-clauses" || path === "/quotation/terms-templates"} onClick={close} />
             </GroupBody>
           </>
         )}
 
-        {/* Project Delivery — execution lifecycle after a quote is accepted. */}
+        {/* ── DELIVERY ── */}
+        {(showQuotation || isAdmin) && <SectionTitle>Delivery</SectionTitle>}
         {showQuotation && (
           <>
-            <NavItem to="/projects" label="Project Delivery" glyph="◈" onClick={close} />
-            <NavItem to="/projects/schedule" label="Work Schedule" glyph="▦" onClick={close} />
-            <NavItem to="/service" label="Service & Warranty" glyph="✚" onClick={close} />
+            <NavItem to="/projects" label="Project Delivery" glyph="▦" onClick={close} />
+            <NavItem to="/projects/schedule" label="Work Schedule" glyph="◷" onClick={close} />
+            <NavItem to="/service" label="Service & Warranty" glyph="◉" onClick={close} />
+          </>
+        )}
+        {isAdmin && (
+          <>
+            <NavItem to="/purchasing" label="Purchasing" glyph="⬓" adminBadge onClick={close} />
+            <NavItem to="/inventory" label="Inventory" glyph="▥" adminBadge onClick={close} />
+            <NavItem to="/logistics" label="Logistics" glyph="⇲" adminBadge onClick={close} />
+            <NavItem to="/returns" label="Returns & QC" glyph="↩" adminBadge onClick={close} />
           </>
         )}
 
-        {/* ERP Entries — ERP-native records + request/approve queue (Phase 2 §2). */}
-        {/* Visible to all: admins create/approve; everyone else requests. */}
-        <NavItem to="/erp-entries" label="ERP Entries" glyph="⊞" onClick={close} />
-        <NavItem to="/data-entry-requests" label={isAdmin ? "Data Entry Requests" : "My Requests"} glyph="✎" onClick={close} />
-
+        {/* ── FINANCE ── */}
+        <SectionTitle>Finance</SectionTitle>
         {isAdmin && (
           <>
-            <NavItem to="/inventory" label="Inventory" glyph="▤" adminBadge onClick={close} />
-            <NavItem to="/purchasing" label="Purchasing" glyph="◪" adminBadge onClick={close} />
-            <NavItem to="/logistics" label="Logistics" glyph="◇" adminBadge onClick={close} />
-            <NavItem to="/returns" label="Returns & QC" glyph="◔" adminBadge onClick={close} />
-
-            <GroupHeader label="Accounting" glyph="◎" open={accountingOpen} active={isAccountingGroupActive} onToggle={toggleAccounting} />
-            <GroupBody open={accountingOpen} maxHeight={640}>
-              <SubItem to="/accounting-module?tab=coa"                  label="Chart of Accounts"     isActive={acct("coa")} onClick={close} />
+            <GroupHeader label="Accounts" glyph="◎" open={accountingOpen} active={isAccountingGroupActive} onToggle={toggleAccounting} />
+            <GroupBody open={accountingOpen} maxHeight={700}>
+              <SubItem to="/accounts-dashboard" label="Accounts Dashboard" isActive={path === "/accounts-dashboard"} adminBadge onClick={close} />
+              <SubItem to="/accounting-module?tab=financial-statements" label="Financial Statements"   isActive={acct("financial-statements")} onClick={close} />
+              <SubItem to="/accounting-module?tab=general-ledger"       label="General Ledger"         isActive={acct("general-ledger")} onClick={close} />
+              <SubItem to="/accounting-module?tab=coa"                  label="Chart of Accounts"      isActive={acct("coa")} onClick={close} />
               <SubItem to="/accounting-module?tab=journal"              label="Journal Entries"        isActive={acct("journal")} onClick={close} />
               <SubItem to="/accounting-module?tab=payment"              label="Payment Entries"        isActive={acct("payment")} onClick={close} />
               <SubItem to="/accounting-module?tab=receipts"             label="Receipts"               isActive={acct("receipts")} onClick={close} />
@@ -437,129 +403,110 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <SubItem to="/accounting-module?tab=purchase-bills"       label="Purchase Bills"         isActive={acct("purchase-bills")} onClick={close} />
               <SubItem to="/accounting-module?tab=credit-notes"         label="Credit Notes"           isActive={acct("credit-notes")} onClick={close} />
               <SubItem to="/accounting-module?tab=debit-notes"          label="Debit Notes"            isActive={acct("debit-notes")} onClick={close} />
-              <SubItem to="/accounting-module?tab=general-ledger"       label="General Ledger"         isActive={acct("general-ledger")} onClick={close} />
               <SubItem to="/accounting-module?tab=ar"                   label="Accounts Receivable"    isActive={acct("ar")} onClick={close} />
               <SubItem to="/accounting-module?tab=ap"                   label="Accounts Payable"       isActive={acct("ap")} onClick={close} />
               <SubItem to="/accounting-module?tab=depreciation"         label="Depreciation (Journal)" isActive={acct("depreciation")} onClick={close} />
               <SubItem to="/accounting-module?tab=cash-flow"            label="Cash Flow"              isActive={acct("cash-flow")} onClick={close} />
-              <SubItem to="/accounting-module?tab=financial-statements" label="Financial Statements"   isActive={acct("financial-statements")} onClick={close} />
             </GroupBody>
-            <NavItem to="/accounts-dashboard" label="Accounts Dashboard" glyph="◎" adminBadge onClick={close} />
-            <NavItem to="/tally-upload" label="Tally Import" glyph="⇪" adminBadge onClick={close} />
+            <NavItem to="/admin/vendor-payments" label="Vendor Payments" glyph="◈" adminBadge onClick={close} />
           </>
         )}
 
-        {/* ── PEOPLE & WORK ── */}
-        <SectionTitle>People &amp; Work</SectionTitle>
+        {/* Data & Entries — ERP-native records, imports, verification, claims */}
+        <GroupHeader label="Data & Entries" glyph="▤" open={dataOpen} active={isDataGroupActive} onToggle={toggleData} />
+        <GroupBody open={dataOpen} maxHeight={360}>
+          <SubItem to="/erp-entries" label="ERP Entries" isActive={isErpEntriesActive} onClick={close} />
+          <SubItem to="/data-entry-requests" label={isAdmin ? "Data Entry Requests" : "My Requests"} isActive={isDataRequestsActive} onClick={close} />
+          {showExpense && <SubItem to="/expenses" label="Expenses" isActive={isExpensesActive} onClick={close} />}
+          {isAdmin && <SubItem to="/tally-upload" label="Tally Import" isActive={isTallyActive} adminBadge onClick={close} />}
+          {showAccounts && can("accounts.upload") && <SubItem to="/accounts?tab=upload" label="Upload Status" isActive={isUploadStatusActive} onClick={close} />}
+          {isAdmin && <SubItem to="/verify" label="Verify Data" isActive={isVerifyActive} adminBadge onClick={close} />}
+        </GroupBody>
+
+        {/* ── PEOPLE ── */}
+        {(showHrms || showAttendance || showLeave || showHolidays || showRecruitment) && <SectionTitle>People</SectionTitle>}
+        {showAttendance && <NavItem to="/admin/attendance" label="Attendance" glyph="◷" onClick={close} />}
+        {showLeave && <NavItem to="/leave" label="Leave" glyph="⎋" onClick={close} />}
+        {showHolidays && <NavItem to="/holidays" label="Holidays" glyph="◰" onClick={close} />}
+        {showRecruitment && <NavItem to="/recruitment" label="Recruitment" glyph="◍" onClick={close} />}
 
         {showHrms && (<>
-        <GroupHeader label="HRMS" glyph="☺" open={hrOpen} active={isHrGroupActive} onToggle={toggleHR} />
-        <GroupBody open={hrOpen} maxHeight={1000}>
-          {isAdmin && <SubItem to="/hrms/employees" label="Employee Master" isActive={isEmpMasterActive} adminBadge onClick={close} />}
-          {showAttendance && <SubItem to="/admin/attendance" label="Attendance" isActive={isAttendanceActive} onClick={close} />}
-          {showHolidays && <SubItem to="/holidays" label="Holidays" isActive={isHolidaysActive} indent onClick={close} />}
-          {showLeave && <SubItem to="/leave" label="Leave" isActive={isLeaveActive} onClick={close} />}
-          {showExpense && <SubItem to="/expenses" label="Expenses" isActive={isExpensesActive} onClick={close} />}
-          {showRecruitment && <SubItem to="/recruitment" label="Recruitment" isActive={isRecruitmentActive} onClick={close} />}
-          {isAdmin && <SubItem to="/admin/employees" label="Team" isActive={isTeamActive} adminBadge onClick={close} />}
-          {isAdmin && (
-            <>
-              <SubItem to="/hrms/shifts" label="Shifts" isActive={isShiftsActive} adminBadge onClick={close} />
-              <SubItem to="/hrms/shift-assignments" label="Shift Roster" isActive={isShiftAssignActive} indent adminBadge onClick={close} />
-              <SubItem to="/hrms/payroll" label="Payroll" isActive={isPayrollActive} adminBadge onClick={close} />
-              <SubItem to="/hrms/salary-assignments" label="Salary Assignments" isActive={isSalaryAssignActive} indent adminBadge onClick={close} />
-              <SubItem to="/hrms/payroll-runs" label="Payroll Runs" isActive={isPayrollRunsActive} indent adminBadge onClick={close} />
-              <SubItem to="/hrms/salary-slips" label="Salary Slips" isActive={isSalarySlipsActive} indent adminBadge onClick={close} />
-              <SubItem to="/hrms/onboarding" label="Onboarding" isActive={isOnboardingActive} adminBadge onClick={close} />
-              <SubItem to="/hrms/training" label="Training" isActive={isTrainingActive} adminBadge onClick={close} />
-              <SubItem to="/hrms/training-sessions" label="Training Sessions" isActive={isTrainingSessActive} indent adminBadge onClick={close} />
-              <SubItem to="/hrms/appraisals" label="Appraisals" isActive={isApprsActive} adminBadge onClick={close} />
-              <SubItem to="/hrms/appraisal-cycles" label="Appraisal Cycles" isActive={isApprCyclesActive} indent adminBadge onClick={close} />
-              <SubItem to="/hrms/exit" label="Exit Management" isActive={isExitActive} adminBadge onClick={close} />
-              <SubItem to="/hrms/departments" label="Departments" isActive={isDepartmentsActive} adminBadge onClick={close} />
-              <SubItem to="/hrms/designations" label="Designations" isActive={isDesignationsActive} indent adminBadge onClick={close} />
-            </>
-          )}
-        </GroupBody>
+          <GroupHeader label="HRMS" glyph="☺" open={hrOpen} active={isHrGroupActive} onToggle={toggleHR} />
+          <GroupBody open={hrOpen} maxHeight={1000}>
+            {isAdmin && <SubItem to="/hrms/employees" label="Employee Master" isActive={isEmpMasterActive} adminBadge onClick={close} />}
+            {isAdmin && <SubItem to="/admin/employees" label="Team" isActive={isTeamActive} adminBadge onClick={close} />}
+            {isAdmin && (
+              <>
+                <SubItem to="/hrms/departments" label="Departments" isActive={path === "/hrms/departments"} adminBadge onClick={close} />
+                <SubItem to="/hrms/designations" label="Designations" isActive={path === "/hrms/designations"} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/shifts" label="Shifts" isActive={path === "/hrms/shifts"} adminBadge onClick={close} />
+                <SubItem to="/hrms/shift-assignments" label="Shift Roster" isActive={path === "/hrms/shift-assignments"} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/payroll" label="Payroll" isActive={path === "/hrms/payroll" || path === "/hrms/salary-assignments" || path === "/hrms/payroll-runs" || path === "/hrms/salary-slips"} adminBadge onClick={close} />
+                <SubItem to="/hrms/onboarding" label="Onboarding" isActive={path === "/hrms/onboarding"} adminBadge onClick={close} />
+                <SubItem to="/hrms/training" label="Training" isActive={path === "/hrms/training"} adminBadge onClick={close} />
+                <SubItem to="/hrms/training-sessions" label="Training Sessions" isActive={path === "/hrms/training-sessions"} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/appraisals" label="Appraisals" isActive={path === "/hrms/appraisals"} adminBadge onClick={close} />
+                <SubItem to="/hrms/appraisal-cycles" label="Appraisal Cycles" isActive={path === "/hrms/appraisal-cycles"} indent adminBadge onClick={close} />
+                <SubItem to="/hrms/exit" label="Exit Management" isActive={path === "/hrms/exit"} adminBadge onClick={close} />
+              </>
+            )}
+          </GroupBody>
         </>)}
 
+        {/* ── WORKSPACE ── */}
+        {(showTodo || showChat || showAccounts) && <SectionTitle>Workspace</SectionTitle>}
         {showTodo && (<>
-        <GroupHeader label="To-Do System" glyph="✓" open={todoOpen} active={isTodoGroupActive} onToggle={toggleTodo} />
-        <GroupBody open={todoOpen} maxHeight={360}>
-          {can("todo.personal") && <SubItem to="/todo/personal" label="Personal Tasks" isActive={isPersonalTasksActive} onClick={close} />}
-          {isAdmin && <SubItem to="/todo/team" label="Team Tasks" isActive={isTeamTasksActive} adminBadge onClick={close} />}
-          {isAdmin && <SubItem to="/todo/approvals" label="Workflow Approvals" isActive={isApprovalsActive} adminBadge onClick={close} />}
-          {can("todo.reminders") && <SubItem to="/todo/reminders" label="Reminders" isActive={isRemindersActive} onClick={close} />}
-          {can("todo.calendar") && <SubItem to="/todo/calendar" label="Calendar" isActive={isCalendarActive} onClick={close} />}
-          {can("todo.meetings") && <SubItem to="/todo/meetings" label="Meetings" isActive={isMeetingsActive} onClick={close} />}
-          {isAdmin && <SubItem to="/todo/notes" label="Notes" isActive={isNotesActive} adminBadge onClick={close} />}
-        </GroupBody>
+          <GroupHeader label="Tasks" glyph="✓" open={todoOpen} active={isTodoGroupActive} onToggle={toggleTodo} />
+          <GroupBody open={todoOpen} maxHeight={280}>
+            {can("todo.personal") && <SubItem to="/todo/personal" label="Personal Tasks" isActive={isPersonalTasksActive} onClick={close} />}
+            {isAdmin && <SubItem to="/todo/team" label="Team Tasks" isActive={isTeamTasksActive} adminBadge onClick={close} />}
+            {isAdmin && <SubItem to="/todo/approvals" label="Workflow Approvals" isActive={isApprovalsActive} adminBadge onClick={close} />}
+            {can("todo.reminders") && <SubItem to="/todo/reminders" label="Reminders" isActive={isRemindersActive} onClick={close} />}
+          </GroupBody>
+          {can("todo.calendar") && <NavItem to="/todo/calendar" label="Calendar" glyph="◰" onClick={close} />}
+          {can("todo.meetings") && <NavItem to="/todo/meetings" label="Meetings" glyph="◎" onClick={close} />}
+          {isAdmin && <NavItem to="/todo/notes" label="Notes" glyph="▤" adminBadge onClick={close} />}
         </>)}
+        {showChat && <NavItem to="/chat" label="Chat" glyph="◌" unreadCount={totalUnread} onClick={close} />}
+        {showAccounts && can("accounts.drive") && <NavItem to="/drive" label="Drive Documents" glyph="▣" onClick={close} />}
 
-        {showOrgHub && <NavItem to="/org-hub" label="Org Hub" glyph="◐" onClick={close} />}
-
-        {/* ── PLATFORM ── */}
-        <SectionTitle>Platform</SectionTitle>
-
-        {showAccounts && (
-          <>
-            <GroupHeader label="Document Management" glyph="▤" open={docsOpen} active={isDocsGroupActive} onToggle={toggleDocs} />
-            <GroupBody open={docsOpen} maxHeight={400}>
-              {can("accounts.drive") && <SubItem to="/drive" label="Drive Documents" isActive={isAccountsDocActive} onClick={close} />}
-              {can("accounts.upload") && <SubItem to="/accounts?tab=upload" label="Upload Status" isActive={isAccountsUploadActive} onClick={close} />}
-              {isAdmin && (
-                <>
-                  <SubItem to="/verify" label="Verify Data" isActive={isVerifyActive} adminBadge onClick={close} />
-                  <SubItem to="/ai-insights" label="AI Insights" isActive={isAIInsightsActive} adminBadge onClick={close} />
-                  <SubItem to="/graphs" label="Graphs" isActive={isGraphsActive} adminBadge onClick={close} />
-                </>
-              )}
-            </GroupBody>
-          </>
-        )}
-
+        {/* ── ADMIN ── */}
+        {(isAdmin || showOrgHub) && <SectionTitle>Admin</SectionTitle>}
         {isAdmin && (
           <>
             <GroupHeader label="Administration" glyph="◈" open={adminOpen} active={isAdminGroupActive} onToggle={toggleAdmin} />
             <GroupBody open={adminOpen} maxHeight={420}>
               <SubItem to="/admin/group-dashboard" label="Group Dashboard" isActive={path === "/admin/group-dashboard"} adminBadge onClick={close} />
-              <SubItem to="/admin/users" label="User Management" isActive={isUsersActive} adminBadge onClick={close} />
-              <SubItem to="/admin/permissions" label="Permissions" isActive={isPermsActive} adminBadge onClick={close} />
+              <SubItem to="/admin/users" label="User Management" isActive={path === "/admin/users"} adminBadge onClick={close} />
+              <SubItem to="/admin/permissions" label="Permissions" isActive={path === "/admin/permissions"} adminBadge onClick={close} />
               <SubItem to="/admin/company-settings" label="Company Settings" isActive={path === "/admin/company-settings"} adminBadge onClick={close} />
               <SubItem to="/admin/cost-prices" label="Cost / Dealer Prices" isActive={path === "/admin/cost-prices"} adminBadge onClick={close} />
               <SubItem to="/admin/finish-rates" label="Finish / Material Rates" isActive={path === "/admin/finish-rates"} adminBadge onClick={close} />
-              <SubItem to="/admin/vendor-payments" label="Vendor Payments" isActive={path === "/admin/vendor-payments"} adminBadge onClick={close} />
+              {showOrgHub && <SubItem to="/org-hub" label="Org Hub" isActive={path === "/org-hub" || path === "/admin/org-hub"} adminBadge onClick={close} />}
             </GroupBody>
           </>
         )}
+        {!isAdmin && showOrgHub && <NavItem to="/org-hub" label="Org Hub" glyph="◍" onClick={close} />}
       </nav>
 
       {/* Bottom profile + sign out */}
-      <div className="shrink-0 px-3 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+      <div className="shrink-0 px-3 py-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="flex items-center gap-2.5 mb-2.5">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold"
-            style={{ background: "linear-gradient(150deg, var(--gold-light), var(--gold))", color: "var(--brand-primary)" }}
+            style={{ backgroundColor: "var(--bg-inverse)", color: "var(--text-inverse)" }}
           >
             {user?.full_name ? getInitials(user.full_name) : "?"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-semibold truncate leading-tight">{user?.full_name ?? "—"}</p>
-            <p className="text-[11px] truncate leading-tight" style={{ color: "#8a9c8a" }}>{user?.name ?? ""}</p>
+            <p className="text-xs font-semibold truncate leading-tight" style={{ color: "var(--text-primary)" }}>{user?.full_name ?? "—"}</p>
+            <p className="text-[11px] truncate leading-tight" style={{ color: "var(--text-tertiary)" }}>{user?.name ?? ""}</p>
           </div>
         </div>
         <button
           onClick={() => logout()}
-          className="w-full flex items-center gap-2 text-xs rounded-md px-2 py-1.5 transition-colors"
-          style={{ color: "#8a9c8a" }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "var(--bg-sidebar-hover)"
-            e.currentTarget.style.color = "#d4c8a8"
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent"
-            e.currentTarget.style.color = "#8a9c8a"
-          }}
+          className="w-full flex items-center gap-2 text-xs rounded-md px-2 py-1.5 transition-colors hover:bg-[var(--overlay-hover)]"
+          style={{ color: "var(--text-tertiary)" }}
         >
           <LogOut size={13} />
           Sign out
@@ -574,7 +521,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
       <div
         className={cn(
           "no-print hidden md:flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
-          open ? "w-[240px]" : "w-0"
+          open ? "w-[244px]" : "w-0"
         )}
       >
         {sidebarBody}
@@ -583,7 +530,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
       {/* Mobile fixed overlay sidebar — slides in/out */}
       <div
         className={cn(
-          "no-print flex flex-col md:hidden fixed inset-y-0 left-0 z-30 w-[240px] transition-transform duration-300",
+          "no-print flex flex-col md:hidden fixed inset-y-0 left-0 z-30 w-[244px] transition-transform duration-300",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >

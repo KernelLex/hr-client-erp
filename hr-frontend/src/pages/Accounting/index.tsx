@@ -92,16 +92,16 @@ export default function AccountingPage() {
 
   return (
     <PeriodProvider>
-      <div className="min-h-screen" style={{ background: "var(--bg-app, #f5efe4)" }}>
+      <div className="min-h-screen" style={{ background: "var(--bg-app, #F5F5F5)" }}>
         {/* Page header */}
         <div className="bg-white border-b border-gray-100 px-6 py-3">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center shadow shrink-0"
-                style={{ background: "#1e3a2f" }}
+                style={{ background: "#171717" }}
               >
-                <Landmark className="w-5 h-5 text-[#c8a45c]" />
+                <Landmark className="w-5 h-5 text-[#171717]" />
               </div>
               <div>
                 <h1 className="text-lg font-bold" style={{ color: "var(--text-primary, #2c2c2a)" }}>
@@ -116,7 +116,7 @@ export default function AccountingPage() {
             {finSummary?.max_date && (
               <div
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border"
-                style={{ borderColor: "#e0d9cb", color: "var(--text-secondary, #6a6a5c)" }}
+                style={{ borderColor: "#E3E3E3", color: "var(--text-secondary, #6a6a5c)" }}
               >
                 <RefreshCw size={11} />
                 Tally data through {finSummary.max_date}
@@ -135,10 +135,10 @@ export default function AccountingPage() {
           {gapDays > 20 && (
             <div
               className="mt-3 flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm"
-              style={{ background: "var(--color-warning-bg, #fff7ed)", border: "0.5px solid #fde68a" }}
+              style={{ background: "var(--color-warning-bg, #F5F5F5)", border: "0.5px solid #F5F5F5" }}
             >
-              <AlertCircle size={14} style={{ color: "var(--color-warning, #ea580c)" }} className="shrink-0" />
-              <span style={{ color: "#92400e" }}>
+              <AlertCircle size={14} style={{ color: "var(--color-warning, #171717)" }} className="shrink-0" />
+              <span style={{ color: "#171717" }}>
                 Tally data is <strong>{gapDays} days</strong> behind (last import: {finSummary!.max_date}).
                 Re-import the latest XML to refresh.
               </span>
@@ -147,10 +147,10 @@ export default function AccountingPage() {
         </div>
 
         {/* Tab content */}
-        <div className="px-6 py-5 max-w-7xl mx-auto">
+        <div className="px-6 py-5 mx-auto">
           <div
             className="bg-white rounded-xl p-5"
-            style={{ border: "var(--border-card, 0.5px solid #e0d9cb)", boxShadow: "var(--shadow-card)" }}
+            style={{ border: "var(--border-card, 0.5px solid #E3E3E3)", boxShadow: "var(--shadow-card)" }}
           >
             <TabContent tab={tab} />
           </div>

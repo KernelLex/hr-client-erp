@@ -84,7 +84,7 @@ export function AddCandidateModal({ open, jobOpeningName, onClose }: Props) {
                   key={n}
                   type="button"
                   onClick={() => set("applicant_rating", n)}
-                  className={`w-8 h-8 rounded-md text-sm font-medium border transition-colors ${form.applicant_rating >= n ? "bg-amber-400 border-amber-400 text-white" : "border-gray-200 text-gray-400 hover:border-amber-300"}`}
+                  className={`w-8 h-8 rounded-md text-sm font-medium border transition-colors ${form.applicant_rating >= n ? "bg-[var(--bg-inverse)] border-[var(--border-subtle)] text-white" : "border-gray-200 text-gray-400 hover:border-[var(--border-subtle)]"}`}
                 >
                   {n}
                 </button>

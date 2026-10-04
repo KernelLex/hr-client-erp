@@ -26,66 +26,30 @@ const CompanyContext = createContext<CompanyContextValue>({
   isPlatformAdmin: false,
   isLoading: true,
   setCompany: async () => {},
-  accentOf: () => "#4F46E5",
+  accentOf: () => "#171717",
 })
 
 // Group / "All companies" console accent — deliberately distinct from every
 // single-company accent so the consolidated view is unmistakable at a glance.
-const GROUP_ACCENT = "#334155" // slate
+const GROUP_ACCENT = "#444444" // slate
 
 // ── Per-company theming ───────────────────────────────────────────────────────
-// The whole app is re-tinted from the active company's accent by overriding the
-// design-system CSS vars on :root. Every surface that reads var(--bg-sidebar),
-// var(--gold), var(--brand-primary), var(--bg-app) etc. recolours automatically —
-// sidebar, top bar, 2FA screen, primary buttons, headers.
-type RGB = [number, number, number]
-const DARK: RGB = [18, 22, 20]
-const WHITE: RGB = [255, 255, 255]
-
-function hexToRgb(hex: string): RGB {
-  let h = hex.replace("#", "").trim()
-  if (h.length === 3) h = h.split("").map((c) => c + c).join("")
-  const n = parseInt(h, 16)
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
-}
-function mix(a: RGB, b: RGB, t: number): string {
-  const r = Math.round(a[0] + (b[0] - a[0]) * t)
-  const g = Math.round(a[1] + (b[1] - a[1]) * t)
-  const bl = Math.round(a[2] + (b[2] - a[2]) * t)
-  return `rgb(${r}, ${g}, ${bl})`
-}
-
+// Monochrome UI overhaul (2026-10): the app is intentionally colour-free, so the
+// active company no longer re-tints the chrome. applyCompanyTheme now just clears
+// any previously-set inline overrides so the greyscale tokens in index.css win.
 const THEME_VARS = [
   "--company-accent", "--gold", "--gold-light", "--brand-primary",
   "--brand-primary-dark", "--bg-sidebar", "--bg-sidebar-hover",
   "--bg-sidebar-active", "--bg-app",
 ]
 
-function applyCompanyTheme(accentHex: string | null) {
+function applyCompanyTheme(_accentHex: string | null) {
+  // Monochrome UI overhaul (2026-10): the app is intentionally colour-free, so
+  // the per-company accent no longer tints the chrome. We always clear any
+  // inline overrides so the greyscale tokens in index.css take effect. Each
+  // company still shows its own name/abbreviation — just not an accent colour.
   const root = document.documentElement.style
-  if (!accentHex) {
-    // Fall back to the static Vera theme in index.css.
-    THEME_VARS.forEach((v) => root.removeProperty(v))
-    return
-  }
-  let rgb: RGB
-  try {
-    rgb = hexToRgb(accentHex)
-  } catch {
-    THEME_VARS.forEach((v) => root.removeProperty(v))
-    return
-  }
-  root.setProperty("--company-accent", accentHex)
-  root.setProperty("--gold", accentHex)
-  root.setProperty("--gold-light", mix(rgb, WHITE, 0.3))
-  // Darkened accents keep white text readable on buttons / brand surfaces.
-  root.setProperty("--brand-primary", mix(rgb, DARK, 0.42))
-  root.setProperty("--brand-primary-dark", mix(rgb, DARK, 0.62))
-  root.setProperty("--bg-sidebar", mix(rgb, DARK, 0.8))
-  root.setProperty("--bg-sidebar-hover", mix(rgb, DARK, 0.66))
-  root.setProperty("--bg-sidebar-active", mix(rgb, DARK, 0.55))
-  // Very subtle full-page tint (cards stay white).
-  root.setProperty("--bg-app", mix(rgb, WHITE, 0.93))
+  THEME_VARS.forEach((v) => root.removeProperty(v))
 }
 
 export function CompanyProvider({ children }: { children: ReactNode }) {
@@ -150,7 +114,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     (company: string | null) => {
       if (company === ALL_COMPANIES) return GROUP_ACCENT
       const c = availableCompanies.find((x) => x.name === company)
-      return c?.accent || "#4F46E5"
+      return c?.accent || "#171717"
     },
     [availableCompanies],
   )

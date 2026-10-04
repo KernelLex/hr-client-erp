@@ -14,17 +14,17 @@ import { ScheduleInterviewModal } from "./ScheduleInterviewModal"
 
 const STAGE_COLORS: Record<PipelineStage, string> = {
   "Application Received": "bg-gray-100 text-gray-700",
-  "Screening":            "bg-blue-100 text-blue-700",
-  "Interview":            "bg-gold-100 text-gold-700",
-  "Offer Sent":           "bg-orange-100 text-orange-700",
-  "Hired":                "bg-green-100 text-green-700",
+  "Screening":            "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+  "Interview":            "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+  "Offer Sent":           "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+  "Hired":                "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
   "Rejected":             "bg-red-100 text-red-700",
 }
 
 const INTERVIEW_STATUS_COLORS: Record<string, string> = {
-  "Pending":      "bg-yellow-100 text-yellow-700",
-  "Under Review": "bg-blue-100 text-blue-700",
-  "Cleared":      "bg-green-100 text-green-700",
+  "Pending":      "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+  "Under Review": "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+  "Cleared":      "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
   "Rejected":     "bg-red-100 text-red-700",
 }
 
@@ -141,7 +141,7 @@ export function CandidateDetailDrawer({ candidateName, open, onClose, jobOpening
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-gray-600">
                       <Mail size={14} />
-                      <a href={`mailto:${candidate.email_id}`} className="hover:text-blue-600">{candidate.email_id}</a>
+                      <a href={`mailto:${candidate.email_id}`} className="hover:text-[var(--text-primary)]">{candidate.email_id}</a>
                     </div>
                     {candidate.phone_number && (
                       <div className="flex items-center gap-2 text-gray-600">
@@ -152,7 +152,7 @@ export function CandidateDetailDrawer({ candidateName, open, onClose, jobOpening
                     {candidate.resume_link && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <ExternalLink size={14} />
-                        <a href={candidate.resume_link} target="_blank" rel="noreferrer" className="hover:text-blue-600 truncate">
+                        <a href={candidate.resume_link} target="_blank" rel="noreferrer" className="hover:text-[var(--text-primary)] truncate">
                           Resume / LinkedIn
                         </a>
                       </div>
@@ -164,7 +164,7 @@ export function CandidateDetailDrawer({ candidateName, open, onClose, jobOpening
                       <p className="text-xs text-gray-500 mb-1">Rating</p>
                       <div className="flex gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} size={14} className={i < candidate.applicant_rating! ? "fill-amber-400 text-amber-400" : "text-gray-200"} />
+                          <Star key={i} size={14} className={i < candidate.applicant_rating! ? "fill-[var(--text-primary)] text-[var(--text-primary)]" : "text-gray-200"} />
                         ))}
                       </div>
                     </div>
@@ -212,7 +212,7 @@ export function CandidateDetailDrawer({ candidateName, open, onClose, jobOpening
                         {iv.average_rating !== undefined && (
                           <div className="flex gap-0.5">
                             {Array.from({ length: 5 }).map((_, i) => (
-                              <Star key={i} size={10} className={i < iv.average_rating! ? "fill-amber-400 text-amber-400" : "text-gray-200"} />
+                              <Star key={i} size={10} className={i < iv.average_rating! ? "fill-[var(--text-primary)] text-[var(--text-primary)]" : "text-gray-200"} />
                             ))}
                           </div>
                         )}
@@ -228,9 +228,9 @@ export function CandidateDetailDrawer({ candidateName, open, onClose, jobOpening
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium">Job Offer</p>
                         <Badge className={
-                          data.offer.status === "Accepted" ? "bg-green-100 text-green-700" :
+                          data.offer.status === "Accepted" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" :
                           data.offer.status === "Rejected" ? "bg-red-100 text-red-700" :
-                          "bg-orange-100 text-orange-700"
+                          "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
                         }>
                           {data.offer.status}
                         </Badge>

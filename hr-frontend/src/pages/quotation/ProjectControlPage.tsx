@@ -124,7 +124,7 @@ export function ProjectControlPage() {
       </button>
 
       {/* Header */}
-      <div className="mb-5 rounded-xl bg-white p-5 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+      <div className="mb-5 rounded-xl bg-white p-5 shadow-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
         <div className="flex items-start justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Project · {o.name}</div>
@@ -136,7 +136,7 @@ export function ProjectControlPage() {
               </div>
             )}
           </div>
-          {o.stage && <span className="rounded-md px-2 py-1 text-[11px] font-semibold" style={{ background: "var(--bg-app, #f5f1e8)", color: "var(--brand-primary)" }}>{o.stage}</span>}
+          {o.stage && <span className="rounded-md px-2 py-1 text-[11px] font-semibold" style={{ background: "var(--bg-app, #F5F5F5)", color: "var(--brand-primary)" }}>{o.stage}</span>}
         </div>
         <div className="mt-4 grid grid-cols-3 gap-3">
           <Metric label="Estimated Value" value={inr(o.estimated_value)} />
@@ -149,13 +149,13 @@ export function ProjectControlPage() {
             <Metric label="Outstanding" value={inr(d.payment.outstanding)} />
           </div>
         )}
-        <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           <div className="mb-1.5 flex items-center justify-between">
             <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Project Details</div>
             {editing ? (
               <div className="flex gap-2">
                 <button onClick={saveDetails} disabled={busy} className="rounded-md px-2 py-1 text-xs font-semibold text-white disabled:opacity-60" style={{ background: "var(--brand-primary)" }}>Save</button>
-                <button onClick={() => setEditing(false)} className="rounded-md px-2 py-1 text-xs font-medium" style={{ border: "1px solid var(--border, #e0d9cb)", color: "var(--text-muted)" }}>Cancel</button>
+                <button onClick={() => setEditing(false)} className="rounded-md px-2 py-1 text-xs font-medium" style={{ border: "1px solid var(--border, #E3E3E3)", color: "var(--text-muted)" }}>Cancel</button>
               </div>
             ) : (
               <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--brand-primary)" }}><Pencil size={12} /> Edit</button>
@@ -169,7 +169,7 @@ export function ProjectControlPage() {
                   <input type={f.key === "target_completion" ? "date" : "text"} value={form[f.key] ?? ""}
                     onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
                     className="mt-0.5 w-full rounded px-2 py-1 text-sm"
-                    style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff", color: "var(--text-primary)" }} />
+                    style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff", color: "var(--text-primary)" }} />
                 </div>
               ))}
             </div>
@@ -188,36 +188,71 @@ export function ProjectControlPage() {
         </div>
       </div>
 
-      {/* Stage rollup cards */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {STAGE_DEFS.map(({ key, label, route }) => {
-          const s = d.stages[key]
-          const started = !!s
-          return (
-            <div key={key} className="rounded-xl bg-white p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
-              <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</div>
-              {started ? (
-                <>
-                  <div className="mt-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>{s!.status || "—"}</div>
-                  {s!.revision != null && <div className="text-xs" style={{ color: "var(--text-muted)" }}>Rev {String(s!.revision).padStart(2, "0")}{(s!.count ?? 1) > 1 ? ` · ${s!.count} revs` : ""}</div>}
-                  {s!.value != null && <div className="mt-1 text-sm font-semibold" style={{ color: "var(--brand-primary)" }}>{inr(s!.value)}</div>}
-                  {key === "cost_sheet" && s!.projected_gp_percent != null && <div className="text-xs" style={{ color: "var(--text-muted)" }}>GP {s!.projected_gp_percent.toFixed(1)}%</div>}
-                  {key === "quotation" && s!.required_authority && <div className="text-xs" style={{ color: "var(--text-muted)" }}>Approval: {s!.required_authority}</div>}
-                  <button onClick={() => navigate(`/quotation/${route}/${s!.name}`)} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--brand-primary)" }}>
-                    Open <ArrowRight size={13} />
-                  </button>
-                </>
-              ) : (
-                <div className="mt-2 text-xs italic" style={{ color: "var(--text-muted)" }}>Not started</div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      {/* Stage pipeline — the six-stage chain as a connected, numbered stepper.
+          Completed stages (a later stage exists) show ✓; the current step is
+          ink-ringed. Each card keeps its full rollup + Open action. */}
+      {(() => {
+        const startedIdx = STAGE_DEFS.map((sd, i) => (d.stages[sd.key] ? i : -1)).filter((i) => i >= 0)
+        const lastStartedIdx = startedIdx.length ? Math.max(...startedIdx) : -1
+        const activeKey = na && na.stage !== "done" ? (na.open ?? na.stage) : undefined
+        return (
+          <div className="grid gap-0 sm:grid-cols-2 lg:grid-cols-5">
+            {STAGE_DEFS.map(({ key, label, route }, idx) => {
+              const s = d.stages[key]
+              const started = !!s
+              const isComplete = started && idx < lastStartedIdx
+              const isActive = key === activeKey
+              return (
+                <div key={key} className="relative flex items-stretch">
+                  {/* connector line to previous card (lg only) */}
+                  {idx > 0 && (
+                    <div className="hidden lg:block absolute left-0 top-5 -translate-x-1/2 w-3 h-px z-0" style={{ background: "var(--border-default)" }} />
+                  )}
+                  <div
+                    className="relative z-10 flex-1 rounded-xl bg-white p-4 lg:mx-1.5 transition-shadow"
+                    style={{
+                      border: isActive ? "1px solid var(--border-strong)" : "1px solid var(--border-subtle)",
+                      boxShadow: isActive ? "0 0 0 1px var(--border-strong), var(--shadow-card)" : "var(--shadow-card)",
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold shrink-0"
+                        style={isComplete
+                          ? { background: "var(--bg-inverse)", color: "var(--text-inverse)" }
+                          : isActive
+                          ? { background: "var(--bg-inverse)", color: "var(--text-inverse)" }
+                          : { border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
+                      >
+                        {isComplete ? "✓" : idx + 1}
+                      </span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-secondary)" }}>{label}</span>
+                    </div>
+                    {started ? (
+                      <>
+                        <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{s!.status || "—"}</div>
+                        {s!.revision != null && <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>Rev {String(s!.revision).padStart(2, "0")}{(s!.count ?? 1) > 1 ? ` · ${s!.count} revs` : ""}</div>}
+                        {s!.value != null && <div className="mt-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{inr(s!.value)}</div>}
+                        {key === "cost_sheet" && s!.projected_gp_percent != null && <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>GP {s!.projected_gp_percent.toFixed(1)}%</div>}
+                        {key === "quotation" && s!.required_authority && <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>Approval: {s!.required_authority}</div>}
+                        <button onClick={() => navigate(`/quotation/${route}/${s!.name}`)} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+                          Open <ArrowRight size={13} />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="mt-2 text-xs italic" style={{ color: "var(--text-disabled)" }}>Not started</div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       {/* Next action (§5) — the single step that moves the project forward. */}
       {na && na.stage !== "done" && (
-        <div className="mt-5 flex items-center justify-between rounded-xl bg-white p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+        <div className="mt-5 flex items-center justify-between rounded-xl bg-white p-4 shadow-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Next step</div>
             <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{na.label}</div>
@@ -232,14 +267,14 @@ export function ProjectControlPage() {
           ) : na.open && na.open_name ? (
             <button onClick={() => navigate(`/quotation/${STAGE_ROUTE[na.open!]}/${na.open_name}`)}
               className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold"
-              style={{ border: "1px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+              style={{ border: "1px solid var(--border, #E3E3E3)", color: "var(--brand-primary)" }}>
               <Lock size={14} /> Open {na.open.replace("_", " ")}
             </button>
           ) : null}
         </div>
       )}
       {na && na.stage === "done" && (
-        <div className="mt-5 rounded-xl p-4 text-sm font-medium" style={{ background: "#ecfdf5", color: "#15803d" }}>
+        <div className="mt-5 rounded-xl p-4 text-sm font-medium" style={{ background: "#F5F5F5", color: "#171717" }}>
           ✓ {na.label}
         </div>
       )}
@@ -259,9 +294,9 @@ function Detail({ label, value }: { label: string; value?: string | null }) {
 
 function Metric({ label, value, tone }: { label: string; value: string; tone?: "good" }) {
   return (
-    <div className="rounded-lg p-3" style={{ background: "var(--bg-app, #f5f1e8)" }}>
+    <div className="rounded-lg p-3" style={{ background: "var(--bg-app, #F5F5F5)" }}>
       <div className="text-[11px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</div>
-      <div className="mt-0.5 text-lg font-semibold" style={{ color: tone === "good" ? "#15803d" : "var(--text-primary)" }}>{value}</div>
+      <div className="mt-0.5 text-lg font-semibold" style={{ color: tone === "good" ? "#171717" : "var(--text-primary)" }}>{value}</div>
     </div>
   )
 }

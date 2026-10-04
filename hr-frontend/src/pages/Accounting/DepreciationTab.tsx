@@ -49,16 +49,16 @@ export function DepreciationTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm bg-amber-50 border border-amber-200">
-        <AlertCircle size={14} className="text-amber-600 shrink-0" />
-        <span className="text-amber-800">
+      <div className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+        <AlertCircle size={14} className="text-[var(--text-primary)] shrink-0" />
+        <span className="text-[var(--text-primary)]">
           Recorded journal entries mentioning "depreciation" — not a computed depreciation schedule.
           No per-asset acquisition date or useful life data exists to project future depreciation.
         </span>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#1e3a2f] animate-spin" /></div>
+        <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#171717] animate-spin" /></div>
       ) : isError ? (
         <p className="py-12 text-center text-sm text-red-500">Failed to load depreciation entries.</p>
       ) : (

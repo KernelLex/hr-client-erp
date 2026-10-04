@@ -75,8 +75,9 @@ export default {
         },
       },
       fontFamily: {
-        serif: ["'Playfair Display'", "Georgia", "serif"],
-        heading: ["'Playfair Display'", "Georgia", "serif"],
+        // Monochrome overhaul — one family (Inter) across the whole app.
+        serif: ["Inter", "system-ui", "sans-serif"],
+        heading: ["Inter", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

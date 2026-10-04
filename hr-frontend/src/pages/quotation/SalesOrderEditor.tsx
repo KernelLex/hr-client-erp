@@ -80,7 +80,7 @@ export function SalesOrderEditor() {
       <StageBar current="Sales Order" />
       <DocumentLinkBar doctype="Vera Sales Order" name={name} />
 
-      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
         <div className="mb-3 flex items-start justify-between">
           <div>
             <h1 className="font-heading text-xl font-semibold" style={{ color: "var(--brand-primary)" }}>{so.so_title}</h1>
@@ -99,7 +99,7 @@ export function SalesOrderEditor() {
         </div>
 
         {/* Traceability to the approved chain it was converted from (§4.11). */}
-        <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Approved Baseline</div>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
             <Cell label={`Quotation${rev(so.quotation_revision)}`} value={<Link to={so.quotation ? `/quotation/quotations/${so.quotation}` : null} label={so.quotation ?? "—"} />} />
@@ -109,15 +109,15 @@ export function SalesOrderEditor() {
         </div>
 
         {/* Status controls */}
-        <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           {so.status === "Open" && (
             <button onClick={() => setStatus("Confirmed")} disabled={busy}
-              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #c8a24a)" }}>
+              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #171717)" }}>
               Confirm Order
             </button>
           )}
           {so.status === "Confirmed" && (
-            <span className="self-center text-xs" style={{ color: "#15803d" }}>Confirmed — ready for §5 project handover.</span>
+            <span className="self-center text-xs" style={{ color: "#171717" }}>Confirmed — ready for §5 project handover.</span>
           )}
           {so.status !== "Cancelled" && (
             <button onClick={() => { if (window.confirm("Cancel this sales order?")) setStatus("Cancelled") }} disabled={busy}

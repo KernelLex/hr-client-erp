@@ -21,6 +21,7 @@ import {
 } from "@/api/graphs"
 import { checkAIStatus } from "@/api/ai"
 import { useAuth } from "@/context/AuthContext"
+import { CHART_SERIES, CHART_GRID, CHART_AXIS } from "@/lib/chartColors"
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -40,23 +41,22 @@ function fmtVal(n: unknown): string {
   return n.toLocaleString("en-IN")
 }
 
-const CHART_COLORS = [
-  "#1e3a2f","#16a34a","#dc2626","#0891b2","#d97706","#c8a45c",
-  "#be185d","#0e7490","#b45309","#1e3a2f","#065f46","#9a3412",
-  "#1e3a5f","#4a044e","#064e3b",
-]
+// Monochrome series — repeat the five-grey ramp so any number of series stays
+// on-palette (distinguished by legend + labels).
+const CHART_COLORS = [...CHART_SERIES, ...CHART_SERIES, ...CHART_SERIES]
 
 const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   TrendingUp, BarChart2, PieChart: PieChartIcon, Activity, Users, Package,
   IndianRupee, AlertTriangle, MapPin, ArrowLeftRight, FileQuestion, FileText, Layers,
 }
 
+const CATEGORY_PILL = "text-[var(--text-secondary)] bg-[var(--bg-subtle)] border-[var(--border-subtle)]"
 const CATEGORY_COLORS: Record<string, string> = {
-  Sales: "text-green-700 bg-green-50 border-green-200",
-  Purchase: "text-red-700 bg-red-50 border-red-200",
-  Finance: "text-forest-700 bg-forest-50 border-forest-200",
-  Inventory: "text-teal-700 bg-teal-50 border-teal-200",
-  Custom: "text-gray-700 bg-gray-50 border-gray-200",
+  Sales: CATEGORY_PILL,
+  Purchase: CATEGORY_PILL,
+  Finance: CATEGORY_PILL,
+  Inventory: CATEGORY_PILL,
+  Custom: CATEGORY_PILL,
 }
 
 const CHART_TYPE_LABELS: Record<string, string> = {
@@ -130,12 +130,12 @@ function ChartRenderer({ chartData, height = 340, animate = true }: ChartRendere
   const xAxisTick = ({ x, y, payload }: any) => {
     const val = String(payload?.value ?? "")
     const short = val.length > 14 ? val.slice(0, 13) + "…" : val
-    return <text x={x} y={y + 8} textAnchor="middle" fontSize={11} fill="#6b7280">{short}</text>
+    return <text x={x} y={y + 8} textAnchor="middle" fontSize={11} fill={CHART_AXIS}>{short}</text>
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const yAxisTick = ({ x, y, payload }: any) => {
-    return <text x={x - 4} y={y + 4} textAnchor="end" fontSize={11} fill="#6b7280">{fmtVal(payload?.value)}</text>
+    return <text x={x - 4} y={y + 4} textAnchor="end" fontSize={11} fill={CHART_AXIS}>{fmtVal(payload?.value)}</text>
   }
 
   // Horizontal bar — label_key on Y axis, value_key on X
@@ -143,12 +143,12 @@ function ChartRenderer({ chartData, height = 340, animate = true }: ChartRendere
     const lk = label_key || "party"
     const vk = value_key || "amount"
     const sorted = [...data].sort((a, b) => (b[vk] as number) - (a[vk] as number))
-    const color = (colors && colors[vk]) ? colors[vk] : "#1e3a2f"
+    const color = (colors && colors[vk]) ? colors[vk] : CHART_SERIES[0]
     return (
       <ResponsiveContainer width="100%" height={Math.max(height, sorted.length * 36 + 40)}>
         <BarChart data={sorted} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
-          <XAxis type="number" tickFormatter={v => fmtVal(v as number)} tick={{ fontSize: 11, fill: "#6b7280" }} />
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={CHART_GRID} />
+          <XAxis type="number" tickFormatter={v => fmtVal(v as number)} tick={{ fontSize: 11, fill: CHART_AXIS }} />
           <YAxis
             type="category"
             dataKey={lk}
@@ -157,12 +157,12 @@ function ChartRenderer({ chartData, height = 340, animate = true }: ChartRendere
             tick={({ x, y, payload }: any) => {
               const v = String(payload?.value ?? "")
               const s = v.length > 22 ? v.slice(0, 21) + "…" : v
-              return <text x={x} y={y + 4} textAnchor="end" fontSize={11} fill="#374151">{s}</text>
+              return <text x={x} y={y + 4} textAnchor="end" fontSize={11} fill={CHART_AXIS}>{s}</text>
             }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Bar dataKey={vk} fill={color} radius={[0, 4, 4, 0]} isAnimationActive={animate}
-            label={{ position: "right", formatter: (v: unknown) => fmtVal(v as number), fontSize: 10, fill: "#6b7280" }} />
+            label={{ position: "right", formatter: (v: unknown) => fmtVal(v as number), fontSize: 10, fill: CHART_AXIS }} />
         </BarChart>
       </ResponsiveContainer>
     )
@@ -196,7 +196,7 @@ function ChartRenderer({ chartData, height = 340, animate = true }: ChartRendere
             ))}
           </Pie>
           <Tooltip content={<PieTooltip />} />
-          <Legend formatter={(v) => <span style={{ fontSize: 11, color: "#374151" }}>{String(v).slice(0, 18)}</span>} />
+          <Legend formatter={(v) => <span style={{ fontSize: 11, color: CHART_AXIS }}>{String(v).slice(0, 18)}</span>} />
         </PieChart>
       </ResponsiveContainer>
     )
@@ -210,15 +210,15 @@ function ChartRenderer({ chartData, height = 340, animate = true }: ChartRendere
     return (
       <ResponsiveContainer width="100%" height={height}>
         <ComposedChart data={data} margin={{ left: 4, right: 16, top: 8, bottom: 24 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
           <XAxis dataKey={xk} tick={xAxisTick} />
-          <YAxis yAxisId="left" tickFormatter={v => fmtVal(v as number)} tick={{ fontSize: 11, fill: "#6b7280" }} />
+          <YAxis yAxisId="left" tickFormatter={v => fmtVal(v as number)} tick={{ fontSize: 11, fill: CHART_AXIS }} />
           {lineKeys.length > 0 && (
-            <YAxis yAxisId="right" orientation="right" tickFormatter={v => `${v}%`} tick={{ fontSize: 11, fill: "#6b7280" }} />
+            <YAxis yAxisId="right" orientation="right" tickFormatter={v => `${v}%`} tick={{ fontSize: 11, fill: CHART_AXIS }} />
           )}
           <Tooltip content={<CustomTooltip />} />
           <Legend formatter={v => <span style={{ fontSize: 11 }}>{v}</span>} />
-          <ReferenceLine yAxisId="left" y={0} stroke="#e5e7eb" />
+          <ReferenceLine yAxisId="left" y={0} stroke={CHART_GRID} />
           {barKeys.map((k, i) => (
             <Bar key={k} yAxisId="left" dataKey={k} fill={resolveColor(k, i)} radius={[3, 3, 0, 0]}
               isAnimationActive={animate} maxBarSize={40} />
@@ -247,9 +247,9 @@ function ChartRenderer({ chartData, height = 340, animate = true }: ChartRendere
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
           <XAxis dataKey={xk} tick={xAxisTick} />
-          <YAxis tickFormatter={v => fmtVal(v as number)} tick={{ fontSize: 11, fill: "#6b7280" }} />
+          <YAxis tickFormatter={v => fmtVal(v as number)} tick={{ fontSize: 11, fill: CHART_AXIS }} />
           <Tooltip content={<CustomTooltip />} />
           <Legend formatter={v => <span style={{ fontSize: 11 }}>{v}</span>} />
           {yKeysList.map((k, i) => (
@@ -267,7 +267,7 @@ function ChartRenderer({ chartData, height = 340, animate = true }: ChartRendere
     return (
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data} margin={{ left: 4, right: 16, top: 8, bottom: 24 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
           <XAxis dataKey={xk} tick={xAxisTick} />
           <YAxis tickFormatter={v => fmtVal(v as number)} tick={yAxisTick} />
           <Tooltip content={<CustomTooltip />} />
@@ -286,7 +286,7 @@ function ChartRenderer({ chartData, height = 340, animate = true }: ChartRendere
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ left: 4, right: 16, top: 8, bottom: 24 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
         <XAxis dataKey={xk} tick={xAxisTick} />
         <YAxis tickFormatter={v => fmtVal(v as number)} tick={yAxisTick} />
         <Tooltip content={<CustomTooltip />} />
@@ -391,7 +391,7 @@ function ChartPanel({ chartData, onSave, isSaving, savedName }: ChartPanelProps)
               {CHART_TYPE_LABELS[chartData.chart_type || "bar"] || chartData.chart_type}
             </span>
             {savedName && (
-              <span className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 flex items-center gap-1">
+              <span className="text-xs text-[var(--text-primary)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-full px-2 py-0.5 flex items-center gap-1">
                 <Check className="w-3 h-3" /> Saved
               </span>
             )}
@@ -407,7 +407,7 @@ function ChartPanel({ chartData, onSave, isSaving, savedName }: ChartPanelProps)
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button onClick={copyData} title="Copy JSON"
             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-[var(--text-tertiary)]0" /> : <Copy className="w-4 h-4" />}
           </button>
           <button onClick={exportJSON} title="Export JSON"
             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
@@ -424,7 +424,7 @@ function ChartPanel({ chartData, onSave, isSaving, savedName }: ChartPanelProps)
           <button
             onClick={handleSave}
             disabled={isSaving || !!savedName}
-            className="flex items-center gap-1.5 text-sm bg-forest-600 text-white px-3 py-1.5 rounded-lg hover:bg-forest-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 text-sm bg-[var(--bg-inverse)] text-white px-3 py-1.5 rounded-lg hover:bg-[var(--bg-inverse)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             {savedName ? "Saved" : "Save"}
@@ -469,7 +469,7 @@ function PresetCard({ preset, onLoad, isLoading }: PresetCardProps) {
   const Icon = ICON_MAP[preset.icon] || BarChart2
   const catClass = CATEGORY_COLORS[preset.category] || CATEGORY_COLORS.Custom
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:border-forest-100 transition-all group cursor-pointer"
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:border-[var(--border-subtle)] transition-all group cursor-pointer"
       onClick={() => !isLoading && onLoad(preset)}>
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -490,7 +490,7 @@ function PresetCard({ preset, onLoad, isLoading }: PresetCardProps) {
         </span>
         <button
           disabled={isLoading}
-          className="flex items-center gap-1 text-xs text-forest-600 group-hover:text-forest-800 font-medium"
+          className="flex items-center gap-1 text-xs text-[var(--text-primary)] group-hover:text-[var(--text-primary)] font-medium"
         >
           {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ChevronRight className="w-3 h-3" />}
           {isLoading ? "Loading…" : "View"}
@@ -515,14 +515,14 @@ function SavedCard({ graph, onOpen, onDelete, onExportCSV, deleting }: SavedCard
   const catClass = CATEGORY_COLORS[graph.category] || CATEGORY_COLORS.Custom
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-forest-100 transition-all overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[var(--border-subtle)] transition-all overflow-hidden">
       {/* Thumbnail or placeholder */}
-      <div className="h-28 bg-gradient-to-br from-gray-50 to-forest-50 flex items-center justify-center border-b border-gray-100 cursor-pointer"
+      <div className="h-28 bg-gradient-to-br from-gray-50 to-[var(--bg-inverse)] flex items-center justify-center border-b border-gray-100 cursor-pointer"
         onClick={() => onOpen(graph)}>
         {graph.thumbnail_data ? (
           <img src={graph.thumbnail_data} alt={graph.title} className="w-full h-full object-cover" />
         ) : (
-          <BarChart2 className="w-10 h-10 text-forest-200" />
+          <BarChart2 className="w-10 h-10 text-[var(--text-tertiary)]" />
         )}
       </div>
       <div className="p-4">
@@ -548,7 +548,7 @@ function SavedCard({ graph, onOpen, onDelete, onExportCSV, deleting }: SavedCard
         </p>
         <div className="flex items-center gap-2">
           <button onClick={() => onOpen(graph)}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs bg-forest-600 text-white py-1.5 rounded-lg hover:bg-forest-700 transition-colors">
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs bg-[var(--bg-inverse)] text-white py-1.5 rounded-lg hover:bg-[var(--bg-inverse)] transition-colors">
             <Eye className="w-3 h-3" /> Open
           </button>
           <button onClick={() => onExportCSV(graph.name)}
@@ -764,11 +764,11 @@ export default function GraphsPage() {
   }
 
   return (
-    <div className="p-6 space-y-5 max-w-7xl mx-auto">
+    <div className="p-6 space-y-5 mx-auto">
       {/* Page header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-forest-600 to-gold-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--bg-inverse)] to-[var(--bg-inverse)] flex items-center justify-center flex-shrink-0">
             <BarChart2 className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -785,9 +785,9 @@ export default function GraphsPage() {
             </div>
           )}
           <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border ${
-            aiReady ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-100 border-gray-200 text-gray-500"
+            aiReady ? "bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-primary)]" : "bg-gray-100 border-gray-200 text-gray-500"
           }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${aiReady ? "bg-green-500 animate-pulse" : "bg-gray-400"}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${aiReady ? "bg-[var(--bg-subtle)]0 animate-pulse" : "bg-gray-400"}`} />
             {aiReady ? `AI · ${aiStatus?.active_model}` : "AI Offline"}
           </div>
         </div>
@@ -805,7 +805,7 @@ export default function GraphsPage() {
             onClick={() => setActiveTab(id)}
             className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === id
-                ? "border-forest-600 text-forest-600"
+                ? "border-[var(--border-subtle)] text-[var(--text-primary)]"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -819,13 +819,13 @@ export default function GraphsPage() {
       {activeTab === "generate" && (
         <div className="space-y-5">
           {!aiReady && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-              <Bot className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl p-4 flex items-start gap-3">
+              <Bot className="w-5 h-5 text-[var(--text-tertiary)]0 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-amber-800">Ollama is offline — AI generation unavailable</p>
-                <p className="text-sm text-amber-700 mt-0.5">
+                <p className="text-sm font-medium text-[var(--text-primary)]">Ollama is offline — AI generation unavailable</p>
+                <p className="text-sm text-[var(--text-primary)] mt-0.5">
                   You can still load preset charts. Start Ollama with:
-                  <code className="ml-1 bg-amber-100 px-1.5 py-0.5 rounded text-xs">ollama serve</code>
+                  <code className="ml-1 bg-[var(--bg-subtle)] px-1.5 py-0.5 rounded text-xs">ollama serve</code>
                 </p>
               </div>
             </div>
@@ -836,7 +836,7 @@ export default function GraphsPage() {
             <div className="lg:col-span-1 space-y-4">
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-forest-500" /> AI Query
+                  <Sparkles className="w-4 h-4 text-[var(--text-tertiary)]0" /> AI Query
                 </h2>
 
                 <div className="space-y-3">
@@ -847,7 +847,7 @@ export default function GraphsPage() {
                       onChange={e => setQuery(e.target.value)}
                       placeholder="e.g. Show me monthly sales vs purchases for the last year"
                       rows={3}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-300 resize-none"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] resize-none"
                     />
                   </div>
 
@@ -861,8 +861,8 @@ export default function GraphsPage() {
                           onClick={() => setChartTypeHint(t)}
                           className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                             chartTypeHint === t
-                              ? "bg-forest-600 text-white border-forest-600"
-                              : "bg-white text-gray-600 border-gray-200 hover:border-forest-300"
+                              ? "bg-[var(--bg-inverse)] text-white border-[var(--border-subtle)]"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-[var(--border-subtle)]"
                           }`}
                         >
                           {t === "auto" ? "Auto" : CHART_TYPE_LABELS[t]}
@@ -878,7 +878,7 @@ export default function GraphsPage() {
                       {["", ...recentFYLabels(3)].map(f => (
                         <button key={f} onClick={() => { setFy(f); setDateFrom(""); setDateTo("") }}
                           className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                            fy === f ? "bg-forest-600 text-white border-forest-600" : "bg-white text-gray-600 border-gray-200 hover:border-forest-300"
+                            fy === f ? "bg-[var(--bg-inverse)] text-white border-[var(--border-subtle)]" : "bg-white text-gray-600 border-gray-200 hover:border-[var(--border-subtle)]"
                           }`}>
                           {f || "All Time"}
                         </button>
@@ -888,12 +888,12 @@ export default function GraphsPage() {
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">From date</label>
                         <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setFy("") }}
-                          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-forest-300" />
+                          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">To date</label>
                         <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setFy("") }}
-                          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-forest-300" />
+                          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]" />
                       </div>
                     </div>
                   </div>
@@ -901,7 +901,7 @@ export default function GraphsPage() {
                   <button
                     onClick={() => generateMut.mutate()}
                     disabled={!query.trim() || generateMut.isPending || !aiReady}
-                    className="w-full flex items-center justify-center gap-2 bg-forest-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-forest-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="w-full flex items-center justify-center gap-2 bg-[var(--bg-inverse)] text-white py-2.5 rounded-xl text-sm font-medium hover:bg-[var(--bg-inverse)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     {generateMut.isPending
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
@@ -926,7 +926,7 @@ export default function GraphsPage() {
                     <button
                       key={q}
                       onClick={() => setQuery(q)}
-                      className="w-full text-left text-xs text-gray-600 hover:text-forest-600 hover:bg-forest-50 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-2"
+                      className="w-full text-left text-xs text-gray-600 hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-2"
                     >
                       <ChevronRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
                       {q}
@@ -947,8 +947,8 @@ export default function GraphsPage() {
                 />
               ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center h-[440px] text-center p-8">
-                  <div className="w-16 h-16 rounded-2xl bg-forest-50 flex items-center justify-center mb-4">
-                    <BarChart2 className="w-8 h-8 text-forest-300" />
+                  <div className="w-16 h-16 rounded-2xl bg-[var(--bg-subtle)] flex items-center justify-center mb-4">
+                    <BarChart2 className="w-8 h-8 text-[var(--text-tertiary)]" />
                   </div>
                   <h3 className="text-base font-semibold text-gray-700 mb-2">Your chart will appear here</h3>
                   <p className="text-sm text-gray-400 max-w-xs">
@@ -956,7 +956,7 @@ export default function GraphsPage() {
                   </p>
                   <button
                     onClick={() => setActiveTab("presets")}
-                    className="mt-5 flex items-center gap-2 text-sm text-forest-600 border border-forest-200 px-4 py-2 rounded-xl hover:bg-forest-50 transition-colors"
+                    className="mt-5 flex items-center gap-2 text-sm text-[var(--text-primary)] border border-[var(--border-subtle)] px-4 py-2 rounded-xl hover:bg-[var(--bg-subtle)] transition-colors"
                   >
                     <Layers className="w-4 h-4" /> Browse Presets
                   </button>
@@ -978,14 +978,14 @@ export default function GraphsPage() {
                 value={presetSearch}
                 onChange={e => setPresetSearch(e.target.value)}
                 placeholder="Search presets…"
-                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-300"
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
               />
             </div>
             <div className="flex gap-1.5 flex-wrap">
               {(["All", "Sales", "Purchase", "Finance", "Inventory"] as const).map(cat => (
                 <button key={cat} onClick={() => setPresetCat(cat)}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    presetCat === cat ? "bg-forest-600 text-white border-forest-600" : "bg-white text-gray-600 border-gray-200 hover:border-forest-300"
+                    presetCat === cat ? "bg-[var(--bg-inverse)] text-white border-[var(--border-subtle)]" : "bg-white text-gray-600 border-gray-200 hover:border-[var(--border-subtle)]"
                   }`}>
                   {cat}
                 </button>
@@ -1040,14 +1040,14 @@ export default function GraphsPage() {
                 value={savedSearch}
                 onChange={e => setSavedSearch(e.target.value)}
                 placeholder="Search saved graphs…"
-                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-300"
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
               />
             </div>
             <div className="flex gap-1.5 flex-wrap">
               {(["All", "Sales", "Purchase", "Finance", "Inventory", "Custom"] as const).map(cat => (
                 <button key={cat} onClick={() => setSavedCat(cat)}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    savedCat === cat ? "bg-forest-600 text-white border-forest-600" : "bg-white text-gray-600 border-gray-200 hover:border-forest-300"
+                    savedCat === cat ? "bg-[var(--bg-inverse)] text-white border-[var(--border-subtle)]" : "bg-white text-gray-600 border-gray-200 hover:border-[var(--border-subtle)]"
                   }`}>
                   {cat}
                 </button>
@@ -1055,11 +1055,11 @@ export default function GraphsPage() {
             </div>
             <div className="ml-auto flex border border-gray-200 rounded-lg overflow-hidden">
               <button onClick={() => setViewMode("grid")}
-                className={`p-2 ${viewMode === "grid" ? "bg-forest-600 text-white" : "bg-white text-gray-400 hover:bg-gray-50"}`}>
+                className={`p-2 ${viewMode === "grid" ? "bg-[var(--bg-inverse)] text-white" : "bg-white text-gray-400 hover:bg-gray-50"}`}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button onClick={() => setViewMode("list")}
-                className={`p-2 ${viewMode === "list" ? "bg-forest-600 text-white" : "bg-white text-gray-400 hover:bg-gray-50"}`}>
+                className={`p-2 ${viewMode === "list" ? "bg-[var(--bg-inverse)] text-white" : "bg-white text-gray-400 hover:bg-gray-50"}`}>
                 <List className="w-4 h-4" />
               </button>
             </div>
@@ -1071,7 +1071,7 @@ export default function GraphsPage() {
               <p className="text-base font-medium text-gray-500 mb-1">No saved graphs yet</p>
               <p className="text-sm text-gray-400 mb-5">Generate a chart and click Save to keep it here</p>
               <button onClick={() => setActiveTab("generate")}
-                className="inline-flex items-center gap-2 text-sm text-forest-600 border border-forest-200 px-4 py-2 rounded-xl hover:bg-forest-50">
+                className="inline-flex items-center gap-2 text-sm text-[var(--text-primary)] border border-[var(--border-subtle)] px-4 py-2 rounded-xl hover:bg-[var(--bg-subtle)]">
                 <Plus className="w-4 h-4" /> Create your first graph
               </button>
             </div>
@@ -1119,7 +1119,7 @@ export default function GraphsPage() {
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => handleOpenSaved(g)}
-                            className="flex items-center gap-1 text-xs text-forest-600 hover:text-forest-800 px-2.5 py-1 border border-forest-200 rounded-lg hover:bg-forest-50 transition-colors">
+                            className="flex items-center gap-1 text-xs text-[var(--text-primary)] hover:text-[var(--text-primary)] px-2.5 py-1 border border-[var(--border-subtle)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors">
                             <Eye className="w-3 h-3" /> Open
                           </button>
                           <button onClick={() => handleExportSavedCSV(g.name)}

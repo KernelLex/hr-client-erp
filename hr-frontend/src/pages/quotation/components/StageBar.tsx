@@ -11,8 +11,9 @@ export function StageBar({ current }: { current: string }) {
       {STAGES.map((s, i) => {
         const done = i < activeIdx
         const active = i === activeIdx
-        const bg = active ? "var(--brand-primary)" : done ? "var(--gold, #c8a24a)" : "var(--cream-dark, #ebe3d3)"
-        const color = active || done ? "#fff" : "var(--text-muted)"
+        // Monochrome: active = ink, done = mid-grey, upcoming = subtle.
+        const bg = active ? "var(--bg-inverse)" : done ? "var(--text-tertiary)" : "var(--bg-subtle)"
+        const color = active || done ? "var(--text-inverse)" : "var(--text-muted)"
         return (
           <div key={s} className="flex items-center">
             <div
@@ -22,7 +23,7 @@ export function StageBar({ current }: { current: string }) {
               {i + 1}. {s}
             </div>
             {i < STAGES.length - 1 && (
-              <div className="mx-0.5 h-px w-4" style={{ background: "var(--border, #e0d9cb)" }} />
+              <div className="mx-0.5 h-px w-4" style={{ background: "var(--border, #E3E3E3)" }} />
             )}
           </div>
         )

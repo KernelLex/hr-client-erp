@@ -178,7 +178,7 @@ export function BoqEditor() {
       <StageBar current="BOQ" />
       <DocumentLinkBar doctype="Vera BOQ" name={name} />
 
-      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #e0d9cb)", background: "#fff" }}>
+      <div className="mb-5 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
         <div className="mb-3 flex items-start justify-between">
           <div>
             <h1 className="font-heading text-xl font-semibold" style={{ color: "var(--brand-primary)" }}>{b.boq_title}</h1>
@@ -201,7 +201,7 @@ export function BoqEditor() {
           {b.approved_on && <HeaderCell label="Approved On" value={String(b.approved_on).slice(0, 16)} />}
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           {b.status === "Draft" && (
             <button onClick={() => action("submit_boq", "Submitted for review")} disabled={!!busy}
               className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--brand-primary)" }}>
@@ -210,13 +210,13 @@ export function BoqEditor() {
           )}
           {b.status === "Submitted" && (
             <button onClick={() => action("reopen_boq", "Reopened")} disabled={!!busy}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #e0d9cb)", color: "var(--brand-primary)" }}>
+              className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-40" style={{ border: "0.5px solid var(--border, #E3E3E3)", color: "var(--brand-primary)" }}>
               Reopen
             </button>
           )}
           {(b.status === "Draft" || b.status === "Submitted") && (
             <button onClick={() => action("approve_boq", "Approved — cost sheet & quotation unlocked")} disabled={!!busy}
-              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #c8a24a)" }}>
+              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--gold, #171717)" }}>
               Approve
             </button>
           )}
@@ -238,10 +238,10 @@ export function BoqEditor() {
 
       {/* Validation panel */}
       <div className="mb-5 rounded-xl p-3 text-sm" style={{
-        border: "0.5px solid " + (b.issues.length ? "#f3c2c2" : "#bfe3c9"),
-        background: b.issues.length ? "#fdeaea" : "#eef8f0",
+        border: "0.5px solid " + (b.issues.length ? "#f3c2c2" : "#F5F5F5"),
+        background: b.issues.length ? "#fdeaea" : "#F5F5F5",
       }}>
-        <div className="flex items-center gap-2 font-semibold" style={{ color: b.issues.length ? "#dc2626" : "#15803d" }}>
+        <div className="flex items-center gap-2 font-semibold" style={{ color: b.issues.length ? "#dc2626" : "#171717" }}>
           {b.issues.length ? <AlertTriangle size={15} /> : <CheckCircle2 size={15} />}
           {b.issues.length ? `${b.issues.length} validation issue(s) — must resolve before approval` : "Validation passed — ready to approve"}
         </div>
@@ -253,22 +253,22 @@ export function BoqEditor() {
       </div>
 
       {reuseHits.length > 0 && (
-        <div className="mb-4 rounded-xl p-4 shadow-sm" style={{ border: "0.5px solid #bbf7d0", background: "#f0fdf4" }}>
-          <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wide" style={{ color: "#15803d" }}>
-            ♻ Reclaimed stock you can reuse ({reuseHits.length})
+        <div className="mb-4 rounded-xl p-4 shadow-sm" style={{ border: "0.5px solid #F5F5F5", background: "#F5F5F5" }}>
+          <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wide" style={{ color: "#171717" }}>
+            ↻ Reclaimed stock you can reuse ({reuseHits.length})
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {reuseHits.map((h) => (
-              <div key={h.name} className="rounded-lg bg-white p-2.5" style={{ border: "0.5px solid #bbf7d0" }}>
+              <div key={h.name} className="rounded-lg bg-white p-2.5" style={{ border: "0.5px solid #F5F5F5" }}>
                 <div className="flex items-center justify-between">
                   <button onClick={() => navigate(`/quotation/reclaimed/${h.name}`)} className="text-left text-sm font-medium hover:underline" style={{ color: "var(--text-primary)" }}>{h.material_title}</button>
-                  <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: h.score >= 70 ? "#dcfce7" : "#fef9c3", color: h.score >= 70 ? "#15803d" : "#854d0e" }}>{h.score}%</span>
+                  <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: h.score >= 70 ? "#F5F5F5" : "#F5F5F5", color: h.score >= 70 ? "#171717" : "#171717" }}>{h.score}%</span>
                 </div>
                 <div className="text-xs" style={{ color: "var(--text-muted)" }}>{h.spec} · {h.dimensions}mm · fits {h.fits_unit}</div>
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>📍 {h.location} · {h.why}</div>
+                  <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>◉ {h.location} · {h.why}</div>
                   <button onClick={() => reservePiece(h.name)} disabled={busy === "reserve:" + h.name}
-                    className="shrink-0 rounded px-2 py-0.5 text-[11px] font-semibold text-white disabled:opacity-60" style={{ background: "#15803d" }}>
+                    className="shrink-0 rounded px-2 py-0.5 text-[11px] font-semibold text-white disabled:opacity-60" style={{ background: "#171717" }}>
                     {busy === "reserve:" + h.name ? "…" : "Reserve"}
                   </button>
                 </div>
@@ -279,8 +279,8 @@ export function BoqEditor() {
       )}
 
       <div className="mb-2 flex justify-end">
-        <button onClick={() => setReturnOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold" style={{ border: "1px solid #bbf7d0", color: "#15803d", background: "#f0fdf4" }}>
-          ♻ Return material to inventory
+        <button onClick={() => setReturnOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold" style={{ border: "1px solid #F5F5F5", color: "#171717", background: "#F5F5F5" }}>
+          ↻ Return material to inventory
         </button>
       </div>
       <RecordDrawer

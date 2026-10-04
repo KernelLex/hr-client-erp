@@ -33,7 +33,7 @@ function SectionCard({ title, section }: { title: string; section: CFSection }) 
           {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           {title} Activities
         </span>
-        <span className={`text-sm font-mono font-semibold ${section.net >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+        <span className={`text-sm font-mono font-semibold ${section.net >= 0 ? "text-[var(--text-primary)]" : "text-red-600"}`}>
           {fmtINR(section.net)}
         </span>
       </button>
@@ -45,7 +45,7 @@ function SectionCard({ title, section }: { title: string; section: CFSection }) 
             <div key={i} className="flex items-center justify-between px-4 py-2 text-sm">
               <span className="text-gray-600 truncate pr-3">{it.line_item}</span>
               <span className="font-mono text-xs shrink-0">
-                {it.inflow > 0 && <span className="text-emerald-700">+{fmtINR(it.inflow)}</span>}
+                {it.inflow > 0 && <span className="text-[var(--text-primary)]">+{fmtINR(it.inflow)}</span>}
                 {it.outflow > 0 && <span className="text-red-600 ml-2">−{fmtINR(it.outflow)}</span>}
               </span>
             </div>
@@ -72,7 +72,7 @@ export function CashFlowTab() {
       {/* Period comes from the shared Year → Month filter in the page header. */}
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Loader2 size={22} className="text-[#1e3a2f] animate-spin" />
+          <Loader2 size={22} className="text-[#171717] animate-spin" />
         </div>
       ) : isError ? (
         <p className="py-12 text-center text-sm text-red-500">Failed to load cash flow statement.</p>
@@ -85,7 +85,7 @@ export function CashFlowTab() {
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-gray-100 px-4 py-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total Inflow</p>
-              <p className="text-lg font-bold text-emerald-700">{fmtINR(data.grand_total.inflow)}</p>
+              <p className="text-lg font-bold text-[var(--text-primary)]">{fmtINR(data.grand_total.inflow)}</p>
             </div>
             <div className="rounded-xl border border-gray-100 px-4 py-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total Outflow</p>
@@ -93,7 +93,7 @@ export function CashFlowTab() {
             </div>
             <div className="rounded-xl border border-gray-100 px-4 py-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">Net Cash Flow</p>
-              <p className={`text-lg font-bold ${data.grand_total.net >= 0 ? "text-emerald-700" : "text-red-600"}`}>{fmtINR(data.grand_total.net)}</p>
+              <p className={`text-lg font-bold ${data.grand_total.net >= 0 ? "text-[var(--text-primary)]" : "text-red-600"}`}>{fmtINR(data.grand_total.net)}</p>
             </div>
           </div>
 
@@ -106,7 +106,7 @@ export function CashFlowTab() {
                   <div key={m.period} className="flex items-center gap-2 text-xs">
                     <span className="w-14 shrink-0 text-gray-500">{m.period}</span>
                     <div className="flex-1 flex gap-0.5 h-3">
-                      <div className="bg-emerald-500/70 rounded-sm" style={{ width: `${(m.inflow / maxMonthly) * 50}%` }} />
+                      <div className="bg-[var(--bg-subtle)]0 rounded-sm" style={{ width: `${(m.inflow / maxMonthly) * 50}%` }} />
                       <div className="bg-red-500/70 rounded-sm" style={{ width: `${(m.outflow / maxMonthly) * 50}%` }} />
                     </div>
                     <span className="w-16 shrink-0 text-right font-mono text-gray-500">{fmtINR(m.inflow - m.outflow)}</span>

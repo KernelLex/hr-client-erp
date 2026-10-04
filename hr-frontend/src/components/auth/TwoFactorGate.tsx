@@ -12,11 +12,11 @@ function Shell({ children }: { children: React.ReactNode }) {
   const abbr = activeCompany === ALL_COMPANIES ? "◆" : brand?.abbr || "V"
   const label = activeCompany === ALL_COMPANIES ? "All Companies" : brand?.label || "Vera ERP"
   return (
-    <div className="flex items-center justify-center h-screen px-4" style={{ background: "var(--bg-sidebar, #1e3a2f)" }}>
-      <div className="w-full bg-white rounded-2xl shadow-xl p-7" style={{ maxWidth: "440px", border: "0.5px solid var(--border, #e0d9cb)" }}>
+    <div className="flex items-center justify-center h-screen px-4" style={{ background: "var(--bg-sidebar, #171717)" }}>
+      <div className="w-full bg-white rounded-2xl shadow-xl p-7" style={{ maxWidth: "440px", border: "0.5px solid var(--border, #E3E3E3)" }}>
         <div className="flex items-center gap-2.5 mb-5">
           <div className="w-9 h-9 rounded-[10px] flex items-center justify-center font-heading text-lg text-white"
-            style={{ background: "linear-gradient(150deg, var(--gold-light,#d4b675), var(--gold,#c8a45c))" }}>{abbr}</div>
+            style={{ background: "linear-gradient(150deg, var(--gold-light,#171717), var(--gold,#171717))" }}>{abbr}</div>
           <div className="leading-tight">
             <div className="font-heading text-[16px] text-gray-900">{label}</div>
             <div className="text-[11px] text-gray-500">Two-Factor Authentication</div>
@@ -38,7 +38,7 @@ function CodeInput({ value, onChange, onEnter }: { value: string; onChange: (v: 
       onChange={(e) => onChange(e.target.value.replace(/[^0-9a-fA-F]/g, "").slice(0, 8))}
       onKeyDown={(e) => { if (e.key === "Enter") onEnter?.() }}
       className="w-full text-center tracking-[0.4em] text-xl font-semibold rounded-lg border px-3 py-3 outline-none focus:ring-2"
-      style={{ borderColor: "var(--border,#e0d9cb)", color: "#1e3a2f" }}
+      style={{ borderColor: "var(--border,#E3E3E3)", color: "#171717" }}
     />
   )
 }
@@ -47,7 +47,7 @@ function GoldButton({ onClick, disabled, children }: { onClick: () => void; disa
   return (
     <button onClick={onClick} disabled={disabled}
       className="w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
-      style={{ background: "var(--brand-primary,#1e3a2f)" }}>
+      style={{ background: "var(--brand-primary,#171717)" }}>
       {children}
     </button>
   )
@@ -79,8 +79,8 @@ function EnrollScreen({ onDone }: { onDone: () => void }) {
   if (backup) {
     return (
       <Shell>
-        <p className="text-sm text-gray-700 mb-3">✅ 2FA is on. Save these <strong>backup codes</strong> somewhere safe — each works once if you lose your phone.</p>
-        <div className="grid grid-cols-2 gap-2 mb-4 p-3 rounded-lg" style={{ background: "var(--cream,#f5efe4)" }}>
+        <p className="text-sm text-gray-700 mb-3">✓ 2FA is on. Save these <strong>backup codes</strong> somewhere safe — each works once if you lose your phone.</p>
+        <div className="grid grid-cols-2 gap-2 mb-4 p-3 rounded-lg" style={{ background: "var(--cream,#F5F5F5)" }}>
           {backup.map((c) => <code key={c} className="text-[13px] tracking-wider text-gray-800 text-center">{c}</code>)}
         </div>
         <GoldButton onClick={onDone}>I've saved them — continue</GoldButton>

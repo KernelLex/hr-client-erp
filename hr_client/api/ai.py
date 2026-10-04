@@ -8,6 +8,7 @@ from hr_client.utils.llm import (
     ask_llm_json,
     build_context,
     VERA_SYSTEM_PROMPT,
+    _pick_jd_model,   # the fast (3B) model — used for all latency-sensitive calls
 )
 
 _VE_DOCTYPES = [
@@ -342,41 +343,90 @@ def analyse_selected(doc_names_json):
 
 @frappe.whitelist()
 def get_business_snapshot():
-    """Quick aggregate snapshot for AI Insights page — from Tally data, no LLM required."""
+    """Aggregate snapshot for AI Insights + chat intents — computed LIVE from the
+    Tally data, company-scoped, using the SAME canonical source as the Dashboard's
+    financial card (operations.get_tally_financial_summary) and the Accounting page.
+
+    Previously this read a static tally_snapshot.json that drifted stale (e.g. it
+    lagged the 2026-09-23 re-import by ~2,500 vouchers) and was not company-scoped,
+    so the AI reported old, group-wide figures. Now there is a single source of
+    truth and the AI can never disagree with the Dashboard/Accounting page."""
     _require_admin()
     try:
-        snap = _load_tally_snapshot()
+        from hr_client.api.operations import get_tally_financial_summary, _cc, _cco, _cfilters, _current_fy
 
-        # Live voucher counts per type
+        company = _cc()
+        cco = _cco(company)          # ' AND company = <co> ' (empty for __ALL__)
+        V = "`tabVE Tally Voucher`"
+        L = "`tabVE Tally Ledger`"
+
+        # Canonical live financials (FY sales/purchases, receivables, payables,
+        # cash+bank, net GST) — identical to the Dashboard card.
+        fin = get_tally_financial_summary()
+
+        def _sq(sql, params=()):
+            rows = frappe.db.sql(sql, params, as_dict=True)
+            return float(rows[0]["v"] or 0) if rows else 0.0
+
+        # Live voucher counts + all-time totals per type (company-scoped).
         counts = frappe.db.sql(
-            "SELECT voucher_type, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
-            "FROM `tabVE Tally Voucher` WHERE is_cancelled=0 GROUP BY voucher_type",
-            as_dict=True
+            f"SELECT voucher_type, COUNT(*) as cnt, COALESCE(SUM(amount),0) as total "
+            f"FROM {V} WHERE is_cancelled=0{cco} GROUP BY voucher_type",
+            as_dict=True,
         )
         by_type = {r["voucher_type"]: r for r in counts}
 
         def _cnt(t): return int((by_type.get(t) or {}).get("cnt") or 0)
         def _tot(t): return float((by_type.get(t) or {}).get("total") or 0)
 
-        # Debtor/creditor counts from ledger
-        debtor_count  = frappe.db.count("VE Tally Ledger", {"is_debtors": 1})
-        creditor_count = frappe.db.count("VE Tally Ledger", {"is_creditors": 1})
+        total_vouchers = sum(_cnt(t) for t in by_type)
+
+        # FY collections (Receipt vouchers within the current FY).
+        fy_start, fy_end, _lbl = _current_fy()
+        fy_collections = _sq(
+            f"SELECT COALESCE(SUM(amount),0) v FROM {V} "
+            f"WHERE voucher_type='Receipt' AND is_cancelled=0 AND voucher_date>=%s AND voucher_date<%s{cco}",
+            (fy_start, fy_end),
+        )
+
+        # GST split + cash split — same sign convention as the Accounting page.
+        output_gst = _sq(f"SELECT COALESCE(SUM(closing_balance),0) v FROM {L} WHERE is_gst=1 AND closing_balance>0{cco}")
+        input_gst  = _sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_gst=1 AND closing_balance<0{cco}")
+        cash       = _sq(f"SELECT COALESCE(SUM(ABS(closing_balance)),0) v FROM {L} WHERE is_cash=1 AND closing_balance<0{cco}")
+        cash_bank  = float(fin.get("cash_bank_raw") or 0)
+        bank       = cash_bank - cash
+
+        # Ledger counts (company-scoped).
+        debtor_count   = frappe.db.count("VE Tally Ledger", _cfilters(company, {"is_debtors": 1}))
+        creditor_count = frappe.db.count("VE Tally Ledger", _cfilters(company, {"is_creditors": 1}))
+        ledger_count   = frappe.db.count("VE Tally Ledger", _cfilters(company))
+        stock_count    = frappe.db.count("VE Tally Stock Item", _cfilters(company))
+
+        # Top 5 debtors / creditors (live, correct sign).
+        td = frappe.db.sql(
+            f"SELECT ledger_name, ABS(closing_balance) amt FROM {L} "
+            f"WHERE is_debtors=1 AND closing_balance<0{cco} ORDER BY amt DESC LIMIT 5", as_dict=True)
+        tc = frappe.db.sql(
+            f"SELECT ledger_name, closing_balance amt FROM {L} "
+            f"WHERE is_creditors=1 AND closing_balance>0{cco} ORDER BY amt DESC LIMIT 5", as_dict=True)
+        top_debtors   = {r["ledger_name"]: float(r["amt"] or 0) for r in td}
+        top_creditors = {r["ledger_name"]: float(r["amt"] or 0) for r in tc}
 
         return {
             "success": True,
-            # Tally snapshot aggregates
-            "total_sales":         float(snap.get("total_sales_alltime", 0)),
-            "fy_sales":            float(snap.get("fy_sales", 0)),
-            "fy_purchases":        float(snap.get("fy_purchases", 0)),
-            "fy_collections":      float(snap.get("fy_collections", 0)),
-            "sundry_debtors":      float(snap.get("sundry_debtors", 0)),
-            "sundry_creditors":    float(snap.get("sundry_creditors", 0)),
-            "gst_payable":         float(snap.get("gst_payable", 0)),
-            "input_gst_credit":    float(snap.get("input_gst_credit", 0)),
-            "cash_in_hand":        float(snap.get("cash_in_hand", 0)),
-            "bank_balance":        float(snap.get("bank_balance", 0)),
-            "tds_payable":         float(snap.get("tds_payable", 0)),
-            # Live counts
+            # Canonical live financials
+            "total_sales":         _tot("Sales"),                      # all-time, live
+            "fy_sales":            float(fin.get("fy_sales_raw") or 0),
+            "fy_purchases":        float(fin.get("fy_purch_raw") or 0),
+            "fy_collections":      fy_collections,
+            "sundry_debtors":      float(fin.get("recv_raw") or 0),
+            "sundry_creditors":    float(fin.get("pay_raw") or 0),
+            "gst_payable":         output_gst,
+            "input_gst_credit":    input_gst,
+            "cash_in_hand":        cash,
+            "bank_balance":        bank,
+            "tds_payable":         0.0,
+            # Live voucher counts
             "sales_count":         _cnt("Sales"),
             "sales_total":         _tot("Sales"),
             "purchase_count":      _cnt("Purchase"),
@@ -388,16 +438,17 @@ def get_business_snapshot():
             "credit_note_count":   _cnt("Credit Note"),
             "debit_note_count":    _cnt("Debit Note"),
             "journal_count":       _cnt("Journal"),
-            "total_vouchers":      int(snap.get("voucher_count", 0)),
-            "total_ledgers":       int(snap.get("ledger_count", debtor_count + creditor_count)),
-            "stock_item_count":    int(snap.get("stock_item_count", 0)),
+            "total_vouchers":      total_vouchers,
+            "total_ledgers":       ledger_count,
+            "stock_item_count":    stock_count,
             "debtor_count":        debtor_count,
             "creditor_count":      creditor_count,
-            "top_debtors":         snap.get("top_debtors", {}),
-            "top_creditors":       snap.get("top_creditors", {}),
-            "monthly_sales":       snap.get("monthly_sales", {}),
-            "monthly_purchases":   snap.get("monthly_purchases", {}),
-            "monthly_collections": snap.get("monthly_collections", {}),
+            "top_debtors":         top_debtors,
+            "top_creditors":       top_creditors,
+            # Monthly series are not consumed by the current UI; kept for shape.
+            "monthly_sales":       {},
+            "monthly_purchases":   {},
+            "monthly_collections": {},
         }
     except Exception as e:
         frappe.log_error(str(e)[:300], "AI: get_business_snapshot")
@@ -405,8 +456,9 @@ def get_business_snapshot():
 
 
 def _build_fast_context() -> str:
-    """Compact snapshot-only context — no live DB queries, fits well within 2048 token window."""
-    snap = _load_tally_snapshot()
+    """Compact financial context for the AI narrative + reports — computed LIVE
+    (company-scoped) from get_business_snapshot, so prose never cites stale figures."""
+    snap = get_business_snapshot()
     def _c(k, default=0):
         try: return float(snap.get(k, default) or default)
         except Exception: return default
@@ -424,7 +476,7 @@ def _build_fast_context() -> str:
         f"Debtors: ₹{debtors:,.0f} (DSR ~{dsr:.0f}d) | Creditors: ₹{_c('sundry_creditors'):,.0f}",
         f"GST Payable: ₹{_c('gst_payable'):,.0f} | Input Credit: ₹{_c('input_gst_credit'):,.0f} | Net GST: ₹{gst_net:,.0f}",
         f"Cash: ₹{_c('cash_in_hand'):,.0f} | Bank: ₹{_c('bank_balance'):,.0f}",
-        f"All-time Sales: ₹{_c('total_sales_alltime'):,.0f} | Vouchers: {int(_c('voucher_count')):,}",
+        f"All-time Sales: ₹{_c('total_sales'):,.0f} | Vouchers: {int(_c('total_vouchers')):,}",
     ]
     # Top 3 debtors if available
     top_d = snap.get("top_debtors", {})
@@ -435,47 +487,161 @@ def _build_fast_context() -> str:
     return "\n".join(lines)
 
 
-@frappe.whitelist()
-def get_dashboard_insights():
-    """Generate AI health score. Cached 5 min in Redis — snapshot rarely changes."""
-    _require_admin()
-    if not is_ollama_running():
-        return {"success": False, "reason": "Ollama not running",
-                "health_score": None, "insights": [], "alerts": []}
+_AI_NARRATIVE_CACHE_KEY = "vera_ai_insight_narrative"
 
-    cache_key = "vera_ai_health_score"
-    cached = frappe.cache().get_value(cache_key)
-    if cached:
+
+def _compute_insights() -> dict:
+    """Deterministic business-health analysis computed from the LIVE, company-scoped
+    snapshot (same source as the Dashboard) — no LLM. Returns instantly and still
+    works when Ollama is down, so the Insights page never waits on the model."""
+    snap = get_business_snapshot()
+
+    def _c(k, d=0.0):
         try:
-            return json.loads(cached)
+            return float(snap.get(k, d) or d)
         except Exception:
-            pass
+            return d
 
-    context = _build_fast_context()
-    prompt = (
-        f"Data: {context}\n"
-        'JSON: {"health_score":0-100,"health_label":"Good","insights":["s1","s2","s3"],'
-        '"alerts":["a1"],"recommendations":["r1","r2"]}'
-    )
+    sales       = _c("fy_sales")
+    purchases   = _c("fy_purchases")
+    collections = _c("fy_collections")
+    debtors     = _c("sundry_debtors")
+    creditors   = _c("sundry_creditors")
+    gst_pay     = _c("gst_payable")
+    gst_cred    = _c("input_gst_credit")
+    gst_net     = max(0.0, gst_pay - gst_cred)
+    cash_bank   = _c("cash_in_hand") + _c("bank_balance")
+    dsr         = round(debtors / sales * 365) if sales > 0 else 0
 
-    result = ask_llm_json(prompt, max_tokens=180)
-    if not result:
-        return {"success": False, "reason": "LLM did not return valid JSON"}
+    def inr(n):
+        return f"₹{n:,.0f}"
 
-    for key in ("insights", "alerts", "recommendations"):
-        if key in result and isinstance(result[key], list):
-            result[key] = [
-                item if isinstance(item, str)
-                else (item.get("text") or item.get("insight") or item.get("message") or str(item))
-                for item in result[key] if item
-            ]
+    # --- deterministic health score (0-100) ---
+    score = 100
+    if dsr > 90:
+        score -= 20
+    elif dsr > 60:
+        score -= 10
+    if cash_bank <= 0:
+        score -= 25
+    elif gst_net > cash_bank:
+        score -= 12
+    if creditors > max(debtors, 1.0) * 1.5:
+        score -= 10
+    if sales <= 0:
+        score -= 15
+    score = max(0, min(100, score))
+    label = ("Excellent" if score >= 85 else "Good" if score >= 70
+             else "Fair" if score >= 50 else "Needs Attention")
 
-    result["success"] = True
+    # --- factual insights (always true, no guessing) ---
+    insights = []
+    if sales > 0:
+        insights.append(f"FY sales {inr(sales)} vs purchases {inr(purchases)} (gross {inr(sales - purchases)}).")
+    if debtors > 0:
+        insights.append(f"Receivables {inr(debtors)} outstanding (DSR ~{dsr}d).")
+    insights.append(f"Cash + bank on hand {inr(cash_bank)}.")
+    if collections > 0:
+        insights.append(f"Collections this FY {inr(collections)}.")
+
+    # --- alerts (what needs action) ---
+    alerts = []
+    if gst_net > 0:
+        alerts.append(f"Net GST payable {inr(gst_net)} — ensure it is funded and filed on time.")
+    if dsr > 90:
+        alerts.append(f"Collections are slow (DSR ~{dsr}d) — chase the largest debtors.")
+    if cash_bank > 0 and gst_net > cash_bank:
+        alerts.append(f"Net GST due ({inr(gst_net)}) exceeds cash + bank ({inr(cash_bank)}) — watch liquidity.")
+    if cash_bank <= 0:
+        alerts.append("Cash + bank balance is zero or negative — review bank data / funding.")
+
+    # --- recommendations ---
+    recs = []
+    if dsr > 60:
+        recs.append("Prioritise collection on invoices older than 60 days.")
+    if creditors > debtors:
+        recs.append("Payables exceed receivables — stagger vendor payments to protect cash.")
+    if gst_net > 0:
+        recs.append("Set aside the net GST amount before the filing due date.")
+    if not recs:
+        recs.append("Financials look balanced — keep monitoring collections and GST.")
+
+    return {
+        "health_score": score,
+        "health_label": label,
+        "insights": insights,
+        "alerts": alerts,
+        "recommendations": recs,
+    }
+
+
+def refresh_ai_insights():
+    """Background/scheduler job: write a short plain-English narrative from the
+    computed metrics and cache it. Small prompt + short output = fast on CPU.
+    Not whitelisted — runs without a session (scheduler/enqueue)."""
+    if not is_ollama_running():
+        return False
     try:
-        frappe.cache().set_value(cache_key, json.dumps(result), expires_in_sec=300)
-    except Exception:
-        pass
-    return result
+        # Scheduler/enqueue has no web session → pin the primary company so the live
+        # snapshot resolves deterministically. If live data can't be read in this
+        # context, skip (don't cache a misleading all-zero narrative).
+        from hr_client.api.utils import COMPANY_NAME
+        if not frappe.form_dict.get("company"):
+            frappe.form_dict["company"] = COMPANY_NAME
+        snap = get_business_snapshot()
+        if not snap.get("success"):
+            return False
+        context = _build_fast_context()
+        prompt = (
+            f"{context}\n\n"
+            "In 2-3 short sentences, summarise this business's financial health for the "
+            "owner and name the single most important thing to watch. Use ₹ with Indian "
+            "comma notation. No preamble, no bullet points, no headings."
+        )
+        text = ask_llm(prompt, system=VERA_SYSTEM_PROMPT, model=_pick_jd_model(), max_tokens=140, temperature=0.3)
+        if text and text.strip():
+            frappe.cache().set_value(_AI_NARRATIVE_CACHE_KEY, text.strip(), expires_in_sec=7200)
+            return True
+    except Exception as e:
+        frappe.log_error(str(e)[:300], "AI: refresh_ai_insights")
+    return False
+
+
+@frappe.whitelist()
+def get_dashboard_insights(force=0):
+    """Instant business-health insights. Numbers + analysis are computed
+    deterministically from the Tally snapshot (no LLM wait). An optional AI
+    narrative is served from cache; if absent it is generated in the background
+    (ai_pending=True) and appears on the next poll. force=1 regenerates it now."""
+    _require_admin()
+    data = _compute_insights()
+    data["success"] = True
+
+    force = frappe.utils.cint(force)
+    ollama = is_ollama_running()
+
+    if force and ollama:
+        refresh_ai_insights()  # synchronous — explicit user action
+
+    narrative = frappe.cache().get_value(_AI_NARRATIVE_CACHE_KEY)
+    if narrative:
+        data["ai_summary"] = narrative
+        data["ai_pending"] = False
+    else:
+        data["ai_summary"] = None
+        data["ai_pending"] = bool(ollama)
+        # Enqueue a background generation, but only once per 2 min so the page's
+        # poll-while-pending can't spam the worker queue.
+        if ollama and not force and not frappe.cache().get_value("vera_ai_insight_refresh_lock"):
+            try:
+                frappe.cache().set_value("vera_ai_insight_refresh_lock", "1", expires_in_sec=120)
+                frappe.enqueue(
+                    "hr_client.api.ai.refresh_ai_insights",
+                    queue="long", timeout=180, enqueue_after_commit=True,
+                )
+            except Exception:
+                pass
+    return data
 
 
 @frappe.whitelist()
@@ -559,7 +725,7 @@ def compare_periods(period1, period2):
         'JSON: {"summary":"1-2 sentences","key_differences":["s1","s2"],"recommendation":"s"}'
     )
 
-    result = ask_llm_json(prompt, max_tokens=120)
+    result = ask_llm_json(prompt, model=_pick_jd_model(), max_tokens=120)
     if not result:
         trend = "improving" if revenue_chg > 5 else "declining" if revenue_chg < -5 else "stable"
         result = {
@@ -600,6 +766,24 @@ def chat(message, history_json=None, context_type="general"):
         return {"success": False, "reply": "Empty message."}
     if len(str(message)) > 1000:
         return {"success": False, "reply": "Message too long (max 1000 characters)."}
+
+    # 1) FAST PATH — intent router. Map the question to a known intent backed by a
+    # safe preset query, compute exact numbers in Python, then have the LLM phrase
+    # them from a tiny prompt (fast on CPU). No LLM-written SQL ever runs.
+    facts = None
+    try:
+        from hr_client.api.ai_intents import route_question
+        facts = route_question(message)
+    except Exception as e:
+        frappe.log_error(str(e)[:300], "AI Chat intent routing")
+
+    if facts:
+        # The facts string is already exact and readable — return it immediately.
+        # No LLM round-trip = instant (sub-second) answers for the common questions.
+        return {"success": True, "reply": facts, "source": "data"}
+
+    # 2) FALLBACK — no preset matched: whole-company context chat (slower, but keeps
+    # the assistant able to answer open-ended questions).
     if not is_ollama_running():
         return {
             "success": False,
@@ -625,8 +809,8 @@ def chat(message, history_json=None, context_type="general"):
 
     try:
         import requests as _requests
-        from hr_client.utils.llm import _pick_model, OLLAMA_BASE
-        model = _pick_model()
+        from hr_client.utils.llm import OLLAMA_BASE
+        model = _pick_jd_model()   # fast 3B — the rare open-ended path, kept snappy
         resp = _requests.post(
             f"{OLLAMA_BASE}/api/chat",
             json={
@@ -634,7 +818,7 @@ def chat(message, history_json=None, context_type="general"):
                 "messages": messages_for_llm,
                 "stream": False,
                 "keep_alive": -1,
-                "options": {"temperature": 0.3, "num_predict": 400, "num_ctx": 4096},
+                "options": {"temperature": 0.3, "num_predict": 300, "num_ctx": 2048},
             },
             # Under gunicorn's raised 300s worker timeout so a slow reply fails gracefully.
             timeout=150,
@@ -649,9 +833,19 @@ def chat(message, history_json=None, context_type="general"):
 
 
 @frappe.whitelist()
-def generate_report(report_type, filters_json=None):
-    """Generate a natural language business report."""
+def generate_report(report_type, filters_json=None, force=0):
+    """Generate a natural-language business report. Cached per report type for 1h
+    (reports don't change minute-to-minute) so repeat views are instant; uses the
+    fast 3B model; force=1 regenerates."""
     _require_admin()
+
+    force = frappe.utils.cint(force)
+    cache_key = f"vera_ai_report::{report_type}"
+    if not force:
+        cached = frappe.cache().get_value(cache_key)
+        if cached:
+            return {"success": True, "report_type": report_type, "report": cached, "cached": True}
+
     if not is_ollama_running():
         return {"success": False, "reason": "Ollama not running"}
 
@@ -675,9 +869,14 @@ def generate_report(report_type, filters_json=None):
     base_prompt = report_prompts.get(report_type, f"Generate a {report_type} report for {COMPANY_NAME}.")
     prompt = f"{base_prompt}\n\nData:\n{context}\n\nUse ₹ for rupees. 3-4 short paragraphs."
 
-    report = ask_llm(prompt, temperature=0.3, max_tokens=600)
+    # Fast 3B model + tighter length (350 tokens ≈ 3-4 short paragraphs) for speed.
+    report = ask_llm(prompt, model=_pick_jd_model(), temperature=0.3, max_tokens=350)
     if not report:
         return {"success": False, "reason": "Ollama did not return a response"}
+    try:
+        frappe.cache().set_value(cache_key, report, expires_in_sec=3600)
+    except Exception:
+        pass
     return {"success": True, "report_type": report_type, "report": report}
 
 

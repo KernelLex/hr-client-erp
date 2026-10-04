@@ -93,7 +93,7 @@ export function EmployeeDetailPage() {
 
           {/* Status badges */}
           <div className="flex flex-col gap-1.5 items-center">
-            <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", emp.status === "Active" ? "bg-green-100 text-green-700" : emp.status === "Left" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600")}>
+            <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", emp.status === "Active" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : emp.status === "Left" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600")}>
               {emp.status}
             </span>
             {isOnboarding && (
@@ -102,7 +102,7 @@ export function EmployeeDetailPage() {
               </span>
             )}
             {hasExit && (
-              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-[var(--bg-subtle)] text-[var(--text-primary)]">
                 Resigned
               </span>
             )}
@@ -209,13 +209,13 @@ export function EmployeeDetailPage() {
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <p className="text-[11px] text-gray-400 mb-0.5">Status</p>
-                      <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", exit.status === "Settled" ? "bg-green-100 text-green-700" : exit.status === "Interview Done" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600")}>
+                      <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", exit.status === "Settled" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : exit.status === "Interview Done" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-gray-100 text-gray-600")}>
                         {exit.status}
                       </span>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <p className="text-[11px] text-gray-400 mb-0.5">Final Settlement</p>
-                      <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", exit.final_settlement_status === "Done" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700")}>
+                      <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", exit.final_settlement_status === "Done" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-[var(--bg-subtle)] text-[var(--text-primary)]")}>
                         {exit.final_settlement_status}
                       </span>
                     </div>
@@ -237,8 +237,8 @@ export function EmployeeDetailPage() {
                         <div>
                           <p className="text-xs text-gray-400 mb-1.5">Would recommend this company?</p>
                           <div className="flex items-center gap-2">
-                            {exit.would_recommend === "Yes" && <ThumbsUp size={16} className="text-green-600" />}
-                            {exit.would_recommend === "Maybe" && <Minus size={16} className="text-yellow-600" />}
+                            {exit.would_recommend === "Yes" && <ThumbsUp size={16} className="text-[var(--text-primary)]" />}
+                            {exit.would_recommend === "Maybe" && <Minus size={16} className="text-[var(--text-primary)]" />}
                             {exit.would_recommend === "No" && <ThumbsDown size={16} className="text-red-600" />}
                             <span className="text-sm font-medium text-gray-800">{exit.would_recommend}</span>
                           </div>
@@ -267,7 +267,7 @@ export function EmployeeDetailPage() {
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 text-xs text-amber-700">
+                    <div className="flex items-start gap-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg px-4 py-3 text-xs text-[var(--text-primary)]">
                       <AlertTriangle size={14} className="shrink-0 mt-0.5" />
                       Exit interview not yet completed.
                     </div>

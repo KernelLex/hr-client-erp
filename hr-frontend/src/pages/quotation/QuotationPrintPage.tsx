@@ -98,7 +98,7 @@ export function QuotationPrintPage() {
 
       {/* Cover page (§5) — optional lead page for project quotes; own print page. */}
       {showCover && d.customer_facing && (
-        <div className="mx-auto mb-6 flex max-w-3xl flex-col items-center justify-center rounded-xl bg-white p-12 text-center shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)", minHeight: "60vh", breakAfter: "page" }}>
+        <div className="mx-auto mb-6 flex max-w-3xl flex-col items-center justify-center rounded-xl bg-white p-12 text-center shadow-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)", minHeight: "60vh", breakAfter: "page" }}>
           {d.company_info?.name && <div className="font-heading text-2xl font-bold tracking-wide" style={{ color: "var(--brand-primary)" }}>{d.company_info.name}</div>}
           {d.company_info?.address && <div className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>{d.company_info.address}</div>}
           <div className="mt-16 text-[11px] uppercase tracking-[0.3em]" style={{ color: "var(--text-muted)" }}>Quotation</div>
@@ -114,12 +114,12 @@ export function QuotationPrintPage() {
         </div>
       )}
 
-      <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm" style={{ border: "0.5px solid var(--border, #e0d9cb)" }}>
+      <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm" style={{ border: "0.5px solid var(--border, #E3E3E3)" }}>
         {d.watermark && <div className="mb-4 text-center text-sm font-bold tracking-widest" style={{ color: "#dc2626" }}>{d.watermark}</div>}
 
         {/* Letterhead (§3) — customer-facing formats only. */}
         {d.company_info?.name && (
-          <div className="mb-4 border-b pb-3 text-center" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="mb-4 border-b pb-3 text-center" style={{ borderColor: "var(--border, #E3E3E3)" }}>
             <div className="font-heading text-lg font-bold tracking-wide" style={{ color: "var(--brand-primary)" }}>{d.company_info.name}</div>
             {d.company_info.address && <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>{d.company_info.address}</div>}
             <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>
@@ -129,7 +129,7 @@ export function QuotationPrintPage() {
           </div>
         )}
 
-        <div className="mb-6 flex items-start justify-between border-b pb-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="mb-6 flex items-start justify-between border-b pb-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           <div>
             <div className="text-[11px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{d.format_label}</div>
             <h1 className="font-heading text-2xl font-semibold" style={{ color: "var(--brand-primary)" }}>{d.title}</h1>
@@ -152,7 +152,7 @@ export function QuotationPrintPage() {
             </thead>
             <tbody>
               {(d.sections ?? []).map((s, i) => (
-                <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                <tr key={i} className="border-t" style={{ borderColor: "var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
                   <td className="py-1.5">{i + 1}</td><td className="py-1.5">{s.section}</td>
                   <td className="py-1.5 text-right">{inr(s.subtotal)}</td>
                 </tr>
@@ -176,7 +176,7 @@ export function QuotationPrintPage() {
                 </thead>
                 <tbody>
                   {s.lines.map((ln, i) => (
-                    <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                    <tr key={i} className="border-t" style={{ borderColor: "var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
                       <td className="py-1">{ln.specification || "—"}</td>
                       {showDimensions && <td className="py-1">{ln.measurement || "—"}</td>}
                       <td className="py-1 text-right">{ln.quantity ?? "—"}</td>
@@ -186,7 +186,7 @@ export function QuotationPrintPage() {
                     </tr>
                   ))}
                   {showPricing && (
-                    <tr className="border-t font-semibold" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                    <tr className="border-t font-semibold" style={{ borderColor: "var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
                       <td className="py-1" colSpan={preAmountCols}>Section Total — {s.section}</td>
                       <td className="py-1 text-right">{inr(s.subtotal)}</td>
                     </tr>
@@ -213,7 +213,7 @@ export function QuotationPrintPage() {
                   <Row label={`SGST (${d.sgst_percent}%)`} value={inr(d.sgst_amount)} />
                 </>
               )}
-              <div className="border-t pt-1" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+              <div className="border-t pt-1" style={{ borderColor: "var(--border, #E3E3E3)" }}>
                 <Row label="Grand Total" value={inr(d.grand_total)} strong />
               </div>
             </div>
@@ -225,7 +225,7 @@ export function QuotationPrintPage() {
 
         {/* Optional / alternate items (§23/§24) — priced add-ons, not in the grand total. */}
         {(d.optional_lines?.length ?? 0) > 0 && (
-          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Optional Items <span className="normal-case font-normal">(not included in the grand total)</span></div>
             <table className="w-full text-sm">
               <thead>
@@ -238,7 +238,7 @@ export function QuotationPrintPage() {
               </thead>
               <tbody>
                 {d.optional_lines!.map((ln, i) => (
-                  <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                  <tr key={i} className="border-t" style={{ borderColor: "var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
                     <td className="py-1">{ln.specification || "—"}</td>
                     {showDimensions && <td className="py-1">{ln.measurement || "—"}</td>}
                     <td className="py-1 text-right">{ln.quantity ?? "—"}</td>
@@ -254,7 +254,7 @@ export function QuotationPrintPage() {
 
         {/* Payment schedule (§28) — customer-facing, derived from the grand total. */}
         {d.customer_facing && d.payment_schedule && d.payment_schedule.length > 0 && (
-          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Payment Terms</div>
             <table className="w-full text-sm">
               <thead>
@@ -264,7 +264,7 @@ export function QuotationPrintPage() {
               </thead>
               <tbody>
                 {d.payment_schedule.map((p, i) => (
-                  <tr key={i} className="border-t" style={{ borderColor: "var(--border, #e0d9cb)", color: "var(--text-primary)" }}>
+                  <tr key={i} className="border-t" style={{ borderColor: "var(--border, #E3E3E3)", color: "var(--text-primary)" }}>
                     <td className="py-1">{p.stage}</td>
                     <td className="py-1 text-right">{p.percent}%</td>
                     <td className="py-1 text-right">{inr(p.amount)}</td>
@@ -302,7 +302,7 @@ export function QuotationPrintPage() {
 
         {/* Delivery & execution terms (§12/§29/§30/§35) — customer-facing. */}
         {d.customer_facing && (d.validity_days || d.delivery_period || d.installation_period || d.warranty_terms) && (
-          <div className="mt-6 grid gap-3 border-t pt-4 md:grid-cols-2" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="mt-6 grid gap-3 border-t pt-4 md:grid-cols-2" style={{ borderColor: "var(--border, #E3E3E3)" }}>
             {!!d.validity_days && <Row label="Quotation Validity" value={`${d.validity_days} days from date`} />}
             {d.delivery_period && <Row label="Delivery Period" value={d.delivery_period} />}
             {d.installation_period && <Row label="Installation Period" value={d.installation_period} />}
@@ -317,10 +317,10 @@ export function QuotationPrintPage() {
 
         {/* Inclusions / Exclusions (§31/§32) — customer-facing. */}
         {d.customer_facing && ((d.inclusions?.length ?? 0) > 0 || (d.exclusions?.length ?? 0) > 0) && (
-          <div className="mt-6 grid gap-4 border-t pt-4 md:grid-cols-2" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="mt-6 grid gap-4 border-t pt-4 md:grid-cols-2" style={{ borderColor: "var(--border, #E3E3E3)" }}>
             {(d.inclusions?.length ?? 0) > 0 && (
               <div>
-                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#15803d" }}>Included</div>
+                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#171717" }}>Included</div>
                 <ul className="list-disc pl-5 text-sm" style={{ color: "var(--text-primary)" }}>
                   {d.inclusions!.map((x, i) => <li key={i}>{x}</li>)}
                 </ul>
@@ -338,14 +338,14 @@ export function QuotationPrintPage() {
         )}
 
         {d.customer_facing && d.assumptions && (
-          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Assumptions</div>
             <pre className="whitespace-pre-wrap text-xs" style={{ color: "var(--text-primary)", fontFamily: "inherit" }}>{d.assumptions}</pre>
           </div>
         )}
 
         {d.terms_and_conditions && (
-          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>Terms &amp; Conditions</div>
             <pre className="whitespace-pre-wrap text-xs" style={{ color: "var(--text-primary)", fontFamily: "inherit" }}>{d.terms_and_conditions}</pre>
           </div>

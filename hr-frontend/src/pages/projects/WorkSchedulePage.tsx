@@ -9,8 +9,8 @@ type Card = { name: string; title: string; project: string; stage?: string; assi
 type Resp = { cards: Card[]; kpis: Record<string, number> }
 
 const STATUS_COLORS: Record<string, string> = {
-  "To Do": "bg-gray-100 text-gray-600", "In Progress": "bg-blue-100 text-blue-700",
-  "Done": "bg-emerald-100 text-emerald-700", "Blocked": "bg-red-100 text-red-700",
+  "To Do": "bg-gray-100 text-gray-600", "In Progress": "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+  "Done": "bg-[var(--bg-subtle)] text-[var(--text-primary)]", "Blocked": "bg-red-100 text-red-700",
 }
 
 export function WorkSchedulePage() {
@@ -31,7 +31,7 @@ export function WorkSchedulePage() {
   const k = q.data?.kpis
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 mx-auto">
       <h1 className="text-2xl font-bold text-slate-800 mb-1">Work Schedule</h1>
       <p className="text-sm text-gray-500 mb-4">Daily work cards across all projects — plan and analyse the PM / carpenter schedule.</p>
 
@@ -54,7 +54,7 @@ export function WorkSchedulePage() {
           <div className="text-sm font-semibold text-slate-600 mb-2">{d}</div>
           <div className="space-y-1.5">
             {byDate[d].map((c) => (
-              <div key={c.name} onClick={() => nav(`/projects/${c.project}`)} className="flex justify-between items-center bg-white rounded-lg border border-gray-100 px-3 py-2 text-sm hover:border-indigo-300 cursor-pointer">
+              <div key={c.name} onClick={() => nav(`/projects/${c.project}`)} className="flex justify-between items-center bg-white rounded-lg border border-gray-100 px-3 py-2 text-sm hover:border-[var(--border-subtle)] cursor-pointer">
                 <div><span className="text-slate-700">{c.title}</span> <span className="text-xs text-gray-400">· {c.assigned_to || "unassigned"} · {c.project} · {c.stage}</span></div>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[c.status] || "bg-gray-100"}`}>{c.status}</span>
               </div>

@@ -45,7 +45,7 @@ export function DocumentLinkBar({ doctype, name }: { doctype: string; name: stri
               onClick={() => to && navigate(to)}
               className="rounded px-1.5 py-0.5 disabled:cursor-default"
               style={{
-                background: current ? "var(--brand-primary)" : "var(--cream-dark, #ebe3d3)",
+                background: current ? "var(--brand-primary)" : "var(--cream-dark, #F5F5F5)",
                 color: current ? "#fff" : "var(--brand-primary)",
               }}
               title={`${s.label} ${val}`}

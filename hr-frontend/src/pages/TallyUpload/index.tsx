@@ -264,7 +264,7 @@ export default function TallyUploadPage() {
 
   const fileLabel = (f: ServerFile) => `${f.filename} · ${f.size_fmt} · ${f.modified}`
   const roleBadge = (role: string) =>
-    role === "masters" ? "bg-blue-100 text-blue-700" : role === "transactions" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
+    role === "masters" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : role === "transactions" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-gray-100 text-gray-500"
 
   // ── Group console: no single company selected — nothing to import into ──
   if (isAll) {
@@ -272,7 +272,7 @@ export default function TallyUploadPage() {
       <div>
         <PageHeader workspaceLabel="Finance" title="Tally Data Import" />
         <div className="px-6 md:px-7 pb-8">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 flex items-start gap-3 max-w-2xl">
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-5 py-4 text-sm text-[var(--text-primary)] flex items-start gap-3 max-w-2xl">
             <Building2 size={18} className="shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold">Pick a company first</p>
@@ -319,7 +319,7 @@ export default function TallyUploadPage() {
             return (
               <div key={s} className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white"
-                  style={{ background: active || done ? accent : "#cbd5e1" }}>
+                  style={{ background: active || done ? accent : "#d6d6d6" }}>
                   {done ? "✓" : i + 1}
                 </span>
                 <span style={{ color: active ? accent : "var(--text-secondary)" }}>
@@ -344,7 +344,7 @@ export default function TallyUploadPage() {
         {/* ── DONE ────────────────────────────────────────────────────── */}
         {phase === "done" && (
           <div className="flex flex-col items-center gap-3 py-8">
-            <CheckCircle2 size={40} className="text-emerald-500" />
+            <CheckCircle2 size={40} className="text-[var(--text-tertiary)]0" />
             <p className="font-semibold text-gray-800">Import complete — {companyLabel} figures refreshed</p>
             <p className="text-sm text-gray-500 text-center max-w-lg">{msg}</p>
             <button onClick={reset} className="mt-1 px-4 py-2 rounded-lg text-sm font-medium text-white"
@@ -398,7 +398,7 @@ export default function TallyUploadPage() {
                 {filesLoading && !listing ? (
                   <div className="flex items-center gap-2 py-6 text-sm text-gray-400"><Loader2 size={16} className="animate-spin" /> Scanning server for Tally files…</div>
                 ) : !listing || listing.files.length === 0 ? (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)]">
                     No Tally XML files found on the server. Upload from your computer instead, or place exports
                     in <code className="font-mono">/home/vera/tally_uploads</code> then rescan.
                   </div>
@@ -446,7 +446,7 @@ export default function TallyUploadPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs text-blue-800 flex items-start gap-2">
+                <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-2.5 text-xs text-[var(--text-primary)] flex items-start gap-2">
                   <AlertCircle size={13} className="shrink-0 mt-0.5" />
                   <span>Large files are supported — they upload in chunks, so the full Transactions export
                     (~1.5 GB) and Masters (~120 MB) work fine over the internet. Keep this tab open until upload finishes.</span>
@@ -514,7 +514,7 @@ export default function TallyUploadPage() {
 
                   {/* Case A — verified match */}
                   {detect.matches && (
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-start gap-2">
+                    <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)] flex items-start gap-2">
                       <ShieldCheck size={16} className="shrink-0 mt-0.5" />
                       <span>Verified — this file belongs to <strong>{companyLabel}</strong>. Safe to import.</span>
                     </div>
@@ -522,7 +522,7 @@ export default function TallyUploadPage() {
 
                   {/* Case B — nothing confirmed yet: owner confirms the detected name */}
                   {!detect.matches && detect.detected && !detect.expected && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 space-y-2">
+                    <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)] space-y-2">
                       <div className="flex items-start gap-2">
                         <ShieldAlert size={16} className="shrink-0 mt-0.5" />
                         <span>No Tally company name is saved for <strong>{companyLabel}</strong> yet.

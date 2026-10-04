@@ -8,79 +8,170 @@
 
 @layer base {
   :root {
-    /* shadcn tokens — plain hex so Tailwind's hsl(var(--x)) mapping never
-       receives an oklch() value (that combination silently renders transparent) */
-    --background: 0 0% 100%;
-    --foreground: 210 10% 15%;
-    --card: 0 0% 100%;
-    --card-foreground: 210 10% 15%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 10% 15%;
-    --primary: 152 32% 15%;
-    --primary-foreground: 42 38% 93%;
-    --secondary: 42 30% 90%;
-    --secondary-foreground: 152 32% 15%;
-    --muted: 42 24% 93%;
-    --muted-foreground: 60 4% 45%;
-    --accent: 38 45% 55%;
-    --accent-foreground: 152 32% 15%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 40 20% 85%;
-    --input: 40 20% 85%;
-    --ring: 38 45% 55%;
-    --radius: 0.75rem;
-    --chart-1: 152 32% 15%;
-    --chart-2: 38 45% 55%;
-    --chart-3: 142 71% 35%;
-    --chart-4: 25 90% 48%;
-    --chart-5: 0 65% 45%;
-    --sidebar: 152 32% 15%;
-    --sidebar-foreground: 42 30% 80%;
-    --sidebar-primary: 38 45% 55%;
-    --sidebar-primary-foreground: 152 32% 15%;
-    --sidebar-accent: 152 25% 25%;
-    --sidebar-accent-foreground: 42 38% 93%;
-    --sidebar-border: 152 25% 25%;
-    --sidebar-ring: 38 45% 55%;
+    /* ========================================================================
+       MONOCHROME UI OVERHAUL (2026-10) — one neutral scale, no hue.
+       Hierarchy comes from size / weight / contrast / space, never colour.
+       Status is shown by icon + label, never colour alone.
+       The gold/forest brand tokens below are REMAPPED onto greyscale so every
+       token-driven surface in the app turns monochrome without per-file edits.
+       ======================================================================== */
 
-    /* Design system tokens — gold / forest-green (Vera brand) */
-    --brand-primary: #1e3a2f;
-    --brand-primary-light: #e8f0e8;
-    --brand-primary-dark: #14261e;
-    --brand-accent: #c8a45c;
-    --gold: #c8a45c;
-    --gold-light: #d4b675;
-    --cream: #f5efe4;
-    --cream-dark: #ebe3d3;
-    --bg-app: #f5efe4;
+    /* Neutral scale (shared by light + dark) */
+    --n0:#FFFFFF; --n50:#FAFAFA; --n100:#F5F5F5; --n150:#EDEDED; --n200:#E3E3E3;
+    --n300:#C7C7C7; --n400:#A8A8A8; --n500:#8F8F8F; --n600:#6B6B6B; --n700:#4D4D4D;
+    --n800:#2E2E2E; --n900:#171717; --n950:#0A0A0A;
+
+    /* shadcn tokens — now greyscale HSL (hsl(var(--x)) mapping stays valid) */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 9%;
+    /* The ONE sanctioned colour: a safety red for destructive actions only. */
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
+    --ring: 0 0% 9%;
+    --radius: 0.5rem;
+    /* Chart series — evenly-spaced greys, all legible on white. Meaning is
+       carried by legends + direct labels, never by hue. */
+    --chart-1: 0 0% 10%;
+    --chart-2: 0 0% 32%;
+    --chart-3: 0 0% 48%;
+    --chart-4: 0 0% 63%;
+    --chart-5: 0 0% 75%;
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 0 0% 30%;
+    --sidebar-primary: 0 0% 9%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-ring: 0 0% 9%;
+
+    /* Brand tokens — remapped onto greyscale. Emphasis = inversion (ink/white). */
+    --brand-primary: #171717;
+    --brand-primary-light: #F5F5F5;
+    --brand-primary-dark: #0A0A0A;
+    --brand-accent: #171717;
+    --gold: #171717;
+    --gold-light: #4D4D4D;
+    --cream: #FAFAFA;
+    --cream-dark: #F5F5F5;
+    --bg-app: #F5F5F5;
     --bg-card: #FFFFFF;
-    --bg-sidebar: #1e3a2f;
-    --bg-sidebar-hover: #2d5544;
-    --bg-sidebar-active: #2d5544;
-    --text-primary: #2c2c2a;
-    --text-secondary: #6a6a5c;
-    --text-muted: #8a8a80;
-    --text-sidebar: #d4c8a8;
-    --text-sidebar-active: #FFFFFF;
-    --color-success: #16a34a;
-    --color-success-bg: #ecfdf3;
-    --color-warning: #ea580c;
-    --color-warning-bg: #fff7ed;
-    --color-danger: #dc2626;
-    --color-danger-bg: #fef2f2;
-    --color-info: #3B82F6;
-    --color-info-bg: #EFF6FF;
-    --color-maroon: #7f1d1d;
-    --shadow-card: 0 1px 3px rgba(30,58,47,0.08), 0 1px 2px rgba(30,58,47,0.06);
-    --shadow-card-hover: 0 4px 16px rgba(200,164,92,0.16);
-    --shadow-sidebar: 2px 0 8px rgba(0,0,0,0.15);
-    --border-card: 0.5px solid #e0d9cb;
-    --radius-card: 12px;
-    --radius-badge: 6px;
-    --radius-button: 8px;
-    --font-serif: 'Playfair Display', Georgia, serif;
+    --bg-sidebar: #FAFAFA;
+    --bg-sidebar-hover: #EDEDED;
+    --bg-sidebar-active: #E3E3E3;
+    --text-primary: #171717;
+    --text-secondary: #4D4D4D;
+    --text-muted: #6B6B6B;
+    --text-sidebar: #4D4D4D;
+    --text-sidebar-active: #171717;
+    /* Status — greyscale. Differentiation by weight/border/fill + icon, not hue. */
+    --color-success: #171717;
+    --color-success-bg: #F5F5F5;
+    --color-warning: #171717;
+    --color-warning-bg: #EDEDED;
+    /* Safety red — destructive only (delete, hard warnings). */
+    --color-danger: #DC2626;
+    --color-danger-bg: #FEF2F2;
+    --color-info: #4D4D4D;
+    --color-info-bg: #F5F5F5;
+    --color-maroon: #B91C1C;
+
+    /* Monochrome-overhaul surface + interaction tokens (new names) */
+    --bg-canvas:#F5F5F5; --bg-surface:#FFFFFF; --bg-raised:#FFFFFF; --bg-overlay:#FFFFFF;
+    --bg-subtle:#FAFAFA; --bg-inverse:#171717;
+    --text-tertiary:#6B6B6B; --text-disabled:#A8A8A8; --text-inverse:#FFFFFF;
+    --border-subtle:rgba(0,0,0,.08); --border-default:rgba(0,0,0,.14);
+    --border-control:#8F8F8F; --border-strong:#171717;
+    --overlay-hover:rgba(0,0,0,.04); --overlay-pressed:rgba(0,0,0,.08);
+    --overlay-selected:rgba(0,0,0,.06); --scrim:rgba(0,0,0,.40);
+    --track:#EDEDED;
+
+    --shadow-card: 0 1px 2px rgba(0,0,0,.05), 0 0 0 1px rgba(0,0,0,.04);
+    --shadow-card-hover: 0 4px 16px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.06);
+    --shadow-2: 0 4px 16px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.06);
+    --shadow-3: 0 16px 48px rgba(0,0,0,.16), 0 0 0 1px rgba(0,0,0,.06);
+    --shadow-sidebar: none;
+    --border-card: 1px solid rgba(0,0,0,.08);
+    --radius-card: 8px;
+    --radius-badge: 4px;
+    --radius-button: 6px;
+    --font-serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+    /* Density — default. Overridden by [data-density] on <html>. */
+    --ctrl-h:32px; --row-h:40px; --head-h:36px; --panel-pad:16px;
   }
+
+  /* ── Dark mode — a separate token set, not a raw inversion ──────────────── */
+  [data-theme="dark"] {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 95%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 66%;
+    --accent: 0 0% 16%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 0 0% 4%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 95%;
+    --chart-1: 0 0% 95%; --chart-2: 0 0% 72%; --chart-3: 0 0% 56%; --chart-4: 0 0% 42%; --chart-5: 0 0% 30%;
+    --sidebar: 0 0% 9%; --sidebar-foreground: 0 0% 66%; --sidebar-primary: 0 0% 95%;
+    --sidebar-primary-foreground: 0 0% 4%; --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 95%; --sidebar-border: 0 0% 16%;
+
+    --brand-primary:#F2F2F2; --brand-primary-light:#161616; --brand-primary-dark:#FFFFFF;
+    --brand-accent:#F2F2F2; --gold:#F2F2F2; --gold-light:#A8A8A8;
+    --cream:#161616; --cream-dark:#121212;
+    --bg-app:#0A0A0A; --bg-card:#121212; --bg-sidebar:#0F0F0F;
+    --bg-sidebar-hover:#1A1A1A; --bg-sidebar-active:#222222;
+    --text-primary:#F2F2F2; --text-secondary:#A8A8A8; --text-muted:#8F8F8F;
+    --text-sidebar:#A8A8A8; --text-sidebar-active:#F2F2F2;
+    --color-success:#F2F2F2; --color-success-bg:#161616; --color-warning:#F2F2F2;
+    --color-warning-bg:#1A1A1A; --color-danger:#F87171; --color-danger-bg:#2A1515;
+    --color-info:#A8A8A8; --color-info-bg:#161616; --color-maroon:#FCA5A5;
+
+    --bg-canvas:#0A0A0A; --bg-surface:#121212; --bg-raised:#1A1A1A; --bg-overlay:#222222;
+    --bg-subtle:#161616; --bg-inverse:#F2F2F2;
+    --text-tertiary:#8F8F8F; --text-disabled:#5A5A5A; --text-inverse:#0A0A0A;
+    --border-subtle:rgba(255,255,255,.08); --border-default:rgba(255,255,255,.16);
+    --border-control:#6B6B6B; --border-strong:#F2F2F2;
+    --overlay-hover:rgba(255,255,255,.06); --overlay-pressed:rgba(255,255,255,.10);
+    --overlay-selected:rgba(255,255,255,.08); --scrim:rgba(0,0,0,.60);
+    --track:#262626;
+    --shadow-card:0 1px 2px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.05);
+    --shadow-card-hover:0 4px 16px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);
+    --shadow-2:0 4px 16px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.06);
+    --shadow-3:0 16px 48px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);
+    --border-card:1px solid rgba(255,255,255,.08);
+  }
+
+  /* ── Density modes — set [data-density] on <html> ───────────────────────── */
+  [data-density="compact"]     { --ctrl-h:28px; --row-h:32px; --head-h:32px; --panel-pad:12px; }
+  [data-density="default"]     { --ctrl-h:32px; --row-h:40px; --head-h:36px; --panel-pad:16px; }
+  [data-density="comfortable"] { --ctrl-h:40px; --row-h:48px; --head-h:44px; --panel-pad:20px; }
 
   .theme {
     --font-heading: var(--font-serif);
@@ -104,14 +195,102 @@
   body {
     @apply bg-background text-foreground;
     font-family: Inter, system-ui, sans-serif;
+    font-feature-settings: "tnum" 1, "cv11" 1;
   }
   select,
   select option {
-    background-color: #FFFFFF !important;
-    color: #2c2c2a !important;
-    border: 1px solid #e0d9cb;
-    border-radius: 8px;
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-control);
+    border-radius: 6px;
   }
+}
+
+/* ============================================================================
+   MONOCHROME PRIMITIVES — shared classes for PageShell, tables, KPIs, badges.
+   Status differentiation comes from icon + weight + border/fill, never hue.
+   ============================================================================ */
+@layer components {
+  .mono-num { font-variant-numeric: tabular-nums; }
+  .mono-font { font-family: var(--font-mono); font-size: 13px; }
+
+  /* Typography scale (reference) — calm hierarchy from size/weight/spacing */
+  .t-page    { font-size:24px; line-height:32px; font-weight:600; letter-spacing:-.015em; }
+  .t-section { font-size:20px; line-height:28px; font-weight:600; letter-spacing:-.01em; }
+  .t-panel   { font-size:16px; line-height:24px; font-weight:600; letter-spacing:-.005em; }
+  .t-caption { font-size:12px; line-height:16px; color:var(--text-tertiary); }
+
+  /* Buttons — calm, systematic. Primary = ink; secondary = hairline; ghost. */
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    height:var(--ctrl-h); padding:0 14px; border-radius:6px; font-size:14px; font-weight:500;
+    cursor:pointer; border:none; background:transparent; color:var(--text-primary);
+    font-family:inherit; white-space:nowrap; transition:background .1s ease, opacity .1s ease, box-shadow .16s ease;
+  }
+  .btn:disabled { opacity:.45; cursor:default; }
+  .btn-primary { background:var(--bg-inverse); color:var(--text-inverse); }
+  .btn-primary:hover:not(:disabled) { opacity:.88; }
+  .btn-secondary { border:1px solid var(--border-control); }
+  .btn-secondary:hover:not(:disabled) { background:var(--overlay-hover); }
+  .btn-ghost:hover:not(:disabled) { background:var(--overlay-hover); }
+  .btn-danger { background:var(--color-danger); color:#fff; }
+  .btn-danger:hover:not(:disabled) { opacity:.9; }
+  .icon-btn {
+    width:var(--ctrl-h); height:var(--ctrl-h); display:inline-flex; align-items:center; justify-content:center;
+    border-radius:6px; cursor:pointer; color:var(--text-secondary); background:transparent; border:none;
+    transition:background .1s ease, color .1s ease;
+  }
+  .icon-btn:hover { background:var(--overlay-hover); color:var(--text-primary); }
+
+  /* Inputs — hairline, soft focus ring (Apple-calm, not a hard outline) */
+  .inp {
+    width:100%; height:var(--ctrl-h); border:1px solid var(--border-control); background:var(--bg-surface);
+    color:var(--text-primary); border-radius:6px; padding:0 12px; font-family:inherit; font-size:14px;
+    outline:none; transition:border-color .12s ease, box-shadow .12s ease;
+  }
+  .inp:focus { border-color:var(--border-strong); box-shadow:0 0 0 3px color-mix(in srgb, var(--text-primary) 12%, transparent); }
+  .inp::placeholder { color:var(--text-tertiary); }
+  textarea.inp { height:auto; padding-top:8px; padding-bottom:8px; line-height:20px; }
+
+  /* Status badge — one component, five variants, no colour */
+  .ui-badge {
+    display:inline-flex; align-items:center; gap:4px; height:20px; padding:0 6px;
+    border-radius:var(--radius-badge); font-size:12px; font-weight:500; white-space:nowrap;
+    border:1px solid var(--border-default); color:var(--text-secondary);
+  }
+  .ui-badge.info     { border-color:var(--border-strong); color:var(--text-primary); }
+  .ui-badge.success  { background:var(--bg-subtle); color:var(--text-primary); }
+  .ui-badge.pending  { border-style:dashed; }
+  .ui-badge.warning  { background:var(--overlay-selected); font-weight:600; border:1px solid var(--border-strong); color:var(--text-primary); }
+  .ui-badge.critical { background:var(--bg-inverse); color:var(--text-inverse); border-color:var(--bg-inverse); }
+
+  /* Hairline data grid — no zebra, no vertical lines */
+  .ui-grid { background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-card); overflow:hidden; }
+  .ui-grid table { width:100%; border-collapse:collapse; font-size:13px; }
+  .ui-grid thead th {
+    background:var(--bg-subtle); text-align:left; font-size:12px; font-weight:500;
+    color:var(--text-secondary); padding:0 12px; height:var(--head-h);
+    border-bottom:1px solid var(--border-default); position:sticky; top:0;
+  }
+  .ui-grid tbody td { padding:0 12px; height:var(--row-h); border-bottom:1px solid var(--border-subtle); }
+  .ui-grid tbody tr:last-child td { border-bottom:none; }
+  .ui-grid tbody tr:hover { background:var(--overlay-hover); }
+  .ui-grid td.num, .ui-grid th.num { text-align:right; font-variant-numeric:tabular-nums; }
+
+  /* KPI card */
+  .ui-kpi { background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-card); padding:14px; }
+  .ui-kpi .lab { font-size:12px; font-weight:500; color:var(--text-tertiary); }
+  .ui-kpi .val { font-size:24px; font-weight:600; letter-spacing:-.015em; margin-top:6px; font-variant-numeric:tabular-nums; }
+  .ui-kpi .delta { font-size:12px; margin-top:4px; color:var(--text-secondary); }
+
+  /* Panel + segmented control + filter chip */
+  .ui-panel { background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-card); padding:var(--panel-pad); }
+  .ui-seg { display:inline-flex; background:var(--track); border-radius:var(--radius-card); padding:2px; gap:2px; }
+  .ui-seg button { border:none; background:transparent; font:inherit; font-size:13px; font-weight:500; color:var(--text-secondary); height:28px; padding:0 12px; border-radius:6px; cursor:pointer; }
+  .ui-seg button[aria-selected="true"] { background:var(--bg-surface); color:var(--text-primary); box-shadow:0 0 0 1px var(--border-subtle); }
+  .ui-chip { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 10px; border-radius:6px; border:1px solid var(--border-control); font-size:13px; cursor:pointer; background:transparent; color:var(--text-secondary); }
+  .ui-chip:hover { color:var(--text-primary); }
+  .ui-chip[aria-pressed="true"] { background:var(--bg-inverse); color:var(--text-inverse); border-color:var(--bg-inverse); }
 }
 
 .font-serif-display {
@@ -126,7 +305,7 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, var(--n100) 25%, var(--n200) 50%, var(--n100) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;

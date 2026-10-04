@@ -90,7 +90,7 @@ export function RecordDrawer({
     <div className="fixed inset-0 z-[500] flex justify-end">
       <div className="absolute inset-0" style={{ background: "rgba(30,58,47,0.45)" }} onClick={submitting ? undefined : onClose} />
       <div className="relative flex h-full w-full max-w-[440px] flex-col bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b px-5 py-4" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="flex items-start justify-between border-b px-5 py-4" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           <div>
             <h2 className="font-heading text-lg font-semibold" style={{ color: "var(--brand-primary)" }}>
               {title}
@@ -126,7 +126,7 @@ export function RecordDrawer({
                     value={String(values[f.name] ?? "")}
                     onChange={(e) => set(f.name, e.target.value)}
                     className="w-full rounded-md px-3 py-2 text-sm outline-none"
-                    style={{ ...inputStyle, background: "#fff", color: "#111827" }}
+                    style={{ ...inputStyle, background: "#fff", color: "#1c1c1c" }}
                   >
                     <option value="">{f.placeholder ?? "Select..."}</option>
                     {(f.options ?? []).map((o) => (
@@ -167,7 +167,7 @@ export function RecordDrawer({
           )}
         </div>
 
-        <div className="flex justify-end gap-2 border-t px-5 py-3" style={{ borderColor: "var(--border, #e0d9cb)" }}>
+        <div className="flex justify-end gap-2 border-t px-5 py-3" style={{ borderColor: "var(--border, #E3E3E3)" }}>
           <button
             onClick={onClose}
             disabled={submitting}

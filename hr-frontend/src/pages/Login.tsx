@@ -36,7 +36,8 @@ export function Login() {
       .catch(() => setCompanies([]))
   }, [])
 
-  const accent = picked?.accent || "var(--brand-primary)"
+  // Monochrome overhaul — the brand panel is ink, not a per-company accent.
+  const accent = "var(--bg-inverse)"
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -67,13 +68,13 @@ export function Login() {
                 key={c.name}
                 onClick={() => { setError(""); setPicked(c) }}
                 className="w-full flex items-center gap-4 rounded-xl border bg-white p-4 text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2"
-                style={{ borderColor: "#e5e7eb", ["--tw-ring-color" as string]: c.accent }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = c.accent }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e5e7eb" }}
+                style={{ borderColor: "#e8e8e8", ["--tw-ring-color" as string]: "var(--border-strong)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-strong)" }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e8e8e8" }}
               >
                 <div
                   className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 font-heading text-lg text-white"
-                  style={{ background: c.accent }}
+                  style={{ background: "var(--bg-inverse)" }}
                 >
                   {c.abbr}
                 </div>
@@ -114,13 +115,13 @@ export function Login() {
 
           <div className="flex-1 flex flex-col justify-center">
             <h1 className="font-heading text-4xl text-white leading-tight">Welcome back</h1>
-            <p className="mt-3 text-lg" style={{ color: "#d4c8a8" }}>Sign in to your ERP workspace</p>
+            <p className="mt-3 text-lg" style={{ color: "#8F8F8F" }}>Sign in to your ERP workspace</p>
           </div>
 
           <div className="space-y-3">
             {FEATURES.map((f) => (
-              <div key={f} className="flex items-center gap-3" style={{ color: "#d4c8a8" }}>
-                <CheckCircle2 size={16} style={{ color: "var(--gold)" }} className="shrink-0" />
+              <div key={f} className="flex items-center gap-3" style={{ color: "#8F8F8F" }}>
+                <CheckCircle2 size={16} style={{ color: "rgba(255,255,255,0.85)" }} className="shrink-0" />
                 <span className="text-sm">{f}</span>
               </div>
             ))}
@@ -135,7 +136,7 @@ export function Login() {
           <div className="md:hidden flex items-center gap-2 mb-8">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 font-heading text-sm"
-              style={{ background: "linear-gradient(150deg, var(--gold-light), var(--gold))", color: "var(--brand-primary)" }}
+              style={{ background: "var(--bg-inverse)", color: "var(--text-inverse)" }}
             >
               V
             </div>

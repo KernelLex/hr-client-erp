@@ -89,10 +89,10 @@ export function ArchetypePage({
         <div className="space-y-4">
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-[76px] animate-pulse rounded-xl" style={{ background: "var(--cream-dark, #ebe3d3)" }} />
+              <div key={i} className="h-[76px] animate-pulse rounded-xl" style={{ background: "var(--cream-dark, #F5F5F5)" }} />
             ))}
           </div>
-          <div className="h-64 animate-pulse rounded-xl" style={{ background: "var(--cream-dark, #ebe3d3)" }} />
+          <div className="h-64 animate-pulse rounded-xl" style={{ background: "var(--cream-dark, #F5F5F5)" }} />
         </div>
       )}
 

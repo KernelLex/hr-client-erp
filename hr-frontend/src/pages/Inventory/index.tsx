@@ -96,7 +96,7 @@ export default function InventoryPage() {
       <div className="px-6 md:px-7 pb-8 space-y-4">
         <div
           className="px-4 py-2.5 rounded-xl text-xs"
-          style={{ background: "var(--color-info-bg)", color: "#2c4a3a", border: "0.5px solid var(--info-border, #c4d4c4)" }}
+          style={{ background: "var(--color-info-bg)", color: "#171717", border: "0.5px solid var(--info-border, #F5F5F5)" }}
         >
           Item master imported from Tally exports — standard rate, HSN and GST% reflect the last uploaded XML. There is no live warehouse/bin-level stock tracking yet.
         </div>
@@ -125,7 +125,7 @@ export default function InventoryPage() {
               <select
                 value={group}
                 onChange={(e) => setGroup(e.target.value)}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-[#c8a45c] max-w-xs"
+                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-[#171717] max-w-xs"
               >
                 <option value="all">All groups ({stats.total.toLocaleString("en-IN")})</option>
                 {stats.groups.map((g) => (

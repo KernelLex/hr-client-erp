@@ -118,7 +118,7 @@ export function RegisterListTab(props: RegisterListTabProps) {
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             placeholder={`Search ${noun.toLowerCase()} — ${partyLabel.toLowerCase()}, ${numberLabel.toLowerCase()}…`}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#c8a45c]"
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#171717]"
           />
         </form>
         <select
@@ -136,7 +136,7 @@ export function RegisterListTab(props: RegisterListTabProps) {
 
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Loader2 size={22} className="text-[#1e3a2f] animate-spin" />
+          <Loader2 size={22} className="text-[#171717] animate-spin" />
         </div>
       ) : isError ? (
         <p className="py-12 text-center text-sm text-red-500">Failed to load {noun.toLowerCase()}.</p>

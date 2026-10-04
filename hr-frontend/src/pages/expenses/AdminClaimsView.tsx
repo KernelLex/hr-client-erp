@@ -19,13 +19,13 @@ function fmt(amount: number) {
 }
 
 function statusClass(status: ClaimStatus) {
-  return status === "Approved" ? "bg-green-100 text-green-800"
+  return status === "Approved" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
     : status === "Rejected" ? "bg-red-100 text-red-800"
-    : "bg-orange-100 text-orange-800"
+    : "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
 }
 
 function typeClass(type: string) {
-  return type === "Petrol" ? "bg-blue-100 text-blue-800" : "bg-gold-100 text-gold-800"
+  return type === "Petrol" ? "bg-[var(--bg-subtle)] text-[var(--text-primary)]" : "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
 }
 
 function PendingClaimCard({ claim }: { claim: ExpenseClaim }) {
@@ -47,7 +47,7 @@ function PendingClaimCard({ claim }: { claim: ExpenseClaim }) {
   }
 
   return (
-    <div className="bg-white border border-amber-200 rounded-lg p-4 space-y-3">
+    <div className="bg-white border border-[var(--border-subtle)] rounded-lg p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold text-gray-900 text-sm">{claim.employee_name}</p>
@@ -55,7 +55,7 @@ function PendingClaimCard({ claim }: { claim: ExpenseClaim }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Badge className={cn("text-[10px]", typeClass(claim.claim_type))}>
-            {claim.claim_type === "Petrol" ? "⛽" : "📦"} {claim.claim_type}
+            {claim.claim_type === "Petrol" ? "◆" : "▦"} {claim.claim_type}
           </Badge>
           <p className="font-bold text-base text-gray-900">{fmt(claim.amount)}</p>
         </div>
@@ -88,13 +88,13 @@ function PendingClaimCard({ claim }: { claim: ExpenseClaim }) {
 
       {claim.pdf_path && (
         <a href={claim.pdf_path} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+          className="inline-flex items-center gap-1 text-xs text-[var(--text-primary)] hover:underline">
           <ExternalLink size={11} /> Download PDF Receipt
         </a>
       )}
       {receipt && (
         <a href={receipt} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-gold-600 hover:underline">
+          className="inline-flex items-center gap-1 text-xs text-[var(--text-primary)] hover:underline">
           <ExternalLink size={11} /> {claim.claim_type === "Material" ? "View Invoice" : "View Receipt"}
         </a>
       )}
@@ -102,7 +102,7 @@ function PendingClaimCard({ claim }: { claim: ExpenseClaim }) {
       <div>
         <Label className="text-xs">Admin Notes</Label>
         <textarea
-          className="w-full min-h-[56px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-amber-500 mt-1"
+          className="w-full min-h-[56px] px-3 py-2 text-sm border border-gray-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)] mt-1"
           placeholder="Notes for the employee..."
           value={adminNotes}
           onChange={(e) => setAdminNotes(e.target.value)}
@@ -111,7 +111,7 @@ function PendingClaimCard({ claim }: { claim: ExpenseClaim }) {
 
       {!showReject ? (
         <div className="flex gap-2">
-          <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 gap-1"
+          <Button size="sm" className="flex-1 bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] gap-1"
             onClick={handleApprove} disabled={approve.isPending}>
             <CheckCircle size={13} />
             {approve.isPending ? "Approving…" : "✓ Approve"}
@@ -205,7 +205,7 @@ function AllClaimsTable({ claims }: { claims: ExpenseClaim[] }) {
                   <td className="px-4 py-2 text-xs text-gray-600">{c.claim_date}</td>
                   <td className="px-4 py-2">
                     <Badge className={cn("text-[10px]", typeClass(c.claim_type))}>
-                      {c.claim_type === "Petrol" ? "⛽" : "📦"} {c.claim_type}
+                      {c.claim_type === "Petrol" ? "◆" : "▦"} {c.claim_type}
                     </Badge>
                   </td>
                   <td className="px-4 py-2 text-xs text-gray-600 max-w-[200px] truncate">{c.purpose}</td>
@@ -216,13 +216,13 @@ function AllClaimsTable({ claims }: { claims: ExpenseClaim[] }) {
                   <td className="px-4 py-2 text-xs">
                     {c.claim_type === "Petrol" && c.pdf_path && (
                       <a href={c.pdf_path} target="_blank" rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline flex items-center gap-1">
+                        className="text-[var(--text-primary)] hover:underline flex items-center gap-1">
                         <ExternalLink size={10} /> PDF
                       </a>
                     )}
                     {c.claim_type === "Material" && c.material_receipt && (
                       <a href={c.material_receipt} target="_blank" rel="noopener noreferrer"
-                        className="text-gold-600 hover:underline flex items-center gap-1">
+                        className="text-[var(--text-primary)] hover:underline flex items-center gap-1">
                         <ExternalLink size={10} /> Invoice
                       </a>
                     )}
@@ -280,7 +280,7 @@ function AdminAddClaimModal({ onClose }: { onClose: () => void }) {
     onClose()
   }
 
-  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
+  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -304,8 +304,8 @@ function AdminAddClaimModal({ onClose }: { onClose: () => void }) {
           <div>
             <Label className="text-xs">Claim Type *</Label>
             <select className={inputCls} value={claimType} onChange={(e) => setClaimType(e.target.value as "Material" | "Petrol")}>
-              <option value="Material">📦 Material</option>
-              <option value="Petrol">⛽ Petrol</option>
+              <option value="Material">▦ Material</option>
+              <option value="Petrol">◆ Petrol</option>
             </select>
           </div>
           <div>
@@ -365,7 +365,7 @@ function AdminAddClaimModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex gap-2 pt-2">
-          <Button className="flex-1 bg-gold-600 hover:bg-gold-700 gap-1" onClick={handleSubmit} disabled={!canSubmit || submit.isPending}>
+          <Button className="flex-1 bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] gap-1" onClick={handleSubmit} disabled={!canSubmit || submit.isPending}>
             {submit.isPending ? "Adding…" : "Add Claim"}
           </Button>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -395,14 +395,14 @@ export function AdminClaimsView() {
   const years = Array.from({ length: 3 }, (_, i) => now.getFullYear() - i)
 
   return (
-    <div className="p-6 max-w-5xl space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
         <button onClick={() => navigate("/expenses")}
           className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
           <ArrowLeft size={14} /> My Claims
         </button>
         <h1 className="text-xl font-semibold text-gray-900">Expense Claims — Admin View</h1>
-        <Button size="sm" className="ml-auto bg-gold-600 hover:bg-gold-700 gap-1" onClick={() => setShowAddClaim(true)}>
+        <Button size="sm" className="ml-auto bg-[var(--bg-inverse)] hover:bg-[var(--bg-inverse)] gap-1" onClick={() => setShowAddClaim(true)}>
           <Plus size={14} /> Add Claim for Employee
         </Button>
       </div>
@@ -411,8 +411,8 @@ export function AdminClaimsView() {
 
       {/* Pending banner */}
       {pendingClaims.length > 0 && (
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-          <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+        <div className="flex items-center gap-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)]">
+          <AlertTriangle size={15} className="text-[var(--text-primary)] shrink-0" />
           <span>{pendingClaims.length} claim{pendingClaims.length > 1 ? "s" : ""} awaiting your review</span>
         </div>
       )}
@@ -470,11 +470,11 @@ export function AdminClaimsView() {
                     <td className="px-4 py-2 font-medium text-xs">{s.employee_name}</td>
                     <td className="px-4 py-2 text-xs text-right text-gray-600">{s.claim_count}</td>
                     <td className="px-4 py-2 text-xs text-right font-medium">{fmt(s.total_claimed)}</td>
-                    <td className="px-4 py-2 text-xs text-right text-green-700">{fmt(s.total_approved)}</td>
-                    <td className="px-4 py-2 text-xs text-right text-orange-700">{fmt(s.total_pending)}</td>
+                    <td className="px-4 py-2 text-xs text-right text-[var(--text-primary)]">{fmt(s.total_approved)}</td>
+                    <td className="px-4 py-2 text-xs text-right text-[var(--text-primary)]">{fmt(s.total_pending)}</td>
                     <td className="px-4 py-2 text-xs text-right text-red-700">{fmt(s.total_rejected)}</td>
-                    <td className="px-4 py-2 text-xs text-right text-blue-700">{fmt(s.petrol_total)}</td>
-                    <td className="px-4 py-2 text-xs text-right text-gold-700">{fmt(s.material_total)}</td>
+                    <td className="px-4 py-2 text-xs text-right text-[var(--text-primary)]">{fmt(s.petrol_total)}</td>
+                    <td className="px-4 py-2 text-xs text-right text-[var(--text-primary)]">{fmt(s.material_total)}</td>
                   </tr>
                 ))}
               </tbody>
