@@ -1,307 +1,209 @@
 # Vera ERP
 
-Full-stack ERP system for **Vera Enterprises** built on ERPNext v15 + Frappe HRMS with a React SPA frontend.  
-Employees interact exclusively with the React app — the Frappe/ERPNext desk is blocked from public access.
+A full-stack, **multi-company ERP** built on ERPNext v15 + Frappe HRMS with a React SPA front end.
+It runs three companies on a single site/database — **Vera Enterprises (VE)**, **Schönes Leben (SL)**,
+and **Hagan Modular (HM)** — with every record company-scoped. Employees interact *only* with the
+React app; the Frappe/ERPNext desk is blocked from public access.
 
-Live at: **https://veraenterprises.in**
+**Live at: https://veraenterprises.in**
+
+> Repository: `KernelLex/hr-client-erp` — single branch **`main`** (the sole source of truth as of
+> 2026-10-08; all prior feature/develop branches were consolidated into `main`).
 
 ---
 
-## Tech Stack
+## What it is
+
+Vera ERP started as an HR tool and grew into the operating system for a modular-interiors business:
+hire and manage people, run the sales → quotation → project-execution pipeline, track finances from
+imported Tally data, and surface it all through a local-AI assistant. It covers three legal entities
+at once, so the same screens serve VE, SL, and HM with a company switcher.
+
+The whole product is a **monochrome React SPA** (Inter font, density + light/dark toggles, a global
+`⌘K` command palette) organised into **7 areas** in the sidebar. ERPNext is a headless backend —
+users never see the Frappe desk.
+
+---
+
+## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Backend framework | ERPNext v15 + Frappe HRMS (Python) |
-| Custom backend app | `hr_client` (this repo) |
-| Database | MariaDB (managed by Frappe bench) |
-| Cache / queue | Redis (managed by Frappe bench) |
+| Custom backend app | `hr_client` (this repo) — extends HRMS, never modifies core |
+| Database | MariaDB (one DB, all 3 companies, company-scoped) |
+| Cache / queue | Redis (Frappe bench) |
 | Frontend | React 18 + Vite + TypeScript |
-| UI components | Tailwind CSS v3 + shadcn/ui |
+| UI | Tailwind CSS v3 + shadcn/ui, monochrome design tokens, Inter |
 | Data fetching | TanStack Query (React Query) |
-| HTTP client | Axios (with CSRF interceptor) + native fetch for file uploads |
+| HTTP | Axios (CSRF interceptor) + native `fetch` for file uploads |
 | Charts | Recharts |
-| Local AI | Ollama (**qwen2.5:7b**) — company assistant, Tally enrichment, and Recruitment JD generation |
-| Tunnelling | Cloudflare Tunnel → nginx → ERPNext |
-| Attendance sync | Jibble API (OAuth2 client credentials) |
-| Document storage | Google Drive (service account sync) |
-| Server OS | Ubuntu (bare metal, static IP via nmcli) |
-| Process manager | Supervisor (7 ERPNext processes) |
-| Web server | nginx (serves React SPA + proxies /api/ to gunicorn) |
+| Local AI | Ollama — company assistant, insights, Tally/document enrichment, JD generation (no external API) |
+| Attendance | Jibble API (OAuth2 client credentials) |
+| Documents | Google Drive (service-account sync) |
+| Serving | nginx serves the SPA from `/var/www/hr-frontend` and proxies `/api/` to gunicorn |
+| Public access | Cloudflare Tunnel → nginx → ERPNext (`vera.local`, gunicorn :8000) |
+| Server | Ubuntu bare metal, static IP `192.168.1.16`; Supervisor-managed Frappe processes |
 
 ---
 
-## Repository Structure
+## The 7 areas & key features
+
+Everything below is **deployed live** on veraenterprises.in. Each feature lists a rough workflow.
+
+### 1. Home / Overview
+Landing dashboard per company: KPI stat cards, recent activity, quick actions, and an admin-only
+**AI Health** widget (Ollama status, extraction/sync freshness, data-quality score).
+*Workflow:* log in → land on company dashboard → jump to any area via cards or `⌘K`.
+
+### 2. People & Work (HR)
+The HRMS surface, built as functional systems (not read-only views):
+
+- **Employee Master & profiles** (`/my-profile`, `/admin/employees`) — self-edit personal/bank/skills;
+  admins edit role, department, documents. *Workflow:* employee edits own profile → admin manages the team grid and per-employee detail tabs (Profile / Leave / Attendance / Permissions).
+- **Leave** (`/leave`, `/holidays`) — apply → admin approves/rejects; holiday calendar + leave policy.
+- **Expense claims** (`/expenses`) — petrol/material claim → admin approves → flows to Accounts opex.
+  Admins can also file leave/claims on behalf of any employee.
+- **Attendance** (`/admin/attendance`) — live Jibble dashboard (who's in, late, absent, overtime, weekly/monthly).
+- **Recruitment** (`/recruitment`) — job openings → candidate kanban pipeline → interviews → offer → employee; local-AI job-description generator grounded in the company's own Org Hub role data.
+- **Payroll, Shifts, Training, Exit, Tasks, Approvals, Calendar, Notes, Onboarding, Appraisal** — archetype-driven CRUD systems under People & Work.
+
+### 3. Sales & CRM
+- **CRM lead pipeline** (`/crm`) — any employee creates leads; stage advances (Lead → Discussion →
+  Quotation → Order → Delivery → Success/Failed) go through an **admin approval flow**.
+  *Workflow:* create lead → request next stage → admin approves → stage advances.
+- **Pre-Quote** → convert a qualified lead into an Opportunity that feeds the Quotation Studio.
+
+### 4. Quotation Studio (modular-interiors)
+The commercial core — turn a site into a priced, branded quotation:
+
+- **Measurements** — per-area capture using 7 product-type templates, with site-photo capture per area.
+- **BOQ editor** — line items pull from the studio master catalogue (materials / finishes / hardware /
+  units) and a **Vendor MRP** price list (7,000+ SKUs incl. Blum, Kesseböhmer, Hettich).
+- **Cost sheet** — auto-pulls dealer cost (MRP × brand discount), computes GP vs target/min.
+- **Quotation document** — discounts, CGST/SGST/IGST by place-of-supply, optional/alternate lines,
+  assumptions, inclusions/exclusions, payment schedule, delivery/warranty terms, cover page,
+  hide-prices mode, company letterhead, print/PDF.
+- **Reclaimed materials** — returned/surplus stock inventory with a reuse matcher that suggests open
+  BOQs a salvaged piece can be cut down for (cost-savings dashboard).
+  *Workflow:* Opportunity → measure → BOQ → cost sheet → quotation → approval → PDF to client.
+
+### 5. Projects & Execution
+Delivery lifecycle once a quote is won:
+
+- **Vera Project** with milestones, stages, site logs, and a work card.
+- **Procurement** — Material Requisition → Vendor-Offer/Quote → Purchase Order (auto vendor-suggest),
+  then **Goods Receipt → Site Inventory**; per-SFT finish/material rate master; starter hardware packages.
+- **Service & Warranty** (`/service`) — post-delivery tickets.
+- **Vendor Payments & Supplier Ledger** (`/admin/vendor-payments`).
+  *Workflow:* win quote → create project → raise MRS → PO → receive goods → track stages/payments → service.
+
+### 6. Finance & Accounts (Tally-powered)
+- **Operations / Accounts dashboard** — bank balance, debtors/creditors with aging, FY totals, cashflow,
+  GST summary, inventory, profitability — all from imported Tally data, company-scoped.
+- **Tally XML import** — upload Masters + Transactions (gzip, up to ~1.5 GB) → background job ingests
+  ledgers, stock items, and vouchers (25,000+); reconciles against client figures within ~1%.
+- **ERP Entries** — request → approve flow for manual accounting entries.
+- **Drive documents & AI verification** (`/accounts`, `/verify`, `/business`) — 7,000+ Drive files synced;
+  PDF/Excel extracted to structured records, confidence-scored, with swipe/auto verification.
+  *Workflow:* import Tally → review dashboards → ingest Drive docs → AI extracts → verify → KPIs update.
+
+### 7. AI & Insights
+- **AI Insights** (`/ai-insights`) — instant deterministic health score, alerts, and executive summary;
+  AI narrative is cached and refreshed hourly in the background (no blocking LLM calls).
+- **Company AI assistant** (in-app chat) — admin-only; an **intent router** answers ~15 preset,
+  safe, company-scoped queries directly from the live DB (no LLM-written SQL), falling back to a
+  retrieval-augmented local-model chat over people, roles, Org Hub policies/SOPs, and finances.
+- **Graphs** (`/graphs`) — 15 financial chart presets plus a no-LLM query layer for common requests.
+
+### Cross-cutting
+- **Chat** — polling-based chatroom: general room, DMs, group rooms, file attachments, @mentions, search.
+- **Group Console / Group Dashboard** (`/admin/group-dashboard`) — consolidated VE + SL + HM view.
+- **2FA** — mandatory TOTP (Google Authenticator), server-enforced, with an Administrator break-glass.
+- **Granular permissions** (`/admin/permissions`) — registry-driven, per-module + per-subsection access
+  control; new modules auto-appear in the Role-Control screen.
+- **User management** (`/admin/users`) — create/disable/delete users, role assignment, protected admin.
+
+---
+
+## Repository structure
 
 ```
 hr-client-erp/
-├── hr_client/              ← Frappe custom app (Python backend)
-│   ├── api/                ← Whitelisted API endpoints
-│   │   ├── utils.py        ← Shared constants (ADMIN_USERS, current_fy(), etc.)
-│   │   ├── ai.py           ← Company AI assistant (chat), document AI, verification
-│   │   ├── company_brain.py ← Retrieval-augmented company context for the AI assistant + JD gen
-│   │   ├── org_hub.py      ← Org Hub knowledge base (9 DocTypes) CRUD + read endpoints
-│   │   ├── chat.py         ← Real-time chat (polling-based)
-│   │   ├── crm.py          ← Lead pipeline with Owais approval flow
-│   │   ├── dashboard.py    ← Dashboard stats
-│   │   ├── employee.py     ← Employee profiles
-│   │   ├── employee_lifecycle.py
-│   │   ├── expenses.py     ← Expense claims
-│   │   ├── graphs.py       ← Financial chart data (preset + AI-generated)
-│   │   ├── jibble.py       ← Jibble attendance integration
-│   │   ├── leave.py        ← Leave applications + holidays
-│   │   ├── operations.py   ← Tally financial operations dashboard
-│   │   ├── permissions.py  ← Per-user module access control
-│   │   ├── recruitment.py  ← Job openings + candidate pipeline
-│   │   ├── tally_enrich.py ← Tally voucher enrichment (Ollama)
-│   │   ├── tally_import_job.py ← Background Tally XML import worker
-│   │   └── user_management.py ← Admin user CRUD
-│   ├── drive_sync/         ← Google Drive sync module
-│   │   ├── api.py          ← Drive file listing, processing, extraction
-│   │   ├── full_sync.py    ← BFS walk from Drive root folder
-│   │   ├── delta_sync.py   ← Incremental sync via Drive changes API
-│   │   ├── extractor.py    ← PDF/Excel text extraction + AI parsing
-│   │   ├── parser.py       ← Filename → metadata parsing
-│   │   ├── watch_manager.py ← Drive push notification channels
-│   │   └── webhook.py      ← Google Drive push notification receiver
-│   └── hr_client/
-│       └── doctype/        ← Custom DocType definitions
-├── hr-frontend/            ← React + Vite SPA
+├── hr_client/                 ← Frappe custom app (Python backend)
+│   ├── api/                   ← ~70 whitelisted endpoint modules, grouped by domain
+│   │   ├── utils.py           ← shared auth/constants (admin check, current FY, company scope)
+│   │   ├── ai.py, ai_intents.py, company_brain.py, graphs.py   ← local-AI layer
+│   │   ├── crm*.py, quotation*.py, boq.py, cost_sheet.py, measurement*.py   ← Sales + Studio
+│   │   ├── project_execution.py, project_procurement.py, service.py, vendor_*.py   ← Execution
+│   │   ├── operations.py, finance_core.py, accounts_*.py, tally_*.py   ← Finance / Tally
+│   │   ├── hrms_*.py, employee*.py, leave.py, expenses.py, payroll.py, recruitment.py, jibble.py
+│   │   ├── group_dashboard.py, intercompany.py, company*.py   ← multi-company
+│   │   └── permissions.py, twofa.py, user_management.py   ← access control
+│   ├── hr_client/doctype/     ← 130+ custom DocType definitions
+│   ├── drive_sync/            ← Google Drive sync (full + delta + extractor + webhook)
+│   ├── pricelist_import/      ← vendor price-list parsers (Blum / Kesseböhmer / Hettich)
+│   └── fixtures/, patches/, templates/, tests/
+├── hr-frontend/               ← React + Vite SPA (monochrome)
 │   └── src/
-│       ├── api/            ← Typed fetch functions per module
-│       ├── components/     ← Shared UI components + layout
-│       ├── context/        ← Auth, Permissions React contexts
-│       ├── lib/
-│       │   ├── api.ts      ← Axios instance with CSRF interceptor
-│       │   ├── constants.ts ← ADMIN_USERS, currentFYLabel(), etc.
-│       │   └── utils.ts
-│       └── pages/          ← One folder per route
+│       ├── api/               ← typed fetch functions per module
+│       ├── components/        ← shared UI + layout (sidebar, TopBar, CommandPalette)
+│       ├── context/           ← Auth, Permissions
+│       ├── lib/               ← axios instance (CSRF), constants, utils
+│       └── pages/             ← one folder per area/route
+├── mcp-brain/                 ← MCP server for project status/decisions
+├── ARCHITECTURE.md            ← system architecture + diagrams
+├── CLAUDE.md                  ← full build context / ERPNext rules / API contract
 └── README.md
 ```
 
 ---
 
-## Features
+## Deployment (production)
 
-### HR & People
-| Feature | Route | Access |
-|---|---|---|
-| Employee profiles — view/edit personal info, bank details, skills | `/my-profile` | All |
-| Admin team management — full employee detail, leave history, permissions | `/admin/employees` | Admin |
-| Leave applications + history, policy, holiday calendar | `/leave`, `/holidays` | All |
-| Expense claims (Petrol/Material) with admin approval | `/expenses` | All |
-| Recruitment pipeline — job openings, kanban stages, AI JD generator | `/recruitment` | All |
-| Jibble live attendance dashboard (who's in, late, absent, overtime) | `/admin/attendance` | Admin |
-| User management — create/disable/delete users, role assignment | `/admin/users` | Admin |
-| Module-level permission control per employee | `/admin/permissions` | Admin |
-| CRM lead pipeline with stage-advance approval flow | `/crm` | All |
+The server is the live box; deploys are by **rsync into the bench**, not `git pull`.
 
-### Finance & Accounting (Tally-powered)
-| Feature | Route | Notes |
-|---|---|---|
-| Operations dashboard — bank balance, debtors, creditors, FY totals | `/operations` | Reads from imported Tally data |
-| Debtor aging buckets, creditor list, party statement | `/operations` | Live DB queries |
-| Full voucher browser — paginated, filterable by type/date/party | `/operations` | 25,000+ vouchers |
-| Tally XML import (Masters + Transactions, up to 1.5 GB) | `/operations → Import & AI` | Background job |
-| Tally data enrichment via Ollama (party normalisation, anomaly detection) | `/operations → Import & AI` | Requires Ollama |
-| Financial year cashflow trend (12-month area chart) | `/operations` | Dynamic current FY |
-
-### AI & Drive Documents
-| Feature | Route | Notes |
-|---|---|---|
-| Google Drive document management (7,000+ files synced) | `/accounts` | Service account sync |
-| Document extraction pipeline — PDF/Excel → structured ERP records | `/accounts`, `/verify` | Regex + Ollama |
-| AI verification — confidence scoring, auto-verify, swipe review | `/verify` | Admin only |
-| Business dashboard — KPI cards over extracted VE DocTypes | `/business` | Admin only |
-| Financial preset charts (15 presets) + natural language chart generation | `/graphs` | Requires Ollama for NL |
-| AI insights — health score, alerts, executive summary, period compare | `/ai-insights` | Requires Ollama |
-| Company AI assistant — answers questions about people, roles, org structure, open jobs, Org Hub policies/SOPs & finances | in-app `AIChat` widget | Admin-only; local model, retrieval-augmented from live DB |
-| AI JD generator — generates job descriptions from the company's own Org Hub role definitions | `/recruitment` | **Local model (qwen2.5), no external API** |
-
-### Chat
-| Feature | Notes |
-|---|---|
-| Polling-based chatroom (no WebSocket required) | General room + direct messages + group rooms |
-| File attachments (images, PDFs, docs) | Stored in Frappe file system |
-| @mention notifications + unread badge | Active room: 3s poll; sidebar: 10s poll |
-| Soft delete (tombstone), message search, media gallery | All via REST API |
-
----
-
-## Custom DocTypes
-
-| DocType | Purpose |
-|---|---|
-| `VE Tally Ledger` | Party/account master from Tally (1,924 records) |
-| `VE Tally Stock Item` | Inventory master from Tally (4,559 records) |
-| `VE Tally Voucher` | All transactions from Tally (25,000+ records) |
-| `VE Tally Enrichment` | Per-voucher AI enrichment (category, party norm, anomaly) |
-| `VE Drive File` | Google Drive file index (7,000+ records) |
-| `VE Drive Settings` | Single — root folder ID, delta page token, watch channels |
-| `VE Sales Invoice`, `VE Purchase Invoice`, `VE Purchase Order` | Extracted structured data |
-| `VE Quotation`, `VE Credit Note`, `VE Debit Note` | Extracted structured data |
-| `VE GRN`, `VE Financial Report`, `VE Payment Record` | Extracted structured data |
-| `VE Sales Order`, `VE Stock Record`, `VE Salary Record` | Extracted structured data |
-| `VE Attendance Record`, `VE Receipt` | Extracted structured data |
-| `VE Saved Graph` | Saved chart configs from the Graphs page |
-| `VE Job Description`, `VE KRA`, `VE KPI`, `VE SOP`, `VE Policy` | Org Hub knowledge base (per company/role) |
-| `VE Employee Handbook`, `VE Operations Manual`, `VE Department Process`, `VE Forms Checklist` | Org Hub knowledge base (cont.) |
-| `Vera Chat Room`, `Vera Chat Room Member`, `Vera Chat Message` | Chat system |
-| `Vera Leave Application` | Custom leave (simpler than HRMS default) |
-| `Vera Expense Claim` | Petrol + material expense claims |
-| `Vera CRM Lead`, `Vera CRM Quotation`, `Vera CRM Approval Request` | CRM pipeline |
-| `User Module Permission` | Per-user module access flags |
-
----
-
-## Required Configuration
-
-None of these are in git. Set them up on each server.
-
-### 1. Jibble Attendance
-
-```bash
-bench --site vera.local set-config jibble_client_id "YOUR_CLIENT_ID"
-bench --site vera.local set-config jibble_client_secret "YOUR_CLIENT_SECRET"
-```
-
-Get from: Jibble Dashboard → Settings → Integrations → API (OAuth2 credentials).
-
-### 2. Google Drive Service Account
-
-Place the service account JSON at:
-```
-/home/frappe/frappe-bench/sites/vera.local/private/vera_drive_service_account.json
-```
-This path is **gitignored and never committed**.
-
-Set the root folder ID and credentials path in `drive_sync/utils.py` and `drive_sync/full_sync.py`.
-
-### 3. OpenAI — NO LONGER REQUIRED (as of 2026-08-09)
-
-Job Description generation was moved off OpenAI onto the **local Ollama model** (`qwen2.5:7b`),
-grounded in the company's Org Hub role data. No `openai_api_key` is needed. `hr_client.api.recruitment.generate_job_description` now calls Ollama and returns the same JSON shape.
-
-### 4. Drive Webhook Token (optional but recommended)
-
-```bash
-bench --site vera.local set-config ve_drive_channel_token "$(openssl rand -hex 32)"
-```
-
-Used to validate Google Drive push notifications. The webhook fails closed (403) if not configured.
-
-### 5. Ollama (local AI — optional)
-
-```bash
-ollama serve
-ollama pull mistral    # or llama3.1
-```
-
-Used for: AI JD generator fallback, Tally enrichment, document cross-check, financial chat.  
-All AI features gracefully degrade to rule-based or disabled if Ollama is offline.
-
----
-
-## `site_config.json` reference
-
-`/home/frappe/frappe-bench/sites/vera.local/site_config.json`:
-
-```json
-{
-  "db_name": "...",
-  "db_password": "...",
-  "developer_mode": 0,
-  "host_name": "https://veraenterprises.in",
-  "jibble_client_id": "...",
-  "jibble_client_secret": "...",
-  "openai_api_key": "sk-...",
-  "ve_drive_channel_token": "...",
-  "session_expiry": "06:00:00",
-  "session_expiry_mobile": "720:00:00"
-}
-```
-
----
-
-## Development Setup
-
-```bash
-# 1. Start ERPNext bench (gunicorn on 127.0.0.1:8000)
-cd /home/frappe/frappe-bench
-bench start
-
-# 2. Start React dev server (port 5173, proxies /api/ to bench)
-cd /home/vera/vera-erp/hr-client-erp/hr-frontend
-npm install
-npm run dev
-```
-
-`hr-frontend/.env.local`:
-```env
-VITE_API_BASE=
-VITE_USE_MOCK=false
-```
-
----
-
-## Production Deployment
-
-### Deploy backend changes
-
+**Backend:**
 ```bash
 sudo rsync -av /home/vera/vera-erp/hr-client-erp/hr_client/ \
     /home/frappe/frappe-bench/apps/hr_client/hr_client/ \
     --exclude __pycache__ --exclude "*.pyc"
-
 sudo -u frappe bash -c "cd /home/frappe/frappe-bench && \
     bench --site vera.local migrate && bench --site vera.local clear-cache"
-
 sudo supervisorctl restart frappe-bench-workers: frappe-bench-web:
 ```
 
-### Deploy frontend changes
-
+**Frontend:**
 ```bash
 cd /home/vera/vera-erp/hr-client-erp/hr-frontend
 npm run build
 sudo rsync -a --delete dist/ /var/www/hr-frontend/
 ```
 
-### Tally XML Import
+**Local dev:** `bench start` (gunicorn :8000) + `npm run dev` (Vite :5173, proxies `/api/`).
+Leave `VITE_API_BASE=` empty in dev so calls go through the Vite proxy; `VITE_USE_MOCK=false`.
 
-Upload XML files to `/home/vera/tally_uploads/` (or use the import UI at `/operations → Import & AI`),
-then run:
-```bash
-cd /home/frappe/frappe-bench
-env/bin/python3 /home/vera/tally_import.py
-```
-Runtime ~20 seconds for a full re-import (DELETE + INSERT). Masters file ~120 MB, Transactions ~1.5 GB.
+### Required configuration (never in git — set per server)
+- **Jibble:** `bench --site vera.local set-config jibble_client_id/secret …`
+- **Google Drive:** service-account JSON at `sites/vera.local/private/vera_drive_service_account.json` (gitignored); set root folder ID + `ve_drive_channel_token`.
+- **Ollama:** `ollama serve` + pulled models (fast 3B for routing/reports). AI features degrade gracefully if offline.
+- No external LLM API key is required — all AI is local.
 
 ---
 
 ## Security
-
-- **Server-side admin check**: `_require_admin()` in `hr_client/api/utils.py` verifies `System Manager` role — not just email comparison. Shared across all API modules.
-- **DocType whitelist**: `verify_record` / `quick_action` validate `doctype` against `_ALLOWED_DOCTYPES` to prevent writing to arbitrary Frappe documents.
-- **CORS**: Restricted to `veraenterprises.in`, `localhost:5173`, and LAN dev IP. No wildcard `*`.
-- **File uploads**: Extension and MIME type validated on profile photos; path traversal guarded via `os.path.realpath()` on Tally XML uploads; chat attachments must be Frappe-hosted (`/files/` or `/private/files/`).
-- **SQL injection**: All user-supplied values use `%s` parameterized queries. No f-string injection.
-- **Secrets**: Never in code or git. All credentials in `site_config.json` (Jibble, OpenAI, Drive webhook token). Drive service account JSON is gitignored.
-- **OpenAI key**: Routed through backend proxy — never compiled into the browser JS bundle.
-- **Session**: 6-hour expiry (web), 30-day (mobile). `developer_mode: 0` in production.
-- **Frappe desk**: Blocked at nginx level (`/desk`, `/app` → 403).
-- **Password policy**: 8+ chars, uppercase, number, special character — enforced server-side on create/change.
-- **Protected admin**: `owais@veraenterprises.in` cannot be disabled, deleted, or have password changed via admin panel.
-- **Drive webhook**: Fails closed — rejects all requests if `ve_drive_channel_token` is not configured.
-- **Prompt injection**: `source_content` in `ai_crosscheck` sanitized before passing to LLM.
+- **Server-side admin checks** (`_require_admin()` / role check) on every privileged endpoint — not email comparison alone.
+- **Company scoping** enforced in queries so VE/SL/HM data never leaks across entities.
+- **Mandatory 2FA** (server-enforced TOTP) for all accounts; protected admin can't be disabled/deleted.
+- **DocType whitelist** on write endpoints; **parameterized SQL** everywhere (no f-string injection).
+- **CORS** restricted to `veraenterprises.in` + dev origins; CSRF token on all state-changing calls.
+- **Secrets** (Jibble, Drive, webhook token) live only in `site_config.json`; service-account JSON is gitignored.
+- **Frappe desk** blocked at nginx (`/app`, `/desk` → 403); `developer_mode: 0`; 6-hour web session expiry.
 
 ---
 
-## Team (Vera Enterprises)
+## Companies & team
 
-| Name | Email | Role |
-|---|---|---|
-| Owais Ahmed Khan | owais@veraenterprises.in | Administrator |
-| Maaz | maazdgr8.mma@gmail.com | Project Manager |
-| Manjunath M N | manju.veraaccnts@outlook.com | Accounts Manager |
-| Lookman | lookman.vera@outlook.com | Accounts Executive |
-| Bhagya Shree | Bhagyashree.veraenterprises@outlook.com | Logistics Manager |
+Three companies on one instance: **Vera Enterprises**, **Schönes Leben**, **Hagan Modular**.
+VE is fully populated (live Tally data to 2026-09-05); SL/HM masters exist, transaction data pending.
+The core team (owner + project/accounts/logistics managers) operates all three via the company switcher.
