@@ -124,8 +124,11 @@ async function uploadFile(
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function TallyUploadPage() {
   const queryClient = useQueryClient()
-  const { activeCompany, availableCompanies, accentOf, isGroupOwner, setCompany } = useCompany()
-  const accent = accentOf(activeCompany)
+  const { activeCompany, availableCompanies, isGroupOwner, setCompany } = useCompany()
+  // Monochrome: the whole app dropped per-company accent tinting (applyCompanyTheme
+  // clears the accent vars), so this page uses the shared ink token for every
+  // button / pill / progress bar instead of the company's gold accent.
+  const accent = "var(--brand-primary)"
   const isAll = activeCompany === ALL_COMPANIES
 
   const companyLabel =
@@ -282,7 +285,7 @@ export default function TallyUploadPage() {
                 {availableCompanies.map((c) => (
                   <button key={c.name} onClick={() => setCompany(c.name)}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-                    style={{ background: accentOf(c.name) }}>
+                    style={{ background: "var(--brand-primary)" }}>
                     {c.label}
                   </button>
                 ))}

@@ -40,6 +40,7 @@ const INDEX: SearchEntry[] = [
   { label: "Cash Flow", to: "/accounting-module?tab=cash-flow", group: "Accounting", admin: true },
   { label: "Financial Statements", to: "/accounting-module?tab=financial-statements", group: "Accounting", admin: true },
   { label: "Accounts Dashboard", to: "/accounts-dashboard", group: "Accounting", admin: true },
+  { label: "Tally Import", to: "/tally-upload", group: "Accounting", admin: true },
 
   { label: "Employee Master", to: "/hrms/employees", group: "HRMS", admin: true },
   { label: "Attendance", to: "/admin/attendance", group: "HRMS" },

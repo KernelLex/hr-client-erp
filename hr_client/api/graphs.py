@@ -3,6 +3,7 @@ graphs.py — Financial Graph Generation API
 Endpoints for AI-powered chart generation, preset charts, and saved graph management.
 """
 import json
+import re
 import calendar
 import frappe
 from frappe.utils import flt, cint
@@ -617,6 +618,72 @@ _GRAPH_PROMPT_TEMPLATE = (
 )
 
 
+def _route_graph_query(query: str, date_from=None, date_to=None):
+    """Deterministic, no-LLM intent router for free-text graph requests — the same
+    'query-based layer' the AI chat uses (`ai_intents.route_question`). Maps the
+    common phrasings straight to a fetcher intent so the chart renders INSTANTLY
+    and without Ollama. Returns an interpretation dict (same shape as
+    `_ai_interpret_query`) or None when nothing matches → caller falls back to the LLM."""
+    q = (query or "").lower().strip()
+    if not q:
+        return None
+
+    def has(*words):
+        return any(w in q for w in words)
+
+    # Optional numeric params pulled straight from the phrasing.
+    m = re.search(r"(?:last|past|previous)\s+(\d{1,2})\s*month", q) or re.search(r"(\d{1,2})\s*month", q)
+    months = max(1, min(36, int(m.group(1)))) if m else 12
+    t = re.search(r"top\s+(\d{1,2})", q)
+    limit = max(1, min(50, int(t.group(1)))) if t else 15
+
+    def R(intent, chart_type, category, title, **params):
+        return {"intent": intent, "chart_type": chart_type, "category": category,
+                "title": title, "description": "", "params": params, "source": "router"}
+
+    # Order matters: most specific phrasings first.
+    if has("state wise", "state-wise", "statewise", "by state", "sales by region", "region wise"):
+        return R("state_wise_sales", "pie", "Sales", "Sales by Customer State", fy="current")
+    if has("credit note", "debit note", "credit & debit", "credit and debit", "cn vs dn", "cn/dn"):
+        return R("credit_debit_notes", "bar", "Finance", "Credit & Debit Notes Trend", months=months)
+    if has("payment vs receipt", "payments vs receipts", "payments and receipts", "inflow", "outflow", "money in vs out"):
+        return R("payments_receipts", "bar", "Finance", "Payments vs Receipts Monthly", months=months)
+    if has("cash flow", "cashflow", "net cash"):
+        return R("cashflow", "area", "Finance", "Monthly Cash Flow Trend", months=months)
+    if has("collection", "receipt trend", "monthly receipt", "money received"):
+        return R("payments_receipts", "bar", "Finance", "Payments vs Receipts Monthly", months=months)
+    # Outstanding balances (ledger) — distinct from transaction totals (top parties).
+    # "creditor"/"debtor" are mutually-exclusive substrings, so they also catch
+    # "top 10 debtors", "outstanding creditors", etc.
+    if has("creditor", "outstanding payable", "whom we owe", "pending payable"):
+        return R("ledger_balances", "bar_horizontal", "Purchase", "Top Outstanding Creditors", limit=limit)
+    if has("debtor", "outstanding receivable", "who owes", "pending receivable"):
+        return R("ledger_balances", "bar_horizontal", "Sales", "Top Outstanding Debtors", limit=limit)
+    if has("top vendor", "top supplier", "biggest vendor", "biggest supplier", "best vendor"):
+        return R("top_parties", "bar_horizontal", "Purchase", "Top Vendors by Purchase",
+                 voucher_types=["Purchase"], limit=limit, fy="current")
+    if has("top customer", "top client", "biggest customer", "best customer", "largest customer", "top buyer"):
+        return R("top_parties", "bar_horizontal", "Sales", "Top Customers by Revenue",
+                 voucher_types=["Sales"], limit=limit, fy="current")
+    if has("voucher breakdown", "voucher type", "transaction type", "transaction mix", "voucher mix", "type distribution", "voucher distribution"):
+        return R("voucher_breakdown", "pie", "Finance", "Transaction Type Distribution")
+    if has("gst", "tax payable", "input credit", "output tax", "igst", "cgst", "sgst"):
+        return R("gst", "bar", "Finance", "GST Position Analysis")
+    if has("stock", "inventory", "item value", "sku value"):
+        return R("stock", "bar_horizontal", "Inventory", "Top Stock Items by Value", limit=limit)
+    if has("growth", "growth rate", "month on month", "month-on-month", "mom change"):
+        return R("growth_rate", "line", "Sales", "Monthly Sales Growth Rate", months=months)
+    if has("year on year", "year-on-year", "yoy", "fy comparison", "compare year", "compare fy", "financial year comparison"):
+        return R("fy_comparison", "bar", "Finance", "Year-on-Year FY Comparison")
+    # Generic monthly trend — sales/purchase over time (the fetcher returns both).
+    if has("monthly", "trend", "over time", "by month", "month wise", "month-wise") and has("sales", "purchase", "revenue", "turnover"):
+        return R("monthly_trend", "composed", "Finance", "Monthly Sales vs Purchases", months=months)
+    if has("sales vs purchase", "sales and purchase", "sales vs purchases", "sales & purchase"):
+        return R("monthly_trend", "composed", "Finance", "Monthly Sales vs Purchases", months=months)
+
+    return None
+
+
 def _ai_interpret_query(query: str, date_from=None, date_to=None):
     """Use Ollama to interpret a natural language graph query. Needs ~80 tokens output."""
     date_context = (
@@ -667,6 +734,12 @@ def _execute_ai_query(interpretation, query, date_from=None, date_to=None):
         chart_data = _fetch_stock_value(limit)
     elif intent == "growth_rate":
         chart_data = _fetch_sales_growth(months)
+    elif intent == "payments_receipts":
+        chart_data = _fetch_payments_receipts(months)
+    elif intent == "credit_debit_notes":
+        chart_data = _fetch_credit_debit_notes(months)
+    elif intent == "state_wise_sales":
+        chart_data = _fetch_state_wise_sales(fy or "current")
     else:
         # Custom: group by party or month for a given voucher type
         vt = v_types[0] if v_types else "Sales"
@@ -758,11 +831,20 @@ def generate_graph_data(query, chart_type_hint=None, date_from=None, date_to=Non
     if not query or not query.strip():
         return {"success": False, "error": "Query is required"}
 
-    if not is_ollama_running():
-        return {"success": False, "error": "Ollama is not running. Start with: ollama serve"}
-
     try:
-        interpretation = _ai_interpret_query(query, date_from, date_to)
+        # Fast path: deterministic keyword router (same query-based layer as AI chat).
+        # Resolves the common requests with NO LLM and NO Ollama dependency.
+        interpretation = _route_graph_query(query, date_from, date_to)
+        used_ai = False
+        if not interpretation:
+            # Fall back to the LLM only when the router can't recognise the request.
+            if not is_ollama_running():
+                return {"success": False, "error": (
+                    "Couldn't match that to a known chart. Try a preset, or rephrase "
+                    "(e.g. 'monthly sales', 'top customers', 'cash flow', 'GST', 'top debtors'). "
+                    "The AI fallback needs Ollama running.")}
+            interpretation = _ai_interpret_query(query, date_from, date_to)
+            used_ai = True
         if not interpretation:
             return {"success": False, "error": "AI could not interpret the query. Try rephrasing."}
 
@@ -786,6 +868,7 @@ def generate_graph_data(query, chart_type_hint=None, date_from=None, date_to=Non
             "category": interpretation.get("category", "Custom"),
             "query_text": query,
             "interpretation": interpretation,
+            "instant": not used_ai,
             **chart_data,
         }
     except Exception as e:
