@@ -26,10 +26,32 @@ export async function fetchTallySummary(): Promise<TallySummary | null> {
   return json.message || null
 }
 
-export function useTallySummary() {
+export function useTallySummary(enabled = true) {
   return useQuery<TallySummary | null>({
     queryKey: ["tally-summary"],
     queryFn: fetchTallySummary,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+    enabled,
+  })
+}
+
+// True when the current user owns the books (accounts/finance dept or designation).
+// Gates the dashboard Tally Financial Snapshot for accountants alongside admins.
+export async function fetchIsAccountsHandler(): Promise<boolean> {
+  const res = await fetch(
+    "/api/method/hr_client.api.operations.is_accounts_handler",
+    { credentials: "include" }
+  )
+  if (!res.ok) return false
+  const json = await res.json()
+  return !!json.message?.is_handler
+}
+
+export function useIsAccountsHandler() {
+  return useQuery<boolean>({
+    queryKey: ["is-accounts-handler"],
+    queryFn: fetchIsAccountsHandler,
     staleTime: 1000 * 60 * 5,
     retry: false,
   })

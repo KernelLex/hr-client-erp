@@ -9,7 +9,7 @@ import {
   Bot, ChevronDown, ChevronUp, RefreshCw, Loader2, ExternalLink,
   AlertTriangle, TrendingUp, TrendingDown, Wallet,
 } from "lucide-react"
-import { useTallySummary, formatDate as tallyFmtDate } from "@/api/tally"
+import { useTallySummary, useIsAccountsHandler, formatDate as tallyFmtDate } from "@/api/tally"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
@@ -371,9 +371,11 @@ export function Dashboard() {
   const { user } = useAuth()
   const { activeCompany } = useCompany()
   const isAdmin = user && ADMIN_USERS.has(user.name)
+  const { data: isAccountant } = useIsAccountsHandler()
+  const canSeeTally = !!(isAdmin || isAccountant)
   const { data, isLoading } = useDashboardStats()
   const { data: pwCheck } = useDefaultPasswordCheck()
-  const { data: tallySnap } = useTallySummary()
+  const { data: tallySnap } = useTallySummary(canSeeTally)
   const showPasswordBanner = pwCheck?.is_default === true
 
   const activity = data?.recent_activity ?? []
@@ -426,8 +428,8 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Tally Financial Snapshot — admin only, top of the dashboard */}
-      {isAdmin && tallySnap && (
+      {/* Tally Financial Snapshot — admins + accountants, top of the dashboard */}
+      {canSeeTally && tallySnap && (
         <Card
           className="border-0"
           style={{ background: "#FFFFFF", border: "var(--border-card)", boxShadow: "var(--shadow-card)", borderRadius: "var(--radius-card)" }}

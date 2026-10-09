@@ -62,6 +62,54 @@ def _require_admin():
         frappe.throw("Not permitted", frappe.PermissionError)
 
 
+def _is_accounts_person(user=None):
+    """True when the user's active Employee sits in an accounts/finance department
+    or carries an accounts/GST/finance designation — i.e. they own the books.
+    Generic ERPNext roles can't distinguish them (every user has Accounts roles),
+    so we key off the Employee's department/designation instead."""
+    user = user or frappe.session.user
+    if user == "Guest":
+        return False
+    emp = frappe.db.get_value(
+        "Employee", {"user_id": user, "status": "Active"},
+        ["department", "designation"], as_dict=True,
+    )
+    if not emp:
+        return False
+    desig = (emp.designation or "").lower()
+    dept = (emp.department or "").lower()
+    # Designation is the strongest signal of the person's real role.
+    if any(k in desig for k in ("account", "gst", "finance")):
+        return True
+    # An accounts/finance DEPARTMENT counts only when the designation doesn't name
+    # a different function (e.g. "Logistics In-charge" who happens to sit in Accounts).
+    other = ("logistics", "sales", "hr", "human resource", "project", "porter",
+             "stock", "driver", "delivery", "design", "site")
+    if ("account" in dept or "finance" in dept) and not any(k in desig for k in other):
+        return True
+    return False
+
+
+def _require_admin_or_accounts():
+    """Admins (and System Managers) OR the accountants who own the books."""
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Not permitted", frappe.PermissionError)
+    if (user in _ADMIN_USERS or "System Manager" in frappe.get_roles(user)
+            or _is_accounts_person(user)):
+        return
+    frappe.throw("Not permitted", frappe.PermissionError)
+
+
+@frappe.whitelist()
+def is_accounts_handler():
+    """Does the current user own the books (accounts/finance)? Gates the dashboard
+    Tally Financial Snapshot so accountants see it alongside admins."""
+    if frappe.session.user == "Guest":
+        frappe.throw("Not permitted", frappe.PermissionError)
+    return {"is_handler": _is_accounts_person()}
+
+
 def _current_fy():
     """Returns (fy_start_date, fy_end_date_exclusive, fy_label) for the current Indian financial year."""
     today = datetime.date.today()
@@ -929,7 +977,7 @@ def get_tally_financial_summary():
     Sign convention: closing_balance < 0 = Dr = asset (money held / owed to us);
                      closing_balance > 0 = Cr = liability (OD drawn / owed by us).
     """
-    _require_admin()
+    _require_admin_or_accounts()
     company = _cc()
     L = "`tabVE Tally Ledger`"
     cco = _cco(company)
