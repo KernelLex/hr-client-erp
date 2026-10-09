@@ -45,9 +45,13 @@ export function Login() {
     setLoading(true)
     try {
       await login(email, password, picked?.name)
-    } catch {
-      // Generic message — never reveals whether the account or company was wrong.
-      setError("Invalid email or password. Please try again.")
+    } catch (err: unknown) {
+      // Show the specific reason (network / rate-limit / server) instead of
+      // always blaming the password — that misled users into endless retries.
+      const msg = err instanceof Error && err.message
+        ? err.message
+        : "Invalid email or password. Please try again."
+      setError(msg)
     } finally {
       setLoading(false)
     }

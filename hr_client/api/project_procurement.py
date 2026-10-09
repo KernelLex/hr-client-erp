@@ -16,8 +16,11 @@ start at 0 — never invented.
 
 import frappe
 
+import json
+
 from hr_client.api.utils import (
     require_login, require_admin, handle_api_error, current_company, allowed_companies,
+    ALL_COMPANIES,
 )
 from hr_client.api.finish_rate import get_rate as _finish_rate_lookup
 
@@ -294,6 +297,70 @@ def list_pos(project: str = None):
             "value": round(sum(_flt(r["total"]) for r in rows)),
             "intercompany": sum(1 for r in rows if r["is_intercompany"])}
     return {"pos": rows, "kpis": kpis}
+
+
+@frappe.whitelist()
+@handle_api_error
+def list_project_options():
+    """Lightweight (name, title) project list for the PO 'link to project'
+    dropdown. Scoped to the companies the user can see."""
+    require_login()
+    comps = allowed_companies() or frappe.get_all("Company", pluck="name")
+    rows = frappe.get_all(
+        "Vera Project", filters={"company": ["in", comps]},
+        fields=["name", "project_title", "company"],
+        order_by="modified desc", limit_page_length=0,
+    )
+    return {"projects": rows}
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def create_po(payload: str = None, **kwargs):
+    """Create a Purchase Order directly. `project` is OPTIONAL — a PO can be
+    raised standalone (e.g. from Logistics) without being tied to a project, or
+    linked to one when relevant. Both paths are supported."""
+    require_login()
+    data = json.loads(payload) if isinstance(payload, str) else dict(payload or {})
+    data.update({k: v for k, v in kwargs.items() if v is not None})
+
+    vendor = (data.get("vendor") or "").strip()
+    if not vendor:
+        frappe.throw("A vendor is required to raise a purchase order.")
+
+    company = data.get("company") or current_company()
+    if company == ALL_COMPANIES:
+        frappe.throw("Select a specific company before raising a purchase order.")
+
+    project = (data.get("project") or "").strip() or None
+    if project and not frappe.db.exists("Vera Project", project):
+        frappe.throw("The selected project no longer exists.")
+
+    po = frappe.new_doc(PO)
+    po.vendor = vendor
+    po.project = project
+    po.company = company
+    po.po_date = data.get("po_date") or frappe.utils.today()
+    po.status = "Draft"
+    po.notes = data.get("notes")
+    po.source = "Manual"
+    if vendor in set(frappe.get_all("Company", pluck="name")):
+        po.is_intercompany = 1
+        po.supplying_company = vendor
+    for r in data.get("lines") or []:
+        desc = (r.get("item_description") or "").strip()
+        if not desc:
+            continue
+        po.append("lines", {
+            "item_description": desc, "spec": r.get("spec"),
+            "qty": _flt(r.get("qty")), "uom": r.get("uom"), "rate": _flt(r.get("rate")),
+        })
+    if not po.get("lines"):
+        frappe.throw("Add at least one line item with a description.")
+    po.flags.ignore_permissions = True
+    po.insert()
+    frappe.db.commit()
+    return {"name": po.name, "total": po.total, "project": po.project}
 
 
 @frappe.whitelist()

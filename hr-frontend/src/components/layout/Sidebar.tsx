@@ -24,7 +24,7 @@ function getInitials(name: string) {
 function AdminBadge() {
   return (
     <span
-      className="ml-auto text-[10px] font-semibold rounded px-1.5 py-0.5"
+      className="ml-auto shrink-0 text-[10px] font-semibold rounded px-1.5 py-0.5"
       style={{ border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
     >
       admin
@@ -82,7 +82,7 @@ function NavItem({
       {({ isActive }) => (
         <>
           <Glyph char={glyph} active={isActive} />
-          <span className="flex-1">{label}</span>
+          <span className="flex-1 min-w-0 truncate">{label}</span>
           {adminBadge && <AdminBadge />}
           {unreadCount > 0 && (
             <span
@@ -127,7 +127,7 @@ function SubItem({
         ? { backgroundColor: "var(--overlay-selected)", color: "var(--text-primary)", borderLeftColor: "var(--text-primary)" }
         : { color: "var(--text-tertiary)" }}
     >
-      <span className="flex-1">{label}</span>
+      <span className="flex-1 min-w-0 truncate">{label}</span>
       {adminBadge && <AdminBadge />}
     </NavLink>
   )
@@ -300,6 +300,9 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
   const showChat = can("chat")
   const showOrgHub = can("org_hub")
   const showTodo = can("todo")
+  // Logistics (deliveries + POD + goods receipts) is run by the logistics owner,
+  // who may not be an admin — so gate on the logistics permission too.
+  const showLogistics = isAdmin || can("logistics")
 
   // Brand reflects the active company so each workspace is identifiable — name
   // + abbreviation only (no accent colour, per the monochrome overhaul).
@@ -368,7 +371,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         )}
 
         {/* ── DELIVERY ── */}
-        {(showQuotation || isAdmin) && <SectionTitle>Delivery</SectionTitle>}
+        {(showQuotation || isAdmin || showLogistics) && <SectionTitle>Delivery</SectionTitle>}
         {showQuotation && (
           <>
             <NavItem to="/projects" label="Project Delivery" glyph="▦" onClick={close} />
@@ -380,10 +383,10 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
           <>
             <NavItem to="/purchasing" label="Purchasing" glyph="⬓" adminBadge onClick={close} />
             <NavItem to="/inventory" label="Inventory" glyph="▥" adminBadge onClick={close} />
-            <NavItem to="/logistics" label="Logistics" glyph="⇲" adminBadge onClick={close} />
             <NavItem to="/returns" label="Returns & QC" glyph="↩" adminBadge onClick={close} />
           </>
         )}
+        {showLogistics && <NavItem to="/logistics" label="Logistics" glyph="⇲" adminBadge={isAdmin} onClick={close} />}
 
         {/* ── FINANCE ── */}
         <SectionTitle>Finance</SectionTitle>
@@ -403,11 +406,13 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <SubItem to="/accounting-module?tab=purchase-bills"       label="Purchase Bills"         isActive={acct("purchase-bills")} onClick={close} />
               <SubItem to="/accounting-module?tab=credit-notes"         label="Credit Notes"           isActive={acct("credit-notes")} onClick={close} />
               <SubItem to="/accounting-module?tab=debit-notes"          label="Debit Notes"            isActive={acct("debit-notes")} onClick={close} />
-              <SubItem to="/accounting-module?tab=ar"                   label="Accounts Receivable"    isActive={acct("ar")} onClick={close} />
-              <SubItem to="/accounting-module?tab=ap"                   label="Accounts Payable"       isActive={acct("ap")} onClick={close} />
+              {/* Accounts Receivable / Payable consolidated into the dedicated
+                  "Payables & Receivables" page below (party-centric, with aging +
+                  invoices). The old COA tabs stay reachable by URL if needed. */}
               <SubItem to="/accounting-module?tab=depreciation"         label="Depreciation (Journal)" isActive={acct("depreciation")} onClick={close} />
               <SubItem to="/accounting-module?tab=cash-flow"            label="Cash Flow"              isActive={acct("cash-flow")} onClick={close} />
             </GroupBody>
+            <NavItem to="/accounting/payables-receivables" label="Payables & Receivables" glyph="⇅" adminBadge onClick={close} />
             <NavItem to="/admin/vendor-payments" label="Vendor Payments" glyph="◈" adminBadge onClick={close} />
           </>
         )}
@@ -424,13 +429,18 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         </GroupBody>
 
         {/* ── PEOPLE ── */}
-        {(showHrms || showAttendance || showLeave || showHolidays || showRecruitment) && <SectionTitle>People</SectionTitle>}
-        {showAttendance && <NavItem to="/admin/attendance" label="Attendance" glyph="◷" onClick={close} />}
+        {/* HRMS group only renders for admins (all its items are admin-only), so
+            the section title must not count `showHrms` alone — otherwise a
+            non-admin with the hrms permission saw an empty "People" section. */}
+        {(showAttendance || showLeave || showHolidays || showRecruitment || (showHrms && isAdmin)) && <SectionTitle>People</SectionTitle>}
+        {showAttendance && <NavItem to={isAdmin ? "/admin/attendance" : "/attendance"} label="Attendance" glyph="◷" onClick={close} />}
         {showLeave && <NavItem to="/leave" label="Leave" glyph="⎋" onClick={close} />}
         {showHolidays && <NavItem to="/holidays" label="Holidays" glyph="◰" onClick={close} />}
         {showRecruitment && <NavItem to="/recruitment" label="Recruitment" glyph="◍" onClick={close} />}
 
-        {showHrms && (<>
+        {/* Every HRMS sub-item is admin-only, so render the whole group only for
+            admins — a non-admin used to see the "HRMS" header open to nothing. */}
+        {showHrms && isAdmin && (<>
           <GroupHeader label="HRMS" glyph="☺" open={hrOpen} active={isHrGroupActive} onToggle={toggleHR} />
           <GroupBody open={hrOpen} maxHeight={1000}>
             {isAdmin && <SubItem to="/hrms/employees" label="Employee Master" isActive={isEmpMasterActive} adminBadge onClick={close} />}
@@ -456,13 +466,18 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
         {/* ── WORKSPACE ── */}
         {(showTodo || showChat || showAccounts) && <SectionTitle>Workspace</SectionTitle>}
         {showTodo && (<>
-          <GroupHeader label="Tasks" glyph="✓" open={todoOpen} active={isTodoGroupActive} onToggle={toggleTodo} />
-          <GroupBody open={todoOpen} maxHeight={280}>
-            {can("todo.personal") && <SubItem to="/todo/personal" label="Personal Tasks" isActive={isPersonalTasksActive} onClick={close} />}
-            {isAdmin && <SubItem to="/todo/team" label="Team Tasks" isActive={isTeamTasksActive} adminBadge onClick={close} />}
-            {isAdmin && <SubItem to="/todo/approvals" label="Workflow Approvals" isActive={isApprovalsActive} adminBadge onClick={close} />}
-            {can("todo.reminders") && <SubItem to="/todo/reminders" label="Reminders" isActive={isRemindersActive} onClick={close} />}
-          </GroupBody>
+          {/* Header+body only when the group actually has a visible child, so it
+              never collapses to an empty "Tasks" header for restricted users.
+              Calendar/Meetings/Notes below are independent of this guard. */}
+          {(can("todo.personal") || isAdmin || can("todo.reminders")) && (<>
+            <GroupHeader label="Tasks" glyph="✓" open={todoOpen} active={isTodoGroupActive} onToggle={toggleTodo} />
+            <GroupBody open={todoOpen} maxHeight={280}>
+              {can("todo.personal") && <SubItem to="/todo/personal" label="Personal Tasks" isActive={isPersonalTasksActive} onClick={close} />}
+              {isAdmin && <SubItem to="/todo/team" label="Team Tasks" isActive={isTeamTasksActive} adminBadge onClick={close} />}
+              {isAdmin && <SubItem to="/todo/approvals" label="Workflow Approvals" isActive={isApprovalsActive} adminBadge onClick={close} />}
+              {can("todo.reminders") && <SubItem to="/todo/reminders" label="Reminders" isActive={isRemindersActive} onClick={close} />}
+            </GroupBody>
+          </>)}
           {can("todo.calendar") && <NavItem to="/todo/calendar" label="Calendar" glyph="◰" onClick={close} />}
           {can("todo.meetings") && <NavItem to="/todo/meetings" label="Meetings" glyph="◎" onClick={close} />}
           {isAdmin && <NavItem to="/todo/notes" label="Notes" glyph="▤" adminBadge onClick={close} />}

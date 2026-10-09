@@ -8,7 +8,7 @@ from frappe.utils import flt, cint
 
 import datetime
 
-_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
+_ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 _SNAPSHOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tally_snapshot.json")
 
 from hr_client.api.utils import ALL_COMPANIES, current_company, require_company
@@ -1133,6 +1133,260 @@ def get_party_statement(party_name: str, limit: int = 50):
         "is_debtor": bool(ledger and ledger.is_debtors),
         "is_creditor": bool(ledger and ledger.is_creditors),
         "transactions": rows,
+    }
+
+
+# ── Payables & Receivables (party-centric detailed ledger) ────────────────────
+# All sourced from the canonical Tally import (VE Tally Ledger / VE Tally Voucher).
+# Sign convention (matches get_debtor_aging / get_creditor_list):
+#   debtor  → Dr balance stored NEGATIVE; closing_balance < 0 means "owes us".
+#   creditor→ Cr balance stored POSITIVE; closing_balance > 0 means "we owe them".
+# Tally has no bill-wise due date, so aging is computed FIFO from invoice dates.
+
+_DEBTOR_CHARGE_TYPES   = ("Sales", "Debit Note")
+_DEBTOR_CREDIT_TYPES   = ("Receipt", "Credit Note")
+_CREDITOR_CHARGE_TYPES = ("Purchase",)
+_CREDITOR_CREDIT_TYPES = ("Payment", "Debit Note", "Credit Note")
+
+
+def _party_direction(ledger):
+    """Return ('receivable'|'payable'|'advance_*'|'settled', outstanding_abs)."""
+    bal = flt(ledger.closing_balance)
+    if ledger.is_debtors and bal < 0:
+        return "receivable", abs(bal)
+    if ledger.is_creditors and bal > 0:
+        return "payable", bal
+    if ledger.is_debtors and bal > 0:
+        return "advance_from_customer", bal
+    if ledger.is_creditors and bal < 0:
+        return "advance_to_vendor", abs(bal)
+    return "settled", abs(bal)
+
+
+def _age_bucket(days):
+    if days is None:
+        return "unknown"
+    if days <= 30:
+        return "b0_30"
+    if days <= 60:
+        return "b31_60"
+    if days <= 90:
+        return "b61_90"
+    return "b90_plus"
+
+
+@frappe.whitelist()
+def get_ar_ap_summary():
+    """Company-wide payables/receivables totals + top parties. Canonical source."""
+    _require_admin()
+    company = _cc()
+
+    rec = frappe.db.sql(
+        "SELECT ledger_name, closing_balance FROM `tabVE Tally Ledger` "
+        f"WHERE is_debtors = 1 AND closing_balance < 0{_cco(company)} "
+        "ORDER BY closing_balance ASC", as_dict=True,
+    )
+    pay = frappe.db.sql(
+        "SELECT ledger_name, closing_balance FROM `tabVE Tally Ledger` "
+        f"WHERE is_creditors = 1 AND closing_balance > 0{_cco(company)} "
+        "ORDER BY closing_balance DESC", as_dict=True,
+    )
+    receivable_total = sum(abs(flt(r.closing_balance)) for r in rec)
+    payable_total = sum(flt(r.closing_balance) for r in pay)
+
+    def _top(rows, n=10):
+        return [{
+            "party": r.ledger_name,
+            "amount": round(abs(flt(r.closing_balance)), 2),
+            "amount_fmt": _fmt(abs(flt(r.closing_balance))),
+        } for r in rows[:n]]
+
+    return {
+        "company": None if company == ALL_COMPANIES else company,
+        "receivable_total": round(receivable_total, 2),
+        "receivable_fmt": _fmt(receivable_total),
+        "receivable_count": len(rec),
+        "payable_total": round(payable_total, 2),
+        "payable_fmt": _fmt(payable_total),
+        "payable_count": len(pay),
+        "net_total": round(receivable_total - payable_total, 2),
+        "net_fmt": _fmt(receivable_total - payable_total),
+        "top_receivables": _top(rec),
+        "top_payables": _top(pay),
+    }
+
+
+@frappe.whitelist()
+def search_parties(query: str = "", kind: str = "all", limit: int = 25):
+    """Search debtor/creditor parties by name. kind ∈ all|receivable|payable."""
+    _require_admin()
+    company = _cc()
+    query = (query or "").strip()
+
+    conds = ["(is_debtors = 1 OR is_creditors = 1)", "closing_balance != 0"]
+    params = []
+    if query:
+        conds.append("ledger_name LIKE %s")
+        params.append(f"%{query}%")
+    if kind == "receivable":
+        conds.append("is_debtors = 1 AND closing_balance < 0")
+    elif kind == "payable":
+        conds.append("is_creditors = 1 AND closing_balance > 0")
+
+    where = " AND ".join(conds) + _cco(company)
+    rows = frappe.db.sql(
+        "SELECT ledger_name, parent_group, closing_balance, is_debtors, is_creditors, gstin, company "
+        f"FROM `tabVE Tally Ledger` WHERE {where} "
+        "ORDER BY ABS(closing_balance) DESC LIMIT %s",
+        params + [int(limit)], as_dict=True,
+    )
+    out = []
+    for r in rows:
+        direction, amt = _party_direction(r)
+        out.append({
+            "party": r.ledger_name,
+            "group": r.parent_group,
+            "gstin": r.gstin,
+            "company": r.company,
+            "direction": direction,
+            "amount": round(amt, 2),
+            "amount_fmt": _fmt(amt),
+        })
+    return {"results": out, "total": len(out)}
+
+
+@frappe.whitelist()
+def get_party_ledger(party_name: str):
+    """Detailed party breakdown: balance direction, FIFO aging, open invoices,
+    and the full transaction ledger with a running balance. Canonical Tally data."""
+    _require_admin()
+    company = _cc()
+    if not party_name:
+        frappe.throw("party_name required")
+
+    from datetime import date
+
+    ledger = frappe.db.get_value(
+        "VE Tally Ledger", _cfilters(company, {"ledger_name": party_name}),
+        ["ledger_name", "mailing_name", "closing_balance", "opening_balance",
+         "is_debtors", "is_creditors", "parent_group", "gstin", "pan_number",
+         "state", "phone", "address", "company"],
+        as_dict=True,
+    )
+    if not ledger:
+        frappe.throw(f"No party ledger found for '{party_name}'")
+
+    direction, outstanding = _party_direction(ledger)
+    is_debtor = bool(ledger.is_debtors)
+    charge_types = _DEBTOR_CHARGE_TYPES if is_debtor else _CREDITOR_CHARGE_TYPES
+    credit_types = _DEBTOR_CREDIT_TYPES if is_debtor else _CREDITOR_CREDIT_TYPES
+
+    vouchers = frappe.db.sql(
+        "SELECT voucher_type, voucher_number, voucher_date, amount, narration "
+        "FROM `tabVE Tally Voucher` "
+        f"WHERE party_name = %s AND is_cancelled = 0{_cco(company)} "
+        "ORDER BY voucher_date ASC, name ASC",
+        (party_name,), as_dict=True,
+    )
+
+    today = date.today()
+
+    # Full ledger + per-type tallies (for the "charged vs received" summary).
+    txns = []
+    charge_invoices = []  # oldest-first list of {date, number, amount} for aging
+    total_charged = 0.0
+    total_paid = 0.0
+    for v in vouchers:
+        amt = flt(v.amount)
+        if v.voucher_type in charge_types:
+            total_charged += amt
+            charge_invoices.append({"date": v.voucher_date, "number": v.voucher_number, "amount": amt})
+            sign = 1
+        elif v.voucher_type in credit_types:
+            total_paid += amt
+            sign = -1
+        else:
+            sign = 0  # Journal / Contra / other
+        txns.append({
+            "type": v.voucher_type,
+            "number": v.voucher_number,
+            "date": str(v.voucher_date),
+            "amount": round(amt, 2),
+            "amount_fmt": _fmt(amt),
+            "signed": sign,  # +1 raises what's owed, -1 settles it, 0 adjustment
+            "narration": (v.narration or "").strip()[:140],
+        })
+
+    # Aging that ALWAYS reconciles to the authoritative closing balance:
+    # allocate the outstanding across the NEWEST invoices first (standard
+    # assumption that older invoices are settled first). Any part of the balance
+    # not explained by Sales/Purchase invoices (journals, opening) → "Other".
+    remaining = outstanding
+    open_invoices = []
+    for inv in sorted(charge_invoices, key=lambda x: (x["date"] or date.min), reverse=True):
+        if remaining <= 0.01:
+            break
+        take = min(inv["amount"], remaining)
+        remaining -= take
+        days = (today - inv["date"]).days if inv["date"] else None
+        open_invoices.append({
+            "number": inv["number"],
+            "date": str(inv["date"]) if inv["date"] else None,
+            "amount": round(inv["amount"], 2),
+            "amount_fmt": _fmt(inv["amount"]),
+            "open_amount": round(take, 2),
+            "open_amount_fmt": _fmt(take),
+            "age_days": days,
+            "bucket": _age_bucket(days),
+        })
+    # open invoices read oldest-first in the UI
+    open_invoices.sort(key=lambda x: (x["date"] or ""))
+
+    buckets = {"b0_30": 0.0, "b31_60": 0.0, "b61_90": 0.0, "b90_plus": 0.0, "unknown": 0.0}
+    for inv in open_invoices:
+        buckets[inv["bucket"]] += inv["open_amount"]
+    # Unexplained remainder (opening balance / journals) kept visible so the
+    # aging always sums to the real outstanding.
+    unexplained = round(remaining, 2)
+    if unexplained > 0.01:
+        buckets["unknown"] += unexplained
+
+    BUCKET_LABELS = {
+        "b0_30": "0–30 days", "b31_60": "31–60 days", "b61_90": "61–90 days",
+        "b90_plus": "90+ days", "unknown": "Other / opening",
+    }
+
+    return {
+        "party": ledger.ledger_name,
+        "mailing_name": ledger.mailing_name,
+        "company": ledger.company,
+        "group": ledger.parent_group,
+        "gstin": ledger.gstin,
+        "pan": ledger.pan_number,
+        "state": ledger.state,
+        "phone": ledger.phone,
+        "address": ledger.address,
+        "direction": direction,
+        "is_debtor": is_debtor,
+        "is_creditor": bool(ledger.is_creditors),
+        "outstanding": round(outstanding, 2),
+        "outstanding_fmt": _fmt(outstanding),
+        "opening_balance": round(abs(flt(ledger.opening_balance)), 2),
+        "opening_fmt": _fmt(abs(flt(ledger.opening_balance))),
+        "total_charged": round(total_charged, 2),
+        "total_charged_fmt": _fmt(total_charged),
+        "total_paid": round(total_paid, 2),
+        "total_paid_fmt": _fmt(total_paid),
+        "unexplained": unexplained,
+        "unexplained_fmt": _fmt(unexplained) if unexplained > 0.01 else None,
+        "aging": {
+            k: {"amount": round(v, 2), "fmt": _fmt(v), "label": BUCKET_LABELS[k]}
+            for k, v in buckets.items()
+        },
+        "open_invoices": open_invoices,
+        "open_invoice_count": len(open_invoices),
+        "transactions": list(reversed(txns)),
+        "transaction_count": len(txns),
     }
 
 

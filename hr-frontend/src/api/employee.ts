@@ -76,6 +76,49 @@ export async function getAllEmployees(): Promise<EmployeeListItem[]> {
   return res.data.message
 }
 
+// ── Self-service password change ──────────────────────────────────────────────
+export async function changeMyPassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message?: string }> {
+  const res = await api.post(apiUrl("hr_client.api.employee.change_my_password"), {
+    current_password: currentPassword,
+    new_password: newPassword,
+  })
+  return res.data.message
+}
+
+// ── Self-service attendance (logged-in employee's own Jibble data) ─────────────
+export interface MyAttendanceRow {
+  person_id: string
+  person_name: string
+  date: string
+  clock_in: string | null
+  clock_out: string | null
+  hours: number
+  break_minutes: number
+  status: "on_time" | "late" | "working" | "absent"
+}
+export interface MyAttendanceDay {
+  date: string
+  date_label: string
+  entry: MyAttendanceRow | null
+}
+export interface MyAttendance {
+  success: boolean
+  linked: boolean
+  person_name: string
+  data: MyAttendanceDay[]
+  date_from: string
+  date_to: string
+  message?: string
+  summary?: { present_days: number; late_days: number; total_hours: number }
+  last_synced?: string
+}
+export async function getMyAttendance(dateFrom: string, dateTo: string): Promise<MyAttendance> {
+  const res = await api.get(apiUrl("hr_client.api.jibble.get_my_attendance"), {
+    params: { date_from: dateFrom, date_to: dateTo },
+  })
+  return res.data.message
+}
+
 export async function uploadProfilePhoto(file: File, email?: string): Promise<string> {
   const form = new FormData()
   form.append("file", file)

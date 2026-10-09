@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import { TransactionSummaryBand, MonthDivider, type VoucherSummary } from "@/pages/Accounting/TransactionSummaryBand"
+import { getActiveCompany } from "@/lib/api"
 
 // ── API helpers ────────────────────────────────────────────────────────────────
 
@@ -17,10 +18,13 @@ function getCsrf(): string {
 }
 
 async function apiPost(method: string, body: Record<string, unknown>) {
+  // Append the active company so voucher lists respect the company switcher.
+  const company = getActiveCompany()
+  const payload = company && body.company == null ? { ...body, company } : body
   const res = await fetch(`/api/method/${method}`, {
     method: "POST", credentials: "include",
     headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": getCsrf() },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   })
   const json = await res.json()
   if (!res.ok || json.exc) throw new Error(json.exc || "Request failed")

@@ -21,6 +21,8 @@ import {
 import { useMyLeaves, useApplyLeave } from "@/pages/leave/useLeave"
 import { LEAVE_TYPES, type LeaveApplication } from "@/pages/leave/types"
 import { HolidaysContent } from "@/pages/holidays/HolidaysPage"
+import { MyAttendanceContent } from "@/pages/attendance/MyAttendancePage"
+import { ChangePasswordCard } from "@/pages/profile/ChangePasswordCard"
 
 
 const SELF_EDITABLE = new Set([
@@ -33,12 +35,12 @@ const SELF_EDITABLE = new Set([
 const BLOOD_GROUPS = ["", "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]
 const GENDER_OPTIONS = ["", "Male", "Female", "Non-binary", "Prefer not to say"]
 
-type Tab = "profile" | "attendance" | "leave" | "holidays"
+type Tab = "profile" | "attendance" | "leave" | "holidays" | "security"
 
 function readTab(): Tab {
   try {
     const v = localStorage.getItem("profile_tab") as Tab | null
-    if (v === "profile" || v === "attendance" || v === "leave" || v === "holidays") return v
+    if (v === "profile" || v === "attendance" || v === "leave" || v === "holidays" || v === "security") return v
   } catch {}
   return "profile"
 }
@@ -362,6 +364,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "attendance", label: "Attendance",    icon: <Clock size={14} /> },
   { id: "leave",      label: "Leave History", icon: <CalendarDays size={14} /> },
   { id: "holidays",   label: "Holidays",      icon: <BarChart3 size={14} /> },
+  { id: "security",   label: "Security",      icon: <Shield size={14} /> },
 ]
 
 function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void }) {
@@ -536,13 +539,7 @@ function ProfileTabContent({
 // ─── AttendanceTabContent ─────────────────────────────────────────────────────
 
 function AttendanceTabContent() {
-  return (
-    <div className="p-6 flex flex-col items-center justify-center py-24" style={{ color: "var(--text-muted)" }}>
-      <Clock size={48} className="mb-4 opacity-20" />
-      <p className="text-base font-medium" style={{ color: "var(--text-secondary)" }}>Attendance history coming soon</p>
-      <p className="text-sm mt-1">Your monthly Jibble attendance data will appear here</p>
-    </div>
-  )
+  return <MyAttendanceContent />
 }
 
 // ─── ApplyLeaveModal ──────────────────────────────────────────────────────────
@@ -925,6 +922,11 @@ export function EmployeeProfilePage() {
       {showTabs && activeTab === "holidays" && (
         <div className="p-6">
           <HolidaysContent />
+        </div>
+      )}
+      {showTabs && activeTab === "security" && (
+        <div className="p-6">
+          <ChangePasswordCard />
         </div>
       )}
     </div>

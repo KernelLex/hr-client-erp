@@ -27,6 +27,7 @@ const HardwarePackagesPage = lazy(() => import("@/pages/admin/HardwarePackagesPa
 const FinishRatesPage = lazy(() => import("@/pages/admin/FinishRatesPage").then(m => ({ default: m.FinishRatesPage })))
 const ServicePage = lazy(() => import("@/pages/service/ServicePage").then(m => ({ default: m.ServicePage })))
 const VendorPaymentsPage = lazy(() => import("@/pages/admin/VendorPaymentsPage").then(m => ({ default: m.VendorPaymentsPage })))
+const PartyLedgerPage = lazy(() => import("@/pages/accounting_parties/PartyLedgerPage"))
 const GroupDashboardPage = lazy(() => import("@/pages/admin/GroupDashboardPage").then(m => ({ default: m.GroupDashboardPage })))
 const ProjectDeliveryPage = lazy(() => import("@/pages/projects/ProjectDeliveryPage").then(m => ({ default: m.ProjectDeliveryPage })))
 const ProjectDeliveryDetail = lazy(() => import("@/pages/projects/ProjectDeliveryDetail").then(m => ({ default: m.ProjectDeliveryDetail })))
@@ -36,6 +37,7 @@ const EmployeeProfilePage = lazy(() => import("@/pages/profile/EmployeeProfilePa
 const AdminEmployeesPage = lazy(() => import("@/pages/admin/employees/AdminEmployeesPage").then(m => ({ default: m.AdminEmployeesPage })))
 const AdminEmployeeDetailPage = lazy(() => import("@/pages/admin/employees/AdminEmployeeDetailPage").then(m => ({ default: m.AdminEmployeeDetailPage })))
 const AttendancePage = lazy(() => import("@/pages/admin/attendance/AttendancePage").then(m => ({ default: m.AttendancePage })))
+const MyAttendancePage = lazy(() => import("@/pages/attendance/MyAttendancePage").then(m => ({ default: m.MyAttendancePage })))
 const LeavePage = lazy(() => import("@/pages/leave/LeavePage").then(m => ({ default: m.LeavePage })))
 const NewLeadForm = lazy(() => import("@/pages/crm/NewLeadForm").then(m => ({ default: m.NewLeadForm })))
 const LeadDetail = lazy(() => import("@/pages/crm/LeadDetail").then(m => ({ default: m.LeadDetail })))
@@ -175,6 +177,8 @@ function App() {
                 <Route path="/projects/:name/procurement" element={<ProcurementPage />} />
                 <Route path="/projects/:name" element={<ProjectDeliveryDetail />} />
                 <Route path="/admin/attendance" element={<AttendancePage />} />
+                {/* Self-service attendance for every employee (admin page is Jibble-admin only) */}
+                <Route path="/attendance" element={<MyAttendancePage />} />
                 <Route path="/leave" element={<LeavePage />} />
                 {/* CRM routes */}
                 <Route path="/crm" element={<CrmHub />} />
@@ -244,6 +248,8 @@ function App() {
                 <Route path="/accounts-dashboard" element={<OperationsPage />} />
                 {/* Accounting Module — 18-tab COA / ledger page */}
                 <Route path="/accounting-module" element={<AccountingPage />} />
+                {/* Payables & Receivables — party-centric detailed ledger */}
+                <Route path="/accounting/payables-receivables" element={<PartyLedgerPage />} />
                 <Route path="/operations" element={<Navigate to="/accounting" replace />} />
                 {/* Per-company Tally upload + detect/confirm (multi-company §1) */}
                 <Route path="/tally-upload" element={<TallyUploadPage />} />

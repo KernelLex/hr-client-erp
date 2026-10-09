@@ -9,7 +9,7 @@ import frappe
 # view must gate on is_group_owner() only — otherwise any System Manager could
 # grant themselves another company's books.
 GROUP_OWNER    = frozenset({"owais@veraenterprises.in"})   # + "Administrator" break-glass
-PLATFORM_ADMIN = frozenset({"amoghspace@gmail.com"})       # developer: all companies, no grants
+PLATFORM_ADMIN = frozenset({"amoghspace@gmail.com", "thushaarrangan@gmail.com"})       # developer: all companies, no grants
 
 # Back-compat admin set (union). Existing code imports ADMIN_USERS / OWAIS_USERS.
 ADMIN_USERS  = frozenset({"Administrator"}) | GROUP_OWNER | PLATFORM_ADMIN

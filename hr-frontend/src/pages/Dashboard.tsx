@@ -16,6 +16,8 @@ import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
 import { GroupConsole } from "@/pages/GroupConsole"
 import { api, apiUrl } from "@/lib/api"
 import { getAIHealth, type AIHealth } from "@/api/ai"
+import { getDeliveryDashboard, isLogisticsHandler } from "@/api/logistics"
+import { Truck } from "lucide-react"
 import { PageHeader, StatCard } from "@/components/dashboard"
 
 function useDefaultPasswordCheck() {
@@ -283,6 +285,107 @@ function AIHealthWidget({ onNavigate, onSync, onProcess }: {
   )
 }
 
+const DELIVERY_TONE: Record<string, { bg: string; fg: string }> = {
+  "Pending": { bg: "var(--bg-subtle)", fg: "var(--text-secondary)" },
+  "Ready for Dispatch": { bg: "#eff6ff", fg: "#1e40af" },
+  "Dispatched": { bg: "#eef2ff", fg: "#3730a3" },
+  "In Transit": { bg: "#fffbeb", fg: "#92400e" },
+  "Delivered": { bg: "#ecfdf5", fg: "#065f46" },
+  "Cancelled": { bg: "#fef2f2", fg: "#991b1b" },
+}
+
+// Visible to the LOGISTICS department and ADMINS only. Always rendered for them
+// (even with zero deliveries). The quick-add is shown ONLY to the person who
+// handles logistics (see is_logistics_handler on the backend) — not to admins.
+function DeliveriesWidget({ onNavigate }: { onNavigate: () => void }) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const isAdmin = !!user && ADMIN_USERS.has(user.name)
+  const { data: isHandler } = useQuery({
+    queryKey: ["is-logistics-handler"],
+    queryFn: isLogisticsHandler,
+    staleTime: 5 * 60_000,
+  })
+  const canSee = isAdmin || !!isHandler
+  const { data, isLoading } = useQuery({
+    queryKey: ["delivery-dashboard"],
+    queryFn: getDeliveryDashboard,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    enabled: canSee,
+  })
+  if (!canSee) return null
+  if (isLoading) return null
+  if (!data) return null
+  const isEmpty = data.total === 0
+
+  return (
+    <Card className="border-0" style={{ background: "#FFFFFF", border: "var(--border-card)", boxShadow: "var(--shadow-card)" }}>
+      <CardHeader className="pb-3 flex flex-row items-center justify-between">
+        <CardTitle className="font-semibold flex items-center gap-2" style={{ fontSize: "15px", color: "var(--text-primary)" }}>
+          <Truck size={16} /> Deliveries
+        </CardTitle>
+        <div className="flex items-center gap-3">
+          {(isHandler || isAdmin) && (
+            <button
+              onClick={() => navigate("/logistics?new=1")}
+              className="text-xs flex items-center gap-1 font-medium px-2.5 py-1 rounded-md text-white"
+              style={{ background: "var(--bg-inverse)" }}
+            >
+              <Plus size={13} /> New delivery
+            </button>
+          )}
+          <button onClick={onNavigate} className="text-xs flex items-center gap-1" style={{ color: "var(--text-tertiary)" }}>
+            View all <ExternalLink size={12} />
+          </button>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-3">
+        {/* status counts */}
+        <div className="grid grid-cols-3 gap-2">
+          <Stat label="In progress" value={data.in_progress} tone="var(--text-primary)" />
+          <Stat label="Delivered" value={data.counts["Delivered"] ?? 0} tone="#065f46" />
+          <Stat label="Total" value={data.total} tone="var(--text-secondary)" />
+        </div>
+        {isEmpty ? (
+          <div className="py-6 text-center" style={{ color: "var(--text-tertiary)" }}>
+            <Truck size={26} className="mx-auto mb-1.5 opacity-30" />
+            <p className="text-[12px]">
+              No deliveries yet.
+              {(isHandler || isAdmin) ? " Add one to start tracking dispatch & proof of delivery." : ""}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {data.recent.slice(0, 6).map((d) => (
+              <div key={d.name} className="flex items-start justify-between gap-3 py-1.5 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{d.customer_name || d.delivery_title}</p>
+                  <p className="text-[11px] truncate" style={{ color: "var(--text-tertiary)" }}>
+                    {d.goods && d.goods.length ? d.goods.join(", ") : `${d.item_count} item(s)`}
+                  </p>
+                </div>
+                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0" style={{ background: DELIVERY_TONE[d.status]?.bg, color: DELIVERY_TONE[d.status]?.fg }}>
+                  {d.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function Stat({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-subtle)" }}>
+      <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-tertiary)" }}>{label}</p>
+      <p className="text-xl font-semibold" style={{ color: tone }}>{value}</p>
+    </div>
+  )
+}
+
 export function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -387,6 +490,9 @@ export function Dashboard() {
               <StatCard key={label} label={label} value={value} sub={sub} icon={icon} />
             ))}
       </div>
+
+      {/* Deliveries — company-wide status + goods, visible to everyone */}
+      <DeliveriesWidget onNavigate={() => navigate("/logistics")} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Activity */}

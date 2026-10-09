@@ -53,6 +53,18 @@ function useAvailableRoles() {
   })
 }
 
+interface CompanyOption { name: string; abbr: string }
+function useCompaniesForUserMgmt() {
+  return useQuery<CompanyOption[]>({
+    queryKey: ["user_mgmt_companies"],
+    queryFn: async () => {
+      const res = await api.get(apiUrl("hr_client.api.user_management.get_companies_for_user_mgmt"))
+      return res.data.message as CompanyOption[]
+    },
+    staleTime: 1000 * 60 * 10,
+  })
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
@@ -191,9 +203,10 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 }
 
 // ── Add User Modal ────────────────────────────────────────────────────────────
-function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: () => void; onSuccess: () => void }) {
+function AddUserModal({ roles, companies, onClose, onSuccess }: { roles: Role[]; companies: CompanyOption[]; onClose: () => void; onSuccess: () => void }) {
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", confirm: "" })
   const [selectedRoles, setSelectedRoles] = useState<Set<string>>(new Set())
+  const [company, setCompany] = useState<string>(companies.length === 1 ? companies[0].name : "")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -204,6 +217,8 @@ function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: (
     setError("")
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.password)
       return setError("All fields are required")
+    if (!company)
+      return setError("Select the company this user belongs to")
     if (form.password !== form.confirm)
       return setError("Passwords do not match")
     setLoading(true)
@@ -213,6 +228,7 @@ function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: (
         first_name: form.firstName.trim(),
         last_name: form.lastName.trim(),
         password: form.password,
+        company,
         roles: JSON.stringify(Array.from(selectedRoles)),
       })
       toast.success(`User ${form.email} created`)
@@ -246,6 +262,14 @@ function AddUserModal({ roles, onClose, onSuccess }: { roles: Role[]; onClose: (
             type="email"
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]"
             placeholder="email@company.com" />
+        </FormField>
+        <FormField label="Company *">
+          <select value={company} onChange={(e) => setCompany(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--border-strong)]">
+            <option value="">Select a company…</option>
+            {companies.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+          </select>
+          <p className="text-[11px] text-gray-400 mt-1">The user can only sign in to and see this company's workspace.</p>
         </FormField>
         <FormField label="Password *">
           <PasswordField value={form.password} onChange={field("password")} showStrength placeholder="Password" />
@@ -455,6 +479,7 @@ export function UserManagement() {
 
   const { data: users = [], isLoading } = useUsers()
   const { data: roles = [] } = useAvailableRoles()
+  const { data: companies = [] } = useCompaniesForUserMgmt()
 
   const [search, setSearch] = useState("")
   const [showAdd, setShowAdd] = useState(false)
@@ -677,7 +702,7 @@ export function UserManagement() {
       </div>
 
       {/* Modals */}
-      {showAdd && <AddUserModal roles={roles} onClose={() => setShowAdd(false)} onSuccess={refresh} />}
+      {showAdd && <AddUserModal roles={roles} companies={companies} onClose={() => setShowAdd(false)} onSuccess={refresh} />}
       {editRolesUser && <EditRolesModal user={editRolesUser} roles={roles} onClose={() => setEditRolesUser(null)} onSuccess={refresh} />}
       {changePwUser && <ChangePasswordModal user={changePwUser} onClose={() => setChangePwUser(null)} onSuccess={refresh} />}
 

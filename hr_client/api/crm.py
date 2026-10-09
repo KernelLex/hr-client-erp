@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 from hr_client.api.utils import current_company, assert_doc_company, scoped
 
-OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
+OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 STAGE_ORDER = ["Lead", "Discussion", "Quotation", "Order", "Delivery", "Success"]
 
 

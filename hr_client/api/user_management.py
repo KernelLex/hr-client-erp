@@ -7,7 +7,7 @@ from hr_client.api.utils import handle_api_error
 # Owais is the protected superuser — cannot be disabled, deleted, or have
 # password changed via this panel.
 _PROTECTED_USER = "owais@veraenterprises.in"
-_ADMIN_USERS = {"Administrator", _PROTECTED_USER, "amoghspace@gmail.com"}
+_ADMIN_USERS = {"Administrator", _PROTECTED_USER, "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 
 # Roles that are system-internal and should never be shown for assignment
 _HIDDEN_ROLES = {"Guest", "All"}
@@ -146,7 +146,7 @@ def get_user_detail(user_email: str):
 
 @frappe.whitelist()
 @handle_api_error
-def create_user(email: str, first_name: str, last_name: str, password: str, roles=None):
+def create_user(email: str, first_name: str, last_name: str, password: str, roles=None, company: str = None):
     _require_admin()
     _check_rate_limit("create_user", limit=10, window_secs=3600)
 
@@ -169,6 +169,13 @@ def create_user(email: str, first_name: str, last_name: str, password: str, role
         if role not in all_roles:
             frappe.throw(f"Role '{role}' does not exist in ERPNext")
 
+    # A System User with NO company access can log in but every company-scoped
+    # page 403s — which is exactly why admin-created accounts appeared "broken".
+    # Require (and grant) exactly ONE company so the account works immediately.
+    # We never grant all companies here.
+    if not company or not frappe.db.exists("Company", company):
+        frappe.throw("A valid company is required so the new user can sign in")
+
     # Create user
     user = frappe.get_doc({
         "doctype": "User",
@@ -181,10 +188,39 @@ def create_user(email: str, first_name: str, last_name: str, password: str, role
     })
     user.insert(ignore_permissions=True)
     update_password(email, password)
+
+    # Grant access to the single chosen company (set as default).
+    frappe.get_doc({
+        "doctype": "User Company Access",
+        "parent": email, "parenttype": "User", "parentfield": "ve_company_access",
+        "idx": 1, "company": company, "access_level": "Full", "is_default": 1,
+    }).insert(ignore_permissions=True)
     frappe.db.commit()
 
-    _log_activity("Created user", email, f"Roles: {', '.join(roles) or 'none'}")
+    _log_activity("Created user", email, f"Company: {company} · Roles: {', '.join(roles) or 'none'}")
     return {"success": True, "name": email, "message": f"User '{email}' created successfully"}
+
+
+@frappe.whitelist()
+@handle_api_error
+def reset_user_password(user_email: str, new_password: str):
+    """Admin reset of a user's password. Thin, reliable wrapper around
+    change_user_password kept as a distinct verb the UI can call for the
+    'this user is locked out' case. Same protections apply."""
+    return change_user_password(user_email, new_password)
+
+
+@frappe.whitelist()
+@handle_api_error
+def get_companies_for_user_mgmt():
+    """Companies an admin may assign a new user to (name + label)."""
+    _require_admin()
+    rows = frappe.get_all(
+        "Company",
+        fields=["name", "abbr"],
+        order_by="name asc",
+    )
+    return [{"name": r.name, "abbr": r.abbr} for r in rows]
 
 
 @frappe.whitelist()

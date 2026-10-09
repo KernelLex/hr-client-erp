@@ -5,7 +5,7 @@ from hr_client.api.utils import (
     current_company, ALL_COMPANIES, scoped, assert_doc_company,
 )
 
-OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
+OWAIS_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 
 
 def _emp_company(emp_name):

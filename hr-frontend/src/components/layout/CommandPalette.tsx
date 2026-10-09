@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
 import { ADMIN_USERS } from "@/lib/constants"
 import { useAuth } from "@/context/AuthContext"
+import { isLogisticsHandler } from "@/api/logistics"
 
 interface SearchEntry {
   label: string
   to: string
   group: string
   admin?: boolean
+  /** Visible to admins AND the logistics handler (logistics dept). */
+  logistics?: boolean
 }
 
 // Flat index of every real page in the app, grouped like the sidebar.
@@ -21,7 +25,12 @@ const INDEX: SearchEntry[] = [
 
   { label: "Inventory", to: "/inventory", group: "Operations", admin: true },
   { label: "Purchasing", to: "/purchasing", group: "Operations", admin: true },
-  { label: "Logistics", to: "/logistics", group: "Operations", admin: true },
+  { label: "Logistics", to: "/logistics", group: "Operations", logistics: true },
+  { label: "Deliveries", to: "/logistics?tab=deliveries", group: "Logistics", logistics: true },
+  { label: "New Delivery", to: "/logistics?new=1", group: "Logistics", logistics: true },
+  { label: "Goods Receipts (GRN)", to: "/logistics?tab=grn", group: "Logistics", logistics: true },
+  { label: "Purchase Orders", to: "/logistics?tab=po", group: "Logistics", logistics: true },
+  { label: "New Purchase Order", to: "/logistics?tab=po&newpo=1", group: "Logistics", logistics: true },
   { label: "Returns & QC", to: "/returns", group: "Operations", admin: true },
 
   { label: "Chart of Accounts", to: "/accounting-module?tab=coa", group: "Accounting", admin: true },
@@ -39,6 +48,8 @@ const INDEX: SearchEntry[] = [
   { label: "Depreciation (Journal)", to: "/accounting-module?tab=depreciation", group: "Accounting", admin: true },
   { label: "Cash Flow", to: "/accounting-module?tab=cash-flow", group: "Accounting", admin: true },
   { label: "Financial Statements", to: "/accounting-module?tab=financial-statements", group: "Accounting", admin: true },
+  { label: "Payables & Receivables", to: "/accounting/payables-receivables", group: "Accounting", admin: true },
+  { label: "Vendor Payments", to: "/admin/vendor-payments", group: "Accounting", admin: true },
   { label: "Accounts Dashboard", to: "/accounts-dashboard", group: "Accounting", admin: true },
   { label: "Tally Import", to: "/tally-upload", group: "Accounting", admin: true },
 
@@ -93,10 +104,22 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isAdmin = !!(user && ADMIN_USERS.has(user.name))
+  const { data: isHandler } = useQuery({
+    queryKey: ["is-logistics-handler"],
+    queryFn: isLogisticsHandler,
+    staleTime: 5 * 60_000,
+  })
   const [q, setQ] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const available = useMemo(() => INDEX.filter((e) => !e.admin || isAdmin), [isAdmin])
+  const available = useMemo(
+    () => INDEX.filter((e) => {
+      if (e.admin && !isAdmin) return false
+      if (e.logistics && !(isAdmin || isHandler)) return false
+      return true
+    }),
+    [isAdmin, isHandler],
+  )
 
   const results = useMemo(() => {
     const query = q.trim().toLowerCase()

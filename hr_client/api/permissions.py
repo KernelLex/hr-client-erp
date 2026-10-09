@@ -153,7 +153,7 @@ MODULE_ROLE_MAP = {
 # Roles always present regardless of module permissions
 BASE_ROLES = ["Employee"]
 
-_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
+_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 _PROTECTED_USER = "owais@veraenterprises.in"
 
 

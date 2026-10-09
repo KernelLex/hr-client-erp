@@ -2,7 +2,7 @@ import frappe
 import json
 from hr_client.api.utils import handle_api_error, current_company, ALL_COMPANIES
 
-ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
+ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 
 # Frappe user name → actual email used on Employee records
 _ADMIN_EMAIL_MAP = {"Administrator": "owais@veraenterprises.in"}
@@ -291,3 +291,49 @@ def check_default_password():
         return {"is_default": True}
     except frappe.AuthenticationError:
         return {"is_default": False}
+
+
+import re as _re
+
+
+def _validate_password_strength(password: str):
+    """Mirror the strength rules used by the admin User Management panel."""
+    if not password or len(password) < 8:
+        frappe.throw("Password must be at least 8 characters long")
+    if not _re.search(r"[A-Z]", password):
+        frappe.throw("Password must contain at least one uppercase letter")
+    if not _re.search(r"[0-9]", password):
+        frappe.throw("Password must contain at least one number")
+    if not _re.search(r'[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/\\\'\"~`]', password):
+        frappe.throw("Password must contain at least one special character")
+
+
+@frappe.whitelist(methods=["POST"])
+@handle_api_error
+def change_my_password(current_password: str, new_password: str):
+    """Self-service password change for the logged-in user.
+
+    Verifies the current password, enforces the strength policy, then updates.
+    Never exposes any hash. Any logged-in user may change their OWN password
+    (this is the recovery path employees previously lacked).
+    """
+    from frappe.utils.password import check_password, update_password
+
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Authentication required", frappe.PermissionError)
+
+    # Verify the current password first — a wrong current password must never
+    # be able to set a new one.
+    try:
+        check_password(user, current_password or "")
+    except frappe.AuthenticationError:
+        frappe.throw("Your current password is incorrect", frappe.ValidationError)
+
+    if new_password == current_password:
+        frappe.throw("New password must be different from the current password")
+
+    _validate_password_strength(new_password)
+    update_password(user, new_password)
+    frappe.db.commit()
+    return {"success": True, "message": "Password updated. Use it next time you sign in."}

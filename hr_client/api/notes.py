@@ -3,7 +3,7 @@ from frappe.utils import now_datetime
 
 from hr_client.api.utils import current_company, ALL_COMPANIES, scoped, require_company
 
-_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
+_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 
 
 def _emp_company(emp_name):

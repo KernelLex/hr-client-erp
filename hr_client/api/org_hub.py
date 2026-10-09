@@ -5,7 +5,7 @@ Includes get_* endpoints for admin and employee views, plus CRUD for admin.
 import frappe
 from hr_client.api.utils import handle_api_error, current_company, require_company, ALL_COMPANIES
 
-_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com"}
+_ADMIN_USERS = {"Administrator", "owais@veraenterprises.in", "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 
 
 def _scope_co(company=None):

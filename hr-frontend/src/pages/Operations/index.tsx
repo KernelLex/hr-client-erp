@@ -7,6 +7,7 @@ import {
   AlertCircle, Brain, BookOpen,
 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
+import { getActiveCompany } from "@/lib/api"
 import { useAdminGuard } from "@/lib/useAdminGuard"
 import { PageHeader } from "@/components/dashboard"
 import { VoucherBrowser } from "./VoucherBrowser"
@@ -19,17 +20,25 @@ function getCsrf(): string {
 
 // ── API helpers ────────────────────────────────────────────────────────────────
 
+// These raw-fetch helpers bypass the axios interceptor, so they must append the
+// active company themselves — otherwise reads (incl. search) ignore the company
+// switcher and silently query the session-default company.
 async function apiFetch(method: string) {
-  const res = await fetch(`/api/method/${method}`, { credentials: "include" })
+  const company = getActiveCompany()
+  const sep = method.includes("?") ? "&" : "?"
+  const url = company ? `/api/method/${method}${sep}company=${encodeURIComponent(company)}` : `/api/method/${method}`
+  const res = await fetch(url, { credentials: "include" })
   if (!res.ok) throw new Error(`Failed: ${method}`)
   return (await res.json()).message
 }
 
 async function apiPost(method: string, body: Record<string, unknown>) {
+  const company = getActiveCompany()
+  const payload = company && body.company == null ? { ...body, company } : body
   const res = await fetch(`/api/method/${method}`, {
     method: "POST", credentials: "include",
     headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": getCsrf() },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   })
   const json = await res.json()
   if (!res.ok || json.exc) throw new Error(json.exc || "Request failed")

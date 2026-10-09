@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "creation": "2026-10-09 10:30:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "istable": 1,
+ "module": "Hr Client",
+ "name": "Vera Delivery Line",
+ "field_order": [
+  "item_description",
+  "spec",
+  "qty",
+  "uom",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_description",
+   "fieldtype": "Data",
+   "label": "Item / Goods",
+   "in_list_view": 1,
+   "columns": 4
+  },
+  {
+   "fieldname": "spec",
+   "fieldtype": "Data",
+   "label": "Specification",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "label": "Qty",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Data",
+   "label": "Unit",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks",
+   "in_list_view": 1,
+   "columns": 3
+  }
+ ],
+ "permissions": []
+}

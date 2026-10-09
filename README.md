@@ -98,6 +98,20 @@ Delivery lifecycle once a quote is won:
 - **Vendor Payments & Supplier Ledger** (`/admin/vendor-payments`).
   *Workflow:* win quote → create project → raise MRS → PO → receive goods → track stages/payments → service.
 
+### Logistics (`/logistics`)
+Tabbed hub opened to the logistics handler via `can("logistics")`:
+- **Deliveries (outbound)** — manual-status deliveries with a Proof-of-Delivery gate (a delivery can't
+  be marked *Delivered* until a POD document is attached). A company-wide **Deliveries widget** on the
+  dashboard is visible to the logistics department + admins; it is always shown (even at zero) and carries
+  a **New delivery** quick-add (logistics handler + admins only) that deep-links to `/logistics?new=1`.
+- **Goods Receipts (inbound / GRN)** — order receipts from POs with ordered-vs-received reconciliation,
+  plus a **printable Goods Receipt Note** (per-line "received" tick boxes + empty signature & company-seal
+  fields to sign and stamp after printing).
+- **Purchase Orders** — raise a PO directly from Logistics, **with or without linking it to a project**
+  (standalone POs are fully supported); line items, vendor, intercompany auto-flag.
+- **Porter** — on-demand logistics scaffold (activates once the Porter API key is provisioned).
+- All of the above are searchable from the global **⌘K command palette** (Logistics group).
+
 ### 6. Finance & Accounts (Tally-powered)
 - **Operations / Accounts dashboard** — bank balance, debtors/creditors with aging, FY totals, cashflow,
   GST summary, inventory, profitability — all from imported Tally data, company-scoped.
@@ -207,3 +221,8 @@ Leave `VITE_API_BASE=` empty in dev so calls go through the Vite proxy; `VITE_US
 Three companies on one instance: **Vera Enterprises**, **Schönes Leben**, **Hagan Modular**.
 VE is fully populated (live Tally data to 2026-09-05); SL/HM masters exist, transaction data pending.
 The core team (owner + project/accounts/logistics managers) operates all three via the company switcher.
+
+Platform-admin ("developer") accounts have cross-company access and bypass the company grant: configured
+in the `PLATFORM_ADMIN`/`ADMIN_USERS` sets (backend) and `ADMIN_USERS` (frontend `lib/constants.ts`).
+The logistics handler is detected from the Employee's department/designation ("logistics") — see
+`logistics.is_logistics_handler`.

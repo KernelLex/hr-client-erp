@@ -12,7 +12,7 @@ TOKEN_TTL = 3500
 PEOPLE_TTL = 300
 TODAY_TS_TTL = 300     # 5 min for today's entries
 PAST_TS_TTL = 3600     # 1 hr for past days
-ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com"}
+ADMIN_USERS = {"owais@veraenterprises.in", "Administrator", "amoghspace@gmail.com", "thushaarrangan@gmail.com"}
 IST = timezone(timedelta(hours=5, minutes=30))
 LATE_THRESHOLD_MINUTES = 9 * 60 + 30  # 09:30 AM IST
 OVERTIME_THRESHOLD_HOURS = 9
@@ -619,3 +619,100 @@ def test_connection():
 		return {"success": True, "connected": True, "organization": org_name}
 	except Exception as e:
 		return {"success": True, "connected": False, "error": str(e)}
+
+
+# ── Self-service (any logged-in employee sees ONLY their own attendance) ──────
+
+def _norm_name(s):
+	"""Lowercase, collapse whitespace — for tolerant name matching."""
+	return re.sub(r"\s+", " ", (s or "").strip().lower())
+
+
+def _resolve_my_jibble_person(id_to_name):
+	"""Map the logged-in user to their Jibble personId by employee name.
+	Returns (person_id, display_name) or (None, employee_name)."""
+	user = frappe.session.user
+	emp_name = frappe.db.get_value("Employee", {"user_id": user, "status": "Active"}, "employee_name") \
+		or frappe.db.get_value("Employee", {"user_id": user}, "employee_name") \
+		or frappe.db.get_value("User", user, "full_name") \
+		or user
+	target = _norm_name(emp_name)
+	# 1) exact normalised match
+	for pid, nm in id_to_name.items():
+		if _norm_name(nm) == target:
+			return pid, nm
+	# 2) token-subset match (handles "Bhagya Shree" vs "Bhagyashree", middle names)
+	t_tokens = set(target.replace(".", " ").split())
+	best = None
+	for pid, nm in id_to_name.items():
+		n_tokens = set(_norm_name(nm).replace(".", " ").split())
+		if t_tokens and (t_tokens <= n_tokens or n_tokens <= t_tokens):
+			best = (pid, nm)
+			break
+	if best:
+		return best
+	return None, emp_name
+
+
+@frappe.whitelist()
+def get_my_attendance(date_from=None, date_to=None):
+	"""The LOGGED-IN employee's own attendance for a date range (max 30 days).
+	Non-admin safe: no Jibble admin check — a user only ever gets their own rows.
+	Mirrors get_attendance_range's day-grouped shape but filtered to one person."""
+	if frappe.session.user == "Guest":
+		frappe.throw("Authentication required", frappe.PermissionError)
+	try:
+		today = _today()
+		date_from = date_from or _week_start()
+		date_to = date_to or today
+		from_d = date.fromisoformat(date_from)
+		to_d = date.fromisoformat(date_to)
+		if (to_d - from_d).days > MAX_RANGE_DAYS:
+			return {"success": False, "error": f"Date range exceeds {MAX_RANGE_DAYS} days"}
+		if from_d > to_d:
+			return {"success": False, "error": "date_from must be before date_to"}
+
+		id_to_name, _all_ids = _get_people_map()
+		person_id, display_name = _resolve_my_jibble_person(id_to_name)
+		if not person_id:
+			# Not linked to Jibble — return an explicit, non-error empty state.
+			return {
+				"success": True, "linked": False, "person_name": display_name,
+				"data": [], "date_from": date_from, "date_to": date_to,
+				"message": "Your attendance isn't linked to the time-tracking system yet. Please contact your admin.",
+			}
+
+		entries_by_date = _get_time_entries_for_range(date_from, date_to)
+		single = {person_id}
+		groups = []
+		present_days = 0
+		total_hours = 0.0
+		late_days = 0
+		d = to_d
+		while d >= from_d:
+			ds = d.isoformat()
+			day_entries = [e for e in entries_by_date.get(ds, []) if e.get("personId") == person_id]
+			rows = _compute_day_attendance(ds, day_entries, id_to_name, single)
+			row = rows[0] if rows else None
+			if row:
+				if row["status"] != "absent":
+					present_days += 1
+					total_hours += row.get("hours") or 0
+				if row["status"] == "late":
+					late_days += 1
+			groups.append({"date": ds, "date_label": _date_label(ds), "entry": row})
+			d -= timedelta(days=1)
+
+		return {
+			"success": True, "linked": True, "person_name": display_name,
+			"data": groups, "date_from": date_from, "date_to": date_to,
+			"summary": {
+				"present_days": present_days,
+				"late_days": late_days,
+				"total_hours": round(total_hours, 2),
+			},
+			"last_synced": datetime.now(IST).isoformat(),
+		}
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "Jibble get_my_attendance")
+		return {"success": False, "error": str(e)}
