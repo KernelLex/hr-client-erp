@@ -191,13 +191,13 @@ function DeliveryDrawer({ name, onClose, onSaved }: { name: string | null; onClo
   return (
     <div className="fixed inset-0 z-40 flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative w-full max-w-lg h-full bg-white overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white border-b px-5 py-3 flex items-center justify-between" style={{ borderColor: "var(--border-subtle)" }}>
+      <div className="relative w-full max-w-lg h-full bg-white shadow-xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="shrink-0 bg-white border-b px-5 py-3 flex items-center justify-between" style={{ borderColor: "var(--border-subtle)" }}>
           <h3 className="font-semibold" style={{ color: "var(--text-primary)" }}>{isNew ? "New Delivery" : view.delivery_title}</h3>
           <button onClick={onClose}><X size={18} style={{ color: "var(--text-tertiary)" }} /></button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Status row (existing only) */}
           {!isNew && (
             <div>
@@ -280,7 +280,7 @@ function DeliveryDrawer({ name, onClose, onSaved }: { name: string | null; onClo
           <Area label="Notes" value={view.notes ?? ""} onChange={(v) => set({ notes: v })} />
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t px-5 py-3 flex gap-2" style={{ borderColor: "var(--border-subtle)" }}>
+        <div className="shrink-0 bg-white border-t px-5 py-3 flex gap-2" style={{ borderColor: "var(--border-subtle)" }}>
           <button onClick={onClose} className="flex-1 rounded-lg border py-2 text-sm" style={{ borderColor: "var(--border-subtle)", color: "var(--text-secondary)" }}>Close</button>
           <button onClick={save} disabled={busy} className="flex-1 rounded-lg py-2 text-sm text-white disabled:opacity-50" style={{ background: "var(--bg-inverse)" }}>
             {busy ? "Saving…" : isNew ? "Create Delivery" : "Save Changes"}

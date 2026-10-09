@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Users, Briefcase, UserCheck, CalendarClock,
+  Briefcase, UserCheck, CalendarClock,
   Plus, UserPlus, Shield, Activity,
   CheckCircle2, XCircle, Circle, FileText, Calendar,
   Bot, ChevronDown, ChevronUp, RefreshCw, Loader2, ExternalLink,
@@ -18,7 +18,7 @@ import { api, apiUrl } from "@/lib/api"
 import { getAIHealth, type AIHealth } from "@/api/ai"
 import { getDeliveryDashboard, isLogisticsHandler } from "@/api/logistics"
 import { Truck } from "lucide-react"
-import { PageHeader, StatCard } from "@/components/dashboard"
+import { PageHeader } from "@/components/dashboard"
 
 function useDefaultPasswordCheck() {
   return useQuery({
@@ -55,26 +55,6 @@ function useDashboardStats() {
     },
     staleTime: 1000 * 60,
   })
-}
-
-function StatSkeleton() {
-  return (
-    <div
-      className="rounded-2xl p-5 animate-pulse"
-      style={{
-        background: "var(--bg-surface)",
-        border: "var(--border-card)",
-        boxShadow: "var(--shadow-card)",
-      }}
-    >
-      <div className="flex items-start justify-between">
-        <div className="h-3 bg-gray-200 rounded w-24" />
-        <div className="h-9 w-9 bg-gray-100 rounded-xl" />
-      </div>
-      <div className="h-7 bg-gray-300 rounded w-14 mt-4" />
-      <div className="h-3 bg-gray-100 rounded w-20 mt-2.5" />
-    </div>
-  )
 }
 
 function getGreeting() {
@@ -396,43 +376,7 @@ export function Dashboard() {
   const { data: tallySnap } = useTallySummary()
   const showPasswordBanner = pwCheck?.is_default === true
 
-  const stats = data?.stats
   const activity = data?.recent_activity ?? []
-
-  const STAT_CARDS = [
-    {
-      label: "Total Employees",
-      value: stats?.total_employees ?? "—",
-      sub: "Active employees",
-      icon: Users,
-      iconBg: "#F5F5F5",
-      iconColor: "#171717",
-    },
-    {
-      label: "Open Positions",
-      value: stats?.open_positions ?? "—",
-      sub: "Job openings",
-      icon: Briefcase,
-      iconBg: "#F5F5F5",
-      iconColor: "#171717",
-    },
-    {
-      label: "Candidates",
-      value: stats?.candidates_this_month ?? "—",
-      sub: "This month",
-      icon: UserCheck,
-      iconBg: "#F5F5F5",
-      iconColor: "#171717",
-    },
-    {
-      label: "Interviews Today",
-      value: stats?.interviews_today ?? "—",
-      sub: "Scheduled today",
-      icon: CalendarClock,
-      iconBg: "#F5F5F5",
-      iconColor: "#171717",
-    },
-  ]
 
   const QUICK_ACTIONS = [
     { label: "Post New Job", icon: Plus, onClick: () => navigate("/recruitment") },
@@ -482,14 +426,43 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {isLoading
-          ? Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
-          : STAT_CARDS.map(({ label, value, sub, icon }) => (
-              <StatCard key={label} label={label} value={value} sub={sub} icon={icon} />
-            ))}
-      </div>
+      {/* Tally Financial Snapshot — admin only, top of the dashboard */}
+      {isAdmin && tallySnap && (
+        <Card
+          className="border-0"
+          style={{ background: "#FFFFFF", border: "var(--border-card)", boxShadow: "var(--shadow-card)", borderRadius: "var(--radius-card)" }}
+        >
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardTitle className="font-semibold flex items-center gap-2" style={{ fontSize: "15px", color: "var(--text-primary)" }}>
+              <Activity size={16} /> Tally Financial Snapshot
+              <span className="text-[11px] font-normal" style={{ color: "var(--text-tertiary)" }}>as of {tallyFmtDate(tallySnap.as_of)}</span>
+            </CardTitle>
+            <button onClick={() => navigate("/accounting")} className="text-xs flex items-center gap-1" style={{ color: "var(--text-tertiary)" }}>
+              Full view <ExternalLink size={12} />
+            </button>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {[
+                { label: "Cash + Bank",   value: tallySnap.cash_bank,    icon: Wallet,       tone: "var(--text-primary)" },
+                { label: "Receivables",   value: tallySnap.receivables,  icon: TrendingUp,   tone: "#065f46" },
+                { label: "Payables",      value: tallySnap.payables,     icon: TrendingDown, tone: "#991b1b" },
+                { label: "FY Sales",      value: tallySnap.fy_sales,     icon: TrendingUp,   tone: "var(--text-primary)" },
+                { label: "FY Purchases",  value: tallySnap.fy_purchases, icon: TrendingDown, tone: "var(--text-primary)" },
+                { label: "Net GST Due",   value: tallySnap.net_gst,      icon: FileText,     tone: "var(--text-primary)" },
+              ].map(({ label, value, icon: Icon, tone }) => (
+                <div key={label} className="rounded-xl px-4 py-3 border" style={{ background: "var(--bg-subtle)", borderColor: "var(--border-subtle)" }}>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Icon size={12} style={{ color: "var(--text-tertiary)" }} />
+                    <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>{label}</span>
+                  </div>
+                  <p className="font-mono text-xl font-bold leading-tight" style={{ color: tone }}>{value}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Deliveries — company-wide status + goods, visible to everyone */}
       <DeliveriesWidget onNavigate={() => navigate("/logistics")} />
@@ -637,48 +610,6 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Tally Financial Snapshot — admin only */}
-      {isAdmin && tallySnap && (
-        <div
-          className="rounded-xl p-5"
-          style={{ background: "var(--bg-inverse)", border: "none", borderRadius: "var(--radius-card)" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Activity size={15} style={{ color: "var(--text-inverse)" }} />
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-inverse)" }}>
-                Tally Financial Snapshot · {tallyFmtDate(tallySnap.as_of)}
-              </span>
-            </div>
-            <button
-              onClick={() => navigate("/accounting")}
-              className="text-xs transition-colors"
-              style={{ color: "var(--text-inverse)", opacity: 0.7 }}
-            >
-              Full View →
-            </button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              { label: "Cash + Bank",   value: tallySnap.cash_bank,    icon: Wallet },
-              { label: "Receivables",   value: tallySnap.receivables,  icon: TrendingUp },
-              { label: "Payables",      value: tallySnap.payables,     icon: TrendingDown },
-              { label: "FY Sales",      value: tallySnap.fy_sales,     icon: TrendingUp },
-              { label: "FY Purchases",  value: tallySnap.fy_purchases, icon: TrendingDown },
-              { label: "Net GST Due",   value: tallySnap.net_gst,      icon: FileText },
-            ].map(({ label, value, icon: Icon }) => (
-              <div key={label} className="rounded-lg px-3 py-2.5" style={{ background: "rgba(255,255,255,0.07)" }}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Icon size={10} style={{ color: "rgba(255,255,255,0.5)" }} />
-                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</span>
-                </div>
-                <p className="font-mono text-lg font-bold leading-tight" style={{ color: "var(--text-inverse)" }}>{value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* AI & System Health — admin only */}
       {isAdmin && (

@@ -410,7 +410,7 @@ export function QuotationEditor() {
       {/* Conversion gate (§4.11) */}
       {(q.status === "Approved" || q.status === "Converted") && (
         <div className="mb-6 rounded-xl p-4" style={{ border: "0.5px solid var(--border, #E3E3E3)", background: "#fff" }}>
-          <div className="mb-2 font-heading text-sm font-semibold" style={{ color: "var(--brand-primary)" }}>Sales Order Conversion (§4.11)</div>
+          <div className="mb-2 font-heading text-sm font-semibold" style={{ color: "var(--brand-primary)" }}>Sales Order Conversion</div>
           <div className="grid gap-1.5 md:grid-cols-2">
             {q.conversion_gate.map((c, i) => (
               <div key={i} className="flex items-center gap-2 text-sm" style={{ color: c.ok ? "#171717" : "var(--text-muted)" }}>

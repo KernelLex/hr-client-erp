@@ -850,8 +850,14 @@ export function AdminEmployeeDetailPage() {
             <TabsContent value="attendance">
               <div className="pt-4 text-center py-16 text-gray-400">
                 <Clock size={36} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium text-gray-500">Attendance data coming soon</p>
-                <p className="text-xs text-gray-400 mt-1">Jibble per-employee history will appear here</p>
+                <p className="text-sm font-medium text-gray-500">Daily attendance, late & absent reports and summaries live in the Attendance module.</p>
+                <button
+                  onClick={() => navigate("/admin/attendance")}
+                  className="mt-3 text-sm font-medium rounded-lg px-4 py-2 text-white"
+                  style={{ background: "var(--bg-inverse)" }}
+                >
+                  Open Attendance
+                </button>
               </div>
             </TabsContent>
 

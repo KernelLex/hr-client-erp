@@ -70,14 +70,29 @@ def _financial_line() -> str:
     except Exception:
         fy = ""
     gst_net = max(0, c("gst_payable") - c("input_gst_credit"))
+
+    def _party_lines(key, label):
+        parties = snap.get(key) or {}
+        if not isinstance(parties, dict) or not parties:
+            return ""
+        rows = "; ".join(f"{n} ₹{float(v or 0):,.0f}" for n, v in list(parties.items())[:10])
+        return f"\n{label} (largest outstanding, name ₹amount): {rows}"
+
+    # Per-party breakdowns so open-ended questions ("which vendors have pending
+    # payments", "who owes us the most") can be answered by name, not just totals.
+    debtors_line   = _party_lines("top_debtors", "Customers who owe us (debtors / receivables)")
+    creditors_line = _party_lines("top_creditors", "Vendors we owe (creditors / payables, pending vendor payments)")
+
     return (
         f"=== {COMPANY_NAME} — FINANCIALS (Tally, FY {fy}) ===\n"
         f"Sales ₹{c('fy_sales'):,.0f} | Purchases ₹{c('fy_purchases'):,.0f} | "
         f"Collections ₹{c('fy_collections'):,.0f}\n"
-        f"Debtors ₹{c('sundry_debtors'):,.0f} | Creditors ₹{c('sundry_creditors'):,.0f} | "
+        f"Debtors (total receivable) ₹{c('sundry_debtors'):,.0f} across {int(c('debtor_count')):,} parties | "
+        f"Creditors (total payable) ₹{c('sundry_creditors'):,.0f} across {int(c('creditor_count')):,} parties | "
         f"Net GST ₹{gst_net:,.0f}\n"
         f"Cash ₹{c('cash_in_hand'):,.0f} | Bank ₹{c('bank_balance'):,.0f} | "
         f"All-time Sales ₹{c('total_sales'):,.0f}"
+        f"{debtors_line}{creditors_line}"
     )
 
 

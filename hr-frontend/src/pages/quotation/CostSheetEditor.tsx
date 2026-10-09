@@ -208,7 +208,7 @@ export function CostSheetEditor() {
             )}
           </div>
           <p className="mt-1.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
-            Target and minimum GP % drive the quotation approval engine (§4.6).
+            Target and minimum GP % drive the quotation approval engine.
           </p>
         </div>
 
@@ -254,7 +254,7 @@ export function CostSheetEditor() {
         </div>
       </div>
 
-      <RegisterGrid title="Cost Lines — per-line component breakdown (§2.2/§60)" columns={LINE_COLS} rows={c.lines} editable={!locked}
+      <RegisterGrid title="Cost Lines — per-line component breakdown" columns={LINE_COLS} rows={c.lines} editable={!locked}
         onSave={saveLines} emptyLabel="No cost lines. Build on an approved BOQ to seed them, or add lines here." />
       <p className="mt-1.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
         Enter the cost components for each line — Total Cost is their sum, or falls back to Cost Rate × Qty when no components are filled.

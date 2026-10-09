@@ -119,8 +119,8 @@ function GrnDrawer({ name, onClose, onSaved }: { name: string; onClose: () => vo
   return (
     <div className="fixed inset-0 z-40 flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative w-full max-w-lg h-full bg-white overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white border-b px-5 py-3 flex items-center justify-between" style={{ borderColor: "var(--border-subtle)" }}>
+      <div className="relative w-full max-w-lg h-full bg-white shadow-xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="shrink-0 bg-white border-b px-5 py-3 flex items-center justify-between" style={{ borderColor: "var(--border-subtle)" }}>
           <div><h3 className="font-semibold" style={{ color: "var(--text-primary)" }}>{name}</h3>
             <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>{data?.vendor} · {data?.status}</p></div>
           <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ function GrnDrawer({ name, onClose, onSaved }: { name: string; onClose: () => vo
             <button onClick={onClose}><X size={18} style={{ color: "var(--text-tertiary)" }} /></button>
           </div>
         </div>
-        <div className="p-5">
+        <div className="flex-1 overflow-y-auto p-5">
           <p className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>Confirm the received quantity against what was ordered. Short lines are flagged so you can see exactly what's missing.</p>
           <table className="w-full text-sm">
             <thead><tr>{["Item", "Ordered", "Received"].map((h) => <th key={h} className="text-left py-1.5 text-[11px] uppercase" style={{ color: "var(--text-tertiary)" }}>{h}</th>)}</tr></thead>
@@ -157,7 +157,7 @@ function GrnDrawer({ name, onClose, onSaved }: { name: string; onClose: () => vo
           </table>
         </div>
         {isDraft && (
-          <div className="sticky bottom-0 bg-white border-t px-5 py-3 flex gap-2" style={{ borderColor: "var(--border-subtle)" }}>
+          <div className="shrink-0 bg-white border-t px-5 py-3 flex gap-2" style={{ borderColor: "var(--border-subtle)" }}>
             <button onClick={() => save(false)} disabled={busy} className="flex-1 rounded-lg border py-2 text-sm" style={{ borderColor: "var(--border-subtle)", color: "var(--text-secondary)" }}>Save</button>
             <button onClick={() => save(true)} disabled={busy} className="flex-1 rounded-lg py-2 text-sm text-white disabled:opacity-50" style={{ background: "var(--bg-inverse)" }}>{busy ? "…" : "Confirm Received"}</button>
           </div>

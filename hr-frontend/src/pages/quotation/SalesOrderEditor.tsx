@@ -117,7 +117,7 @@ export function SalesOrderEditor() {
             </button>
           )}
           {so.status === "Confirmed" && (
-            <span className="self-center text-xs" style={{ color: "#171717" }}>Confirmed — ready for §5 project handover.</span>
+            <span className="self-center text-xs" style={{ color: "#171717" }}>Confirmed — ready for project handover.</span>
           )}
           {so.status !== "Cancelled" && (
             <button onClick={() => { if (window.confirm("Cancel this sales order?")) setStatus("Cancelled") }} disabled={busy}

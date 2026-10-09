@@ -49,31 +49,40 @@ def route_question(message: str):
             _cache["snap"] = get_business_snapshot() or {}
         return _cache["snap"]
 
-    # ── Top debtors / creditors (lists) ──────────────────────────────────────
-    if _has(q, "top debtor", "biggest debtor", "largest debtor", "who owes us", "who owes the"):
-        d = S().get("top_debtors") or {}
-        if d:
-            lst = "; ".join(f"{n} {_inr(v)}" for n, v in list(d.items())[:5])
-            return (f"Top debtors (outstanding): {lst}. "
-                    f"Total receivables {_inr(S().get('sundry_debtors'))} across "
-                    f"{int(S().get('debtor_count') or 0)} parties.")
-
-    if _has(q, "top creditor", "biggest creditor", "largest creditor", "whom do we owe", "who do we owe"):
+    # ── Payables / vendor pending payments (creditors) — always list parties ──
+    # Checked BEFORE receivables because "which vendors have pending payments"
+    # is a payables question that must not be captured by a generic "payment".
+    if _has(q, "payable", "creditor", "we owe", "owe to", "to pay", "pending payment",
+            "pending payments", "pending vendor", "vendor", "vendors", "supplier",
+            "suppliers", "bills to pay", "bill to pay", "whom to pay", "who to pay",
+            "which vendor", "which supplier", "dues to", "outstanding payment",
+            "top creditor", "biggest creditor", "largest creditor", "whom do we owe",
+            "who do we owe", "money to pay"):
         c = S().get("top_creditors") or {}
+        total = _inr(S().get("sundry_creditors"))
+        cnt = int(S().get("creditor_count") or 0)
         if c:
-            lst = "; ".join(f"{n} {_inr(v)}" for n, v in list(c.items())[:5])
-            return (f"Top creditors (outstanding): {lst}. "
-                    f"Total payables {_inr(S().get('sundry_creditors'))} across "
-                    f"{int(S().get('creditor_count') or 0)} parties.")
+            lst = "; ".join(f"{n} {_inr(v)}" for n, v in list(c.items())[:10])
+            return (f"Vendor payments pending (payables) — {total} outstanding across "
+                    f"{cnt} vendors/creditors. By vendor, largest first: {lst}.")
+        return (f"Payables {total} across {cnt} creditors "
+                "(no per-vendor breakdown available in the current snapshot).")
 
-    # ── Receivables / payables (totals) ──────────────────────────────────────
-    if _has(q, "receivable", "debtor", "owed to us", "outstanding from client", "collect from"):
-        return (f"Receivables {_inr(S().get('sundry_debtors'))} outstanding across "
-                f"{int(S().get('debtor_count') or 0)} debtors.")
-
-    if _has(q, "payable", "creditor", "we owe", "owe to", "to pay vendor"):
-        return (f"Payables {_inr(S().get('sundry_creditors'))} across "
-                f"{int(S().get('creditor_count') or 0)} creditors.")
+    # ── Receivables / who owes us (debtors) — always list parties ─────────────
+    if _has(q, "receivable", "debtor", "owes us", "owe us", "who owes", "owed to us",
+            "outstanding from client", "outstanding from customer", "collect from",
+            "which customer", "which client", "customers owe", "clients owe",
+            "pending from customer", "pending receipt", "top debtor", "biggest debtor",
+            "largest debtor", "money owed to us"):
+        d = S().get("top_debtors") or {}
+        total = _inr(S().get("sundry_debtors"))
+        cnt = int(S().get("debtor_count") or 0)
+        if d:
+            lst = "; ".join(f"{n} {_inr(v)}" for n, v in list(d.items())[:10])
+            return (f"Receivables — {total} outstanding across {cnt} customers. "
+                    f"By customer, largest first: {lst}.")
+        return (f"Receivables {total} outstanding across {cnt} customers "
+                "(no per-customer breakdown available in the current snapshot).")
 
     # ── Sales / purchases / collections ──────────────────────────────────────
     if _has(q, "sales", "revenue", "turnover", "sold", "how much did we sell"):
