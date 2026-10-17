@@ -1,0 +1,20 @@
+{
+  "erp_base_url": "http://100.83.174.36",
+  "agent_token": "PASTE_THE_SAME_TOKEN_SET_IN_site_config.json",
+
+  "tally_url": "http://localhost:9000",
+  "tally_company_name": "VERA ENTERPRISES",
+  "tally_timeout": 1800,
+
+  "masters_report": "List of Accounts",
+  "transactions_report": "Day Book",
+  "from_date": "20000401",
+  "to_date": "",
+
+  "scp_target": "vera@100.83.174.36:/home/vera/tally_uploads",
+  "scp_extra_args": [],
+
+  "masters_remote_name": "VEMaster_agent.xml",
+  "transactions_remote_name": "Transactions_agent.xml",
+  "state_file": "state.json"
+}

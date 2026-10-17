@@ -1,0 +1,121 @@
+{
+ "creation": "2026-10-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "config_section",
+  "enabled",
+  "company",
+  "interval_minutes",
+  "only_when_changed",
+  "sync_now",
+  "status_section",
+  "last_status",
+  "last_message",
+  "last_alterid",
+  "last_sync_start",
+  "last_sync_end",
+  "agent_last_seen"
+ ],
+ "fields": [
+  {
+   "fieldname": "config_section",
+   "fieldtype": "Section Break",
+   "label": "Continuous Sync Configuration"
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "0",
+   "description": "Master switch. When OFF (default) the Tally sync agent is told to do nothing and the manual upload flow is unaffected."
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "label": "Company",
+   "default": "Vera Enterprises",
+   "description": "Which company's Tally data this agent syncs. One profile per company; VE only for now."
+  },
+  {
+   "fieldname": "interval_minutes",
+   "fieldtype": "Select",
+   "label": "Sync Every (minutes)",
+   "options": "15\n30\n60\n180\n360\n720\n1440",
+   "default": "60",
+   "description": "Admin-chosen frequency. The agent only re-imports when this much time has elapsed since the last sync (or when Sync Now is pressed)."
+  },
+  {
+   "fieldname": "only_when_changed",
+   "fieldtype": "Check",
+   "label": "Only Sync When Tally Data Changed",
+   "default": "1",
+   "description": "When ON, the agent first asks Tally (via AlterID) whether anything changed since the last sync and skips the full export/import if nothing did."
+  },
+  {
+   "fieldname": "sync_now",
+   "fieldtype": "Check",
+   "label": "Sync Now (one-shot)",
+   "default": "0",
+   "description": "Tick to force the next agent poll to sync immediately regardless of interval. Auto-clears after the agent picks it up."
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Last Sync Status (read-only, written by the agent)"
+  },
+  {
+   "fieldname": "last_status",
+   "fieldtype": "Data",
+   "label": "Last Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_message",
+   "fieldtype": "Small Text",
+   "label": "Last Message",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_alterid",
+   "fieldtype": "Data",
+   "label": "Last AlterID (high-water mark)",
+   "read_only": 1,
+   "description": "The Tally AlterID of the most recent successful sync; the agent compares against this to detect changes."
+  },
+  {
+   "fieldname": "last_sync_start",
+   "fieldtype": "Datetime",
+   "label": "Last Sync Started",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_end",
+   "fieldtype": "Datetime",
+   "label": "Last Sync Ended",
+   "read_only": 1
+  },
+  {
+   "fieldname": "agent_last_seen",
+   "fieldtype": "Datetime",
+   "label": "Agent Last Seen",
+   "read_only": 1,
+   "description": "Heartbeat — updated every time the agent polls for a command."
+  }
+ ],
+ "issingle": 1,
+ "modified": "2026-10-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Hr Client",
+ "name": "VE Tally Sync Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "read": 1,
+   "write": 1,
+   "role": "System Manager"
+  }
+ ],
+ "track_changes": 0
+}
