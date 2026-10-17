@@ -6,6 +6,7 @@ import {
 } from "lucide-react"
 import { PageHeader, HeaderPill } from "@/components/dashboard"
 import { useCompany, ALL_COMPANIES } from "@/context/CompanyContext"
+import ContinuousSyncPanel from "./ContinuousSyncPanel"
 
 // ── CSRF + API helpers (same contract as Operations page) ───────────────────────
 function getCsrf(): string {
@@ -578,6 +579,9 @@ export default function TallyUploadPage() {
             </div>
           </div>
         )}
+
+        {/* Continuous (agent-based) sync — always visible, independent of the wizard phase */}
+        <ContinuousSyncPanel />
       </div>
     </div>
   )
